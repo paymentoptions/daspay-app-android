@@ -1,11 +1,10 @@
-import com.android.build.api.dsl.Packaging
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
     kotlin("plugin.serialization") version "2.0.21"
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -70,6 +69,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.lint)
+    implementation(libs.firebase.messaging.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -93,4 +93,9 @@ dependencies {
 //    Minesec
 //    releaseImplementation("com.theminesec.sdk:headless:1.0.17")
     debugImplementation(libs.headless.stage)
+
+    //Firebase
+    implementation(libs.firebase.bom)
+    implementation(libs.firebase.analytics)
+
 }

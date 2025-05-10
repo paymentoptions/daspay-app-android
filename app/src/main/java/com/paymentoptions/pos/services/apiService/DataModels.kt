@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.apiService
+package com.paymentoptions.pos.services.apiService
 
 import kotlinx.serialization.Serializable
 
@@ -124,10 +124,9 @@ data class TransactionListResponse(
 
 
 data class RefundRequest(
-    val transactionId: String,
+    val id: String,
     val merchant_id: String,
-    val amount: Float,
-    val notes: String,
+    val refundAmount: Float,
 )
 
 data class Refund_GatewayResponse(
@@ -212,3 +211,25 @@ data class RefundResponse(
     val payment_details: Refund_PaymentDetails,
     val transaction_details: Refund_TransactionDetails,
 )
+//
+//data class PayByLinkRequestProduct(
+//    val Currency: String,
+//    val Name: String,
+//    val Quantity: Int,
+//    val Price: Float,
+//    val TotalPrice: String
+//)
+//
+//data class PayByLinkRequest(
+//    val ExpiryDate: String,
+//    val PBLLinkName: String,
+//    val Product: List<PayByLinkRequestProduct>,
+//)
+//
+//data class PayByLinkResponse(
+//    val status: Int,
+//    val success: Boolean,
+//    val message: Int,
+//    val is_live: Boolean,
+//    val transaction_type: String
+//)

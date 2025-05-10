@@ -1,5 +1,4 @@
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -7,8 +6,8 @@ import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LockClock
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.PointOfSale
+import androidx.compose.material.icons.filled.ProductionQuantityLimits
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Support
 import androidx.compose.material3.DrawerValue
@@ -27,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -37,6 +35,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.ui.composables._components.NotificationPermission
 import kotlinx.coroutines.launch
 
 data class NavItem(
@@ -46,27 +45,31 @@ data class NavItem(
     val route: String,
 )
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Drawer(navController1: NavController): Unit {
+fun Drawer(mainNavController: NavController) {
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-    val navController = rememberNavController()
+    val drawerController = rememberNavController()
 
     val navItems = listOf(
         NavItem("Sale", "Make Payment", Icons.Default.PointOfSale, "saleScreen"),
+        NavItem("Products", "Products", Icons.Default.ProductionQuantityLimits, "productScreen"),
         NavItem("Settlement", "Settlement", Icons.Default.LockClock, "settlementScreen"),
         NavItem("History", "History", Icons.Default.History, "historyScreen"),
         NavItem("Pre-Auth", "Pre-Auth", Icons.Default.AutoFixHigh, "preAuthScreen"),
-        NavItem("Refund", "Refund", Icons.Default.Money, "refundScreen"),
+//        NavItem("Refund", "Refund", Icons.Default.Money, "refundScreen"),
         NavItem("Settings", "Settings", Icons.Default.Settings, "settingsScreen"),
         NavItem("Help & Support", "Help & Support", Icons.Default.Support, "helpAndSupportScreen")
     )
 
-    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentBackStackEntry by drawerController.currentBackStackEntryAsState()
     val currentRoute = currentBackStackEntry?.destination?.route
     val currentTitle = navItems.find { it.route == currentRoute }?.title ?: navItems[0].title
 
+
+    NotificationPermission()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -87,8 +90,10 @@ fun Drawer(navController1: NavController): Unit {
                         icon = { Icon(item.icon, contentDescription = item.label) },
                         selected = currentRoute == item.route,
                         onClick = {
-                            scope.launch { drawerState.close() }
-                            navController.navigate(item.route)
+                            scope.launch {
+                                drawerState.close()
+                                drawerController.navigate(item.route)
+                            }
                         },
                         modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                     )
@@ -115,17 +120,23 @@ fun Drawer(navController1: NavController): Unit {
 
             ) {
             NavHost(
-                navController = navController,
+                navController = drawerController,
                 startDestination = "saleScreen",
-                modifier = Modifier.padding(it)
+                modifier = Modifier.padding(it),
             ) {
-                composable("helpAndSupportScreen") { HelpAndSupportScreen(navController) }
-                composable("historyScreen") { HistoryScreen(navController) }
-                composable("preAuthScreen") { PreAuthScreen(navController) }
-                composable("refundScreen") { RefundScreen(navController) }
-                composable("saleScreen") { SaleScreen(navController) }
-                composable("settingsScreen") { SettingsScreen(navController) }
-                composable("settlementScreen") { SettlementScreen(navController) }
+                composable("loginScreen") {
+                    mainNavController.navigate("loginScreen") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+                composable("saleScreen") { SaleScreen(drawerController) }
+                composable("productScreen") { ProductScreen(drawerController) }
+                composable("historyScreen") { HistoryScreen(drawerController) }
+                composable("preAuthScreen") { PreAuthScreen(drawerController) }
+//                composable("refundScreen") { RefundScreen(navController) }
+                composable("settingsScreen") { SettingsScreen(drawerController) }
+                composable("settlementScreen") { SettlementScreen(drawerController) }
+                composable("helpAndSupportScreen") { HelpAndSupportScreen(drawerController) }
             }
         }
     }

@@ -12,7 +12,7 @@ fun CustomDialog(
     cancelButtonText: String = "Cancel",
     onDismiss: () -> Unit,
     onAccept: () -> Unit,
-): Unit {
+) {
 
     if (showDialog) {
         AlertDialog(

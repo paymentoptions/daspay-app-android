@@ -1,7 +1,6 @@
 package com.paymentoptions.pos.ui.composables
 
 import BiometricAuthScreen
-import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -21,7 +20,6 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -52,14 +50,16 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.apiService.SignInResponse
-import com.paymentoptions.pos.apiService.endpoints.signIn
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.services.apiService.SignInResponse
+import com.paymentoptions.pos.services.apiService.endpoints.signIn
+import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
+import com.paymentoptions.pos.ui.theme.Orange10
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun PaymentOptionsLoginScreen(navController: NavController) {
+fun LoginScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -68,12 +68,11 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
     var invalidCredentials by remember { mutableStateOf<String?>(null) }
     var showDrawer by remember { mutableStateOf<Boolean>(false) }
     var signInLoader by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
     println("signInLoader: $signInLoader")
 
     val context = LocalContext.current
-    val activity = context as? Activity
 
     if (showDrawer) {
         BiometricAuthScreen(
@@ -85,9 +84,9 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
             {
                 Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
             },
-            navController
+            navController,
+            true
         )
-        navController.navigate("drawerScreen")
     } else {
         Column(
             modifier = Modifier
@@ -120,7 +119,7 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
                         withStyle(
                             style = SpanStyle(
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFFFF9800)
+                                color = Orange10
                             )
                         ) {
                             append("Payment Options")
@@ -144,7 +143,7 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            tint = Color(0xFFFF9800)
+                            tint = Orange10
                         )
                     },
                     modifier = Modifier
@@ -161,8 +160,8 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = Color.White,
                         focusedContainerColor = Color.White,
-                        focusedIndicatorColor = Color(0xFFFF9800),
-                        focusedLabelColor = Color(0xFFFF9800),
+                        focusedIndicatorColor = Orange10,
+                        focusedLabelColor = Orange10,
                         unfocusedLabelColor = Color.DarkGray,
                         focusedTextColor = Color.Black,
                         unfocusedTextColor = Color.Black,
@@ -197,7 +196,7 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
                         Icon(
                             imageVector = Icons.Default.Lock,
                             contentDescription = null,
-                            tint = Color(0xFFFF9800)
+                            tint = Orange10
                         )
                     },
                     trailingIcon = {
@@ -207,7 +206,7 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = Color(0xFFFF9800)
+                                tint = Orange10
                             )
                         }
                     },
@@ -220,8 +219,8 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
                     colors = TextFieldDefaults.colors(
                         unfocusedContainerColor = Color.White,
                         focusedContainerColor = Color.White,
-                        focusedIndicatorColor = Color(0xFFFF9800),
-                        focusedLabelColor = Color(0xFFFF9800),
+                        focusedIndicatorColor = Orange10,
+                        focusedLabelColor = Orange10,
                         unfocusedLabelColor = Color.DarkGray,
                         focusedTextColor = Color.Black,
                         unfocusedTextColor = Color.Black,
@@ -267,7 +266,6 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
             }
 
             Button(
-
                 onClick = {
                     emailError = if (isValidEmail(email)) null else "Invalid email"
                     passwordError =
@@ -275,9 +273,8 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
 
                     if (emailError == null && passwordError == null && invalidCredentials == null) {
 
-                        signInLoader = true
-
-                        coroutineScope.launch {
+                        scope.launch {
+                            signInLoader = true
                             var signInResponse: SignInResponse? = null
 
                             try {
@@ -285,9 +282,20 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
                                 signInResponse = signIn(email, password)
                                 println("signInResponse: $signInResponse")
 
-                                if (signInResponse.success) {
-                                    SharedPreferences.saveAuthDetails(context, signInResponse)
-                                    showDrawer = true
+                                if (signInResponse == null) {
+                                    Toast.makeText(
+                                        context,
+                                        "Invalid Credentials",
+                                        Toast.LENGTH_LONG
+                                    )
+                                        .show()
+                                }
+
+                                signInResponse?.let {
+                                    if (signInResponse.success) {
+                                        SharedPreferences.saveAuthDetails(context, signInResponse)
+                                        showDrawer = true
+                                    }
                                 }
                             } catch (e: Exception) {
                                 Toast.makeText(context, "Invalid Credentials", Toast.LENGTH_LONG)
@@ -298,7 +306,7 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
                         }
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                colors = ButtonDefaults.buttonColors(containerColor = Orange10),
                 shape = RoundedCornerShape(50),
                 enabled = !signInLoader,
                 modifier = Modifier
@@ -306,17 +314,10 @@ fun PaymentOptionsLoginScreen(navController: NavController) {
                     .height(56.dp)
             ) {
 
-                if (signInLoader) {
-                    CircularProgressIndicator(
-                        color = Color.White,
-                        strokeWidth = 2.dp,
-                        modifier = Modifier
-                            .size(20.dp)
-                    )
-                } else {
-                    Text("Login", fontWeight = FontWeight.Bold, color = Color.White)
-                }
-
+                if (signInLoader)
+                    CustomCircularProgressIndicator("Signing In", Orange10)
+                else
+                    Text("Sign In", fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }

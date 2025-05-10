@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.apiService
+package com.paymentoptions.pos.services.apiService
 
 fun generateRequestHeaders(authToken: String = ""): Map<String, String> {
     val requestHeaders = mapOf<String, String>(

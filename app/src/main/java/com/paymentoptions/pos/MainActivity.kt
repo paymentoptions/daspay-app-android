@@ -1,8 +1,6 @@
 package com.paymentoptions.pos
 
-import Navigator
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.fragment.app.FragmentActivity
@@ -28,8 +26,6 @@ class MainActivity : FragmentActivity() {
     }
 
     fun setup() = lifecycleScope.launch {
-
-        val setupResp = HeadlessSetup.initialSetup(this@MainActivity)
-        Log.d("MainActivity ->", "setup: $setupResp")
+        HeadlessSetup.initialSetup(this@MainActivity)
     }
 }

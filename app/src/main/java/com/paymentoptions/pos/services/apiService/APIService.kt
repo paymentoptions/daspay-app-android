@@ -1,5 +1,7 @@
-package com.paymentoptions.pos.apiService
+package com.paymentoptions.pos.services.apiService
 
+import com.paymentoptions.pos.utils.retrofitTimeout
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
@@ -7,6 +9,8 @@ import retrofit2.http.GET
 import retrofit2.http.HeaderMap
 import retrofit2.http.POST
 import retrofit2.http.Query
+import java.util.concurrent.TimeUnit
+
 
 const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/api/v1/"
 
@@ -37,17 +41,31 @@ interface ApiService {
         @Query("skip") skip: Int,
     ): TransactionListResponse
 
-    @POST("server-to-server-interface/refund")
+
+//    @POST("paybylink/add/DASMID/JP00002347")
+//    suspend fun payByLink(
+//        @HeaderMap headers: Map<String, String>,
+//        @Body post: PayByLinkRequest,
+//    ): PayByLinkResponse
+
+    @POST("transactions/refund")
     suspend fun refund(
         @HeaderMap headers: Map<String, String>,
         @Body post: RefundRequest,
     ): RefundResponse
 }
 
+var okHttpClient = OkHttpClient.Builder()
+    .connectTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to establish the connection
+    .readTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to wait for the server to send data
+    .writeTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to send data to the server
+    .build()
+
 object RetrofitClient {
     val api: ApiService by lazy {
         Retrofit.Builder()
             .baseUrl(baseUrl)
+            .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)

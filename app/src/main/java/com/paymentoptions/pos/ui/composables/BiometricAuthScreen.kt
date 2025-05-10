@@ -30,6 +30,7 @@ fun BiometricAuthScreen(
     onAuthSuccess: () -> Unit,
     onAuthFailed: () -> Unit,
     navController: NavController,
+    bypassBiometric: Boolean = false,
 ) {
 
 
@@ -38,30 +39,30 @@ fun BiometricAuthScreen(
     var hasPrompted by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
 
-    // Automatically trigger on first composition
-
     LaunchedEffect(Unit) {
 
         if (!hasPrompted) {
 
             hasPrompted = true
 
-            authenticateUser(
-                context = context,
-                lifecycleOwner = lifecycleOwner,
-                onAuthSuccess = onAuthSuccess,
-                onAuthFailed = { error ->
-                    errorText = error
-                    onAuthFailed()
-                }
-            )
+            if (bypassBiometric)
+                onAuthSuccess()
+            else {
+
+                authenticateUser(
+                    context = context,
+                    lifecycleOwner = lifecycleOwner,
+                    onAuthSuccess = onAuthSuccess,
+                    onAuthFailed = { error ->
+                        errorText = error
+                        onAuthFailed()
+                    }
+                )
+            }
         }
     }
 
-    // Optional UI while waiting or error message
-
     errorText?.let {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()

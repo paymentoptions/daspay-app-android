@@ -1,13 +1,11 @@
-package com.paymentoptions.pos.apiService.endpoints
+package com.paymentoptions.pos.services.apiService.endpoints
 
-import com.paymentoptions.pos.apiService.RefreshTokenRequest
-import com.paymentoptions.pos.apiService.RetrofitClient
-import com.paymentoptions.pos.apiService.generateRequestHeaders
+import com.paymentoptions.pos.services.apiService.RefreshTokenRequest
+import com.paymentoptions.pos.services.apiService.RetrofitClient
+import com.paymentoptions.pos.services.apiService.generateRequestHeaders
 import kotlinx.coroutines.runBlocking
 
 fun refreshTokens(username: String = "", refreshToken: String = "") = runBlocking {
-
-    println("refreshTokens")
     try {
         val requestHeaders = generateRequestHeaders()
         val refreshTokenRequest = RefreshTokenRequest(username, refreshToken)
@@ -15,7 +13,7 @@ fun refreshTokens(username: String = "", refreshToken: String = "") = runBlockin
             RetrofitClient.api.refreshToken(requestHeaders, refreshTokenRequest)
         return@runBlocking refreshTokenResponse
     } catch (e: Exception) {
-        println("refreshTokensError: ${e.message}")
-        throw e
+        println("refreshTokensError: $e")
+        return@runBlocking null
     }
 }

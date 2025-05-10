@@ -1,7 +1,7 @@
 package com.paymentoptions.pos.device
 
 import android.content.Context
-import com.paymentoptions.pos.apiService.SignInResponse
+import com.paymentoptions.pos.services.apiService.SignInResponse
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -72,7 +72,7 @@ class SharedPreferences {
         }
 
         fun saveBiometricsStatus(context: Context, status: Boolean) = runBlocking {
-            SharedPreferences.saveBoolean(context, "biometrics", status)
+            saveBoolean(context, "biometrics", status)
         }
 
         fun getBiometricsStatus(context: Context) = runBlocking {

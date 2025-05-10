@@ -1,6 +1,5 @@
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
@@ -15,6 +14,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paymentoptions.pos.ui.theme.Orange10
 
 @Composable
 fun TextField(label: String, value: String, onValueChange: (String) -> Unit) {
@@ -41,8 +41,8 @@ fun TextField(label: String, value: String, onValueChange: (String) -> Unit) {
         colors = TextFieldDefaults.colors(
             unfocusedContainerColor = background,
             focusedContainerColor = background,
-            focusedIndicatorColor = Color(0xFFFF9800),
-            focusedLabelColor = Color(0xFFFF9800),
+            focusedIndicatorColor = Orange10,
+            focusedLabelColor = Orange10,
             unfocusedLabelColor = Color.DarkGray,
             focusedTextColor = Color.Black,
             unfocusedTextColor = Color.Black,
@@ -63,7 +63,7 @@ fun TextInputDialog(
     cancelButtonText: String = "Cancel",
     onDismiss: () -> Unit,
     onAccept: () -> Unit,
-): Unit {
+) {
 
     if (showDialog) {
         AlertDialog(

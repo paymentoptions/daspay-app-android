@@ -45,6 +45,8 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
+import com.paymentoptions.pos.ui.theme.DisabledButtonColor
+import com.paymentoptions.pos.ui.theme.Orange10
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
@@ -52,13 +54,16 @@ import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
 import java.math.BigDecimal
 import java.util.Currency
+import java.util.UUID
 
 @Composable
-fun SaleScreen(navController: NavController): Unit {
+fun SaleScreen(navController: NavController) {
     var showNFCNotPresent by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
     var rawInput by remember { mutableStateOf("") }
+    var posReferenceId by remember { mutableStateOf("-") }
+
     fun formatAmount(input: String): String {
         if (input.isEmpty()) return "0.00"
         val cents = input.toLong()
@@ -102,11 +107,6 @@ fun SaleScreen(navController: NavController): Unit {
         HeadlessActivity.contract(ClientHeadlessImpl::class.java)
     )
     {
-
-        Log.d(
-            "registerForActivityResult ->",
-            "MainActivity launcher result back for WrappedResult<Transaction>: $it}"
-        )
 
         var completedSaleTranId: String? = ""
         var completedSalePosReference: String? = ""
@@ -196,8 +196,8 @@ fun SaleScreen(navController: NavController): Unit {
                 colors = TextFieldDefaults.colors(
                     unfocusedContainerColor = background,
                     focusedContainerColor = background,
-                    focusedIndicatorColor = Color(0xFFFF9800),
-                    focusedLabelColor = Color(0xFFFF9800),
+                    focusedIndicatorColor = Orange10,
+                    focusedLabelColor = Orange10,
                     unfocusedLabelColor = Color.DarkGray,
                     focusedTextColor = Color.Black,
                     unfocusedTextColor = Color.Black,
@@ -305,7 +305,7 @@ fun SaleScreen(navController: NavController): Unit {
                     .fillMaxWidth()
                     .height(48.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(if (chargeEnabled) Color(0xFFFF9800) else Color(0xFF2B2B2B))
+                    .background(if (chargeEnabled) Orange10 else DisabledButtonColor)
                     .clickable(enabled = chargeEnabled) {
 
                         if (DeveloperOptions.isEnabled(context)) {
@@ -318,25 +318,19 @@ fun SaleScreen(navController: NavController): Unit {
                             } else if (!nfcStatusPair.second) {
                                 showNFCNotEnabled = true
                             } else {
-
-                                val myMap = mutableMapOf(
-                                    "foo" to "bar",
-                                    "linkedTranId" to "test-linkedTranId",
-                                    "transactionId" to "test-linkedTranId"
-                                )
+                                val uuid: UUID = UUID.randomUUID()
+                                posReferenceId = uuid.toString()
 
                                 launcher.launch(
                                     PoiRequest.ActionNew(
                                         tranType = TranType.SALE,
-                                        linkedTranId = "Test-linkedTranId",
-//                                    extra = myMap,
                                         amount = Amount(
                                             BigDecimal(formattedAmount),
                                             Currency.getInstance("USD"),
                                         ),
                                         profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
-
-                                        )
+                                        posReference = posReferenceId
+                                    )
                                 )
                             }
                         }
@@ -351,7 +345,6 @@ fun SaleScreen(navController: NavController): Unit {
                 )
             }
         }
-
 
         Text(
             "©2025, Payment Options Limited", color = Color.Gray, fontSize = 12.sp
