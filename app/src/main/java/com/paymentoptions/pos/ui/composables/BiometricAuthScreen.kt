@@ -112,10 +112,8 @@ fun authenticateUser(
         object : BiometricPrompt.AuthenticationCallback() {
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-
                 super.onAuthenticationSucceeded(result)
                 onAuthSuccess()
-
             }
 
             override fun onAuthenticationFailed() {

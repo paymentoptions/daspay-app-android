@@ -28,40 +28,6 @@ class SharedPreferences {
 
         }
 
-        fun saveInt(context: Context, key: String, value: Int) = runBlocking {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, Context.MODE_PRIVATE)
-            with(sharedPreferences.edit()) {
-                putInt(key, value)
-                apply()
-            }
-        }
-
-        fun getInt(context: Context, key: String) = runBlocking {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, Context.MODE_PRIVATE)
-            val biometricsEnabled = sharedPreferences.getInt(key, 0)
-            return@runBlocking biometricsEnabled
-
-        }
-
-        fun saveInt(context: Context, key: String, value: String) = runBlocking {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, Context.MODE_PRIVATE)
-            with(sharedPreferences.edit()) {
-                putString(key, value)
-                apply()
-            }
-        }
-
-        fun getString(context: Context, key: String) = runBlocking {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, Context.MODE_PRIVATE)
-            val biometricsEnabled = sharedPreferences.getBoolean("biometrics", false)
-            return@runBlocking biometricsEnabled
-
-        }
-
         fun saveKeyValue(context: Context, key: String, value: String) {
             val sharedPreferences =
                 context.getSharedPreferences(sharedPreferencesLabel, Context.MODE_PRIVATE)
@@ -101,6 +67,14 @@ class SharedPreferences {
             with(sharedPreferences.edit()) {
                 clear().apply()
             }
+        }
+
+        fun getFcmToken(context: Context): String? {
+            val sharedPreferences =
+                context.getSharedPreferences(sharedPreferencesLabel, Context.MODE_PRIVATE)
+            val fcmToken = sharedPreferences.getString("fcm_token", null)
+
+            return fcmToken
         }
     }
 }

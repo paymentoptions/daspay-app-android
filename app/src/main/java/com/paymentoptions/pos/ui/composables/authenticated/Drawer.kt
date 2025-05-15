@@ -2,6 +2,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddAlert
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LockClock
@@ -57,6 +58,7 @@ fun Drawer(mainNavController: NavController) {
         NavItem("Sale", "Make Payment", Icons.Default.PointOfSale, "saleScreen"),
         NavItem("Products", "Products", Icons.Default.ProductionQuantityLimits, "productScreen"),
         NavItem("Settlement", "Settlement", Icons.Default.LockClock, "settlementScreen"),
+        NavItem("FCM Token", "FCM Token", Icons.Default.AddAlert, "fcmTokenScreen"),
         NavItem("History", "History", Icons.Default.History, "historyScreen"),
         NavItem("Pre-Auth", "Pre-Auth", Icons.Default.AutoFixHigh, "preAuthScreen"),
 //        NavItem("Refund", "Refund", Icons.Default.Money, "refundScreen"),
@@ -136,6 +138,7 @@ fun Drawer(mainNavController: NavController) {
 //                composable("refundScreen") { RefundScreen(navController) }
                 composable("settingsScreen") { SettingsScreen(drawerController) }
                 composable("settlementScreen") { SettlementScreen(drawerController) }
+                composable("fcmTokenScreen") { FcmTokenScreen(drawerController) }
                 composable("helpAndSupportScreen") { HelpAndSupportScreen(drawerController) }
             }
         }

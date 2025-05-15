@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,6 +30,8 @@ fun HistoryScreen(navController: NavController) {
     val context = LocalContext.current
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
+    var filters = remember { mutableStateListOf("All", "SUCCESSFUL", "NOTSUCCESSFUL") }
+    var selectedFilter by remember { mutableStateOf("All") }
 
     fun exitToLoginScreen() {
         navController.navigate("loginScreen") {
@@ -48,20 +51,31 @@ fun HistoryScreen(navController: NavController) {
             navController.navigate("loginScreen") {
                 popUpTo(0) { inclusive = true }
             }
-
         }
 
         transactionList?.let {
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.End,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(20.dp)
                     .verticalScroll(scrollState)
             ) {
 
+                CustomDropdown(filters, selectedFilter, {
+                    selectedFilter = it
+                })
+
                 for (transaction in it.data.records) {
-                    TransactionCard(transaction, ::exitToLoginScreen)
+                    var skip = true
+
+                    if (selectedFilter === "All" || selectedFilter == transaction.status.uppercase())
+                        skip = false
+
+                    if (!skip)
+                        TransactionCard(transaction, ::exitToLoginScreen)
                 }
             }
         }
