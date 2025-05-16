@@ -49,8 +49,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.SharedPreferences.Companion.saveFcmToken
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.services.apiService.endpoints.signIn
 import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
@@ -60,8 +62,15 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(navController: NavController) {
+//    var email by remember { mutableStateOf("ankitkambale097@myyahoo.com" )}
+//    var password by remember { mutableStateOf( "Test12345678@#")}
+
+//    var email by remember { mutableStateOf("gilad59355@clubemp.com") }
+//    var password by remember { mutableStateOf( "Paymentoptions2025@") }
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
     var passwordVisible by remember { mutableStateOf(false) }
     var emailError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
@@ -71,7 +80,6 @@ fun LoginScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
 
     println("signInLoader: $signInLoader")
-
     val context = LocalContext.current
 
     if (showDrawer) {
@@ -293,6 +301,18 @@ fun LoginScreen(navController: NavController) {
 
                                 signInResponse?.let {
                                     if (signInResponse.success) {
+
+                                        FirebaseMessaging.getInstance().token
+                                            .addOnCompleteListener { task ->
+                                                if (task.isSuccessful) {
+                                                    val token = task.result
+                                                    saveFcmToken(context, token)
+                                                    println("mainActivity token --> $token")
+                                                } else {
+                                                    println("mainActivity token fetching failed ${task.exception}")
+                                                }
+                                            }
+
                                         SharedPreferences.saveAuthDetails(context, signInResponse)
                                         showDrawer = true
                                     }

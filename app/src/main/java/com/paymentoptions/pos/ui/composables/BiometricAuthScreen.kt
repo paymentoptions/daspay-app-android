@@ -32,8 +32,6 @@ fun BiometricAuthScreen(
     navController: NavController,
     bypassBiometric: Boolean = false,
 ) {
-
-
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     var hasPrompted by remember { mutableStateOf(false) }

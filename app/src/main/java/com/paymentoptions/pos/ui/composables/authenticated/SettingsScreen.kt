@@ -37,89 +37,101 @@ fun SettingsScreen(navController: NavController) {
     var signOutResponse: SignOutResponse? = null
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-
+    var showBiometricScreen by remember { mutableStateOf(false) }
     var biometricsEnabled by remember { mutableStateOf(SharedPreferences.getBiometricsStatus(context)) }
+    var isBiometricsAvailable = isBiometricAvailable(context)
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(40.dp),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-
-
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth(),
+    if (showBiometricScreen)
+        BiometricAuthScreen(
+            {
+            SharedPreferences.saveBiometricsStatus(context, true)
+            biometricsEnabled = true
+            showBiometricScreen = false
+        }, {
+            SharedPreferences.saveBiometricsStatus(context, false)
+            biometricsEnabled = false
+            showBiometricScreen = false
+        }, navController,
+            false
+        )
+    else
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(40.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("Biometrics")
-            Switch(
-                checked = biometricsEnabled,
-                onCheckedChange = {
-                    try {
-                        SharedPreferences.saveBiometricsStatus(context, it)
-                        biometricsEnabled = it
-                    } catch (e: Exception) {
-                        Toast.makeText(
-                            context,
-                            "Unable to set biometrics status",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            )
-        }
 
-        Button(
-            onClick = {
-                println("sign out -->")
-
-                scope.launch {
-                    signOutLoader = true
-
-                    try {
-                        signOutResponse = signOut(context)
-                        println("signOutResponse: $signOutResponse")
-
-                        if (signOutResponse == null) {
-                            navController.navigate("loginScreen") {
-                                popUpTo(0) { inclusive = true }
+            if (isBiometricsAvailable)
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text("Biometrics")
+                    Switch(
+                        checked = biometricsEnabled,
+                        onCheckedChange = {
+                            try {
+                                showBiometricScreen = true
+                            } catch (e: Exception) {
+                                Toast.makeText(
+                                    context,
+                                    "Unable to set biometrics status",
+                                    Toast.LENGTH_LONG
+                                ).show()
                             }
                         }
+                    )
+                }
 
-                        signOutResponse?.let {
-                            if (it.success) {
-                                SharedPreferences.clearSharedPreferences(context)
+            Button(
+                onClick = {
+                    scope.launch {
+                        signOutLoader = true
+
+                        try {
+                            signOutResponse = signOut(context)
+                            println("signOutResponse: $signOutResponse")
+
+                            if (signOutResponse == null) {
                                 navController.navigate("loginScreen") {
                                     popUpTo(0) { inclusive = true }
                                 }
                             }
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(context, "Unable to sign out", Toast.LENGTH_LONG).show()
-                        println("Error: ${e.toString()}")
-                    } finally {
-                        signOutLoader = false
-                    }
-                }
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = Orange10),
-            shape = RoundedCornerShape(50),
-            enabled = !signOutLoader,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-        ) {
 
-            if (signOutLoader)
-                CustomCircularProgressIndicator("Signing out")
-            else
-                Text(
-                    "Sign Out",
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+                            signOutResponse?.let {
+                                if (it.success) {
+                                    SharedPreferences.clearSharedPreferences(context)
+                                    navController.navigate("loginScreen") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Unable to sign out", Toast.LENGTH_LONG).show()
+                            println("Error: ${e.toString()}")
+                        } finally {
+                            signOutLoader = false
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Orange10),
+                shape = RoundedCornerShape(50),
+                enabled = !signOutLoader,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) {
+
+                if (signOutLoader)
+                    CustomCircularProgressIndicator("Signing out")
+                else
+                    Text(
+                        "Sign Out",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+            }
         }
-    }
 }

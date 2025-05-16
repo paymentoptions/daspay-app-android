@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.SuggestionChip
@@ -98,76 +99,78 @@ fun TransactionCard(transaction: TransactionListDataRecord, exitToLoginScreen: (
             .defaultMinSize(minHeight = 100.dp)
     ) {
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-        ) {
-
-            SuggestionChip(
-                onClick = {
-                },
-                label = {
-                    Text(
-                        text = transaction.status,
-                        fontSize = 8.sp
-                    )
-                },
+        SelectionContainer {
+            Column(
                 modifier = Modifier
-                    .height(20.dp)
-                    .align(alignment = Alignment.End),
-            )
+                    .fillMaxWidth()
+                    .padding(10.dp)
+            ) {
 
-            Text(
-                text = "Transaction ID: " + transaction.uuid,
-                fontSize = 10.sp,
-                modifier = Modifier.padding(top = 20.dp)
-            )
-
-            Text(
-                text = "Merchant ID: " + transaction.DASMID,
-                fontSize = 10.sp,
-                modifier = Modifier.padding(top = 20.dp)
-            )
-
-            Text(
-                text = "Card: ${transaction.CardNumber}",
-                fontSize = 10.sp,
-            )
-
-            Text(
-                text = "Amount: ${transaction.CurrencyCode} ${transaction.amount}",
-                fontSize = 10.sp,
-            )
-
-            Text(
-                text = "Date: $date",
-                fontSize = 10.sp,
-            )
-
-            if (transaction.status.toString().uppercase() == "SUCCESSFUL")
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .padding(top = 20.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .clickable(enabled = !showRefundLoader) {
-                            showRefundConfirmationDialog = true
-                        },
-                    contentAlignment = Alignment.Center,
-
-                    ) {
-                    if (showRefundLoader)
-                        CustomCircularProgressIndicator()
-                    else
+                SuggestionChip(
+                    onClick = {
+                    },
+                    label = {
                         Text(
-                            refundButtonText,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
+                            text = transaction.status,
+                            fontSize = 8.sp
                         )
-                }
+                    },
+                    modifier = Modifier
+                        .height(20.dp)
+                        .align(alignment = Alignment.End),
+                )
+
+
+                Text(
+                    text = "Transaction ID: " + transaction.uuid,
+                    fontSize = 10.sp,
+                    modifier = Modifier.padding(top = 20.dp)
+                )
+
+                Text(
+                    text = "Merchant ID: " + transaction.DASMID,
+                    fontSize = 10.sp,
+                    modifier = Modifier.padding(top = 20.dp)
+                )
+
+                Text(
+                    text = "Card: ${transaction.CardNumber}",
+                    fontSize = 10.sp,
+                )
+
+                Text(
+                    text = "Amount: ${transaction.CurrencyCode} ${transaction.amount}",
+                    fontSize = 10.sp,
+                )
+
+                Text(
+                    text = "Date: $date",
+                    fontSize = 10.sp,
+                )
+
+                if (transaction.status.toString().uppercase() == "SUCCESSFUL")
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .padding(top = 20.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(enabled = !showRefundLoader) {
+                                showRefundConfirmationDialog = true
+                            },
+                        contentAlignment = Alignment.Center,
+
+                        ) {
+                        if (showRefundLoader)
+                            CustomCircularProgressIndicator()
+                        else
+                            Text(
+                                refundButtonText,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                    }
+            }
         }
     }
-
 }
