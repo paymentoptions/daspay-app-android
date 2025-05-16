@@ -39,17 +39,16 @@ fun SettingsScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     var showBiometricScreen by remember { mutableStateOf(false) }
     var biometricsEnabled by remember { mutableStateOf(SharedPreferences.getBiometricsStatus(context)) }
-    var isBiometricsAvailable = isBiometricAvailable(context)
+    val isBiometricsAvailable = isBiometricAvailable(context)
 
     if (showBiometricScreen)
         BiometricAuthScreen(
             {
-            SharedPreferences.saveBiometricsStatus(context, true)
-            biometricsEnabled = true
+            SharedPreferences.saveBiometricsStatus(context, !biometricsEnabled)
+            biometricsEnabled = !biometricsEnabled
             showBiometricScreen = false
         }, {
-            SharedPreferences.saveBiometricsStatus(context, false)
-            biometricsEnabled = false
+            //SharedPreferences.saveBiometricsStatus(context, false)
             showBiometricScreen = false
         }, navController,
             false

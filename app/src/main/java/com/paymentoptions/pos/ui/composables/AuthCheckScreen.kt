@@ -8,7 +8,7 @@ import com.paymentoptions.pos.device.SharedPreferences
 fun AuthCheckScreen(navController: NavController) {
     val context = LocalContext.current
     val authDetails = SharedPreferences.getAuthDetails(context)
-
+    val biometricStatus = !SharedPreferences.getBiometricsStatus(context)
     if (authDetails?.success == true) {
         BiometricAuthScreen(
             {
@@ -20,7 +20,7 @@ fun AuthCheckScreen(navController: NavController) {
                 Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
             },
             navController,
-            true
+            biometricStatus
         )
     } else {
         SharedPreferences.clearSharedPreferences(context)

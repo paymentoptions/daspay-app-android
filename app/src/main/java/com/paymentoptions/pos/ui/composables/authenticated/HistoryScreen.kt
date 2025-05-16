@@ -30,7 +30,7 @@ fun HistoryScreen(navController: NavController) {
     val context = LocalContext.current
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
-    var filters = remember { mutableStateListOf("All", "SUCCESSFUL", "NOTSUCCESSFUL") }
+    val filters = remember { mutableStateListOf("All", "SUCCESSFUL", "NOTSUCCESSFUL") }
     var selectedFilter by remember { mutableStateOf("All") }
 
     fun exitToLoginScreen() {
