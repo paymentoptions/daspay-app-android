@@ -15,9 +15,9 @@ import com.paymentoptions.pos.ui.theme.Orange10
 
 @Composable
 fun CustomDropdown(
-    filters: List<String>,
-    selectedFilter: String,
-    onFilterChange: (String) -> Unit,
+    filters: Map<String, String>,
+    selectedFilterValue: String,
+    onFilterChange: (String, String) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -27,7 +27,7 @@ fun CustomDropdown(
                 onClick = { expanded = true },
                 colors = ButtonDefaults.buttonColors(containerColor = Orange10)
             ) {
-                Text(selectedFilter, color = Color.White, fontSize = 12.sp)
+                Text(selectedFilterValue, color = Color.White, fontSize = 12.sp)
             }
 
             DropdownMenu(
@@ -36,9 +36,9 @@ fun CustomDropdown(
             ) {
                 filters.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(option) },
+                        text = { Text(option.value) },
                         onClick = {
-                            onFilterChange(option)
+                            onFilterChange(option.key, option.value)
                             expanded = false
                         }
                     )

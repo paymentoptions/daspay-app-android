@@ -103,8 +103,6 @@ fun Drawer(mainNavController: NavController) {
             }
         }
     ) {
-
-
         Text("Drawer Screen")
         Scaffold(
             topBar = {

@@ -108,7 +108,13 @@ fun SettingsScreen(navController: NavController) {
                                 }
                             }
                         } catch (e: Exception) {
-                            Toast.makeText(context, "Unable to sign out", Toast.LENGTH_LONG).show()
+//                            Toast.makeText(context, "Unable to sign out", Toast.LENGTH_LONG).show()
+
+                            SharedPreferences.clearSharedPreferences(context)
+                            navController.navigate("loginScreen") {
+                                popUpTo(0) { inclusive = true }
+                            }
+
                             println("Error: ${e.toString()}")
                         } finally {
                             signOutLoader = false

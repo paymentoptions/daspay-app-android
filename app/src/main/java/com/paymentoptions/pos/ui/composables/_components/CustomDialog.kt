@@ -10,8 +10,10 @@ fun CustomDialog(
     text: String,
     acceptButtonText: String = "OK",
     cancelButtonText: String = "Cancel",
-    onDismiss: () -> Unit,
+    showAcceptButton: Boolean = true,
+    showCancelButton: Boolean = true,
     onAccept: () -> Unit,
+    onDismiss: () -> Unit,
 ) {
 
     if (showDialog) {
@@ -19,14 +21,16 @@ fun CustomDialog(
             title = { Text(title) },
             text = { Text(text) },
             confirmButton = {
-                TextButton(onClick = onAccept) {
-                    Text(acceptButtonText)
-                }
+                if (showAcceptButton)
+                    TextButton(onClick = onAccept) {
+                        Text(acceptButtonText)
+                    }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss) {
-                    Text(cancelButtonText)
-                }
+                if (showCancelButton)
+                    TextButton(onClick = onDismiss) {
+                        Text(cancelButtonText)
+                    }
             },
             onDismissRequest = onDismiss,
         )
@@ -35,4 +39,3 @@ fun CustomDialog(
 }
 
 
- 

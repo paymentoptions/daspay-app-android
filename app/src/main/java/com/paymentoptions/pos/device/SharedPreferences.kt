@@ -3,6 +3,7 @@ package com.paymentoptions.pos.device
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import com.paymentoptions.pos.services.apiService.SignInResponse
+import com.paymentoptions.pos.utils.decodeJwtPayload
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -56,6 +57,9 @@ class SharedPreferences {
             val authDetailsString = sharedPreferences.getString("auth_details", null)
             val authDetailsJson =
                 authDetailsString?.let { Json.decodeFromString<SignInResponse>(it) }
+
+            val decodedToken = decodeJwtPayload(authDetailsJson!!.data.token.idToken)
+            println("decodedToken: $decodedToken")
 
             return@runBlocking authDetailsJson
         }

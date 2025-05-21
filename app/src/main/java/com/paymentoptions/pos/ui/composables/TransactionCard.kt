@@ -16,6 +16,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,15 +39,37 @@ import java.util.Date
 
 
 @Composable
-fun TransactionCard(transaction: TransactionListDataRecord, exitToLoginScreen: () -> Unit) {
+fun TransactionCard(
+    transaction: TransactionListDataRecord,
+    exitToLoginScreen: () -> Unit,
+    updateState: () -> Unit,
+) {
     val context = LocalContext.current
     val dateString = transaction.Date   //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     var showRefundConfirmationDialog by remember { mutableStateOf(false) }
+    var showRefundResponseSuccessfulDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var showRefundLoader by remember { mutableStateOf(false) }
     var refundButtonText by remember { mutableStateOf("Refund") }
+    var transactionState = remember { mutableStateOf<TransactionListDataRecord>(transaction) }
+
+    println("transactionState: $transactionState")
+
+    LaunchedEffect(transactionState) {
+
+    }
+
+    CustomDialog(
+        showDialog = showRefundResponseSuccessfulDialog,
+        title = "Refund Success",
+        text = "Amount of ${transactionState.value.amount} was refunded successfully",
+        acceptButtonText = "OK",
+        showCancelButton = false,
+        onAccept = { showRefundResponseSuccessfulDialog = false },
+        onDismiss = { showRefundResponseSuccessfulDialog = false },
+    )
 
     CustomDialog(
         showDialog = showRefundConfirmationDialog,
@@ -61,9 +84,9 @@ fun TransactionCard(transaction: TransactionListDataRecord, exitToLoginScreen: (
                 try {
                     var refundResponse = refund(
                         context,
-                        transaction.uuid,
-                        transaction.DASMID,
-                        transaction.amount.toFloat()
+                        transactionState.value.uuid,
+                        transactionState.value.DASMID,
+                        transactionState.value.amount.toFloat()
                     )
                     println("refundResponse --> $refundResponse")
                     if (refundResponse == null) {
@@ -72,6 +95,8 @@ fun TransactionCard(transaction: TransactionListDataRecord, exitToLoginScreen: (
 
                     refundResponse?.let {
                         if (refundResponse.success) {
+                            transactionState.value.status == "REFUND"
+                            showRefundResponseSuccessfulDialog = true
                             println("refundResponse: $refundResponse")
                         }
                     }
@@ -110,8 +135,15 @@ fun TransactionCard(transaction: TransactionListDataRecord, exitToLoginScreen: (
                     onClick = {
                     },
                     label = {
+
+                        var text =
+                            if (transactionState.value.TransactionType.uppercase() == "REFUND") "REFUNDED" else transactionState.value.status
+
+                        if (text == "REFUND")
+                            println("tet: $text")
+
                         Text(
-                            text = transaction.status,
+                            text = text,
                             fontSize = 8.sp
                         )
                     },
@@ -120,26 +152,25 @@ fun TransactionCard(transaction: TransactionListDataRecord, exitToLoginScreen: (
                         .align(alignment = Alignment.End),
                 )
 
-
                 Text(
-                    text = "Transaction ID: " + transaction.uuid,
+                    text = "Transaction ID: " + transactionState.value.uuid,
                     fontSize = 10.sp,
                     modifier = Modifier.padding(top = 20.dp)
                 )
 
                 Text(
-                    text = "Merchant ID: " + transaction.DASMID,
+                    text = "Merchant ID: " + transactionState.value.DASMID,
                     fontSize = 10.sp,
                     modifier = Modifier.padding(top = 20.dp)
                 )
 
                 Text(
-                    text = "Card: ${transaction.CardNumber}",
+                    text = "Card: ${transactionState.value.CardNumber}",
                     fontSize = 10.sp,
                 )
 
                 Text(
-                    text = "Amount: ${transaction.CurrencyCode} ${transaction.amount}",
+                    text = "Amount: ${transactionState.value.CurrencyCode} ${transactionState.value.amount}",
                     fontSize = 10.sp,
                 )
 
@@ -148,7 +179,9 @@ fun TransactionCard(transaction: TransactionListDataRecord, exitToLoginScreen: (
                     fontSize = 10.sp,
                 )
 
-                if (transaction.status.toString().uppercase() == "SUCCESSFUL")
+                if (transactionState.value.status.toString()
+                        .uppercase() == "SUCCESSFUL" && transactionState.value.TransactionType.uppercase() == "PURCHASE"
+                )
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
