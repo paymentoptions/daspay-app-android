@@ -17,12 +17,10 @@ class FcmService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         saveFcmToken(this, token)
-        println("onNewToken token --> $token")
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         remoteMessage.notification?.let {
-            println("remoteMessage --> $remoteMessage")
             showNotification(it.title, it.body)
         }
     }

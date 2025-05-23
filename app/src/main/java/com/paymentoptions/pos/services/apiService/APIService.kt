@@ -53,6 +53,12 @@ interface ApiService {
         @HeaderMap headers: Map<String, String>,
         @Body post: RefundRequest,
     ): RefundResponse
+
+    @POST("server-to-server-interface/daspay/payment")
+    suspend fun payment(
+        @HeaderMap headers: Map<String, String>,
+        @Body post: PaymentRequest,
+    ): PaymentResponse
 }
 
 var okHttpClient = OkHttpClient.Builder()

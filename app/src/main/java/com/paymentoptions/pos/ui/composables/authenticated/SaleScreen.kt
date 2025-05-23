@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,13 +46,27 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
+import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.services.apiService.Address
+import com.paymentoptions.pos.services.apiService.PaymentMethod
+import com.paymentoptions.pos.services.apiService.PaymentRequest
+import com.paymentoptions.pos.services.apiService.PaymentResponse
+import com.paymentoptions.pos.services.apiService.PaymentReturnUrl
+import com.paymentoptions.pos.services.apiService.endpoints.payment
+import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
 import com.paymentoptions.pos.ui.theme.DisabledButtonColor
 import com.paymentoptions.pos.ui.theme.Orange10
+import com.paymentoptions.pos.utils.decodeJwtPayload
+import com.paymentoptions.pos.utils.getDasmidFromToken
+import com.paymentoptions.pos.utils.getDeviceIpAddress
+import com.paymentoptions.pos.utils.getDeviceTimeZone
+import com.paymentoptions.pos.utils.getKeyFromToken
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
+import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.Currency
 import java.util.UUID
@@ -59,10 +74,13 @@ import java.util.UUID
 @Composable
 fun SaleScreen(navController: NavController) {
     var showNFCNotPresent by remember { mutableStateOf(false) }
+    var showTransactionStatus by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
+    var paymentLoader by remember { mutableStateOf(false) }
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
     var rawInput by remember { mutableStateOf("") }
     var posReferenceId by remember { mutableStateOf("-") }
+    var transactionDetailsText by remember { mutableStateOf("") }
 
     fun formatAmount(input: String): String {
         if (input.isEmpty()) return "0.00"
@@ -102,6 +120,35 @@ fun SaleScreen(navController: NavController) {
     )
     val context = LocalContext.current
     val activity = context as? Activity
+    val scope = rememberCoroutineScope()
+
+
+    val authDetails = SharedPreferences.getAuthDetails(context)
+
+    if (authDetails == null) {
+        Toast.makeText(context, "Token invalid! Please login again.", Toast.LENGTH_LONG).show()
+        navController.navigate("loginScreen") {
+            popUpTo(0) { inclusive = true }
+        }
+        return
+    }
+
+    val merchant: MutableMap<String, String> = mutableMapOf<String, String>()
+    val decodedJwtPayloadJson = decodeJwtPayload(authDetails.data.token.idToken)
+    merchant["dasmid"] = getDasmidFromToken(decodedJwtPayloadJson)
+    merchant["name"] = getKeyFromToken(decodedJwtPayloadJson, "name")
+    merchant["email"] = getKeyFromToken(decodedJwtPayloadJson, "email")
+    merchant["contact"] = getKeyFromToken(decodedJwtPayloadJson, "custom:ContactNo")
+
+    CustomDialog(
+        showDialog = showTransactionStatus,
+        title = "Transaction Status",
+        text = transactionDetailsText,
+        acceptButtonText = "Ok",
+        showCancelButton = false,
+        onAccept = { showTransactionStatus = false },
+        onDismiss = { showTransactionStatus = false },
+    )
 
     val launcher = rememberLauncherForActivityResult(
         HeadlessActivity.contract(ClientHeadlessImpl::class.java)
@@ -123,16 +170,13 @@ fun SaleScreen(navController: NavController) {
                     completedSaleRequestId = it.value.actions.firstOrNull()?.requestId
                 }
 
+                transactionDetailsText =
+                    "Transaction of $$formattedAmount was successful. POS Reference Transaction ID returned by MineSec is: $completedSalePosReference."
+                showTransactionStatus = true
                 Log.d(
                     "Success ->",
                     "completedSaleTranId: $completedSaleTranId | completedSalePosReference: $completedSalePosReference | completedSaleRequestId: $completedSaleRequestId | it: ${it.value}"
                 )
-
-                Toast.makeText(
-                    context,
-                    "Transaction of $$formattedAmount was successful",
-                    Toast.LENGTH_LONG
-                ).show()
 
                 rawInput = ""
 
@@ -321,28 +365,109 @@ fun SaleScreen(navController: NavController) {
                                 val uuid: UUID = UUID.randomUUID()
                                 posReferenceId = uuid.toString()
 
-                                launcher.launch(
-                                    PoiRequest.ActionNew(
-                                        tranType = TranType.SALE,
-                                        amount = Amount(
-                                            BigDecimal(formattedAmount),
-                                            Currency.getInstance("USD"),
-                                        ),
-                                        profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
-                                        posReference = posReferenceId
-                                    )
+                                val paymentReturnUrl = PaymentReturnUrl(
+                                    webhook_url = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454%22",
+                                    success_url = "https://api-bpm.hiji.xyz/dgv3/success%22",
+                                    decline_url = "https://api-bpm.hiji.xyz/dgv3/decline%22"
                                 )
+
+                                val billingAddress = Address(
+                                    country = "IN",
+                                    email = merchant["email"]!!,
+                                    address1 = "Chiyoda1-1",
+                                    phone_number = merchant["contact"]!!,
+                                    city = "Minatoku",
+                                    state = "Tokyoto",
+                                    postal_code = "100001"
+                                )
+
+                                val shippingAddress = Address(
+                                    country = "IN",
+                                    email = merchant["email"]!!,
+                                    address1 = "Chiyoda1-1",
+                                    phone_number = merchant["contact"]!!,
+                                    city = "Minatoku",
+                                    state = "Tokyoto",
+                                    postal_code = "100001"
+                                )
+
+                                val paymentMethod = PaymentMethod(
+                                    type = "daspay"
+                                )
+
+                                val paymentRequest = PaymentRequest(
+                                    amount = formattedAmount,
+                                    currency = "USD",
+                                    merchant_txn_ref = "TEST00989012878787878787878787",
+                                    customer_ip = getDeviceIpAddress(),
+                                    merchant_id = merchant["dasmid"]!!,
+                                    return_url = paymentReturnUrl,
+                                    billing_address = billingAddress,
+                                    shipping_address = shippingAddress,
+                                    payment_method = paymentMethod,
+                                    time_zone = getDeviceTimeZone()
+                                )
+
+                                scope.launch {
+                                    paymentLoader = true
+
+                                    try {
+
+                                        val paymentResponse: PaymentResponse? =
+                                            payment(context, paymentRequest)
+                                        println("paymentResponse: $paymentResponse")
+
+                                        if (paymentResponse == null) {
+                                            Toast.makeText(
+                                                context,
+                                                "2: Token invalid! Please login again.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                            navController.navigate("loginScreen") {
+                                                popUpTo(0) { inclusive = true }
+                                            }
+                                        }
+
+                                        paymentResponse?.let {
+                                            if (it.success) {
+                                                launcher.launch(
+                                                    PoiRequest.ActionNew(
+                                                        tranType = TranType.SALE,
+                                                        amount = Amount(
+                                                            BigDecimal(formattedAmount),
+                                                            Currency.getInstance("USD"),
+                                                        ),
+                                                        profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
+                                                        posReference = it.transaction_details.id
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        SharedPreferences.clearSharedPreferences(context)
+                                        navController.navigate("loginScreen") {
+                                            popUpTo(0) { inclusive = true }
+                                        }
+
+                                        println("Error: ${e.toString()}")
+                                    } finally {
+                                        paymentLoader = false
+                                    }
+                                }
                             }
                         }
                     },
                 contentAlignment = Alignment.Center,
 
                 ) {
-                Text(
-                    "Charge",
-                    color = if (chargeEnabled) Color.White else Color.Gray,
-                    fontWeight = FontWeight.Bold
-                )
+                if (paymentLoader)
+                    CustomCircularProgressIndicator("Initiating...")
+                else
+                    Text(
+                        "Charge",
+                        color = if (chargeEnabled) Color.White else Color.Gray,
+                        fontWeight = FontWeight.Bold
+                    )
             }
         }
 

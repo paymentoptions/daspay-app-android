@@ -129,7 +129,7 @@ data class RefundRequest(
     val refundAmount: Float,
 )
 
-data class Refund_GatewayResponse(
+data class GatewayResponse(
     val version: String,
     val type: String,
     val message: String,
@@ -206,11 +206,94 @@ data class RefundResponse(
     val status_code: Int,
     val is_live: Boolean,
     val transaction_type: String,
-    val gateway_response: Refund_GatewayResponse,
+    val gateway_response: GatewayResponse,
     val merchant_details: Refund_MerchantDetails,
     val payment_details: Refund_PaymentDetails,
     val transaction_details: Refund_TransactionDetails,
 )
+
+// Payment API Models ------------------------------------
+data class PaymentReturnUrl(
+    val webhook_url: String,
+    val success_url: String,
+    val decline_url: String,
+)
+
+data class Address(
+    val country: String,
+    val email: String,
+    val address1: String,
+    val phone_number: String,
+    val city: String,
+    val state: String,
+    val postal_code: String,
+)
+
+data class PaymentMethod(
+    val type: String,
+)
+
+data class PaymentRequest(
+    val amount: String,
+    val currency: String,
+    val merchant_txn_ref: String,
+    val customer_ip: String,
+    val merchant_id: String,
+    val return_url: PaymentReturnUrl,
+    val billing_address: Address,
+    val shipping_address: Address,
+    val payment_method: PaymentMethod,
+    val time_zone: String,
+)
+
+data class Card(
+    val name: String,
+    val number: String,
+    val exp_month: String,
+    val exp_year: String,
+    //val additional_data: TODO
+)
+
+data class PaymentDetails(
+    val amount: Float,
+    val response_code: Int,
+    val responseDescription: String,
+    val auth_code: String,
+    val currency: String,
+    val payment_method: String,
+    val scheme: String,
+    val card: Card,
+)
+
+data class TransactionDetails(
+    val id: String,
+    val ref: Int,
+    val timestamp: String,
+    val billing_details: BillingDetails,
+)
+
+data class BillingDetails(
+    val billing_address: Address,
+    val shipping_address: Address,
+)
+
+data class RiskDetails(
+    val risk_score: String,
+)
+
+data class PaymentResponse(
+    val success: Boolean,
+    val status_code: Int,
+    val is_live: Boolean,
+    val transaction_type: String,
+    val gateway_response: GatewayResponse,
+//    val merchant_details :    TODO
+    val payment_details: PaymentDetails,
+    val transaction_details: TransactionDetails,
+    val risk_details: RiskDetails,
+)
+// -------------------------------------------------------
+
 //
 //data class PayByLinkRequestProduct(
 //    val Currency: String,

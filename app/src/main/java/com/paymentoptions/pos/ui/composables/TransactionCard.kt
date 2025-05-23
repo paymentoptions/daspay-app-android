@@ -16,7 +16,6 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,12 +54,6 @@ fun TransactionCard(
     var refundButtonText by remember { mutableStateOf("Refund") }
     var transactionState = remember { mutableStateOf<TransactionListDataRecord>(transaction) }
 
-    println("transactionState: $transactionState")
-
-    LaunchedEffect(transactionState) {
-
-    }
-
     CustomDialog(
         showDialog = showRefundResponseSuccessfulDialog,
         title = "Refund Success",
@@ -88,7 +81,6 @@ fun TransactionCard(
                         transactionState.value.DASMID,
                         transactionState.value.amount.toFloat()
                     )
-                    println("refundResponse --> $refundResponse")
                     if (refundResponse == null) {
 //                    exitToLoginScreen()
                     }
@@ -97,7 +89,6 @@ fun TransactionCard(
                         if (refundResponse.success) {
                             transactionState.value.status == "REFUND"
                             showRefundResponseSuccessfulDialog = true
-                            println("refundResponse: $refundResponse")
                         }
                     }
                 } catch (e: Exception) {

@@ -11,9 +11,7 @@ fun Navigator() {
 
     LaunchedEffect(navController) {
         navController.currentBackStackEntryFlow.collect { backStackEntry ->
-            println("Back stack changed:")
             navController.currentBackStackEntryFlow.collect { backStackEntry ->
-                println("Current route: ${backStackEntry.destination.route}")
             }
         }
     }
