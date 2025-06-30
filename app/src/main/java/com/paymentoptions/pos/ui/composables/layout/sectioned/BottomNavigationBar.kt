@@ -1,10 +1,11 @@
 package com.paymentoptions.pos.ui.composables.layout.sectioned
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -32,9 +33,12 @@ import androidx.compose.material.icons.outlined.MoneyOff
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,7 +53,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.primary100
@@ -171,10 +174,7 @@ fun MyBottomNavigationBar(
 
     Column {
         if (showMoreItems) Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .zIndex(4f)
-                .padding(10.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -182,20 +182,27 @@ fun MyBottomNavigationBar(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(10.dp)
             ) {
-
                 items(itemsInMore.size) {
 
-                    Item(
-                        itemsInMore[it],
-                        more,
-                        onSelected = {
-                            navController.navigate(itemsInMore[it].route)
-                        },
-                        navController,
-                        modifier = Modifier
-                            .border(1.dp, Color.LightGray)
-                            .padding(10.dp)
-                    )
+                    OutlinedCard(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                        ),
+                        border = BorderStroke(2.dp, primary100.copy(alpha = 0.2f)),
+                    ) {
+
+                        Item(
+                            itemsInMore[it],
+                            more,
+                            onSelected = {
+                                navController.navigate(itemsInMore[it].route)
+                            },
+                            navController,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp),
+                        )
+                    }
                 }
             }
         }
@@ -204,8 +211,7 @@ fun MyBottomNavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White)
-                .height(80.dp)
-                .zIndex(4f),
+                .height(60.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.Top,
         ) {

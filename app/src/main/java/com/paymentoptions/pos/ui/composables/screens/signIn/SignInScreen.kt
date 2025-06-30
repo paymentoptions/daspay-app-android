@@ -12,7 +12,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 @Composable
 fun SignInScreen(navController: NavController) {
     SectionedLayout(
-        navController = navController, bottomSectionMaxHeightRatio = 0.65f, bottomSectionContent = {
+        navController = navController, bottomSectionContent = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Bottom,

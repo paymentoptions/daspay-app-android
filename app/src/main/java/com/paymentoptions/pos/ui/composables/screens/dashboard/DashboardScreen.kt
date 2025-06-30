@@ -12,15 +12,12 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 @Composable
 fun DashboardScreen(navController: NavController) {
     SectionedLayout(
-        navController = navController,
-        bottomSectionMaxHeightRatio = 0.68f,
-        bottomSectionContent = {
+        navController = navController, bottomSectionContent = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxSize()
             ) {
                 BottomSectionContent(navController)
             }
-        }
-    )
+        })
 }

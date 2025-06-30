@@ -37,8 +37,8 @@ import com.paymentoptions.pos.ui.theme.primary100
 fun SectionedLayout(
     navController: NavController,
     bottomSectionContent: @Composable () -> Unit,
-    bottomSectionMinHeightRatio: Float = 0.0f,
-    bottomSectionMaxHeightRatio: Float = 0.5f,
+    bottomSectionMinHeightRatio: Float = 0.2f,
+    bottomSectionMaxHeightRatio: Float = 0.73f,
     enableBottomNavigationBar: Boolean = true,
 ) {
 
@@ -51,6 +51,8 @@ fun SectionedLayout(
     val bottomNavigationBarHeight = 85.dp
     val bottomNavigationBarExpandedHeight = 310.dp
 
+    val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.7f else 0.05f)
+
     fun toggleShowMoreItems() {
         showMoreItems = !showMoreItems
     }
@@ -59,13 +61,14 @@ fun SectionedLayout(
         modifier = Modifier.fillMaxSize()
     ) {
 
-        BackgroundImage()
+        BackgroundImage(modifier = Modifier.zIndex(1f))
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .align(alignment = Alignment.TopCenter)
                 .padding(bottom = if (enableBottomNavigationBar) bottomNavigationBarHeight else 0.dp)
+                .zIndex(2f)
                 .clickable(
                     enabled = !showMoreItems,
                     indication = null,
@@ -76,17 +79,15 @@ fun SectionedLayout(
             TopSection(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 90.dp)
+                    .padding(top = 70.dp)
                     .align(alignment = Alignment.TopCenter)
                     .zIndex(1f)
             ) {
-
                 Column {
                     LogoImage()
-                    Spacer(modifier = Modifier.height(30.dp))
+                    Spacer(modifier = Modifier.height(35.dp))
                     TapToPayImage(height = 260.dp)
                 }
-
             }
 
             BottomSection(
@@ -104,7 +105,7 @@ fun SectionedLayout(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.LightGray.copy(alpha = if (showMoreItems) 0.2f else 0.1f))
+                    .background(overlayColor)
                     .zIndex(5f)
             )
         }
@@ -113,11 +114,14 @@ fun SectionedLayout(
         if (enableBottomNavigationBar) Row(
             modifier = Modifier
                 .background(Color.White)
-                .background(Color.LightGray.copy(alpha = 0.2f))
-                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                .background(primary100.copy(alpha = 0.08f))
+                .background(overlayColor)
+                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .background(Color.White)
+                .background(primary100.copy(alpha = 0.04f))
                 .align(alignment = Alignment.BottomCenter)
                 .height(if (showMoreItems) bottomNavigationBarExpandedHeight else bottomNavigationBarHeight)
+                .zIndex(3f)
+                .padding(2.dp)
         ) {
             MyBottomNavigationBar(navController, showMoreItems, onClickShowMoreItems = {
                 toggleShowMoreItems()

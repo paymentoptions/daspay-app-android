@@ -9,11 +9,11 @@ import androidx.compose.ui.res.painterResource
 import com.paymentoptions.pos.R
 
 @Composable
-fun BackgroundImage() {
+fun BackgroundImage(modifier: Modifier = Modifier) {
     Image(
         painter = painterResource(id = R.drawable.banner_bg),
         contentDescription = "App Background",
         contentScale = ContentScale.Crop,
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     )
 }
