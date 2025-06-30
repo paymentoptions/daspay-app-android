@@ -90,13 +90,16 @@ fun SectionedLayout(
             }
 
             //Bottom Section
-            BottomSection(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min)
                     .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(2f)
+                    .background(color = Color.Transparent)
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .background(color = Color.White)
             ) {
                 bottomSectionContent()
             }
