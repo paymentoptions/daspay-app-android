@@ -48,8 +48,8 @@ fun SectionedLayout(
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMaxHeightRatio))
     var showMoreItems by remember { mutableStateOf(false) }
 
-    val bottomNavigationBarHeight = 85.dp
-    val bottomNavigationBarExpandedHeight = 310.dp
+    val bottomNavigationBarHeight = 75.dp
+    val bottomNavigationBarExpandedHeight = 335.dp
 
     val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.7f else 0.05f)
 
@@ -76,20 +76,20 @@ fun SectionedLayout(
                     onClick = { })
         ) {
 
-            TopSection(
+            //Top Section
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 70.dp)
                     .align(alignment = Alignment.TopCenter)
                     .zIndex(1f)
             ) {
-                Column {
-                    LogoImage()
-                    Spacer(modifier = Modifier.height(35.dp))
-                    TapToPayImage(height = 260.dp)
-                }
+                LogoImage()
+                Spacer(modifier = Modifier.height(35.dp))
+                TapToPayImage(height = 260.dp)
             }
 
+            //Bottom Section
             BottomSection(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -115,13 +115,17 @@ fun SectionedLayout(
             modifier = Modifier
                 .background(Color.White)
                 .background(overlayColor)
-                .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                .clip(
+                    RoundedCornerShape(
+                        topStart = if (showMoreItems) 20.dp else 0.dp,
+                        topEnd = if (showMoreItems) 20.dp else 0.dp
+                    )
+                )
                 .background(Color.White)
                 .background(primary100.copy(alpha = 0.04f))
                 .align(alignment = Alignment.BottomCenter)
                 .height(if (showMoreItems) bottomNavigationBarExpandedHeight else bottomNavigationBarHeight)
                 .zIndex(3f)
-                .padding(2.dp)
         ) {
             MyBottomNavigationBar(navController, showMoreItems, onClickShowMoreItems = {
                 toggleShowMoreItems()
