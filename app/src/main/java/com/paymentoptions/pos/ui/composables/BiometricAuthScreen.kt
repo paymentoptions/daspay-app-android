@@ -43,8 +43,7 @@ fun BiometricAuthScreen(
 
             hasPrompted = true
 
-            if (bypassBiometric)
-                onAuthSuccess()
+            if (bypassBiometric) onAuthSuccess()
             else {
 
                 authenticateUser(
@@ -54,8 +53,7 @@ fun BiometricAuthScreen(
                     onAuthFailed = { error ->
                         errorText = error
                         onAuthFailed()
-                    }
-                )
+                    })
             }
         }
     }
@@ -67,8 +65,7 @@ fun BiometricAuthScreen(
                 .background(color = Color.Black),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-        )
-        {
+        ) {
             Text(
                 "Biometric $it",
                 color = Color.Red,
@@ -84,20 +81,16 @@ fun BiometricAuthScreen(
 }
 
 fun authenticateUser(
-
     context: Context,
     lifecycleOwner: LifecycleOwner,
     onAuthSuccess: () -> Unit,
     onAuthFailed: (String) -> Unit,
-
-    ) {
+) {
 
     val biometricManager = BiometricManager.from(context)
     val activity = context as FragmentActivity
 
-    if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)
-        != BiometricManager.BIOMETRIC_SUCCESS
-    ) {
+    if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) != BiometricManager.BIOMETRIC_SUCCESS) {
         onAuthFailed("Biometric not available")
         return
     }
@@ -105,9 +98,7 @@ fun authenticateUser(
     val executor = ContextCompat.getMainExecutor(context)
 
     val biometricPrompt = BiometricPrompt(
-        activity,
-        executor,
-        object : BiometricPrompt.AuthenticationCallback() {
+        activity, executor, object : BiometricPrompt.AuthenticationCallback() {
 
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
@@ -126,11 +117,8 @@ fun authenticateUser(
 
         })
 
-    val promptInfo = BiometricPrompt.PromptInfo.Builder()
-        .setTitle("Authenticate")
-        .setSubtitle("Verify your identity to proceed")
-        .setNegativeButtonText("Cancel")
-        .build()
+    val promptInfo = BiometricPrompt.PromptInfo.Builder().setTitle("Authenticate")
+        .setSubtitle("Verify your identity to proceed").setNegativeButtonText("Cancel").build()
 
     biometricPrompt.authenticate(promptInfo)
 

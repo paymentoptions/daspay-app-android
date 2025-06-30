@@ -18,10 +18,7 @@ import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Money
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ChipColors
 import androidx.compose.material3.Icon
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,9 +32,9 @@ import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.theme.green200
 import com.paymentoptions.pos.ui.theme.green500
-import com.paymentoptions.pos.ui.theme.primary100
-import com.paymentoptions.pos.ui.theme.primary200
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.ui.theme.purple50
+import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
 
@@ -53,11 +50,13 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
 
     val isCardTransaction = true
 
+    val dateStringFormatted: String = SimpleDateFormat("DD MMMM YYYY | hh:mm a").format(date)
+
     Card(
         colors = CardDefaults.cardColors().copy(
-            containerColor = Color.White,
+            containerColor = Color.White
         ),
-        border = BorderStroke(1.dp, primary100.copy(alpha = 0.2f)),
+        border = BorderStroke(2.dp, primary500.copy(alpha = 0.2f)),
         shape = RoundedCornerShape(32.dp)
     ) {
 
@@ -70,21 +69,20 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
         ) {
 
             Surface(
-                shape = RoundedCornerShape(20.dp), modifier = Modifier
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
                     .width(60.dp)
-                    .height(60.dp)
+                    .height(60.dp),
+                color = Color.White
+
             ) {
                 Box(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .background(primary100.copy(alpha = 0.2f)),
-                    contentAlignment = Alignment.Center,
-
-                    ) {
+                    modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         imageVector = if (isCardTransaction) Icons.Outlined.CreditCard else Icons.Outlined.Money,
                         contentDescription = "Card",
-                        modifier = Modifier.background(Color.Transparent),
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
@@ -92,24 +90,28 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
             Spacer(modifier = Modifier.width(8.dp))
 
             Column(modifier = Modifier.weight(8f)) {
-                SuggestionChip(
-                    colors = SuggestionChipDefaults.suggestionChipColors().copy(
-                        containerColor = green200.copy(alpha = 0.2f),
-                    ),
-                    border = BorderStroke(0.dp, Color.Transparent),
-                    onClick = { },
-                    label = { Text("Suggestion chip", color = green500) }
-                )
+
                 Text(
-                    date.toString(),
-                    fontWeight = FontWeight.Light,
-                    fontSize = 12.sp,
-                    color = primary200
+                    transaction.status.uppercase(),
+                    modifier = Modifier.background(green200.copy(alpha = 0.2f)),
+                    color = green500
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    dateStringFormatted,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    color = purple50
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
                     text = (if (isCardTransaction) "Txn ID - " else "Cash Id - ") + transaction.TransactionID.toString(),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     color = primary500
                 )
             }

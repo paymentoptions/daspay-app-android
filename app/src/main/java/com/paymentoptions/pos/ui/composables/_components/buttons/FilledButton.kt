@@ -9,10 +9,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
-import com.paymentoptions.pos.ui.theme.Orange10
 import com.paymentoptions.pos.ui.theme.primary100
 
 @Composable
@@ -36,7 +36,7 @@ fun FilledButton(
         shape = RoundedCornerShape(8.dp)
     ) {
 
-        if (isLoading) CustomCircularProgressIndicator("Signing In", Color.White)
-        else Text(text = text, fontSize = 16.sp)
+        if (isLoading) CustomCircularProgressIndicator(color = Color.White)
+        else Text(text = text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
     }
 }

@@ -62,9 +62,7 @@ fun BottomSectionContent(navController: NavController) {
     var isLoading by remember { mutableStateOf(false) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(all = 16.dp),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top
     ) {
@@ -168,9 +166,7 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
 
-            },
-            isLoading = isLoading,
-            disabled = emailError || passwordError
+            }, isLoading = isLoading, disabled = emailError || passwordError
         )
     }
 }

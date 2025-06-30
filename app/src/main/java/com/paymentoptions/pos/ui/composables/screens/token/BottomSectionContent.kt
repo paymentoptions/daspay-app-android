@@ -58,9 +58,7 @@ fun BottomSectionContent(navController: NavController) {
     })
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(all = 16.dp),
+        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {

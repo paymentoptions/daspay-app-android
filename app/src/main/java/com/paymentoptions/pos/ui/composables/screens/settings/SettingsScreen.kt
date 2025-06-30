@@ -1,14 +1,15 @@
-package com.paymentoptions.pos.ui.composables.screens.token
+package com.paymentoptions.pos.ui.composables.screens.settings
+
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
+
 @Composable
-fun TokenScreen(navController: NavController) {
+fun SettingsScreen(navController: NavController) {
     SectionedLayout(
         navController = navController, bottomSectionContent = {
             BottomSectionContent(navController)
-        }, enableBottomNavigationBar = false
-    )
+        })
 }

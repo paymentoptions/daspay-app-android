@@ -28,12 +28,9 @@ fun BottomSectionContent(navController: NavController) {
     var refundAmount: Float by remember { mutableFloatStateOf(191.00f) }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(all = 16.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
-
     ) {
         Text(
             text = "Refund Money",
@@ -46,8 +43,7 @@ fun BottomSectionContent(navController: NavController) {
             text = buildAnnotatedString {
                 withStyle(
                     SpanStyle(
-                        primary100.copy(alpha = 0.5f),
-                        fontWeight = FontWeight.Light
+                        primary100.copy(alpha = 0.5f), fontWeight = FontWeight.Light
                     )
                 ) { append("INR ") }
                 withStyle(SpanStyle(primary100)) { append(refundAmount.toString()) }

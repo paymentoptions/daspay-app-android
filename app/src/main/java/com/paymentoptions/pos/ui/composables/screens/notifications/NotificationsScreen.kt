@@ -1,25 +1,17 @@
 package com.paymentoptions.pos.ui.composables.screens.notifications
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun NotificationsScreen(navController: NavController) {
     SectionedLayout(
-        navController = navController, bottomSectionContent = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                BottomSectionContent(navController)
-            }
+        navController = navController,
+        bottomSectionMinHeightRatio = 0.3f,
+        bottomSectionMaxHeightRatio = 0.9f,
+        bottomSectionContent = {
+            BottomSectionContent(navController)
         }, enableBottomNavigationBar = false
     )
 }

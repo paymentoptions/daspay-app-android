@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,47 +29,49 @@ import com.paymentoptions.pos.ui.theme.primary900
 fun BottomSectionContent(navController: NavController) {
 
     var receivalAmount: Float by remember { mutableFloatStateOf(2000.00f) }
+    val currency = "JPY"
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(all = 16.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-
     ) {
+
+        Spacer(modifier = Modifier.height(10.dp))
+
         Text(
             text = "Receival for the day",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.SemiBold,
             color = primary900,
         )
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
             text = buildAnnotatedString {
                 withStyle(
                     SpanStyle(
-                        primary100.copy(alpha = 0.5f),
-                        fontWeight = FontWeight.Light
+                        primary100.copy(alpha = 0.5f), fontWeight = FontWeight.Light
                     )
-                ) { append("INR ") }
+                ) { append("$currency ") }
+
                 withStyle(SpanStyle(primary100)) { append(receivalAmount.toString()) }
             },
-            fontSize = 28.sp,
+            fontSize = 36.sp,
             fontWeight = FontWeight.Bold,
             color = primary100,
             modifier = Modifier.padding(bottom = 10.dp)
         )
 
+        Spacer(modifier = Modifier.height(8.dp))
+
         FilledButton(
-            text = "View Insights",
-            onClick = {},
-            modifier = Modifier
+            text = "View Insights", onClick = {}, modifier = Modifier
                 .width(160.dp)
                 .height(36.dp)
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
         RecentTransactions(navController)
     }
 }

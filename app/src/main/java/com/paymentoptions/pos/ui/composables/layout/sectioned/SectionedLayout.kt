@@ -40,18 +40,20 @@ fun SectionedLayout(
     bottomSectionMinHeightRatio: Float = 0.2f,
     bottomSectionMaxHeightRatio: Float = 0.73f,
     enableBottomNavigationBar: Boolean = true,
+    defaultBottomSectionPadding: Dp = 16.dp,
 ) {
 
     val bottomSectionMinHeightDp =
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMinHeightRatio))
     val bottomSectionMaxHeightDp =
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMaxHeightRatio))
-    var showMoreItems by remember { mutableStateOf(true) }
+    var showMoreItems by remember { mutableStateOf(false) }
 
     val bottomNavigationBarHeight = 75.dp
     val bottomNavigationBarExpandedHeight = 335.dp
 
     val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.8f else 0.05f)
+    val borderRadiusInDp = 32.dp
 
     fun toggleShowMoreItems() {
         showMoreItems = !showMoreItems
@@ -98,8 +100,13 @@ fun SectionedLayout(
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(2f)
                     .background(color = Color.Transparent)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .clip(
+                        RoundedCornerShape(
+                            topStart = borderRadiusInDp, topEnd = borderRadiusInDp
+                        )
+                    )
                     .background(color = Color.White)
+                    .padding(defaultBottomSectionPadding)
             ) {
                 bottomSectionContent()
             }
@@ -109,7 +116,7 @@ fun SectionedLayout(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(overlayColor)
-                    .zIndex(5f)
+                    .zIndex(3f)
             )
         }
 
@@ -120,15 +127,15 @@ fun SectionedLayout(
                 .background(overlayColor)
                 .clip(
                     RoundedCornerShape(
-                        topStart = if (showMoreItems) 20.dp else 0.dp,
-                        topEnd = if (showMoreItems) 20.dp else 0.dp
+                        topStart = if (showMoreItems) borderRadiusInDp else 0.dp,
+                        topEnd = if (showMoreItems) borderRadiusInDp else 0.dp
                     )
                 )
                 .background(Color.White)
                 .background(primary100.copy(alpha = 0.04f))
                 .align(alignment = Alignment.BottomCenter)
                 .height(if (showMoreItems) bottomNavigationBarExpandedHeight else bottomNavigationBarHeight)
-                .zIndex(3f)
+                .zIndex(5f)
         ) {
             MyBottomNavigationBar(navController, showMoreItems, onClickShowMoreItems = {
                 toggleShowMoreItems()
