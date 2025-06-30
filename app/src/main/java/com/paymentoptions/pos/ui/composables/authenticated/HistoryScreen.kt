@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
-import com.paymentoptions.pos.ui.composables.TransactionCard
+import com.paymentoptions.pos.ui.composables._components.TransactionCard
 import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
 import com.paymentoptions.pos.ui.theme.Orange10
 import kotlin.math.ceil

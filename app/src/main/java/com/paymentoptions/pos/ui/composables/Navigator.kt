@@ -3,7 +3,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.paymentoptions.pos.ui.composables.LoginScreen
 
 @Composable
 fun Navigator() {
@@ -16,10 +15,10 @@ fun Navigator() {
         }
     }
 
-    NavHost(navController = navController, startDestination = "authCheckScreen") {
-        composable("authCheckScreen") { AuthCheckScreen(navController) }
+    NavHost(navController = navController, startDestination = "authcheckscreen") {
+        //composable("authcheckscreen") { AuthCheckScreen(navController) }
         composable("biometricAuthScreen") { BiometricAuthScreen({}, {}, navController, true) }
-        composable("loginScreen") { LoginScreen(navController) }
+//        composable("loginScreen") { LoginScreen(navController) }
         composable("drawerScreen") { Drawer(navController) }
     }
 }

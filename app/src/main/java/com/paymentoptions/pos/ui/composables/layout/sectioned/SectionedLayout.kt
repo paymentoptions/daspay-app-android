@@ -1,0 +1,127 @@
+package com.paymentoptions.pos.ui.composables.layout.sectioned
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import androidx.navigation.NavController
+import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
+import com.paymentoptions.pos.ui.composables._components.images.LogoImage
+import com.paymentoptions.pos.ui.composables._components.images.TapToPayImage
+import com.paymentoptions.pos.ui.theme.primary100
+
+@Composable
+fun SectionedLayout(
+    navController: NavController,
+    bottomSectionContent: @Composable () -> Unit,
+    bottomSectionMinHeightRatio: Float = 0.0f,
+    bottomSectionMaxHeightRatio: Float = 0.5f,
+    enableBottomNavigationBar: Boolean = true,
+) {
+
+    val bottomSectionMinHeightDp =
+        Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMinHeightRatio))
+    val bottomSectionMaxHeightDp =
+        Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMaxHeightRatio))
+    var showMoreItems by remember { mutableStateOf(false) }
+
+    val bottomNavigationBarHeight = 85.dp
+    val bottomNavigationBarExpandedHeight = 310.dp
+
+    fun toggleShowMoreItems() {
+        showMoreItems = !showMoreItems
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+
+        BackgroundImage()
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .align(alignment = Alignment.TopCenter)
+                .padding(bottom = if (enableBottomNavigationBar) bottomNavigationBarHeight else 0.dp)
+                .clickable(
+                    enabled = !showMoreItems,
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = { })
+        ) {
+
+            TopSection(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 90.dp)
+                    .align(alignment = Alignment.TopCenter)
+                    .zIndex(1f)
+            ) {
+
+                Column {
+                    LogoImage()
+                    Spacer(modifier = Modifier.height(30.dp))
+                    TapToPayImage(height = 260.dp)
+                }
+
+            }
+
+            BottomSection(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+                    .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
+                    .align(alignment = Alignment.BottomCenter)
+                    .zIndex(2f)
+            ) {
+                bottomSectionContent()
+            }
+
+            //Just an overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.LightGray.copy(alpha = if (showMoreItems) 0.2f else 0.1f))
+                    .zIndex(5f)
+            )
+        }
+
+        //Bottom Navigation Bar
+        if (enableBottomNavigationBar) Row(
+            modifier = Modifier
+                .background(Color.White)
+                .background(Color.LightGray.copy(alpha = 0.2f))
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                .background(primary100.copy(alpha = 0.08f))
+                .align(alignment = Alignment.BottomCenter)
+                .height(if (showMoreItems) bottomNavigationBarExpandedHeight else bottomNavigationBarHeight)
+        ) {
+            MyBottomNavigationBar(navController, showMoreItems, onClickShowMoreItems = {
+                toggleShowMoreItems()
+            })
+        }
+    }
+}

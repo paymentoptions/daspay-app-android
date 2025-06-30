@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.ui.composables
+package com.paymentoptions.pos.ui.composables._components
 
 import CustomDialog
 import android.widget.Toast
@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.refund
-import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
 import kotlinx.coroutines.launch
 import java.time.OffsetDateTime
 import java.util.Date
