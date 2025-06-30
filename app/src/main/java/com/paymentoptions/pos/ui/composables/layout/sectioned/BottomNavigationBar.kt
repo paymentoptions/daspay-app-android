@@ -137,7 +137,6 @@ fun Item(
     item: BottomNavigationBarItem,
     selected: BottomNavigationBarItem,
     onSelected: () -> Unit,
-    navController: NavController,
     modifier: Modifier = Modifier,
 ) {
 
@@ -156,6 +155,7 @@ fun Item(
         Text(
             item.title,
             textAlign = TextAlign.Center,
+            minLines = 2,
             maxLines = 2,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
@@ -197,7 +197,6 @@ fun MyBottomNavigationBar(
                             onSelected = {
                                 navController.navigate(itemsInMore[it].route)
                             },
-                            navController,
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(20.dp),
@@ -219,28 +218,28 @@ fun MyBottomNavigationBar(
             Item(home, selected, onSelected = {
                 selected = home
                 navController.navigate(selected.route)
-            }, navController)
+            })
 
             Item(foodMenu, selected, onSelected = {
                 selected = foodMenu
                 navController.navigate(selected.route)
-            }, navController)
+            })
 
             Item(receiveMoney, selected, onSelected = {
                 selected = receiveMoney
                 navController.navigate(selected.route)
-            }, navController)
+            })
 
             Item(notifications, selected, onSelected = {
                 selected = notifications
                 navController.navigate(selected.route)
-            }, navController)
+            })
 
             Item(more, selected, onSelected = {
                 selected = more
                 onClickShowMoreItems()
 //            navController.navigate(selected.route)
-            }, navController)
+            })
         }
     }
 }

@@ -46,12 +46,12 @@ fun SectionedLayout(
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMinHeightRatio))
     val bottomSectionMaxHeightDp =
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMaxHeightRatio))
-    var showMoreItems by remember { mutableStateOf(false) }
+    var showMoreItems by remember { mutableStateOf(true) }
 
     val bottomNavigationBarHeight = 75.dp
     val bottomNavigationBarExpandedHeight = 335.dp
 
-    val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.7f else 0.05f)
+    val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.8f else 0.05f)
 
     fun toggleShowMoreItems() {
         showMoreItems = !showMoreItems
