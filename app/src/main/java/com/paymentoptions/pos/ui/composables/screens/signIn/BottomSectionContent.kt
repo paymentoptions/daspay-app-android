@@ -40,18 +40,29 @@ import com.paymentoptions.pos.utils.validation.validateOtp
 import com.paymentoptions.pos.utils.validation.validatePassword
 import kotlinx.coroutines.launch
 
+
+data class Credentials(
+    val email: String,
+    val password: String,
+)
+
 @Composable
 fun BottomSectionContent(navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    var email by remember { mutableStateOf("ankitkambale097@myyahoo.com") }
-    var password by remember { mutableStateOf("Test12345678@#") }
+    val allCredentials = listOf(
+        Credentials(email = "ankitkambale097@myyahoo.com", password = "Test12345678@#"),
+        Credentials(email = "vijacip629@daupload.com", password = "Test123456789@#"),
+        Credentials(email = "kavitest15@ghunowa.com", password = "Kavios@12345678")
+    )
 
-//    var email by remember { mutableStateOf("") }
+    val credentials = allCredentials[1]
+
+    var email by remember { mutableStateOf(credentials.email) }
+    var password by remember { mutableStateOf(credentials.password) }
+
     var emailError by remember { mutableStateOf(false) }
-
-//    var password by remember { mutableStateOf("") }
     var passwordError by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -158,7 +169,7 @@ fun BottomSectionContent(navController: NavController) {
                                 navController.navigate(Screens.Token.route)
                             }
                         }
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                         Toast.makeText(context, "Invalid Credentials", Toast.LENGTH_LONG).show()
                     } finally {
                         isLoading = false

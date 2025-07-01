@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.layout.sectioned
 
+import CustomDialog
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -13,11 +14,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.MoneyOff
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -27,7 +29,6 @@ import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Fastfood
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.Money
 import androidx.compose.material.icons.outlined.MoneyOff
 import androidx.compose.material.icons.outlined.MoreHoriz
@@ -37,25 +38,30 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.services.apiService.SignOutResponse
+import com.paymentoptions.pos.services.apiService.endpoints.signOut
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.primary100
+import kotlinx.coroutines.launch
 
 data class BottomNavigationBarItem(
     val title: String,
@@ -105,31 +111,22 @@ val itemsInMore = listOf<BottomNavigationBarItem>(
         selectedIcon = Icons.Default.CreditCard,
         unselectedIcon = Icons.Outlined.CreditCard,
         route = Screens.TransactionHistory.route
-    ),
-    BottomNavigationBarItem(
+    ), BottomNavigationBarItem(
         title = "Refund",
         selectedIcon = Icons.Default.MoneyOff,
         unselectedIcon = Icons.Outlined.MoneyOff,
         route = Screens.Refund.route
-    ),
-    BottomNavigationBarItem(
+    ), BottomNavigationBarItem(
         title = "Settings",
         selectedIcon = Icons.Default.Settings,
         unselectedIcon = Icons.Outlined.Settings,
         route = Screens.Settings.route
-    ),
-    BottomNavigationBarItem(
+    ), BottomNavigationBarItem(
         title = "Help & Support",
         selectedIcon = Icons.Default.Info,
         unselectedIcon = Icons.Outlined.Info,
         route = Screens.HelpAndSupport.route
-    ),
-    BottomNavigationBarItem(
-        title = "Log Out",
-        selectedIcon = Icons.Default.Logout,
-        unselectedIcon = Icons.Outlined.Logout,
-        route = Screens.SignOut.route
-    ),
+    )
 )
 
 @Composable
@@ -170,7 +167,62 @@ fun MyBottomNavigationBar(
     showMoreItems: Boolean = false,
     onClickShowMoreItems: () -> Unit,
 ) {
+
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var showSignOutConfirmationDialog by remember { mutableStateOf(false) }
+    var signOutLoader by remember { mutableStateOf(false) }
+    var signOutResponse: SignOutResponse? = null
+
     var selected by remember { mutableStateOf<BottomNavigationBarItem>(home) }
+
+
+    CustomDialog(
+        showDialog = showSignOutConfirmationDialog,
+        title = "Confirmation",
+        text = "Do you want to log out?",
+        acceptButtonText = "Log Out",
+        onAcceptFn = {
+            scope.launch {
+                signOutLoader = true
+
+                try {
+                    signOutResponse = signOut(context)
+                    println("signOutResponse: $signOutResponse")
+
+                    if (signOutResponse == null) {
+                        navController.navigate(Screens.SignIn.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+
+                    signOutResponse?.let {
+                        if (it.success) {
+                            SharedPreferences.clearSharedPreferences(context)
+                            navController.navigate(Screens.SignIn.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+//                            Toast.makeText(context, "Unable to sign out", Toast.LENGTH_LONG).show()
+
+                    SharedPreferences.clearSharedPreferences(context)
+                    navController.navigate(Screens.SignIn.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+
+                    println("Error: ${e.toString()}")
+                } finally {
+                    signOutLoader = false
+                }
+            }
+
+            showSignOutConfirmationDialog = false
+        },
+        onDismissFn = { showSignOutConfirmationDialog = false })
+
+
 
     Column {
         if (showMoreItems) Row(
@@ -186,7 +238,7 @@ fun MyBottomNavigationBar(
 
                     OutlinedCard(
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
+                            containerColor = Color.White.copy(alpha = 0.1f),
                         ),
                         border = BorderStroke(2.dp, primary100.copy(alpha = 0.2f)),
                     ) {
@@ -202,6 +254,37 @@ fun MyBottomNavigationBar(
                                 .padding(20.dp),
                         )
                     }
+                }
+
+                item {
+
+                    OutlinedCard(
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color.White.copy(alpha = 0.1f),
+                        ),
+                        border = BorderStroke(2.dp, primary100.copy(alpha = 0.2f)),
+                    ) {
+
+                        Item(
+                            BottomNavigationBarItem(
+                                title = "Log Out",
+                                selectedIcon = Icons.AutoMirrored.Filled.Logout,
+                                unselectedIcon = Icons.AutoMirrored.Outlined.Logout,
+                                route = Screens.SignOut.route
+                            ),
+                            more,
+                            onSelected = {
+
+
+                                showSignOutConfirmationDialog = true
+
+                            },
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(20.dp),
+                        )
+                    }
+
                 }
             }
         }

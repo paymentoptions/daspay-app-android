@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -113,10 +113,7 @@ fun SaleScreen(navController: NavController) {
     val buttonBorder = Color(0xFF3A3A3A)
     val textColor = Color(0xFFEFEFEF)
     val buttons = listOf(
-        listOf("1", "2", "3"),
-        listOf("4", "5", "6"),
-        listOf("7", "8", "9"),
-        listOf("00", "0", "←")
+        listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"), listOf("00", "0", "←")
     )
     val context = LocalContext.current
     val activity = context as? Activity
@@ -146,14 +143,13 @@ fun SaleScreen(navController: NavController) {
         text = transactionDetailsText,
         acceptButtonText = "Ok",
         showCancelButton = false,
-        onAccept = { showTransactionStatus = false },
-        onDismiss = { showTransactionStatus = false },
+        onAcceptFn = { showTransactionStatus = false },
+        onDismissFn = { showTransactionStatus = false },
     )
 
     val launcher = rememberLauncherForActivityResult(
         HeadlessActivity.contract(ClientHeadlessImpl::class.java)
-    )
-    {
+    ) {
 
         var completedSaleTranId: String? = ""
         var completedSalePosReference: String? = ""
@@ -189,9 +185,7 @@ fun SaleScreen(navController: NavController) {
 //                    viewModel.writeMessage("Failed")
                 Log.d("Failed ->", "Payment Failed")
                 Toast.makeText(
-                    context,
-                    "Transaction of $$formattedAmount was failed",
-                    Toast.LENGTH_LONG
+                    context, "Transaction of $$formattedAmount was failed", Toast.LENGTH_LONG
                 ).show()
             }
         }
@@ -208,8 +202,7 @@ fun SaleScreen(navController: NavController) {
 
 
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+            horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()
         ) {
 
             Text("Sale", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
@@ -253,8 +246,7 @@ fun SaleScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+            horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()
         ) {
 
             buttons.forEach { row ->
@@ -272,12 +264,11 @@ fun SaleScreen(navController: NavController) {
                                 .padding(horizontal = 5.dp)
                                 .border(1.dp, buttonBorder, RoundedCornerShape(8.dp))
                                 .background(buttonColor, RoundedCornerShape(8.dp))
-                                .clickable { onKeyPress(key) },
-                            contentAlignment = Alignment.Center
+                                .clickable { onKeyPress(key) }, contentAlignment = Alignment.Center
                         ) {
                             if (key == "←") {
                                 Icon(
-                                    Icons.Default.ArrowBack,
+                                    Icons.AutoMirrored.Outlined.ArrowBack,
                                     contentDescription = "Back",
                                     tint = Color.White
                                 )
@@ -302,11 +293,11 @@ fun SaleScreen(navController: NavController) {
                 text = "You need to disable developer options to proceed further.",
                 acceptButtonText = "Exit",
                 cancelButtonText = "Developer Options",
-                onAccept = {
+                onAcceptFn = {
                     showDeveloperOptionsEnabled = false
                     activity?.finish()
                 },
-                onDismiss = {
+                onDismissFn = {
                     showDeveloperOptionsEnabled = false
                     val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
                     context.startActivity(intent)
@@ -320,11 +311,11 @@ fun SaleScreen(navController: NavController) {
                 text = "Your device does not support NFC.",
                 acceptButtonText = "Exit",
                 cancelButtonText = "Cancel",
-                onAccept = {
+                onAcceptFn = {
                     showNFCNotPresent = false
                     activity?.finish()
                 },
-                onDismiss = { showNFCNotPresent = false },
+                onDismissFn = { showNFCNotPresent = false },
             )
 
             CustomDialog(
@@ -333,12 +324,12 @@ fun SaleScreen(navController: NavController) {
                 text = "This feature needs NFC. Please enable it in your device settings.",
                 acceptButtonText = "Go to Settings",
                 cancelButtonText = "Cancel",
-                onAccept = {
+                onAcceptFn = {
                     showNFCNotEnabled = false
                     val intent = Intent(Settings.ACTION_NFC_SETTINGS)
                     context.startActivity(intent)
                 },
-                onDismiss = { showNFCNotEnabled = false },
+                onDismissFn = { showNFCNotEnabled = false },
             )
 
 
@@ -460,14 +451,12 @@ fun SaleScreen(navController: NavController) {
                 contentAlignment = Alignment.Center,
 
                 ) {
-                if (paymentLoader)
-                    CustomCircularProgressIndicator("Initiating...")
-                else
-                    Text(
-                        "Charge",
-                        color = if (chargeEnabled) Color.White else Color.Gray,
-                        fontWeight = FontWeight.Bold
-                    )
+                if (paymentLoader) CustomCircularProgressIndicator("Initiating...")
+                else Text(
+                    "Charge",
+                    color = if (chargeEnabled) Color.White else Color.Gray,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
 

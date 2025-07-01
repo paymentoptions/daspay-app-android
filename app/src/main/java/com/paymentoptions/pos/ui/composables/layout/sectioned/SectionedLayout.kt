@@ -50,7 +50,7 @@ fun SectionedLayout(
     var showMoreItems by remember { mutableStateOf(false) }
 
     val bottomNavigationBarHeight = 75.dp
-    val bottomNavigationBarExpandedHeight = 335.dp
+    val bottomNavigationBarExpandedHeight = 348.dp
 
     val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.8f else 0.05f)
     val borderRadiusInDp = 32.dp
@@ -59,9 +59,7 @@ fun SectionedLayout(
         showMoreItems = !showMoreItems
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
 
         BackgroundImage(modifier = Modifier.zIndex(1f))
 

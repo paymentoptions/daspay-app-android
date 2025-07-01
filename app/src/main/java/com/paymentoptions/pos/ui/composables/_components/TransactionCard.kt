@@ -59,8 +59,8 @@ fun TransactionCard(
         text = "Amount of ${transactionState.value.amount} was refunded successfully",
         acceptButtonText = "OK",
         showCancelButton = false,
-        onAccept = { showRefundResponseSuccessfulDialog = false },
-        onDismiss = { showRefundResponseSuccessfulDialog = false },
+        onAcceptFn = { showRefundResponseSuccessfulDialog = false },
+        onDismissFn = { showRefundResponseSuccessfulDialog = false },
     )
 
     CustomDialog(
@@ -69,7 +69,7 @@ fun TransactionCard(
         text = "Are you sure you want to initiate refund for the transaction?",
         acceptButtonText = "Confirm",
         cancelButtonText = "Cancel",
-        onAccept = {
+        onAcceptFn = {
             scope.launch {
                 showRefundLoader = true
 
@@ -102,7 +102,7 @@ fun TransactionCard(
             showRefundConfirmationDialog = false
 
         },
-        onDismiss = { showRefundConfirmationDialog = false },
+        onDismissFn = { showRefundConfirmationDialog = false },
     )
 
     ElevatedCard(

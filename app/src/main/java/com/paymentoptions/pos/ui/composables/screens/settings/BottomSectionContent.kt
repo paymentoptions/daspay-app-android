@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens.settings
 
 import BiometricAuthScreen
+import CustomDialog
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,7 @@ fun BottomSectionContent(navController: NavController) {
     val context = LocalContext.current
 
     var signOutLoader by remember { mutableStateOf(false) }
+    var showSignOutConfirmationDialog by remember { mutableStateOf(false) }
     var signOutResponse: SignOutResponse? = null
     val scope = rememberCoroutineScope()
     var showBiometricScreen by remember { mutableStateOf(false) }
@@ -59,6 +61,51 @@ fun BottomSectionContent(navController: NavController) {
 
     val lastLoginString: String =
         SimpleDateFormat("DD MMMM YYYY | hh:mm a").format(authDetails?.data?.auth_time ?: "")
+
+    CustomDialog(
+        showDialog = showSignOutConfirmationDialog,
+        title = "Confirmation",
+        text = "Do you want to log out?",
+        acceptButtonText = "Log Out",
+        onAcceptFn = {
+            scope.launch {
+                signOutLoader = true
+
+                try {
+                    signOutResponse = signOut(context)
+                    println("signOutResponse: $signOutResponse")
+
+                    if (signOutResponse == null) {
+                        navController.navigate(Screens.SignIn.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+
+                    signOutResponse?.let {
+                        if (it.success) {
+                            SharedPreferences.clearSharedPreferences(context)
+                            navController.navigate(Screens.SignIn.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+//                            Toast.makeText(context, "Unable to sign out", Toast.LENGTH_LONG).show()
+
+                    SharedPreferences.clearSharedPreferences(context)
+                    navController.navigate(Screens.SignIn.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+
+                    println("Error: ${e.toString()}")
+                } finally {
+                    signOutLoader = false
+                }
+            }
+
+            showSignOutConfirmationDialog = false
+        },
+        onDismissFn = { showSignOutConfirmationDialog = false })
 
     if (showBiometricScreen) BiometricAuthScreen(
         {
@@ -135,7 +182,7 @@ fun BottomSectionContent(navController: NavController) {
                         ), checked = biometricsEnabled, onCheckedChange = {
                             try {
                                 showBiometricScreen = true
-                            } catch (e: Exception) {
+                            } catch (_: Exception) {
                                 Toast.makeText(
                                     context, "Unable to set biometrics status", Toast.LENGTH_LONG
                                 ).show()
@@ -147,40 +194,7 @@ fun BottomSectionContent(navController: NavController) {
 
                 FilledButton(
                     text = "Logout", onClick = {
-                        scope.launch {
-                            signOutLoader = true
-
-                            try {
-                                signOutResponse = signOut(context)
-                                println("signOutResponse: $signOutResponse")
-
-                                if (signOutResponse == null) {
-                                    navController.navigate(Screens.SignIn.route) {
-                                        popUpTo(0) { inclusive = true }
-                                    }
-                                }
-
-                                signOutResponse?.let {
-                                    if (it.success) {
-                                        SharedPreferences.clearSharedPreferences(context)
-                                        navController.navigate(Screens.SignIn.route) {
-                                            popUpTo(0) { inclusive = true }
-                                        }
-                                    }
-                                }
-                            } catch (e: Exception) {
-//                            Toast.makeText(context, "Unable to sign out", Toast.LENGTH_LONG).show()
-
-                                SharedPreferences.clearSharedPreferences(context)
-                                navController.navigate(Screens.SignIn.route) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-
-                                println("Error: ${e.toString()}")
-                            } finally {
-                                signOutLoader = false
-                            }
-                        }
+                        showSignOutConfirmationDialog = true
                     }, isLoading = signOutLoader
                 )
             }

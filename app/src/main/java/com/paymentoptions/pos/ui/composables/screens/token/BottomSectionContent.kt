@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Backspace
+import androidx.compose.material.icons.automirrored.outlined.Backspace
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -155,6 +155,7 @@ fun BottomSectionContent(navController: NavController) {
             ) {
 
                 OutlinedButton(
+                    enabled = otp.value.length < 6,
                     onClick = {
                         otp.value = otp.value + "1"
                     },
@@ -188,7 +189,7 @@ fun BottomSectionContent(navController: NavController) {
                 OutlinedButton(
                     enabled = otp.value.length < 6,
                     onClick = {
-                        otp.value = otp.value + "2"
+                        otp.value = otp.value + "3"
                     },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
@@ -354,12 +355,11 @@ fun BottomSectionContent(navController: NavController) {
                 ) {
 
                     Icon(
-                        imageVector = Icons.Outlined.Backspace,
+                        imageVector = Icons.AutoMirrored.Outlined.Backspace,
                         contentDescription = "delete",
                         tint = primary500,
                         modifier = Modifier.scale(1.2f)
                     )
-
                 }
             }
         }
