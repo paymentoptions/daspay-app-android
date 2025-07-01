@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables._components.buttons
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
@@ -29,10 +30,9 @@ fun OutlinedButton(
         colors = ButtonDefaults.buttonColors().copy(
             contentColor = primary900, containerColor = Color.Transparent
         ),
-
-        ) {
+        shape = RoundedCornerShape(18.dp)
+    ) {
         if (isLoading) CustomCircularProgressIndicator(color = Color.White)
         else Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-
     }
 }
