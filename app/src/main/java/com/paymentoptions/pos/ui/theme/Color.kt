@@ -7,10 +7,14 @@ val Orange10 = Color(0xFFFF9800)
 val DisabledButtonColor = Color(0xFF2B2B2B)
 
 //DasPay Colors
+val primary50 = Color(0xFF2482E8)
 val primary100 = Color(0xFF436CFB)
 val primary200 = Color(0xFF7277A8)
+val primary300 = Color(0xFF3154D1)
+val primary400 = Color(0xFF2B54A3)
 val primary500 = Color(0xFF0A307A)
 val primary900 = Color(0xFF031F68)
+
 
 val red300 = Color(0xFFDB4747)
 val red400 = Color(0xC1F44336)

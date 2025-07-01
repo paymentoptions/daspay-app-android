@@ -1,21 +1,17 @@
 package com.paymentoptions.pos.ui.theme
 
-import android.app.Activity
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat
 
 private val darkColorScheme = AppColorScheme(
     background = Color.Black,
@@ -36,12 +32,22 @@ private val lightColorScheme = AppColorScheme(
 )
 
 private val typography = AppTypography(
+    screenTitle = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.Bold,
+        fontSize = 36.sp,
+        brush = Brush.horizontalGradient(
+            colorStops = arrayOf(0.92f to primary300, 1f to primary100)
+        )
+    ),
+
     titleLarge = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.Bold,
         fontSize = 36.sp,
         color = primary500,
     ),
+
     titleNormal = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.Normal,

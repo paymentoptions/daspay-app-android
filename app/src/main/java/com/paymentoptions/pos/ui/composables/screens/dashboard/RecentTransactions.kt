@@ -129,7 +129,7 @@ fun RecentTransactions(navController: NavController) {
             transactionList?.let {
 
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.End,
                     modifier = Modifier
                         .fillMaxSize()

@@ -44,7 +44,7 @@ import kotlin.math.ceil
 data class Filter(
     val text: String,
     val matchText: String,
-    val badgeCount: Int = 0,
+    val newCount: Int = 0,
 )
 
 @Composable
@@ -64,14 +64,14 @@ fun FilterButton(filter: Filter, selected: Filter, onClick: () -> Unit) {
             fontSize = 14.sp,
             fontWeight = if (selected == filter) FontWeight.Bold else FontWeight.Normal
         )
-        if (filter.badgeCount > 0) Box(
+        if (filter.newCount > 0) Box(
             modifier = Modifier
-                .size(16.dp)
+                .size(20.dp)
                 .background(Color.White)
                 .clip(RoundedCornerShape(50))
                 .background(primary100.copy(alpha = 0.2f)), contentAlignment = Alignment.Center
         ) {
-            Text(filter.badgeCount.toString(), color = bannerBgColor, fontSize = 12.sp)
+            Text(filter.newCount.toString(), color = bannerBgColor, fontSize = 12.sp)
         }
     }
 }
@@ -174,7 +174,7 @@ fun BottomSectionContent(navController: NavController) {
             transactionList?.let {
 
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.End,
                     modifier = Modifier
                         .fillMaxSize()

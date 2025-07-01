@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -30,6 +31,7 @@ fun BottomSectionContent(navController: NavController) {
 
     var receivalAmount: Float by remember { mutableFloatStateOf(2000.00f) }
     val currency = "JPY"
+    var showInsights by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -66,7 +68,9 @@ fun BottomSectionContent(navController: NavController) {
         Spacer(modifier = Modifier.height(8.dp))
 
         FilledButton(
-            text = "View Insights", onClick = {}, modifier = Modifier
+            text = "View Insights",
+            onClick = { showInsights = !showInsights },
+            modifier = Modifier
                 .width(160.dp)
                 .height(36.dp)
         )

@@ -180,7 +180,7 @@ fun MyBottomNavigationBar(
                 columns = GridCells.Fixed(3),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(10.dp)
+                modifier = Modifier.padding(16.dp)
             ) {
                 items(itemsInMore.size) {
 
