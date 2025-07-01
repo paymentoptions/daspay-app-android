@@ -3,7 +3,6 @@ package com.paymentoptions.pos.ui.composables.screens.token
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.outlined.Backspace
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -28,17 +27,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
-import com.paymentoptions.pos.ui.composables._components.inputs.OtpInputField
-import com.paymentoptions.pos.ui.composables._components.inputs.pxToDp
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -80,18 +78,57 @@ fun BottomSectionContent(navController: NavController) {
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        OtpInputField(
-            otp = otp,
-            count = 6,
-            textColor = Color.White,
-            otpBoxModifier = Modifier
-                .height(70.dp)
-                .background(Color.Transparent)
-                .clip(RoundedCornerShape(8.dp))
-                .background(primary50)
-                .border(1.pxToDp(), Color(0xFF0C659D), shape = RoundedCornerShape(50.pxToDp())),
-            otpTextType = KeyboardType.Number,
-        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+
+            val emptyBoxCount = 6 - otp.value.length
+
+            otp.value.toList().forEachIndexed { index, digit ->
+
+                OutlinedButton(
+                    enabled = false,
+                    onClick = {},
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    modifier = Modifier
+                        .height(70.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(primary50)
+
+                        .weight(1f)
+                ) {
+                    Text(
+                        digit.toString(),
+                        color = Color.White,
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            (1..emptyBoxCount).toList().forEachIndexed { index, item ->
+
+                OutlinedButton(
+                    enabled = false,
+                    onClick = {},
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    modifier = Modifier
+                        .height(70.dp)
+                        .weight(1f)
+                ) {
+                    Text(
+                        "", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
+                    )
+                }
+            }
+        }
 
         Row(
             modifier = Modifier.align(alignment = Alignment.End),
@@ -118,7 +155,9 @@ fun BottomSectionContent(navController: NavController) {
             ) {
 
                 OutlinedButton(
-                    onClick = {},
+                    onClick = {
+                        otp.value = otp.value + "1"
+                    },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
                     modifier = Modifier
@@ -131,7 +170,10 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
                 OutlinedButton(
-                    onClick = {},
+                    enabled = otp.value.length < 6,
+                    onClick = {
+                        otp.value = otp.value + "2"
+                    },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
                     modifier = Modifier
@@ -144,7 +186,10 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
                 OutlinedButton(
-                    onClick = {},
+                    enabled = otp.value.length < 6,
+                    onClick = {
+                        otp.value = otp.value + "2"
+                    },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
                     modifier = Modifier
@@ -163,7 +208,10 @@ fun BottomSectionContent(navController: NavController) {
             ) {
 
                 OutlinedButton(
-                    onClick = {},
+                    enabled = otp.value.length < 6,
+                    onClick = {
+                        otp.value = otp.value + "4"
+                    },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
                     modifier = Modifier
@@ -176,7 +224,10 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
                 OutlinedButton(
-                    onClick = {},
+                    enabled = otp.value.length < 6,
+                    onClick = {
+                        otp.value = otp.value + "5"
+                    },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
                     modifier = Modifier
@@ -189,7 +240,10 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
                 OutlinedButton(
-                    onClick = {},
+                    enabled = otp.value.length < 6,
+                    onClick = {
+                        otp.value = otp.value + "6"
+                    },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
                     modifier = Modifier
@@ -208,7 +262,10 @@ fun BottomSectionContent(navController: NavController) {
             ) {
 
                 OutlinedButton(
-                    onClick = {},
+                    enabled = otp.value.length < 6,
+                    onClick = {
+                        otp.value = otp.value + "7"
+                    },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
                     modifier = Modifier
@@ -221,7 +278,10 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
                 OutlinedButton(
-                    onClick = {},
+                    enabled = otp.value.length < 6,
+                    onClick = {
+                        otp.value = otp.value + "8"
+                    },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
                     modifier = Modifier
@@ -234,7 +294,10 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
                 OutlinedButton(
-                    onClick = {},
+                    enabled = otp.value.length < 6,
+                    onClick = {
+                        otp.value = otp.value + "9"
+                    },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
                     modifier = Modifier
@@ -261,7 +324,10 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
                 OutlinedButton(
-                    onClick = {},
+                    enabled = otp.value.length < 6,
+                    onClick = {
+                        otp.value = otp.value + "0"
+                    },
                     shape = RoundedCornerShape(8.dp),
                     border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
                     modifier = Modifier
@@ -274,15 +340,25 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
                 OutlinedButton(
-                    onClick = {},
+                    enabled = otp.value.isNotEmpty(),
+                    onClick = {
+                        otp.value = if (otp.value.length == 1) "" else otp.value.substring(
+                            0, otp.value.length - 1
+                        )
+                    },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = BorderStroke(1.dp, Color.Transparent),
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
                 ) {
 
-                    Icon(imageVector = Icons.Default.Backspace, contentDescription = "delete")
+                    Icon(
+                        imageVector = Icons.Outlined.Backspace,
+                        contentDescription = "delete",
+                        tint = primary500,
+                        modifier = Modifier.scale(1.2f)
+                    )
 
                 }
             }
