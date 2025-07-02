@@ -3,7 +3,9 @@ package com.paymentoptions.pos.ui.composables.layout.sectioned
 import CustomDialog
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.outlined.Logout
@@ -36,8 +39,6 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,11 +49,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -60,7 +63,9 @@ import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
 import com.paymentoptions.pos.ui.composables.navigation.Screens
+import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.primary500
 import kotlinx.coroutines.launch
 
 data class BottomNavigationBarItem(
@@ -135,28 +140,40 @@ fun Item(
     selected: BottomNavigationBarItem,
     onSelected: () -> Unit,
     modifier: Modifier = Modifier,
+    minLines: Int = 1,
+    maxLines: Int = 1,
 ) {
 
     val icon = if (selected == item) item.selectedIcon else item.unselectedIcon
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
-        IconButton(
-            onClick = onSelected, colors = IconButtonDefaults.iconButtonColors().copy(
-                contentColor = primary100
-            )
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable {
+            onSelected()
+        }, verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(RoundedCornerShape(50))
+                .background(iconBackgroundColor), contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = icon, contentDescription = item.title, modifier = Modifier.size(24.dp)
+                imageVector = icon,
+                contentDescription = item.title,
+                modifier = Modifier.size(24.dp),
+                tint = primary500
             )
         }
+
         Text(
             item.title,
             textAlign = TextAlign.Center,
-            minLines = 2,
-            maxLines = 2,
+            minLines = minLines,
+            maxLines = maxLines,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = primary100
+            color = primary500
         )
     }
 }
@@ -166,16 +183,14 @@ fun MyBottomNavigationBar(
     navController: NavController,
     showMoreItems: Boolean = false,
     onClickShowMoreItems: () -> Unit,
+    bottomNavigationBarHeightInDp: Dp = 70.dp,
 ) {
-
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showSignOutConfirmationDialog by remember { mutableStateOf(false) }
     var signOutLoader by remember { mutableStateOf(false) }
     var signOutResponse: SignOutResponse? = null
-
     var selected by remember { mutableStateOf<BottomNavigationBarItem>(home) }
-
 
     CustomDialog(
         showDialog = showSignOutConfirmationDialog,
@@ -222,8 +237,6 @@ fun MyBottomNavigationBar(
         },
         onDismissFn = { showSignOutConfirmationDialog = false })
 
-
-
     Column {
         if (showMoreItems) Row(
             modifier = Modifier.fillMaxWidth()
@@ -247,17 +260,19 @@ fun MyBottomNavigationBar(
                             itemsInMore[it],
                             more,
                             onSelected = {
+                                println("Current: ${navController.currentDestination?.route}")
                                 navController.navigate(itemsInMore[it].route)
                             },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(20.dp),
+                            minLines = 2,
+                            maxLines = 2
                         )
                     }
                 }
 
                 item {
-
                     OutlinedCard(
                         colors = CardDefaults.cardColors(
                             containerColor = Color.White.copy(alpha = 0.1f),
@@ -273,18 +288,14 @@ fun MyBottomNavigationBar(
                                 route = Screens.SignOut.route
                             ),
                             more,
-                            onSelected = {
-
-
-                                showSignOutConfirmationDialog = true
-
-                            },
+                            onSelected = { showSignOutConfirmationDialog = true },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(20.dp),
+                            minLines = 2,
+                            maxLines = 2
                         )
                     }
-
                 }
             }
         }
@@ -292,30 +303,40 @@ fun MyBottomNavigationBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White)
-                .height(60.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.Top,
+                .height(bottomNavigationBarHeightInDp)
+                .background(Color.White),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
 
             Item(home, selected, onSelected = {
-                selected = home
-                navController.navigate(selected.route)
+
+                println("selected: $selected")
+                if (selected != home) {
+                    selected = home
+                    navController.navigate(selected.route)
+                }
             })
 
             Item(foodMenu, selected, onSelected = {
-                selected = foodMenu
-                navController.navigate(selected.route)
+                if (selected != foodMenu) {
+                    selected = foodMenu
+                    navController.navigate(selected.route)
+                }
             })
 
             Item(receiveMoney, selected, onSelected = {
-                selected = receiveMoney
-                navController.navigate(selected.route)
+                if (selected != receiveMoney) {
+                    selected = receiveMoney
+                    navController.navigate(selected.route)
+                }
             })
 
             Item(notifications, selected, onSelected = {
-                selected = notifications
-                navController.navigate(selected.route)
+                if (selected != notifications) {
+                    selected = notifications
+                    navController.navigate(selected.route)
+                }
             })
 
             Item(more, selected, onSelected = {

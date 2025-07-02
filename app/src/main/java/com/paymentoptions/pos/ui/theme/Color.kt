@@ -28,6 +28,7 @@ val purple50 = Color(0xFF7277A8)
 
 val linkColor = Color(0xFF0B317A)
 val bannerBgColor = Color(0xFF336EFF)
+val iconBackgroundColor = Color(0xFFE7F6FF)
 
 val primaryEnabledButtonColor = primary500
 val primaryEnabledButtonTextColor = Color.White

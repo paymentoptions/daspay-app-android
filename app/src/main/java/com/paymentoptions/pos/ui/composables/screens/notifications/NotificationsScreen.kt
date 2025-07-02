@@ -12,6 +12,7 @@ fun NotificationsScreen(navController: NavController) {
         bottomSectionMaxHeightRatio = 0.9f,
         bottomSectionContent = {
             BottomSectionContent(navController)
-        }, enableBottomNavigationBar = false
+        },
+        enableBottomNavigationBar = false,
     )
 }

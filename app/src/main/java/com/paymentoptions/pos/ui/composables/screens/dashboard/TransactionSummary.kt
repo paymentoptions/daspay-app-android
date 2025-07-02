@@ -37,6 +37,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import java.time.OffsetDateTime
 import java.util.Date
 
+
 @Composable
 fun TransactionSummary(transaction: TransactionListDataRecord) {
 

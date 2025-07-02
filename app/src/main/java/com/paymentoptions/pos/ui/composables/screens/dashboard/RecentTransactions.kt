@@ -90,10 +90,29 @@ fun RecentTransactions(navController: NavController) {
     }
 
     fun exitToLoginScreen() {
-        navController.navigate("loginScreen") {
+        navController.navigate(Screens.SignIn.route) {
             popUpTo(0) { inclusive = true }
         }
     }
+
+//    val configuration = LocalConfiguration.current
+//    val screenHeight = configuration.screenHeightDp.dp
+//    val screenWidth = configuration.screenWidthDp.dp
+//    val pagerState = rememberPagerState(pageCount = { 5 }, initialPage = 0)
+//
+//    Box(
+//        modifier = Modifier
+//            .width(screenWidth)
+//            .height(screenHeight)
+//            .background(Color.Red),
+//        contentAlignment = Alignment.Center
+//    ) {
+//        HorizontalPager(state = pagerState) { page ->
+//            Text(
+//                text = "Page: $page", modifier = Modifier.fillMaxWidth()
+//            )
+//        }
+//    }
 
     Column {
 

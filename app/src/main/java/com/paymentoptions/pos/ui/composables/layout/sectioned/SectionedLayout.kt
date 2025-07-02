@@ -49,9 +49,7 @@ fun SectionedLayout(
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMaxHeightRatio))
     var showMoreItems by remember { mutableStateOf(false) }
 
-    val bottomNavigationBarHeight = 75.dp
-    val bottomNavigationBarExpandedHeight = 348.dp
-
+    val bottomNavigationBarHeightInDp = 70.dp
     val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.8f else 0.05f)
     val borderRadiusInDp = 32.dp
 
@@ -67,7 +65,7 @@ fun SectionedLayout(
             modifier = Modifier
                 .fillMaxSize()
                 .align(alignment = Alignment.TopCenter)
-                .padding(bottom = if (enableBottomNavigationBar) bottomNavigationBarHeight else 0.dp)
+                .padding(bottom = if (enableBottomNavigationBar) bottomNavigationBarHeightInDp else 0.dp)
                 .zIndex(2f)
                 .clickable(
                     enabled = !showMoreItems,
@@ -132,12 +130,11 @@ fun SectionedLayout(
                 .background(Color.White)
                 .background(primary100.copy(alpha = 0.04f))
                 .align(alignment = Alignment.BottomCenter)
-                .height(if (showMoreItems) bottomNavigationBarExpandedHeight else bottomNavigationBarHeight)
-                .zIndex(5f)
+                .zIndex(5f),
         ) {
             MyBottomNavigationBar(navController, showMoreItems, onClickShowMoreItems = {
                 toggleShowMoreItems()
-            })
+            }, bottomNavigationBarHeightInDp)
         }
     }
 }

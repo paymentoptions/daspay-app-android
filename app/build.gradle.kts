@@ -98,4 +98,5 @@ dependencies {
     implementation(libs.firebase.bom)
     implementation(libs.firebase.analytics)
 
+    implementation(libs.androidx.compose.bom.v20250500)
 }
