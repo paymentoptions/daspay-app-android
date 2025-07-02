@@ -111,9 +111,7 @@ fun Item(
     minLines: Int = 1,
     maxLines: Int = 1,
 ) {
-    val isSelected = selected == item
-
-    println("item: ${item.title}  | isSelected : $isSelected")
+//    val isSelected = selected == item
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable {

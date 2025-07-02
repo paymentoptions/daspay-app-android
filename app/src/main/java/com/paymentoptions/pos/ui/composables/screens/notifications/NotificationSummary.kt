@@ -19,11 +19,11 @@ import androidx.compose.material.icons.outlined.Money
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.theme.green200
 import com.paymentoptions.pos.ui.theme.green500
+import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import java.text.SimpleDateFormat
@@ -68,26 +69,19 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
-            Surface(
-                shape = RoundedCornerShape(16.dp),
+            Box(
                 modifier = Modifier
-                    .width(60.dp)
-                    .height(60.dp),
-                color = Color.White
-
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(iconBackgroundColor), contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier.padding(16.dp), contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isCardTransaction) Icons.Outlined.CreditCard else Icons.Outlined.Money,
-                        contentDescription = "Card",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+                Icon(
+                    imageVector = if (isCardTransaction) Icons.Outlined.CreditCard else Icons.Outlined.Money,
+                    contentDescription = "Icon"
+                )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             Column(modifier = Modifier.weight(8f)) {
 
@@ -116,7 +110,7 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
             Column(
                 horizontalAlignment = Alignment.End,
