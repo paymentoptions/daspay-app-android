@@ -17,17 +17,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Fastfood
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Money
-import androidx.compose.material.icons.filled.MoneyOff
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Fastfood
@@ -70,67 +60,45 @@ import kotlinx.coroutines.launch
 
 data class BottomNavigationBarItem(
     val title: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
+    val icon: ImageVector,
     val route: String,
 )
 
 val home = BottomNavigationBarItem(
-    title = "Home",
-    selectedIcon = Icons.Default.Dashboard,
-    unselectedIcon = Icons.Outlined.Dashboard,
-    route = Screens.Dashboard.route
+    title = "Home", icon = Icons.Outlined.Dashboard, route = Screens.Dashboard.route
 )
 
 val foodMenu = BottomNavigationBarItem(
-    title = "Food Menu",
-    selectedIcon = Icons.Default.Fastfood,
-    unselectedIcon = Icons.Outlined.Fastfood,
-    route = Screens.FoodMenu.route
+    title = "Food Menu", icon = Icons.Outlined.Fastfood, route = Screens.FoodMenu.route
 )
 
 val receiveMoney = BottomNavigationBarItem(
     title = "Receive Money",
-    selectedIcon = Icons.Default.Money,
-    unselectedIcon = Icons.Outlined.Money,
+    icon = Icons.Outlined.Money,
     route = Screens.ReceiveMoney.route,
 )
 
 val notifications = BottomNavigationBarItem(
     title = "Notifications",
-    selectedIcon = Icons.Default.Notifications,
-    unselectedIcon = Icons.Outlined.Notifications,
+    icon = Icons.Outlined.Notifications,
     route = Screens.Notifications.route
 )
 
 val more = BottomNavigationBarItem(
-    title = "More",
-    selectedIcon = Icons.Default.MoreHoriz,
-    unselectedIcon = Icons.Outlined.MoreHoriz,
-    route = "More"
+    title = "More", icon = Icons.Outlined.MoreHoriz, route = "More"
 )
 
 val itemsInMore = listOf<BottomNavigationBarItem>(
     BottomNavigationBarItem(
         title = "Transaction History",
-        selectedIcon = Icons.Default.CreditCard,
-        unselectedIcon = Icons.Outlined.CreditCard,
+        icon = Icons.Outlined.CreditCard,
         route = Screens.TransactionHistory.route
     ), BottomNavigationBarItem(
-        title = "Refund",
-        selectedIcon = Icons.Default.MoneyOff,
-        unselectedIcon = Icons.Outlined.MoneyOff,
-        route = Screens.Refund.route
+        title = "Refund", icon = Icons.Outlined.MoneyOff, route = Screens.Refund.route
     ), BottomNavigationBarItem(
-        title = "Settings",
-        selectedIcon = Icons.Default.Settings,
-        unselectedIcon = Icons.Outlined.Settings,
-        route = Screens.Settings.route
+        title = "Settings", icon = Icons.Outlined.Settings, route = Screens.Settings.route
     ), BottomNavigationBarItem(
-        title = "Help & Support",
-        selectedIcon = Icons.Default.Info,
-        unselectedIcon = Icons.Outlined.Info,
-        route = Screens.HelpAndSupport.route
+        title = "Help & Support", icon = Icons.Outlined.Info, route = Screens.HelpAndSupport.route
     )
 )
 
@@ -143,8 +111,9 @@ fun Item(
     minLines: Int = 1,
     maxLines: Int = 1,
 ) {
+    val isSelected = selected == item
 
-    val icon = if (selected == item) item.selectedIcon else item.unselectedIcon
+    println("item: ${item.title}  | isSelected : $isSelected")
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable {
@@ -159,7 +128,7 @@ fun Item(
                 .background(iconBackgroundColor), contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = icon,
+                imageVector = item.icon,
                 contentDescription = item.title,
                 modifier = Modifier.size(24.dp),
                 tint = primary500
@@ -259,10 +228,7 @@ fun MyBottomNavigationBar(
                         Item(
                             itemsInMore[it],
                             more,
-                            onSelected = {
-                                println("Current: ${navController.currentDestination?.route}")
-                                navController.navigate(itemsInMore[it].route)
-                            },
+                            onSelected = { navController.navigate(itemsInMore[it].route) },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(20.dp),
@@ -283,8 +249,7 @@ fun MyBottomNavigationBar(
                         Item(
                             BottomNavigationBarItem(
                                 title = "Log Out",
-                                selectedIcon = Icons.AutoMirrored.Filled.Logout,
-                                unselectedIcon = Icons.AutoMirrored.Outlined.Logout,
+                                icon = Icons.AutoMirrored.Outlined.Logout,
                                 route = Screens.SignOut.route
                             ),
                             more,
@@ -310,8 +275,6 @@ fun MyBottomNavigationBar(
         ) {
 
             Item(home, selected, onSelected = {
-
-                println("selected: $selected")
                 if (selected != home) {
                     selected = home
                     navController.navigate(selected.route)
