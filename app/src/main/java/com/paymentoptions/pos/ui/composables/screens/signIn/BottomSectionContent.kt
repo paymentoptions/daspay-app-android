@@ -136,7 +136,8 @@ fun BottomSectionContent(navController: NavController) {
         Spacer(modifier = Modifier.height(12.dp))
 
         FilledButton(
-            text = "Proceed", onClick = {
+            text = "Proceed",
+            onClick = {
                 scope.launch {
                     isLoading = true
                     var signInResponse: SignInResponse? = null
@@ -177,7 +178,10 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
 
-            }, isLoading = isLoading, disabled = emailError || passwordError
+            },
+            isLoading = isLoading,
+            disabled = emailError || passwordError,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

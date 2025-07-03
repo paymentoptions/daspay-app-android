@@ -273,10 +273,10 @@ fun MyBottomNavigationBar(
         ) {
 
             Item(home, selected, onSelected = {
-                if (selected != home) {
+//                if (selected != home) {
                     selected = home
                     navController.navigate(selected.route)
-                }
+//                }
             })
 
             Item(foodMenu, selected, onSelected = {

@@ -1,3 +1,4 @@
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -43,11 +44,17 @@ fun CustomDialog(
             },
             confirmButton = {
                 if (showAcceptButton) FilledButton(
-                    text = acceptButtonText, onClick = onAcceptFn
+                    text = acceptButtonText,
+                    onClick = onAcceptFn,
+                    modifier = Modifier.fillMaxWidth()
                 )
             },
             dismissButton = {
-                if (showCancelButton) OutlinedButton(text = cancelButtonText, onClick = onDismissFn)
+                if (showCancelButton) OutlinedButton(
+                    text = cancelButtonText,
+                    onClick = onDismissFn,
+                    modifier = Modifier.fillMaxWidth()
+                )
             },
             onDismissRequest = onDismissFn,
         )

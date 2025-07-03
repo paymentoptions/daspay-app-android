@@ -10,6 +10,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 fun TransactionHistoryScreen(navController: NavController) {
     SectionedLayout(
         navController = navController, bottomSectionContent = {
-                BottomSectionContent(navController)
-        })
+            BottomSectionContent(navController)
+        }, bottomSectionMaxHeightRatio = 0.9f
+    )
 }

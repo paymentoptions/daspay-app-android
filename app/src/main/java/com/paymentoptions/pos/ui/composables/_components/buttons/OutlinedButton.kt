@@ -1,7 +1,6 @@
 package com.paymentoptions.pos.ui.composables._components.buttons
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -27,9 +26,7 @@ fun OutlinedButton(
     Button(
         enabled = !disabled,
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .border(1.dp, Color.LightGray),
+        modifier = modifier.border(1.dp, Color.LightGray),
         colors = ButtonDefaults.buttonColors().copy(
             contentColor = primary900, containerColor = Color.Transparent
         ),

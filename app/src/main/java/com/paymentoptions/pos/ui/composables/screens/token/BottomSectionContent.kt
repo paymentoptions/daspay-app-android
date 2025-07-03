@@ -367,7 +367,8 @@ fun BottomSectionContent(navController: NavController) {
         FilledButton(
             text = "Confirm",
             onClick = { openFingerprintScan = true },
-            disabled = otp.value.length < 6
+            disabled = otp.value.length < 6,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

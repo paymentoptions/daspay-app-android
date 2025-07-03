@@ -98,5 +98,8 @@ dependencies {
     implementation(libs.firebase.bom)
     implementation(libs.firebase.analytics)
 
+    //ycharts
+    implementation(libs.ycharts)
+
     implementation(libs.androidx.compose.bom.v20250500)
 }

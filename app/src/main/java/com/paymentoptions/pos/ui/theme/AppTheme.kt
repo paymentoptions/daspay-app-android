@@ -40,6 +40,15 @@ private val typography = AppTypography(
             colorStops = arrayOf(0.92f to primary300, 1f to primary100)
         )
     ),
+    titleNormal = TextStyle(
+        fontFamily = Inter,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = primary900,
+    ),
+    footnote = TextStyle(
+        fontFamily = Inter, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = purple50
+    ),
 
     titleLarge = TextStyle(
         fontFamily = Inter,
@@ -48,33 +57,20 @@ private val typography = AppTypography(
         color = primary500,
     ),
 
-    titleNormal = TextStyle(
-        fontFamily = Inter,
-        fontWeight = FontWeight.Normal,
-        fontSize = 28.sp
-    ),
-
     body = TextStyle(
-        fontFamily = Inter,
-        fontSize = 16.sp
+        fontFamily = Inter, fontSize = 16.sp
     ),
-
     labelLarge = TextStyle(
-        fontFamily = Inter,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 16.sp,
-        color = primary900
+        fontFamily = Inter, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = primary900
     ),
     labelNormal = TextStyle(
-        fontFamily = Inter,
-        fontSize = 14.sp,
-        color = purple50
+        fontFamily = Inter, fontSize = 14.sp, color = purple50
     ),
     labelSmall = TextStyle(
-        fontFamily = Inter,
-        fontSize = 12.sp
+        fontFamily = Inter, fontSize = 12.sp
     ),
-)
+
+    )
 
 private val shape = AppShape(
     container = RoundedCornerShape(12.dp),

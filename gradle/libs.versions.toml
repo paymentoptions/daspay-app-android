@@ -23,6 +23,7 @@ navigationCompose = "2.8.9"
 pagingCompose = "3.3.6"
 retrofit = "2.9.0"
 firebaseMessagingKtx = "24.1.1"
+ycharts = "2.1.0"
 
 [libraries]
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
@@ -55,6 +56,7 @@ material3 = { module = "androidx.compose.material3:material3", version.ref = "ma
 minehades = { module = "com.theminesec:minehades", version.ref = "minehades" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
+ycharts = { module = "co.yml:ycharts", version.ref = "ycharts" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
