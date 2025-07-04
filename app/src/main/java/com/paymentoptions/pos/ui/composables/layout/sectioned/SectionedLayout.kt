@@ -49,7 +49,7 @@ fun SectionedLayout(
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMaxHeightRatio))
     var showMoreItems by remember { mutableStateOf(false) }
 
-    val bottomNavigationBarHeightInDp = 70.dp
+    val bottomNavigationBarHeightInDp = BOTTOM_NAVIGATION_HEIGHT_IN_DP
     val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.8f else 0.05f)
     val borderRadiusInDp = 32.dp
 

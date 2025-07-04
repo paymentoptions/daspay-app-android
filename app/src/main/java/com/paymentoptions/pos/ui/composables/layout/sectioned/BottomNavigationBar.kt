@@ -58,6 +58,8 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import kotlinx.coroutines.launch
 
+val BOTTOM_NAVIGATION_HEIGHT_IN_DP = 70.dp
+
 data class BottomNavigationBarItem(
     val title: String,
     val icon: ImageVector,
@@ -145,12 +147,13 @@ fun Item(
     }
 }
 
+
 @Composable
 fun MyBottomNavigationBar(
     navController: NavController,
     showMoreItems: Boolean = false,
     onClickShowMoreItems: () -> Unit,
-    bottomNavigationBarHeightInDp: Dp = 70.dp,
+    bottomNavigationBarHeightInDp: Dp = BOTTOM_NAVIGATION_HEIGHT_IN_DP,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -274,8 +277,8 @@ fun MyBottomNavigationBar(
 
             Item(home, selected, onSelected = {
 //                if (selected != home) {
-                    selected = home
-                    navController.navigate(selected.route)
+                selected = home
+                navController.navigate(selected.route)
 //                }
             })
 
