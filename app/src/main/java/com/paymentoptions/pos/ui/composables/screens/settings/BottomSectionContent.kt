@@ -64,7 +64,7 @@ fun BottomSectionContent(navController: NavController) {
 
     CustomDialog(
         showDialog = showSignOutConfirmationDialog,
-        title = "Confirmation",
+        title = "Confirmation Required",
         text = "Do you want to log out?",
         acceptButtonText = "Log Out",
         onAcceptFn = {

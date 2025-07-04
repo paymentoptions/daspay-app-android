@@ -27,5 +27,11 @@ fun getDasmidFromToken(decodedTokenJson: JSONObject): String {
 }
 
 fun getKeyFromToken(decodedTokenJson: JSONObject, key: String): String {
-    return decodedTokenJson[key] as String
+
+    return try {
+        decodedTokenJson[key] as String
+    } catch (_: Exception) {
+        "No data from API"
+    }
+
 }

@@ -28,7 +28,7 @@ fun Transactions(
     var selectedFilterKey by remember { mutableStateOf("ALL") }
     var transactionsWithTrackId = mutableMapOf<String, Boolean>()
 
-    if (transactions == null) NoData(text = "No transactions found")
+    if (transactions == null || transactions.isEmpty()) NoData(text = "No transactions found")
     else Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.End,

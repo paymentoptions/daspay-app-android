@@ -38,7 +38,7 @@ fun SectionedLayout(
     navController: NavController,
     bottomSectionContent: @Composable () -> Unit,
     bottomSectionMinHeightRatio: Float = 0.2f,
-    bottomSectionMaxHeightRatio: Float = 0.73f,
+    bottomSectionMaxHeightRatio: Float = 0.85f,
     enableBottomNavigationBar: Boolean = true,
     defaultBottomSectionPadding: Dp = 16.dp,
 ) {

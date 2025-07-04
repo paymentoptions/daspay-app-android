@@ -31,8 +31,8 @@ import com.paymentoptions.pos.ui.theme.primary100
 @Composable
 fun CustomDropdown(
     filters: Map<String, String>,
-    selectedFilterValue: String,
-    onFilterChange: (String, String) -> Unit,
+    selectedFilter: Map.Entry<String, String>,
+    onFilterChange: (Map.Entry<String, String>) -> Unit,
     icon: ImageVector? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -57,7 +57,7 @@ fun CustomDropdown(
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = selectedFilterValue,
+                text = selectedFilter.key,
                 style = AppTheme.typography.titleNormal.copy(fontSize = 14.sp)
             )
 
@@ -79,7 +79,7 @@ fun CustomDropdown(
             expanded = expanded, onDismissRequest = { expanded = false }) {
             filters.forEach { option ->
                 DropdownMenuItem(text = { Text(option.value) }, onClick = {
-                    onFilterChange(option.key, option.value)
+                    onFilterChange(option)
                     expanded = false
                 })
             }

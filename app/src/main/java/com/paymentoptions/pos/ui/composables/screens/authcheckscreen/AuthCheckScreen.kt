@@ -15,19 +15,18 @@ fun AuthCheckScreen(navController: NavController) {
     val authDetails = SharedPreferences.getAuthDetails(context)
     val biometricStatus = SharedPreferences.getBiometricsStatus(context)
 
-    if (authDetails?.success == true)
-        FingerprintScanScreen(
-            navController = navController,
-            onAuthSuccess = {
-                navController.navigate(Screens.Dashboard.route) {
-                    popUpTo(Screens.SignIn.route) { inclusive = true }
-                }
-            },
-            onAuthFailed = {
-                Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
-            },
-            bypassBiometric = !biometricStatus
-        )
+    if (authDetails?.success == true) FingerprintScanScreen(
+        navController = navController,
+        onAuthSuccess = {
+            navController.navigate(Screens.Dashboard.route) {
+                popUpTo(Screens.SignIn.route) { inclusive = true }
+            }
+        },
+        onAuthFailed = {
+            Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
+        },
+        bypassBiometric = !biometricStatus
+    )
     else {
         SharedPreferences.clearSharedPreferences(context)
         navController.navigate(Screens.SignIn.route) {

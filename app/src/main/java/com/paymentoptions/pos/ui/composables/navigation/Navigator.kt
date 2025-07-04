@@ -23,7 +23,7 @@ import com.paymentoptions.pos.ui.composables.screens.transactionshistory.Transac
 @Composable
 fun Navigator() {
     val navController = rememberNavController()
-    val startDestination = Screens.TransactionHistory.route
+    val startDestination = Screens.Loading.route
 
 //    LaunchedEffect(navController) {
 //        navController.currentBackStackEntryFlow.collect { backStackEntry ->
@@ -61,7 +61,6 @@ fun Navigator() {
         composable(Screens.Settings.route) { SettingsScreen(navController) }
         composable(Screens.HelpAndSupport.route) { HelpAndSupportScreen(navController) }
         //composable(Screens.AppVersion.route) { AppVersionScreen(navController) }
-
 
         //Misc
         composable(Screens.Loading.route) { LoadingScreen(navController) }

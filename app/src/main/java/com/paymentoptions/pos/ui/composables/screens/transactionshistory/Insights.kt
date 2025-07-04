@@ -14,6 +14,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,10 +28,11 @@ import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.green500
-import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import java.time.OffsetDateTime
+import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 
 @Composable
 fun Insights(
@@ -39,7 +41,6 @@ fun Insights(
 ) {
     val scrollState = rememberScrollState()
     var currency = "JPY"
-    var receivalAmount = 0.0f
     var saleTransactionCount = 0
     var earningAmount = 0.0f
     var refundTransactionCount = 0
@@ -48,7 +49,7 @@ fun Insights(
     var chartMinValue = 0.0f
     var barData: MutableList<BarData> = mutableListOf()
 
-    if (transactions == null) NoData(text = "No transactions found")
+    if (transactions == null || transactions.isEmpty()) NoData(text = "No transactions found")
     else Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -61,17 +62,15 @@ fun Insights(
             val amount = transaction.amount.toFloat()
             val date = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
 
-            println("transaction : ${transaction.TransactionType} | ${transaction.status} | $date")
-
-            receivalAmount = receivalAmount + amount
-
             if (amount > chartMaxValue) chartMaxValue = amount
             if (amount < chartMinValue) chartMinValue = amount
 
             barData.add(
                 BarData(
                     point = Point(x = index.toFloat(), y = transaction.amount.toFloat()),
-                    color = if (transaction.TransactionType == "REFUND") Color.Red else Color.Green,
+                    color = if (transaction.TransactionType == "REFUND") Color.Red.copy(alpha = 0.5f) else primary500.copy(
+                        alpha = 0.5f
+                    ),
                     label = "${date.dayOfMonth} ${date.month}",
                     gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
                     description = if (transaction.TransactionType == "REFUND") "Refund" else "Earning",
@@ -91,7 +90,7 @@ fun Insights(
             }
         }
 
-        updateReceivalAmount(receivalAmount)
+        updateReceivalAmount(earningAmount)
 
         //Bar Graph
         Row(
@@ -101,23 +100,23 @@ fun Insights(
 
             val xAxisData =
                 AxisData.Builder().axisStepSize(2.dp).steps(barData.size - 1).bottomPadding(0.dp)
-                    .axisLabelColor(Color.LightGray).axisLineThickness(0.dp)
-                    .axisLabelFontSize(8.sp).axisLabelAngle(0f).axisLineColor(Color.White)
-                    .labelAndAxisLinePadding(0.dp).labelData { index -> barData[index].label }
-                    .build()
+                    .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
+                    .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
+                    .labelData { index -> barData[index].label }.build()
 
             val yAxisData =
-                AxisData.Builder().steps(10).labelAndAxisLinePadding(20.dp).axisOffset(20.dp)
-                    .labelData { index -> (index * (barData.size / 1)).toString() }.build()
+                AxisData.Builder().axisStepSize(2.dp).steps(5).axisOffset(30.dp).endPadding(0.dp)
+                    .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
+                    .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
+                    .backgroundColor(Color.White).labelData { index ->
+                        (index * (chartMaxValue / (barData.size - 1))).roundToInt().toString()
+                    }.build()
 
             val barChartData = BarChartData(
-                chartData = barData,
-                xAxisData = xAxisData,
-                yAxisData = yAxisData,
-                showYAxis = false,
+                chartData = barData, xAxisData = xAxisData, yAxisData = yAxisData,
+//                showYAxis = false,
 //                showXAxis = false,
-                paddingTop = 0.dp,
-                paddingEnd = 0.dp
+                paddingTop = 0.dp, paddingEnd = 0.dp
             )
 
             BarChart(
@@ -133,7 +132,12 @@ fun Insights(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(primary100.copy(alpha = 0.2f), shape = RoundedCornerShape(16.dp))
+//                .background(primary100.copy(alpha = 0.2f), shape = RoundedCornerShape(16.dp))
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color(0xFFE6F6FF), Color.White),
+                    ), shape = RoundedCornerShape(8.dp)
+                )
                 .padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
@@ -170,7 +174,7 @@ fun Insights(
                     )
 
                     Text(
-                        earningAmount.toString(),
+                        "+ ${earningAmount.absoluteValue}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = green500
@@ -211,7 +215,7 @@ fun Insights(
                     )
 
                     Text(
-                        refundAmount.toString(),
+                        "- ${refundAmount.absoluteValue}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Red
@@ -247,6 +251,8 @@ fun Insights(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+
+                    val netEarningAmount = earningAmount - refundAmount
                     Text(
                         "Net Earnings",
                         fontSize = 14.sp,
@@ -255,13 +261,15 @@ fun Insights(
                     )
 
                     Text(
-                        (earningAmount - refundAmount).toString(),
+                        "${if (netEarningAmount > 0) "+" else if (netEarningAmount < 0) "-" else ""} ${netEarningAmount.absoluteValue}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = primary900
                     )
                 }
             }
+
+
         }
     }
 }

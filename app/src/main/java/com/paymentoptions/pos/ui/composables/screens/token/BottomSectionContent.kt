@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -63,7 +62,7 @@ fun BottomSectionContent(navController: NavController) {
     })
 
     Column(
-        modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = "Enter Token", style = AppTheme.typography.screenTitle
@@ -77,7 +76,6 @@ fun BottomSectionContent(navController: NavController) {
         )
 
         Spacer(modifier = Modifier.height(30.dp))
-
 
         Row(
             modifier = Modifier

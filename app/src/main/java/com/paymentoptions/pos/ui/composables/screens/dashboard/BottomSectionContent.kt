@@ -74,7 +74,13 @@ fun BottomSectionContent(navController: NavController) {
         apiResponseAvailable = true
     }
 
-    if (apiResponseAvailable) Column(
+    if (!apiResponseAvailable) Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        CustomCircularProgressIndicator(null, Orange10)
+    } else Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -143,13 +149,5 @@ fun BottomSectionContent(navController: NavController) {
                 updateReceivalAmount(it)
             })
     }
-    else {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CustomCircularProgressIndicator(null, Orange10)
-        }
-    }
+
 }
