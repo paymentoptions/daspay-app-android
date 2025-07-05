@@ -14,7 +14,7 @@ import com.paymentoptions.pos.R
 @Composable
 fun TapToPayImage(height: Dp = 60.dp) {
     Image(
-        painter = painterResource(id = R.drawable.tap_to_pay_2), // Replace with your image resource
+        painter = painterResource(id = R.drawable.tap_to_pay), // Replace with your image resource
         contentDescription = "DASPay Logo",
         contentScale = ContentScale.Fit,
         modifier = Modifier

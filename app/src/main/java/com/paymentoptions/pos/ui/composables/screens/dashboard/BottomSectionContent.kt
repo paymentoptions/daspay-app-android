@@ -49,7 +49,6 @@ fun BottomSectionContent(navController: NavController) {
     var take: Int by remember { mutableIntStateOf(10) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
     var maxPage: Int by remember { mutableIntStateOf(1) }
-    var showInsights by remember { mutableStateOf(false) }
 
     fun updateReceivalAmount(newAmount: Float) {
         receivalAmount = newAmount
@@ -116,7 +115,7 @@ fun BottomSectionContent(navController: NavController) {
 
         FilledButton(
             text = "View Insights",
-            onClick = { showInsights = !showInsights },
+            onClick = { navController.navigate(Screens.TransactionHistory.route) },
             modifier = Modifier
                 .width(160.dp)
                 .height(36.dp)
@@ -138,7 +137,7 @@ fun BottomSectionContent(navController: NavController) {
             )
 
             SuggestionChip(onClick = {
-                navController.navigate(Screens.TransactionHistory.route)
+//                navController.navigate(Screens.TransactionHistory.route)
             }, label = { Text(text = "View All", fontSize = 14.sp, fontWeight = FontWeight.Bold) })
         }
 

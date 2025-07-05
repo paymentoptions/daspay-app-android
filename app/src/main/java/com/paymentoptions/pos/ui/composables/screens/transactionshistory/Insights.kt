@@ -68,7 +68,7 @@ fun Insights(
             barData.add(
                 BarData(
                     point = Point(x = index.toFloat(), y = transaction.amount.toFloat()),
-                    color = if (transaction.TransactionType == "REFUND") Color.Red.copy(alpha = 0.5f) else primary500.copy(
+                    color = if (transaction.TransactionType == "REFUND") Color.Red.copy(alpha = 0.5f) else Color.Green.copy(
                         alpha = 0.5f
                     ),
                     label = "${date.dayOfMonth} ${date.month}",
@@ -109,7 +109,7 @@ fun Insights(
                     .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
                     .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
                     .backgroundColor(Color.White).labelData { index ->
-                        (index * (chartMaxValue / (barData.size - 1))).roundToInt().toString()
+                        "${currency} ${(index * (chartMaxValue / (barData.size - 1))).roundToInt()}"
                     }.build()
 
             val barChartData = BarChartData(
@@ -123,8 +123,8 @@ fun Insights(
                 modifier = Modifier
                     .height(200.dp)
                     .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(4.dp), barChartData = barChartData
+                    .background(Color.White),
+                barChartData = barChartData
             )
         }
 
