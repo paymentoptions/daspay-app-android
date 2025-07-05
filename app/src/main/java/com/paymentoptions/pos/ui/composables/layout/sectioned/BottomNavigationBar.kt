@@ -64,6 +64,7 @@ data class BottomNavigationBarItem(
     val title: String,
     val icon: ImageVector,
     val route: String,
+    val hideIcon: Boolean = false,
 )
 
 val home = BottomNavigationBarItem(
@@ -78,6 +79,7 @@ val receiveMoney = BottomNavigationBarItem(
     title = "Receive Money",
     icon = Icons.Outlined.Money,
     route = Screens.ReceiveMoney.route,
+    hideIcon = true
 )
 
 val notifications = BottomNavigationBarItem(
@@ -116,18 +118,22 @@ fun Item(
 //    val isSelected = selected == item
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable {
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier.clickable {
             onSelected()
-        }, verticalArrangement = Arrangement.spacedBy(4.dp)
+        },
+        verticalArrangement = if (item.hideIcon) Arrangement.Bottom else Arrangement.spacedBy(4.dp)
     ) {
 
         Box(
             modifier = Modifier
                 .size(36.dp)
                 .clip(RoundedCornerShape(50))
-                .background(iconBackgroundColor), contentAlignment = Alignment.Center
+                .background(if (item.hideIcon) Color.Transparent else iconBackgroundColor),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(
+
+            if (!item.hideIcon) Icon(
                 imageVector = item.icon,
                 contentDescription = item.title,
                 modifier = Modifier.size(24.dp),
@@ -147,10 +153,10 @@ fun Item(
     }
 }
 
-
 @Composable
 fun MyBottomNavigationBar(
     navController: NavController,
+    modifier: Modifier = Modifier,
     showMoreItems: Boolean = false,
     onClickShowMoreItems: () -> Unit,
     bottomNavigationBarHeightInDp: Dp = BOTTOM_NAVIGATION_HEIGHT_IN_DP,
@@ -207,7 +213,7 @@ fun MyBottomNavigationBar(
         },
         onDismissFn = { showSignOutConfirmationDialog = false })
 
-    Column {
+    Column(modifier = modifier) {
         if (showMoreItems) Row(
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -215,7 +221,9 @@ fun MyBottomNavigationBar(
                 columns = GridCells.Fixed(3),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(16.dp)
+                modifier = Modifier
+                    .padding(16.dp)
+                    .padding(bottom = 20.dp)
             ) {
                 items(itemsInMore.size) {
 

@@ -12,10 +12,10 @@ import androidx.compose.ui.unit.dp
 import com.paymentoptions.pos.R
 
 @Composable
-fun TapToPayImage(height: Dp = 60.dp) {
+fun TapToPayImage(height: Dp = 260.dp) {
     Image(
         painter = painterResource(id = R.drawable.tap_to_pay), // Replace with your image resource
-        contentDescription = "DASPay Logo",
+        contentDescription = "Tap to pay",
         contentScale = ContentScale.Fit,
         modifier = Modifier
             .fillMaxWidth()

@@ -362,106 +362,111 @@ fun BottomSectionContent(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
 
-                    if (DeveloperOptions.isEnabled(context)) {
-                        showDeveloperOptionsEnabled = true
-                    } else {
-                        var nfcStatusPair = Nfc.getStatus(context)
+                    Toast.makeText(context, "Under development", Toast.LENGTH_SHORT).show()
 
-                        if (!nfcStatusPair.first) {
-                            showNFCNotPresent = true
-                        } else if (!nfcStatusPair.second) {
-                            showNFCNotEnabled = true
+                    //Disabled
+                    if (false) {
+                        if (DeveloperOptions.isEnabled(context)) {
+                            showDeveloperOptionsEnabled = true
                         } else {
-                            val uuid: UUID = UUID.randomUUID()
-                            posReferenceId = uuid.toString()
+                            var nfcStatusPair = Nfc.getStatus(context)
 
-                            val paymentReturnUrl = PaymentReturnUrl(
-                                webhook_url = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454%22",
-                                success_url = "https://api-bpm.hiji.xyz/dgv3/success%22",
-                                decline_url = "https://api-bpm.hiji.xyz/dgv3/decline%22"
-                            )
+                            if (!nfcStatusPair.first) {
+                                showNFCNotPresent = true
+                            } else if (!nfcStatusPair.second) {
+                                showNFCNotEnabled = true
+                            } else {
+                                val uuid: UUID = UUID.randomUUID()
+                                posReferenceId = uuid.toString()
 
-                            val billingAddress = Address(
-                                country = "IN",
-                                email = merchant["email"]!!,
-                                address1 = "Chiyoda1-1",
-                                phone_number = merchant["contact"]!!,
-                                city = "Minatoku",
-                                state = "Tokyoto",
-                                postal_code = "100001"
-                            )
+                                val paymentReturnUrl = PaymentReturnUrl(
+                                    webhook_url = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454%22",
+                                    success_url = "https://api-bpm.hiji.xyz/dgv3/success%22",
+                                    decline_url = "https://api-bpm.hiji.xyz/dgv3/decline%22"
+                                )
 
-                            val shippingAddress = Address(
-                                country = "IN",
-                                email = merchant["email"]!!,
-                                address1 = "Chiyoda1-1",
-                                phone_number = merchant["contact"]!!,
-                                city = "Minatoku",
-                                state = "Tokyoto",
-                                postal_code = "100001"
-                            )
+                                val billingAddress = Address(
+                                    country = "IN",
+                                    email = merchant["email"]!!,
+                                    address1 = "Chiyoda1-1",
+                                    phone_number = merchant["contact"]!!,
+                                    city = "Minatoku",
+                                    state = "Tokyoto",
+                                    postal_code = "100001"
+                                )
 
-                            val paymentMethod = PaymentMethod(
-                                type = "daspay"
-                            )
+                                val shippingAddress = Address(
+                                    country = "IN",
+                                    email = merchant["email"]!!,
+                                    address1 = "Chiyoda1-1",
+                                    phone_number = merchant["contact"]!!,
+                                    city = "Minatoku",
+                                    state = "Tokyoto",
+                                    postal_code = "100001"
+                                )
 
-                            val paymentRequest = PaymentRequest(
-                                amount = formattedAmount,
-                                currency = "USD",
-                                merchant_txn_ref = "TEST00989012878787878787878787",
-                                customer_ip = getDeviceIpAddress(),
-                                merchant_id = merchant["dasmid"]!!,
-                                return_url = paymentReturnUrl,
-                                billing_address = billingAddress,
-                                shipping_address = shippingAddress,
-                                payment_method = paymentMethod,
-                                time_zone = getDeviceTimeZone()
-                            )
+                                val paymentMethod = PaymentMethod(
+                                    type = "daspay"
+                                )
 
-                            scope.launch {
-                                paymentLoader = true
+                                val paymentRequest = PaymentRequest(
+                                    amount = formattedAmount,
+                                    currency = "USD",
+                                    merchant_txn_ref = "TEST00989012878787878787878787",
+                                    customer_ip = getDeviceIpAddress(),
+                                    merchant_id = merchant["dasmid"]!!,
+                                    return_url = paymentReturnUrl,
+                                    billing_address = billingAddress,
+                                    shipping_address = shippingAddress,
+                                    payment_method = paymentMethod,
+                                    time_zone = getDeviceTimeZone()
+                                )
 
-                                try {
+                                scope.launch {
+                                    paymentLoader = true
 
-                                    val paymentResponse: PaymentResponse? =
-                                        payment(context, paymentRequest)
-                                    println("paymentResponse: $paymentResponse")
+                                    try {
 
-                                    if (paymentResponse == null) {
-                                        Toast.makeText(
-                                            context,
-                                            "2: Token invalid! Please login again.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
+                                        val paymentResponse: PaymentResponse? =
+                                            payment(context, paymentRequest)
+                                        println("paymentResponse: $paymentResponse")
+
+                                        if (paymentResponse == null) {
+                                            Toast.makeText(
+                                                context,
+                                                "2: Token invalid! Please login again.",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                            navController.navigate("loginScreen") {
+                                                popUpTo(0) { inclusive = true }
+                                            }
+                                        }
+
+                                        paymentResponse?.let {
+                                            if (it.success) {
+                                                launcher.launch(
+                                                    PoiRequest.ActionNew(
+                                                        tranType = TranType.SALE,
+                                                        amount = Amount(
+                                                            BigDecimal(formattedAmount),
+                                                            Currency.getInstance("USD"),
+                                                        ),
+                                                        profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
+                                                        posReference = it.transaction_details.id
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        SharedPreferences.clearSharedPreferences(context)
                                         navController.navigate("loginScreen") {
                                             popUpTo(0) { inclusive = true }
                                         }
-                                    }
 
-                                    paymentResponse?.let {
-                                        if (it.success) {
-                                            launcher.launch(
-                                                PoiRequest.ActionNew(
-                                                    tranType = TranType.SALE,
-                                                    amount = Amount(
-                                                        BigDecimal(formattedAmount),
-                                                        Currency.getInstance("USD"),
-                                                    ),
-                                                    profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
-                                                    posReference = it.transaction_details.id
-                                                )
-                                            )
-                                        }
+                                        println("Error: ${e.toString()}")
+                                    } finally {
+                                        paymentLoader = false
                                     }
-                                } catch (e: Exception) {
-                                    SharedPreferences.clearSharedPreferences(context)
-                                    navController.navigate("loginScreen") {
-                                        popUpTo(0) { inclusive = true }
-                                    }
-
-                                    println("Error: ${e.toString()}")
-                                } finally {
-                                    paymentLoader = false
                                 }
                             }
                         }

@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -141,6 +142,7 @@ fun BottomSectionContent(navController: NavController) {
                 )
 
                 SuggestionChip(
+                    border = BorderStroke(1.dp, color = primary100.copy(alpha = 0.2f)),
                     onClick = {
 //                navController.navigate(Screens.TransactionHistory.route)
                     },

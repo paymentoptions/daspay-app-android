@@ -9,6 +9,6 @@ fun ReceiveMoneyScreen(navController: NavController) {
     SectionedLayout(
         navController = navController, bottomSectionContent = {
             BottomSectionContent(navController)
-        }, bottomSectionMaxHeightRatio = 0.9f
+        }, bottomSectionMaxHeightRatio = 0.9f, enableBottomNavigationBar = false
     )
 }
