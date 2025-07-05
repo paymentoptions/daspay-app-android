@@ -43,7 +43,7 @@ import kotlin.math.ceil
 fun BottomSectionContent(navController: NavController) {
     val context = LocalContext.current
     var receivalAmount: Float? by remember { mutableStateOf<Float?>(null) }
-    val currency = "JPY"
+    var currency by remember { mutableStateOf("") }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
     var take: Int by remember { mutableIntStateOf(10) }
@@ -79,74 +79,89 @@ fun BottomSectionContent(navController: NavController) {
         verticalArrangement = Arrangement.Center
     ) {
         CustomCircularProgressIndicator(null, Orange10)
-    } else Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    } else {
 
-        Spacer(modifier = Modifier.height(10.dp))
+        currency = transactionList?.data?.records?.first()?.CurrencyCode ?: ""
 
-        Text(
-            text = "Receival for the day",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = primary900,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = buildAnnotatedString {
-                withStyle(
-                    SpanStyle(
-                        primary100.copy(alpha = 0.5f), fontWeight = FontWeight.Light
-                    )
-                ) { append("$currency ") }
-
-                withStyle(SpanStyle(primary100)) { append(receivalAmount.toString()) }
-            },
-            fontSize = 36.sp,
-            fontWeight = FontWeight.Bold,
-            color = primary100,
-            modifier = Modifier.padding(bottom = 10.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        FilledButton(
-            text = "View Insights",
-            onClick = { navController.navigate(Screens.TransactionHistory.route) },
-            modifier = Modifier
-                .width(160.dp)
-                .height(36.dp)
-        )
-
-        Spacer(Modifier.height(20.dp))
-
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
 
+            Spacer(modifier = Modifier.height(10.dp))
+
             Text(
-                text = "Recent Transactions",
+                text = "Receival for the day",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = primary500,
+                color = primary900,
             )
 
-            SuggestionChip(onClick = {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(
+                        SpanStyle(
+                            primary100.copy(alpha = 0.5f), fontWeight = FontWeight.Light
+                        )
+                    ) { append("$currency ") }
+
+                    withStyle(SpanStyle(primary100)) { append(receivalAmount.toString()) }
+                },
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                color = primary100,
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            FilledButton(
+                text = "View Insights",
+                onClick = { navController.navigate(Screens.TransactionHistory.route) },
+                modifier = Modifier
+                    .width(160.dp)
+                    .height(36.dp)
+            )
+
+            Spacer(Modifier.height(20.dp))
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Text(
+                    text = "Recent Transactions",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = primary500,
+                )
+
+                SuggestionChip(
+                    onClick = {
 //                navController.navigate(Screens.TransactionHistory.route)
-            }, label = { Text(text = "View All", fontSize = 14.sp, fontWeight = FontWeight.Bold) })
+                    },
+                    label = {
+                        Text(
+                            text = "View All",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    })
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            Transactions(
+                navController,
+                transactions = transactionList?.data?.records,
+                updateReceivalAmount = {
+                    updateReceivalAmount(it)
+                })
         }
-
-        Spacer(Modifier.height(10.dp))
-
-        Transactions(
-            navController, transactions = transactionList?.data?.records, updateReceivalAmount = {
-                updateReceivalAmount(it)
-            })
     }
 
 }

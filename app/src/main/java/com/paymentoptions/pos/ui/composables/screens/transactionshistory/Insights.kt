@@ -37,10 +37,10 @@ import kotlin.math.roundToInt
 @Composable
 fun Insights(
     transactions: Array<TransactionListDataRecord>?,
+    currency: String,
     updateReceivalAmount: (Float) -> Unit,
 ) {
     val scrollState = rememberScrollState()
-    var currency = "JPY"
     var saleTransactionCount = 0
     var earningAmount = 0.0f
     var refundTransactionCount = 0

@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
@@ -42,14 +44,14 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import kotlin.math.ceil
 
-data class Filter(
+data class Tab(
     val text: String,
     val matchText: String,
     val newCount: Int = 0,
 )
 
 @Composable
-fun FilterButton(filter: Filter, selected: Filter, onClick: () -> Unit) {
+fun FilterButton(filter: Tab, selected: Tab, onClick: () -> Unit) {
 
     Row(
         modifier = Modifier.clickable {
@@ -80,13 +82,16 @@ fun FilterButton(filter: Filter, selected: Filter, onClick: () -> Unit) {
 @Composable
 fun BottomSectionContent(navController: NavController) {
 
-    val filters = arrayOf<Filter>(
-        Filter("All", "ALL", 5),
-        Filter("Received", "SUCCESSFUL", 1),
-        Filter("Refunded", "REFUND"),
-        Filter("Failed", "NOTSUCCESSFUL")
-    )
-    var selected by remember { mutableStateOf<Filter>(filters[0]) }
+    var tabs = remember {
+        mutableStateListOf<Tab>(
+            Tab("All", "ALL"),
+            Tab("Received", "SUCCESSFUL"),
+            Tab("Refunded", "REFUND"),
+            Tab("Failed", "NOTSUCCESSFUL")
+        )
+    }
+
+    var selectedTab by remember { mutableStateOf<Tab>(tabs[0]) }
 
     val scrollState = rememberScrollState()
     val context = LocalContext.current
@@ -96,6 +101,7 @@ fun BottomSectionContent(navController: NavController) {
     var currentPage: Int by remember { mutableIntStateOf(1) }
     var maxPage: Int by remember { mutableIntStateOf(1) }
     var transactionsWithTrackId = mutableMapOf<String, Boolean>()
+    var transactions by remember { mutableStateOf<List<TransactionListDataRecord>?>(listOf()) }
 
     LaunchedEffect(currentPage) {
         apiResponseAvailable = false
@@ -114,6 +120,29 @@ fun BottomSectionContent(navController: NavController) {
 
         }
         apiResponseAvailable = true
+    }
+
+    LaunchedEffect(transactionList) {
+        transactions = transactionList?.data?.records?.filter { transaction ->
+            when (transaction.status) {
+                "SUCCESSFUL" -> {
+                    tabs[0] = Tab(tabs[0].text, tabs[0].matchText, tabs[0].newCount + 1)
+                    tabs[1] = Tab(tabs[1].text, tabs[1].matchText, tabs[1].newCount + 1)
+                }
+
+                "REFUND" -> {
+                    tabs[0] = Tab(tabs[0].text, tabs[0].matchText, tabs[0].newCount + 1)
+                    tabs[2] = Tab(tabs[2].text, tabs[2].matchText, tabs[2].newCount + 1)
+                }
+
+                "NOTSUCCESSFUL" -> {
+                    tabs[0] = Tab(tabs[0].text, tabs[0].matchText, tabs[0].newCount + 1)
+                    tabs[3] = Tab(tabs[3].text, tabs[3].matchText, tabs[3].newCount + 1)
+                }
+            }
+            selectedTab.matchText == transaction.status
+
+        }
     }
 
     fun firstPageHandler() {
@@ -153,16 +182,23 @@ fun BottomSectionContent(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            filters.forEachIndexed { index, filter ->
-                FilterButton(filter = filter, selected, onClick = {
-                    selected = filter
+            tabs.forEachIndexed { index, filter ->
+                FilterButton(filter = filter, selectedTab, onClick = {
+                    selectedTab = filter
                 })
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        if (apiResponseAvailable) {
+        if (!apiResponseAvailable) Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            CustomCircularProgressIndicator()
+        } else {
             if (transactionList == null) {
                 Toast.makeText(
                     context, "Token expired. Please log in again.", Toast.LENGTH_LONG
@@ -172,41 +208,57 @@ fun BottomSectionContent(navController: NavController) {
                 }
             }
 
-            transactionList?.let {
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalAlignment = Alignment.End,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                ) {
+            transactions = transactionList?.data?.records?.filter {
 
-                    for (transaction in it.data.records) {
-                        println("transaction: ${transaction.status}")
-
-                        var skip = true
-                        if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] =
-                            true
-
-                        if (!transactionsWithTrackId.contains(transaction.uuid)) {
-                            if ((selected.text.uppercase() == "ALL" || (selected.matchText == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selected.text.uppercase() == transaction.TransactionType.uppercase())) skip =
-                                false
-                        }
-
-                        if (!skip) NotificationSummary(transaction)
-                    }
+                var filterIn = when (selectedTab.text) {
+                    "All" -> allFilterFn(it)
+                    "Received" -> receivedFilterFn(it)
+                    "Refunded" -> refundedFilterFn(it)
+                    "Failed" -> failedFilterFn(it)
+                    else -> false
                 }
+
+                filterIn
             }
-        } else {
             Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalAlignment = Alignment.End,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .verticalScroll(scrollState)
             ) {
-                CustomCircularProgressIndicator()
+
+                for (transaction in transactions!!.toTypedArray()) {
+
+                    var skip = true
+                    if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] =
+                        true
+
+                    if (!transactionsWithTrackId.contains(transaction.uuid)) {
+                        if ((selectedTab.text.uppercase() == "ALL" || (selectedTab.matchText == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selectedTab.text.uppercase() == transaction.TransactionType.uppercase())) skip =
+                            false
+                    }
+
+                    if (!skip) NotificationSummary(transaction)
+                }
             }
         }
     }
+}
+
+fun allFilterFn(transaction: TransactionListDataRecord): Boolean {
+    return true
+}
+
+fun receivedFilterFn(transaction: TransactionListDataRecord): Boolean {
+    return transaction.status == "SUCCESSFUL"
+}
+
+fun refundedFilterFn(transaction: TransactionListDataRecord): Boolean {
+    return transaction.status == "REFUND"
+}
+
+fun failedFilterFn(transaction: TransactionListDataRecord): Boolean {
+    return transaction.status == "NOTSUCCESSFUL"
 }

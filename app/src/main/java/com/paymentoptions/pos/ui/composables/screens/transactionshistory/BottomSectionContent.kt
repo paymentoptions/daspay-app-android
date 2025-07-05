@@ -60,7 +60,7 @@ import kotlin.math.ceil
 fun BottomSectionContent(navController: NavController) {
     val context = LocalContext.current
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
-    val currency = "JPY"
+    var currency by remember { mutableStateOf("") }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
 
@@ -176,136 +176,145 @@ fun BottomSectionContent(navController: NavController) {
         ) {
             CustomCircularProgressIndicator(null, Orange10)
         }
-    } else Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Text(
-            text = "Transaction History",
-            modifier = Modifier.align(alignment = Alignment.Start),
-            style = AppTheme.typography.titleNormal
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            CustomDropdown(
-                filters,
-                selectedFilter,
-                onFilterChange = { selectedFilter = it },
-                icon = Icons.Default.CalendarMonth
-            )
-
-            Row(
-                Modifier
-                    .fillMaxHeight()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(iconBackgroundColor)
-                    .clickable(onClick = {
-                        showInsights = !showInsights
-                    }),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Show list",
-                    modifier = Modifier
-                        .padding(6.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(if (!showInsights) Color.White.copy(alpha = 0.9f) else Color.Transparent)
-                        .padding(4.dp)
-                )
-                Icon(
-                    imageVector = Icons.Default.BarChart,
-                    contentDescription = "Show bar graph",
-                    modifier = Modifier
-                        .padding(6.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(if (showInsights) Color.White.copy(alpha = 0.9f) else Color.Transparent)
-                        .padding(4.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
+    } else {
+        currency = transactionList?.data?.records?.first()?.CurrencyCode ?: ""
 
         Column(
-            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                text = receivalForText,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = primary900,
-            )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = receivalForTimePeriodText,
-                style = AppTheme.typography.footnote,
+                text = "Transaction History",
+                modifier = Modifier.align(alignment = Alignment.Start),
+                style = AppTheme.typography.titleNormal
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(
-                        SpanStyle(
-                            primary100.copy(alpha = 0.5f), fontWeight = FontWeight.Light
-                        )
-                    ) { append("$currency ") }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
 
-                    withStyle(SpanStyle(primary100)) { append(receivalAmount.toString()) }
-                },
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                color = primary100,
-                modifier = Modifier.padding(bottom = 10.dp)
-            )
+                CustomDropdown(
+                    filters,
+                    selectedFilter,
+                    onFilterChange = { selectedFilter = it },
+                    icon = Icons.Default.CalendarMonth
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    Modifier
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(iconBackgroundColor)
+                        .clickable(onClick = {
+                            showInsights = !showInsights
+                        }),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
 
-            var transactions = transactionList?.data?.records?.filter {
-
-                var filterIn = when (selectedFilter.key) {
-                    "Today" -> dayFilterFn(it)
-                    "Week" -> weekFilterFn(it)
-                    "Month" -> monthFilterFn(it)
-                    "Custom" -> {
-                        if (fromDateCustomFilter != null && toDateCustomFilter != null) customFilterFn(
-                            it, startDate = fromDateCustomFilter!!, endDate = toDateCustomFilter!!
-                        )
-                        else false
-                    }
-
-                    else -> false
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Show list",
+                        modifier = Modifier
+                            .padding(6.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(if (!showInsights) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                            .padding(4.dp)
+                    )
+                    Icon(
+                        imageVector = Icons.Default.BarChart,
+                        contentDescription = "Show bar graph",
+                        modifier = Modifier
+                            .padding(6.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(if (showInsights) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                            .padding(4.dp)
+                    )
                 }
-
-                filterIn
             }
 
-            if (showInsights) Insights(
-                transactions = transactions!!.toTypedArray(), updateReceivalAmount = {
-                    updateReceivalAmount(it)
-                }) else Transactions(
-                navController,
-                transactions = transactions!!.toTypedArray(),
-                updateReceivalAmount = {
-                    updateReceivalAmount(it)
-                })
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = receivalForText,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = primary900,
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = receivalForTimePeriodText,
+                    style = AppTheme.typography.footnote,
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(
+                            SpanStyle(
+                                primary100.copy(alpha = 0.5f), fontWeight = FontWeight.Light
+                            )
+                        ) { append("$currency ") }
+
+                        withStyle(SpanStyle(primary100)) { append(receivalAmount.toString()) }
+                    },
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primary100,
+                    modifier = Modifier.padding(bottom = 10.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                var transactions = transactionList?.data?.records?.filter {
+
+                    var filterIn = when (selectedFilter.key) {
+                        "Today" -> dayFilterFn(it)
+                        "Week" -> weekFilterFn(it)
+                        "Month" -> monthFilterFn(it)
+                        "Custom" -> {
+                            if (fromDateCustomFilter != null && toDateCustomFilter != null) customFilterFn(
+                                it,
+                                startDate = fromDateCustomFilter!!,
+                                endDate = toDateCustomFilter!!
+                            )
+                            else false
+                        }
+
+                        else -> false
+                    }
+
+                    filterIn
+                }
+
+                if (showInsights) Insights(
+                    transactions = transactions!!.toTypedArray(),
+                    currency = currency,
+                    updateReceivalAmount = {
+                        updateReceivalAmount(it)
+                    }) else Transactions(
+                    navController,
+                    transactions = transactions!!.toTypedArray(),
+                    updateReceivalAmount = {
+                        updateReceivalAmount(it)
+                    })
+            }
         }
     }
 }
