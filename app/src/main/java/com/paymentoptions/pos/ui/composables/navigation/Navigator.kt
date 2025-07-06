@@ -9,7 +9,7 @@ import com.paymentoptions.pos.ui.composables.screens.dashboard.DashboardScreen
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.composables.screens.foodmenu.FoodMenuScreen
 import com.paymentoptions.pos.ui.composables.screens.helpandsupport.HelpAndSupportScreen
-import com.paymentoptions.pos.ui.composables.screens.loading.LoadingScreen
+import com.paymentoptions.pos.ui.composables.screens.splashscreen.SplashScreen
 import com.paymentoptions.pos.ui.composables.screens.notifications.NotificationsScreen
 import com.paymentoptions.pos.ui.composables.screens.receivemoney.ReceiveMoneyScreen
 import com.paymentoptions.pos.ui.composables.screens.refund.RefundScreen
@@ -23,7 +23,7 @@ import com.paymentoptions.pos.ui.composables.screens.transactionshistory.Transac
 @Composable
 fun Navigator() {
     val navController = rememberNavController()
-    val startDestination = Screens.Loading.route
+    val startDestination = Screens.SplashScreen.route
 
 //    LaunchedEffect(navController) {
 //        navController.currentBackStackEntryFlow.collect { backStackEntry ->
@@ -63,6 +63,6 @@ fun Navigator() {
         //composable(Screens.AppVersion.route) { AppVersionScreen(navController) }
 
         //Misc
-        composable(Screens.Loading.route) { LoadingScreen(navController) }
+        composable(Screens.SplashScreen.route) { SplashScreen(navController) }
     }
 }

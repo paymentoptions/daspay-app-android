@@ -239,11 +239,12 @@ fun BottomSectionContent(navController: NavController) {
                     "Add a note (optional)",
                     color = Color.Gray,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White)
+
                 )
             },
-            modifier = Modifier.height(60.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp),
             shape = RoundedCornerShape(8.dp),
             singleLine = true,
             textStyle = TextStyle(

@@ -24,7 +24,6 @@ fun Transactions(
     updateReceivalAmount: (Float) -> Unit,
 ) {
     val scrollState = rememberScrollState()
-    var receivalAmount = 0.0f
     var selectedFilterKey by remember { mutableStateOf("ALL") }
     var transactionsWithTrackId = mutableMapOf<String, Boolean>()
 
@@ -36,8 +35,11 @@ fun Transactions(
             .fillMaxSize()
             .verticalScroll(scrollState)
     ) {
+
+        var earningAmount = 0.0f
         for (transaction in transactions) {
-            receivalAmount = receivalAmount + transaction.amount.toFloat()
+
+            if (transaction.TransactionType == "PURCHASE") earningAmount += transaction.amount.toFloat()
 
             var skip = true
 
@@ -50,6 +52,7 @@ fun Transactions(
 
             if (!skip) TransactionSummary(transaction)
         }
-        updateReceivalAmount(receivalAmount)
+
+        updateReceivalAmount(earningAmount)
     }
 }

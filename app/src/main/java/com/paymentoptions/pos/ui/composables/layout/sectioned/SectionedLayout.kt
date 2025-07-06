@@ -13,11 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,10 +30,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
+import com.paymentoptions.pos.ui.composables._components.buttons.ReceiveMoneyFAB
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
 import com.paymentoptions.pos.ui.composables._components.images.TapToPayImage
-import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.primary100
 
 val RECEIVE_MONEY_BUTTON_HEIGHT_IN_DP = 60.dp
@@ -49,16 +45,16 @@ fun SectionedLayout(
     bottomSectionMinHeightRatio: Float = 0.2f,
     bottomSectionMaxHeightRatio: Float = 0.73f,
     enableBottomNavigationBar: Boolean = true,
+    showMenuBarButton: Boolean = false,
     defaultBottomSectionPadding: Dp = 16.dp,
 ) {
-
     val bottomSectionMinHeightDp =
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMinHeightRatio))
     val bottomSectionMaxHeightDp =
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMaxHeightRatio))
     var showMoreItems by remember { mutableStateOf(false) }
 
-    val bottomNavigationBarHeightInDp = BOTTOM_NAVIGATION_HEIGHT_IN_DP
+
     val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.8f else 0.05f)
     val borderRadiusInDp = 32.dp
 
@@ -74,7 +70,7 @@ fun SectionedLayout(
             modifier = Modifier
                 .fillMaxSize()
                 .align(alignment = Alignment.TopCenter)
-                .padding(bottom = if (enableBottomNavigationBar) bottomNavigationBarHeightInDp else 0.dp)
+                .padding(bottom = if (enableBottomNavigationBar) BOTTOM_NAVIGATION_HEIGHT_IN_DP else 0.dp)
                 .zIndex(2f)
                 .clickable(
                     enabled = !showMoreItems,
@@ -97,7 +93,7 @@ fun SectionedLayout(
             }
 
             //Bottom Section
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min)
@@ -115,11 +111,21 @@ fun SectionedLayout(
                         start = defaultBottomSectionPadding,
                         top = defaultBottomSectionPadding,
                         end = defaultBottomSectionPadding,
-                        bottom = defaultBottomSectionPadding.plus(if (enableBottomNavigationBar) 20.dp else 0.dp)
-                    )
+                        bottom = if (enableBottomNavigationBar) defaultBottomSectionPadding.plus(
+                            20.dp
+                        ) else if (showMenuBarButton) 0.dp else 20.dp
+                    ), horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
                 bottomSectionContent()
+
+//                if (!enableBottomNavigationBarState) {
+//                    Spacer(modifier = Modifier.height(20.dp))
+//                    ShowBottomMenuBarButton(
+//                        showMenuBarButton = showMenuBarButton, onClickShowMenuBarButton = {
+//                            navController.popBackStack()
+//                        })
+//                }
             }
 
             //Just an overlay
@@ -133,7 +139,7 @@ fun SectionedLayout(
 
         //Bottom Navigation Bar
         if (enableBottomNavigationBar) {
-            OverlayReceiveMoneyButton(
+            ReceiveMoneyFAB(
                 navController,
                 modifier = Modifier
                     .align(alignment = Alignment.BottomCenter)
@@ -145,7 +151,6 @@ fun SectionedLayout(
                 modifier = Modifier
                     .background(Color.White)
                     .background(overlayColor)
-
                     .clip(
                         RoundedCornerShape(
                             topStart = if (showMoreItems) borderRadiusInDp else 20.dp,
@@ -169,27 +174,9 @@ fun SectionedLayout(
                 MyBottomNavigationBar(
                     navController, modifier = modifier, showMoreItems, onClickShowMoreItems = {
                         toggleShowMoreItems()
-                    }, bottomNavigationBarHeightInDp
+                    }, BOTTOM_NAVIGATION_HEIGHT_IN_DP
                 )
             }
         }
     }
-}
-
-@Composable
-fun OverlayReceiveMoneyButton(
-    navController: NavController,
-    modifier: Modifier = Modifier,
-) {
-    Icon(
-        imageVector = Icons.Default.Add,
-        contentDescription = "Receive Money",
-        tint = Color.White,
-        modifier = modifier
-            .size(RECEIVE_MONEY_BUTTON_HEIGHT_IN_DP)
-            .background(primary100, shape = RoundedCornerShape(50))
-            .clickable {
-                navController.navigate(Screens.ReceiveMoney.route)
-            })
-
 }
