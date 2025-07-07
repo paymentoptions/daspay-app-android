@@ -3,6 +3,7 @@ package com.paymentoptions.pos.ui.composables.layout.sectioned
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -119,7 +120,9 @@ fun SectionedLayout(
                         bottom = if (enableBottomNavigationBar) defaultBottomSectionPaddingInDp.plus(
                             5.dp
                         ) else if (showBackButton) 0.dp else defaultBottomSectionPaddingInDp
-                    ), horizontalAlignment = Alignment.CenterHorizontally
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
 
             ) {
                 bottomSectionContent()

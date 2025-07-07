@@ -9,7 +9,6 @@ sealed class Screens(val route: String) {
 
     //Auth
     object SignIn : Screens(route = "SignIn")
-    object SignOut : Screens(route = "SignOut")
     object Token : Screens(route = "Token")
 
     //Bottom Navigation
@@ -30,5 +29,5 @@ sealed class Screens(val route: String) {
 
     //Misc
     object SplashScreen : Screens(route = "Splash")
-    object FcmTokenScreen : Screens(route = "Fcm")
+    object FcmTokenScreen : Screens(route = "FcmToken")
 }

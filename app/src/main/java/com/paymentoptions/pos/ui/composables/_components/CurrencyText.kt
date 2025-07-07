@@ -7,10 +7,11 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.theme.primary100
 
 @Composable
-fun CurrencyText(currency: String, amount: String, fontSize: TextUnit) {
+fun CurrencyText(currency: String, amount: String, fontSize: TextUnit = 36.sp) {
     Text(
         text = buildAnnotatedString {
             withStyle(

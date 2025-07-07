@@ -259,7 +259,7 @@ fun MyBottomNavigationBar(
                             BottomNavigationBarItem(
                                 title = "Log Out",
                                 icon = Icons.AutoMirrored.Outlined.Logout,
-                                route = Screens.SignOut.route
+                                route = "Dummy"
                             ),
                             more,
                             onSelected = { showSignOutConfirmationDialog = true },

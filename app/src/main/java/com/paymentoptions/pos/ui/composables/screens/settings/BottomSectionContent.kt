@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.settings
 
-import BiometricAuthScreen
 import MyDialog
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -9,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Mail
 import androidx.compose.material3.HorizontalDivider
@@ -34,6 +34,7 @@ import com.paymentoptions.pos.services.apiService.endpoints.signOut
 import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
+import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.composables.screens.notifications.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
@@ -107,28 +108,27 @@ fun BottomSectionContent(navController: NavController) {
         },
         onDismissFn = { showSignOutConfirmationDialog = false })
 
-    if (showBiometricScreen) BiometricAuthScreen(
-        {
+    if (showBiometricScreen) FingerprintScanScreen(
+        navController = navController, onAuthSuccess = {
             SharedPreferences.saveBiometricsStatus(context, !biometricsEnabled)
             biometricsEnabled = !biometricsEnabled
             showBiometricScreen = false
-        }, {
+        }, onAuthFailed = {
             //SharedPreferences.saveBiometricsStatus(context, false)
             showBiometricScreen = false
-        }, navController, false
+        }, bypassBiometric = false
     )
     else
 
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-
             ScreenTitleWithCloseButton(title = "Settings", navController = navController)
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Column {
                 Text(
@@ -149,17 +149,15 @@ fun BottomSectionContent(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = "Last login: $lastLoginString", color = purple50, fontSize = 14.sp
-                )
+                Text(text = "Last login: $lastLoginString", color = purple50, fontSize = 14.sp)
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(30.dp))
 
                 LinkWithIcon(
                     text = email, url = "mailto:" + email, icon = Icons.Outlined.Mail
                 )
 
-                Spacer(modifier = Modifier.height(60.dp))
+                Spacer(modifier = Modifier.height(50.dp))
 
                 HorizontalDivider(Modifier.fillMaxWidth())
 

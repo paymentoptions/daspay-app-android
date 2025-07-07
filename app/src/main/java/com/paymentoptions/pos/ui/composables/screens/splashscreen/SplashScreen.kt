@@ -17,6 +17,7 @@ fun SplashScreen(navController: NavController) {
     Handler().postDelayed({
         navController.navigate(Screens.AuthCheck.route)
     }, 1000)
+
     SimpleLayout {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

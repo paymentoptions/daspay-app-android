@@ -28,17 +28,13 @@ fun NoNetworkScreen() {
         ) {
 
             LogoImage()
-
             Spacer(modifier = Modifier.height(80.dp))
-
             CircularProgressIndicator(
                 color = Color.White,
                 strokeWidth = 2.dp,
                 modifier = Modifier.size(20.dp)
             )
-
             Spacer(modifier = Modifier.height(20.dp))
-
             Text(
                 text = "Device not connected to the Internet. Checking internet connectivity status in the background.",
                 color = Color.White,

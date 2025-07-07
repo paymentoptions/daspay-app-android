@@ -34,10 +34,10 @@ private val lightColorScheme = AppColorScheme(
 private val typography = AppTypography(
     screenTitle = TextStyle(
         fontFamily = Inter,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.ExtraBold,
         fontSize = 36.sp,
         brush = Brush.horizontalGradient(
-            colorStops = arrayOf(0.92f to primary300, 1f to primary100)
+            colorStops = arrayOf(0.5f to primary300, 1f to primary100)
         )
     ),
     titleNormal = TextStyle(

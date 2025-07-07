@@ -68,6 +68,8 @@ fun BottomSectionContent(navController: NavController) {
             text = "Enter Token", style = AppTheme.typography.screenTitle
         )
 
+        Spacer(modifier = Modifier.height(4.dp))
+
         Text(
             text = "Enter the Token sent by Payment Options",
             fontSize = 14.sp,

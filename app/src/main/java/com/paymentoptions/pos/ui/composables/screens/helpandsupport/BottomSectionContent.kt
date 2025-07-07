@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.helpandsupport
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,12 +27,11 @@ fun BottomSectionContent(navController: NavController) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
 
         ScreenTitleWithCloseButton(title = "Help & Support", navController = navController)
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(30.dp))
 
         Column {
             Text(text, textAlign = TextAlign.Justify, color = purple50, fontSize = 14.sp)

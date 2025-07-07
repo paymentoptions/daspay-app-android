@@ -98,9 +98,7 @@ fun BottomSectionContent(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            CurrencyText(
-                currency = currency, amount = receivalAmount.toString(), fontSize = 36.sp
-            )
+            CurrencyText(currency = currency, amount = receivalAmount.toString())
 
             Spacer(modifier = Modifier.height(24.dp))
 

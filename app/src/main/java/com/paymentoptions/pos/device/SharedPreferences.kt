@@ -50,7 +50,7 @@ class SharedPreferences {
             saveKeyValue(context, "auth_details", authDetailsString)
         }
 
-        fun getAuthDetails(context: Context): SignInResponse? = runBlocking {
+        fun getAuthDetails(context: Context): SignInResponse? {
             val sharedPreferences =
                 context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             val authDetailsString = sharedPreferences.getString("auth_details", null)
@@ -60,7 +60,7 @@ class SharedPreferences {
 //            val decodedToken = decodeJwtPayload(authDetailsJson!!.data.token.idToken)
 //            println("decodedToken: $decodedToken")
 
-            return@runBlocking authDetailsJson
+            return authDetailsJson
         }
 
         fun clearSharedPreferences(context: Context) = runBlocking {

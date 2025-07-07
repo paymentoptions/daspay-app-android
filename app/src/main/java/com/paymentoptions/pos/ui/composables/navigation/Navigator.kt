@@ -15,7 +15,6 @@ import com.paymentoptions.pos.ui.composables.screens.receivemoney.ReceiveMoneySc
 import com.paymentoptions.pos.ui.composables.screens.refund.RefundScreen
 import com.paymentoptions.pos.ui.composables.screens.settings.SettingsScreen
 import com.paymentoptions.pos.ui.composables.screens.signIn.SignInScreen
-import com.paymentoptions.pos.ui.composables.screens.signout.SignOutScreen
 import com.paymentoptions.pos.ui.composables.screens.splashscreen.SplashScreen
 import com.paymentoptions.pos.ui.composables.screens.token.TokenScreen
 import com.paymentoptions.pos.ui.composables.screens.transactionshistory.TransactionHistoryScreen
@@ -42,7 +41,6 @@ fun Navigator() {
 
         //Auth
         composable(Screens.SignIn.route) { SignInScreen(navController) }
-        composable(Screens.SignOut.route) { SignOutScreen(navController) }
         composable(Screens.Token.route) { TokenScreen(navController) }
 
         //Bottom Navigation

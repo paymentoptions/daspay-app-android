@@ -22,15 +22,13 @@ fun OutlinedButton(
     isLoading: Boolean = false,
     disabled: Boolean = false,
 ) {
-
     Button(
         enabled = !disabled,
         onClick = onClick,
-        modifier = modifier.border(1.dp, Color.LightGray),
+        modifier = modifier.border(1.dp, Color.LightGray, shape = RoundedCornerShape(8.dp)),
         colors = ButtonDefaults.buttonColors().copy(
             contentColor = primary900, containerColor = Color.Transparent
-        ),
-        shape = RoundedCornerShape(18.dp)
+        )
     ) {
         if (isLoading) MyCircularProgressIndicator(color = Color.White)
         else Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Bold)

@@ -151,6 +151,7 @@ fun BottomSectionContent(navController: NavController) {
 
     val merchant: MutableMap<String, String> = mutableMapOf<String, String>()
     val decodedJwtPayloadJson = decodeJwtPayload(authDetails.data.token.idToken)
+    val currency = "HKD"
 
     merchant["dasmid"] = getDasmidFromToken(decodedJwtPayloadJson)
     merchant["name"] = getKeyFromToken(decodedJwtPayloadJson, "name")
@@ -210,8 +211,6 @@ fun BottomSectionContent(navController: NavController) {
             }
         }
     }
-
-    val currency = "HKD"
 
     MyDialog(
         showDialog = showDeveloperOptionsEnabled,
@@ -324,8 +323,7 @@ fun BottomSectionContent(navController: NavController) {
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-
-            CurrencyText(currency = currency, amount = formattedAmount, fontSize = 36.sp)
+            CurrencyText(currency = currency, amount = formattedAmount)
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -438,9 +436,7 @@ fun BottomSectionContent(navController: NavController) {
                         .copy(containerColor = primary100.copy(alpha = 0.15f)),
                     onClick = { rawInput = "1000" },
                     label = {
-                        CurrencyText(
-                            currency = currency, amount = "10.00", fontSize = 16.sp
-                        )
+                        CurrencyText(currency = currency, amount = "10.00", fontSize = 16.sp)
                     })
             }
 
@@ -453,7 +449,9 @@ fun BottomSectionContent(navController: NavController) {
                     onClick = { rawInput = "${(it + 1) * 50}00" },
                     label = {
                         CurrencyText(
-                            currency = currency, amount = "${(it + 1) * 50}", fontSize = 16.sp
+                            currency = currency,
+                            amount = "${(it + 1) * 50}",
+                            fontSize = 16.sp
                         )
                     })
             }
