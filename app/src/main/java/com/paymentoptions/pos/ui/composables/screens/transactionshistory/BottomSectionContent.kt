@@ -44,7 +44,6 @@ import com.paymentoptions.pos.ui.composables._components.DatePickerModal
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
-import com.paymentoptions.pos.ui.theme.Orange10
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary900
 import java.text.SimpleDateFormat
@@ -171,7 +170,7 @@ fun BottomSectionContent(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            MyCircularProgressIndicator(null, Orange10)
+            MyCircularProgressIndicator()
         }
     } else {
         currency = transactionList?.data?.records?.first()?.CurrencyCode ?: ""

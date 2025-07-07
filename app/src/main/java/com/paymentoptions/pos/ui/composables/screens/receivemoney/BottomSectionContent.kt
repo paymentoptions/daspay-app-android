@@ -77,6 +77,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getDasmidFromToken
 import com.paymentoptions.pos.utils.getDeviceIpAddress
@@ -357,7 +358,7 @@ fun BottomSectionContent(navController: NavController) {
                     focusedLabelColor = primary100,
                     focusedTextColor = purple50,
                     unfocusedTextColor = Color.LightGray,
-                    errorContainerColor = Color.Red,
+                    errorContainerColor = red500,
                     unfocusedIndicatorColor = Color.Transparent,
                     disabledIndicatorColor = Color.Transparent,
                     focusedIndicatorColor = Color.Transparent,

@@ -6,6 +6,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.paymentoptions.pos.ui.theme.red500
 
 
 @Composable
@@ -28,12 +29,12 @@ fun BasicTextInput(
             onChange(it)
         },
         colors = TextFieldDefaults.colors(
-            focusedTextColor = if (error) Color.Red else Color.Blue,
-            unfocusedTextColor = if (error) Color.Red else Color.Gray,
+            focusedTextColor = if (error) red500 else Color.Blue,
+            unfocusedTextColor = if (error) red500 else Color.Gray,
             focusedContainerColor = Color.White,
             unfocusedContainerColor = Color.White,
-            unfocusedLabelColor = if (error) Color.Red else Color.Unspecified,
-            focusedLabelColor = if (error) Color.Red else Color.Unspecified,
+            unfocusedLabelColor = if (error) red500 else Color.Unspecified,
+            focusedLabelColor = if (error) red500 else Color.Unspecified,
         )
     )
 }

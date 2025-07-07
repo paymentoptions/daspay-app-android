@@ -6,7 +6,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -36,9 +35,7 @@ private val typography = AppTypography(
         fontFamily = Inter,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 36.sp,
-        brush = Brush.horizontalGradient(
-            colorStops = arrayOf(0.5f to primary300, 1f to primary100)
-        )
+        brush = textGradientBrush
     ),
     titleNormal = TextStyle(
         fontFamily = Inter,

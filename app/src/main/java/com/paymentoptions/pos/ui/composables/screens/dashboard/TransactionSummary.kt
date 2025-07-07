@@ -35,6 +35,7 @@ import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary200
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.ui.theme.red500
 import java.time.OffsetDateTime
 import java.util.Date
 
@@ -102,12 +103,12 @@ fun TransactionSummary(transaction: TransactionListDataRecord) {
                 Text(
                     transaction.CurrencyCode,
                     textAlign = TextAlign.End,
-                    color = if (isTransactionAmountPositive) green200 else Color.Red
+                    color = if (isTransactionAmountPositive) green200 else red500
                 )
 
                 Text(
                     text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
-                    color = if (isTransactionAmountPositive) green500 else Color.Red,
+                    color = if (isTransactionAmountPositive) green500 else red500,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
                 )

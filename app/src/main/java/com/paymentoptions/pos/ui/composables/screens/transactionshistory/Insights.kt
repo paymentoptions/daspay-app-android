@@ -12,7 +12,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -25,9 +24,11 @@ import co.yml.charts.ui.barchart.models.BarData
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.ui.theme.red500
 import java.time.OffsetDateTime
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
@@ -67,7 +68,7 @@ fun Insights(
             barData.add(
                 BarData(
                     point = Point(x = index.toFloat(), y = transaction.amount.toFloat()),
-                    color = if (transaction.TransactionType == "REFUND") Color.Red.copy(alpha = 0.5f) else Color.Green.copy(
+                    color = if (transaction.TransactionType == "REFUND") red500.copy(alpha = 0.5f) else Color.Green.copy(
                         alpha = 0.5f
                     ),
                     label = "${date.dayOfMonth} ${date.month}",
@@ -133,9 +134,7 @@ fun Insights(
                 .fillMaxWidth()
 //                .background(primary100.copy(alpha = 0.2f), shape = RoundedCornerShape(16.dp))
                 .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFE6F6FF), Color.White),
-                    ), shape = RoundedCornerShape(8.dp)
+                    brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(8.dp)
                 )
                 .padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -198,7 +197,7 @@ fun Insights(
                         currency,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Red.copy(alpha = 0.5f)
+                        color = red500.copy(alpha = 0.5f)
                     )
                 }
 
@@ -217,7 +216,7 @@ fun Insights(
                         "- ${refundAmount.absoluteValue}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Red
+                        color = red500
                     )
                 }
             }

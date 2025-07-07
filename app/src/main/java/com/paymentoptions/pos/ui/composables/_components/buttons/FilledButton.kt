@@ -8,14 +8,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
-import com.paymentoptions.pos.ui.theme.primary400
-import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.ui.theme.filledButtonGradientBrush
 
 @Composable
 fun FilledButton(
@@ -25,19 +23,12 @@ fun FilledButton(
     isLoading: Boolean = false,
     disabled: Boolean = false,
 ) {
-
-    val enabledGradientColors = listOf(primary500, primary400)
-
     Button(
         enabled = !disabled,
         onClick = onClick,
         modifier = modifier
             .height(50.dp)
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = enabledGradientColors,
-                ), shape = RoundedCornerShape(8.dp)
-            ),
+            .background(brush = filledButtonGradientBrush, shape = RoundedCornerShape(8.dp)),
         colors = ButtonDefaults.buttonColors().copy(
             contentColor = Color.White,
             containerColor = Color.Transparent,

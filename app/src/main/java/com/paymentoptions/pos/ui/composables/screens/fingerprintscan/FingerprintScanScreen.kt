@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
+import com.paymentoptions.pos.ui.theme.red500
 
 @Composable
 fun FingerprintScanScreen(
@@ -66,7 +67,7 @@ fun FingerprintScanScreen(
         ) {
             Text(
                 "Biometric $it",
-                color = Color.Red,
+                color = red500,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(all = 20.dp),
