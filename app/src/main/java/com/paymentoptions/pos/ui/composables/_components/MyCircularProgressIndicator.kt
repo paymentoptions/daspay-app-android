@@ -12,9 +12,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.paymentoptions.pos.ui.theme.primary100
 
 @Composable
-fun MyCircularProgressIndicator(text: String? = null, color: Color = Color.White) {
+fun MyCircularProgressIndicator(text: String? = null, color: Color = primary100) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,

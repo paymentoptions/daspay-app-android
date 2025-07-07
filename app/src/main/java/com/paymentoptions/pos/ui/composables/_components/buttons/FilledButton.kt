@@ -42,7 +42,7 @@ fun FilledButton(
         shape = RoundedCornerShape(8.dp)
     ) {
 
-        if (isLoading) MyCircularProgressIndicator()
+        if (isLoading) MyCircularProgressIndicator(color = Color.White)
         else Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
 }

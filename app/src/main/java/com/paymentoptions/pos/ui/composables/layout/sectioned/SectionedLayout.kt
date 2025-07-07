@@ -122,7 +122,7 @@ fun SectionedLayout(
                         ) else if (showBackButton) 0.dp else defaultBottomSectionPaddingInDp
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Top
 
             ) {
                 bottomSectionContent()
