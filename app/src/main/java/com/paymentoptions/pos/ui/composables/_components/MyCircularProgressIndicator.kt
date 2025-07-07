@@ -20,7 +20,7 @@ fun MyCircularProgressIndicator(text: String? = null, color: Color = Color.White
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CircularProgressIndicator(modifier = Modifier.height(40.dp), color = color)
+        CircularProgressIndicator(modifier = Modifier.height(36.dp), color = color)
 
         if (text != null) {
             Spacer(modifier = Modifier.height(10.dp))

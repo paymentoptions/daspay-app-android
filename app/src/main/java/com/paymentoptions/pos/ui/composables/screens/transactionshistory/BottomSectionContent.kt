@@ -40,7 +40,7 @@ import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
-import com.paymentoptions.pos.ui.composables._components.DatePickerModal
+import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -81,22 +81,19 @@ fun BottomSectionContent(navController: NavController) {
     var selectedFilter by remember { mutableStateOf<Map.Entry<String, String>>(filters.entries.first()) }
 
     if (selectedFilter.key == "Custom") {
-        if (fromDateCustomFilter == null) DatePickerModal(title = "Start Date", {
-
-            if (it == null) {
-                fromDateCustomFilter = null
-                toDateCustomFilter = null
-                selectedFilter = filters.entries.first()
-            } else fromDateCustomFilter = it
-
-        }, { selectedFilter = filters.entries.first() })
-        else if (toDateCustomFilter == null) DatePickerModal(title = "End Date", {
-            if (it == null) {
-                fromDateCustomFilter = null
-                toDateCustomFilter = null
-                selectedFilter = filters.entries.first()
-            } else toDateCustomFilter = it
-        }, { selectedFilter = filters.entries.first() })
+        if (fromDateCustomFilter == null) DateRangePickerModal(
+            title = "Start Date",
+            { startDateMillis, endDateMillis ->
+                if (startDateMillis == null || endDateMillis == null) {
+                    fromDateCustomFilter = null
+                    toDateCustomFilter = null
+                    selectedFilter = filters.entries.first()
+                } else {
+                    fromDateCustomFilter = startDateMillis
+                    toDateCustomFilter = endDateMillis
+                }
+            },
+            { selectedFilter = filters.entries.first() })
     } else {
         fromDateCustomFilter = null
         toDateCustomFilter = null
@@ -294,6 +291,8 @@ fun BottomSectionContent(navController: NavController) {
                     updateReceivalAmount = {
                         updateReceivalAmount(it)
                     })
+
+
             }
         }
     }

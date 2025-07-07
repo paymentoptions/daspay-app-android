@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables.layout.sectioned.RECEIVE_MONEY_BUTTON_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.theme.filledButtonGradientBrush
+import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 
 
 @Composable
@@ -29,7 +29,7 @@ fun ReceiveMoneyFAB(
         tint = Color.White,
         modifier = modifier
             .size(RECEIVE_MONEY_BUTTON_HEIGHT_IN_DP)
-            .background(brush = filledButtonGradientBrush, shape = RoundedCornerShape(50))
+            .background(brush = enabledFilledButtonGradientBrush, shape = RoundedCornerShape(50))
             .padding(10.dp)
             .clickable { navController.navigate(Screens.ReceiveMoney.route) })
 }

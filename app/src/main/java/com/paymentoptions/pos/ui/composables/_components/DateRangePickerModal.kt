@@ -2,12 +2,12 @@ package com.paymentoptions.pos.ui.composables._components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -17,25 +17,32 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatePickerModal(
+fun DateRangePickerModal(
     title: String,
-    onDateSelected: (Long?) -> Unit,
+    onDateSelected: (Long?, Long?) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val datePickerState = rememberDatePickerState()
+    val dateRangePickerState = rememberDateRangePickerState()
 
     DatePickerDialog(onDismissRequest = onDismiss, confirmButton = {
-        TextButton(onClick = {
-            onDateSelected(datePickerState.selectedDateMillis)
-        }) {
+        TextButton(
+            enabled = dateRangePickerState.selectedStartDateMillis != null && dateRangePickerState.selectedEndDateMillis != null,
+            onClick = {
+                onDateSelected(
+                    dateRangePickerState.selectedStartDateMillis,
+                    dateRangePickerState.selectedEndDateMillis
+                )
+            }) {
             Text("OK")
         }
     }, dismissButton = {
-        TextButton(onClick = onDismiss) {
+        TextButton(
+            onClick = onDismiss
+        ) {
             Text("Cancel")
         }
     }) {
-        DatePicker(state = datePickerState, title = {
+        DateRangePicker(state = dateRangePickerState, title = {
             Text(
                 text = title,
                 modifier = Modifier

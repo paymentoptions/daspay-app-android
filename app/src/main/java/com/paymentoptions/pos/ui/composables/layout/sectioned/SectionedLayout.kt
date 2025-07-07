@@ -118,7 +118,7 @@ fun SectionedLayout(
                         top = defaultBottomSectionPaddingInDp,
                         end = defaultBottomSectionPaddingInDp,
                         bottom = if (enableBottomNavigationBar) defaultBottomSectionPaddingInDp.plus(
-                            5.dp
+                            20.dp
                         ) else if (showBackButton) 0.dp else defaultBottomSectionPaddingInDp
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally,

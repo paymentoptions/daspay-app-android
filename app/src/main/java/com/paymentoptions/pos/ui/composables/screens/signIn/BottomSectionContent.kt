@@ -171,8 +171,6 @@ fun BottomSectionContent(navController: NavController) {
                         isLoading = false
                     }
                 }
-
-
             },
             isLoading = isLoading,
             disabled = emailError || passwordError,
