@@ -35,7 +35,7 @@ import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary200
 import com.paymentoptions.pos.ui.theme.primary500
-import com.paymentoptions.pos.ui.theme.red500
+import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
 
@@ -49,8 +49,14 @@ fun TransactionSummary(transaction: TransactionListDataRecord) {
     val dateString = transaction.Date   //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
-
+    val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
     val isCardTransaction = true
+
+//    val niceDateStr: String? = DateUtils.getRelativeTimeSpanString(
+//        now = date.getTime(),
+//        time = Calendar.getInstance().getTimeInMillis(),
+//        DateUtils.MINUTE_IN_MILLIS
+//    )
 
     Card(
         colors = CardDefaults.cardColors().copy(
@@ -67,7 +73,6 @@ fun TransactionSummary(transaction: TransactionListDataRecord) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -84,8 +89,8 @@ fun TransactionSummary(transaction: TransactionListDataRecord) {
 
             Column(modifier = Modifier.weight(8f)) {
                 Text(
-                    date.toString(),
-                    fontWeight = FontWeight.Light,
+                    dateStringFormatted,
+                    fontWeight = FontWeight.Medium,
                     fontSize = 12.sp,
                     color = primary200
                 )
@@ -103,12 +108,12 @@ fun TransactionSummary(transaction: TransactionListDataRecord) {
                 Text(
                     transaction.CurrencyCode,
                     textAlign = TextAlign.End,
-                    color = if (isTransactionAmountPositive) green200 else red500
+                    color = if (isTransactionAmountPositive) green200 else Color.Red
                 )
 
                 Text(
                     text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
-                    color = if (isTransactionAmountPositive) green500 else red500,
+                    color = if (isTransactionAmountPositive) green500 else Color.Red,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
                 )

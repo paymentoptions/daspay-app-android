@@ -27,7 +27,7 @@ fun Transactions(
 
     if (transactions == null || transactions.isEmpty()) NoData(text = "No transactions found")
     else Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
         horizontalAlignment = Alignment.End,
         modifier = Modifier
             .fillMaxSize()

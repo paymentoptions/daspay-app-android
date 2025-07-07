@@ -27,7 +27,7 @@ fun FilledButton(
         enabled = !disabled,
         onClick = onClick,
         modifier = modifier
-            .height(50.dp)
+            .height(40.dp)
             .background(brush = filledButtonGradientBrush, shape = RoundedCornerShape(8.dp)),
         colors = ButtonDefaults.buttonColors().copy(
             contentColor = Color.White,
@@ -38,7 +38,7 @@ fun FilledButton(
         shape = RoundedCornerShape(8.dp)
     ) {
 
-        if (isLoading) MyCircularProgressIndicator(color = Color.White)
+        if (isLoading) MyCircularProgressIndicator()
         else Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
 }

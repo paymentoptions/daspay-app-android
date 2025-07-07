@@ -58,9 +58,7 @@ fun BottomSectionContent(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(20.dp))
 
-            FilledButton(text = "Cancel and Quit", onClick = {
-                activity?.finish()
-            })
+            FilledButton(text = "Cancel and Quit", onClick = { activity?.finish() })
         }
     } else if (isAuthenticated) FingerprintScanScreen(
         navController = navController,

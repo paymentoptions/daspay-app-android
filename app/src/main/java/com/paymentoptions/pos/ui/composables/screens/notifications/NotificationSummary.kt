@@ -51,7 +51,6 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
     val date: Date = Date.from(dateTime.toInstant())
 
     val isCardTransaction = true
-
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY | hh:mm a").format(date)
 
     Card(

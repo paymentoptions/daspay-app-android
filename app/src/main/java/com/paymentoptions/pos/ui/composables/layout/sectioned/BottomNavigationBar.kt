@@ -114,25 +114,23 @@ fun Item(
     modifier: Modifier = Modifier,
     minLines: Int = 1,
     maxLines: Int = 1,
+    inMore: Boolean = false,
 ) {
 //    val isSelected = selected == item
 
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.clickable {
+        horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable {
             onSelected()
-        },
-        verticalArrangement = if (item.hideIcon) Arrangement.Bottom else Arrangement.spacedBy(4.dp)
+        }, verticalArrangement = Arrangement.Bottom
     ) {
 
         Box(
             modifier = Modifier
                 .size(36.dp)
                 .clip(RoundedCornerShape(50))
-                .background(if (item.hideIcon) Color.Transparent else iconBackgroundColor),
+                .background(if (item.hideIcon || !inMore) Color.Transparent else iconBackgroundColor),
             contentAlignment = Alignment.Center
         ) {
-
             if (!item.hideIcon) Icon(
                 imageVector = item.icon,
                 contentDescription = item.title,
@@ -148,7 +146,7 @@ fun Item(
             maxLines = maxLines,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = primary500
+            color = if (item.hideIcon) primary100 else primary500
         )
     }
 }
@@ -242,7 +240,8 @@ fun MyBottomNavigationBar(
                                 .fillMaxSize()
                                 .padding(20.dp),
                             minLines = 2,
-                            maxLines = 2
+                            maxLines = 2,
+                            inMore = true
                         )
                     }
                 }
@@ -267,7 +266,8 @@ fun MyBottomNavigationBar(
                                 .fillMaxSize()
                                 .padding(20.dp),
                             minLines = 2,
-                            maxLines = 2
+                            maxLines = 2,
+                            inMore = true
                         )
                     }
                 }

@@ -95,18 +95,16 @@ fun BottomSectionContent(navController: NavController) {
                 color = primary900,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             CurrencyText(currency = currency, amount = receivalAmount.toString())
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             FilledButton(
                 text = "View Insights",
                 onClick = { navController.navigate(Screens.TransactionHistory.route) },
-                modifier = Modifier
-                    .width(160.dp)
-                    .height(36.dp)
+                modifier = Modifier.width(160.dp)
             )
 
             Spacer(Modifier.height(20.dp))
