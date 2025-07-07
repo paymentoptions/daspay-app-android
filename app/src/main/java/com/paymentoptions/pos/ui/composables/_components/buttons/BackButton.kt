@@ -26,10 +26,9 @@ import com.paymentoptions.pos.ui.theme.primary500
 //}
 
 @Composable
-fun ShowBottomMenuBarButton(
-    showMenuBarButton: Boolean,
-    modifier: Modifier = Modifier,
+fun BackButton(
     onClickShowMenuBarButton: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     IconButton(
         onClick = onClickShowMenuBarButton,
@@ -47,7 +46,7 @@ fun ShowBottomMenuBarButton(
     ) {
         Icon(
             imageVector = Icons.Default.ArrowUpward,
-            contentDescription = "Show bottom menubar",
+            contentDescription = "Back button",
             tint = primary500.copy(alpha = 0.2f),
             modifier = Modifier.size(30.dp)
         )

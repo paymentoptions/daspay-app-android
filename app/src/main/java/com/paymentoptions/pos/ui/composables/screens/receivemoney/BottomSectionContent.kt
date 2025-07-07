@@ -7,6 +7,7 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,12 +19,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,15 +37,22 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -55,10 +66,17 @@ import com.paymentoptions.pos.services.apiService.PaymentRequest
 import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.PaymentReturnUrl
 import com.paymentoptions.pos.services.apiService.endpoints.payment
+import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
+import com.paymentoptions.pos.ui.composables._components.inputs.bottomStroke
+import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getDasmidFromToken
 import com.paymentoptions.pos.utils.getDeviceIpAddress
@@ -95,34 +113,31 @@ fun BottomSectionContent(navController: NavController) {
     }
 
     val formattedAmount = formatAmount(rawInput)
-    var description by remember { mutableStateOf("") }
+    var note by remember { mutableStateOf("") }
+
     val onKeyPress: (String) -> Unit = { key ->
         when (key) {
             "←" -> {
-                if (rawInput.isNotEmpty()) {
-                    rawInput = rawInput.dropLast(1)
-                }
+                if (rawInput.isNotEmpty()) rawInput = rawInput.dropLast(1)
             }
 
             else -> {
                 // Avoid too many digits
-                if (rawInput.length < 9) {
-                    rawInput += key
-                }
+                if (rawInput.length < 9) rawInput += key
             }
         }
     }
-    Color(0xFF121017)
-    Color(0xFF1E1E1E)
-    val buttonBorder = Color(0xFF3A3A3A)
-    val textColor = Color(0xFFEFEFEF)
+
     val buttons = listOf(
-        listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"), listOf("00", "0", "←")
+        listOf("1", "2", "3"),
+        listOf("4", "5", "6"),
+        listOf("7", "8", "9"),
+        listOf("00", "0", "←"),
     )
     val context = LocalContext.current
     val activity = context as? Activity
     val scope = rememberCoroutineScope()
-
+    var showInsights by remember { mutableStateOf(true) }
 
     val authDetails = SharedPreferences.getAuthDetails(context)
 
@@ -136,6 +151,7 @@ fun BottomSectionContent(navController: NavController) {
 
     val merchant: MutableMap<String, String> = mutableMapOf<String, String>()
     val decodedJwtPayloadJson = decodeJwtPayload(authDetails.data.token.idToken)
+
     merchant["dasmid"] = getDasmidFromToken(decodedJwtPayloadJson)
     merchant["name"] = getKeyFromToken(decodedJwtPayloadJson, "name")
     merchant["email"] = getKeyFromToken(decodedJwtPayloadJson, "email")
@@ -195,7 +211,53 @@ fun BottomSectionContent(navController: NavController) {
         }
     }
 
-    val currency = "JPY"
+    val currency = "HKD"
+
+    CustomDialog(
+        showDialog = showDeveloperOptionsEnabled,
+        title = "Error",
+        text = "You need to disable developer options to proceed further.",
+        acceptButtonText = "Exit",
+        cancelButtonText = "Developer Options",
+        onAcceptFn = {
+            showDeveloperOptionsEnabled = false
+            activity?.finish()
+        },
+        onDismissFn = {
+            showDeveloperOptionsEnabled = false
+            val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+            context.startActivity(intent)
+//            activity?.finish()
+        },
+    )
+
+    CustomDialog(
+        showDialog = showNFCNotPresent,
+        title = "NFC Required",
+        text = "Your device does not support NFC.",
+        acceptButtonText = "Exit",
+        cancelButtonText = "Cancel",
+        onAcceptFn = {
+            showNFCNotPresent = false
+            activity?.finish()
+        },
+        onDismissFn = { showNFCNotPresent = false },
+    )
+
+    CustomDialog(
+        showDialog = showNFCNotEnabled,
+        title = "NFC Required",
+        text = "This feature needs NFC. Please enable it in your device settings.",
+        acceptButtonText = "Go to Settings",
+        cancelButtonText = "Cancel",
+        onAcceptFn = {
+            showNFCNotEnabled = false
+            val intent = Intent(Settings.ACTION_NFC_SETTINGS)
+            context.startActivity(intent)
+        },
+        onDismissFn = { showNFCNotEnabled = false },
+    )
+
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -204,73 +266,123 @@ fun BottomSectionContent(navController: NavController) {
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Text(
-            text = "Receive Money",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = primary900,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = buildAnnotatedString {
-                withStyle(
-                    SpanStyle(
-                        primary100.copy(alpha = 0.5f), fontWeight = FontWeight.Light
-                    )
-                ) { append(currency.toString()) }
-
-                withStyle(SpanStyle(primary100)) { append(formattedAmount) }
-            },
-            fontSize = 36.sp,
-            fontWeight = FontWeight.Bold,
-            color = primary100,
-            modifier = Modifier.padding(bottom = 10.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
-            label = {
-                Text(
-                    "Add a note (optional)",
-                    color = Color.Gray,
-                    modifier = Modifier
-
-                )
-            },
-            modifier = Modifier
+        Row(
+            Modifier
                 .fillMaxWidth()
-                .height(60.dp),
-            shape = RoundedCornerShape(8.dp),
-            singleLine = true,
-            textStyle = TextStyle(
-                color = textColor,
-                fontSize = 12.sp,
-                fontStyle = FontStyle.Normal,
-                textDecoration = TextDecoration.None
-            ),
-            colors = TextFieldDefaults.colors(
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White,
-                focusedIndicatorColor = primary100,
-                focusedLabelColor = primary100,
-                unfocusedLabelColor = primary100,
-                focusedTextColor = primary500,
-                unfocusedTextColor = primary100,
-                errorContainerColor = Color.Red,
+                .clip(RoundedCornerShape(8.dp))
+                .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .padding(bottom = 0.dp)
+                .background(iconBackgroundColor),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+
+            Text(
+                text = "Receive Money",
+                modifier = Modifier
+                    .padding(6.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(if (showInsights) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                    .padding(10.dp)
+                    .weight(1f)
+                    .clickable(onClick = {
+                        showInsights = true
+                    }),
+                textAlign = TextAlign.Center,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = primary600
             )
-        )
+            Text(
+                text = "Pre-Authorize",
+                modifier = Modifier
+                    .padding(6.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(if (!showInsights) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                    .padding(10.dp)
+                    .weight(1f)
+                    .clickable(onClick = {
+                        showInsights = false
+                    }),
+                textAlign = TextAlign.Center,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = primary600
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Column(
+            modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Receive Money",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = primary900,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            CurrencyText(currency = currency, amount = formattedAmount, fontSize = 36.sp)
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Column(modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)) {
+            TextField(
+                value = note,
+                onValueChange = { if (note.length < 50) note = it },
+                placeholder = {
+                    Text(
+                        text = "Add a note (optional)", color = Color.Gray, modifier = Modifier,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 12.sp,
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+//                    .height(40.dp)
+                    .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
+                    .bottomStroke(strokeWidth = 0.dp, color = Color.Transparent),
+                shape = RoundedCornerShape(8.dp),
+                singleLine = true,
+                textStyle = TextStyle(
+                    fontSize = 12.sp,
+                    textDecoration = TextDecoration.None,
+                ),
+                colors = TextFieldDefaults.colors().copy(
+                    unfocusedContainerColor = Color.White,
+                    focusedContainerColor = Color.White,
+                    unfocusedLabelColor = primary100,
+                    focusedLabelColor = primary100,
+                    focusedTextColor = purple50,
+                    unfocusedTextColor = Color.LightGray,
+                    errorContainerColor = Color.Red,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                ),
+                maxLines = 1,
+            )
+
+            Text(
+                text = "Max ${note.length}/50 characters",
+                modifier = Modifier.fillMaxWidth(),
+                style = AppTheme.typography.footnote,
+                textAlign = TextAlign.End
+            )
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxWidth()
                 .background(Color.White)
         ) {
@@ -278,15 +390,16 @@ fun BottomSectionContent(navController: NavController) {
             buttons.forEach { row ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     row.forEach { key ->
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(70.dp)
-                                .padding(horizontal = 5.dp)
-                                .border(1.dp, buttonBorder, RoundedCornerShape(8.dp))
+                                .border(
+                                    2.dp, primary100.copy(alpha = 0.2f), RoundedCornerShape(8.dp)
+                                )
                                 .background(Color.White, RoundedCornerShape(8.dp))
                                 .clickable { onKeyPress(key) }, contentAlignment = Alignment.Center
                         ) {
@@ -301,179 +414,194 @@ fun BottomSectionContent(navController: NavController) {
                                     key,
                                     color = primary500,
                                     fontSize = 30.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Normal
                                 )
                             }
                         }
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-            CustomDialog(
-                showDialog = showDeveloperOptionsEnabled,
-                title = "Error",
-                text = "You need to disable developer options to proceed further.",
-                acceptButtonText = "Exit",
-                cancelButtonText = "Developer Options",
-                onAcceptFn = {
-                    showDeveloperOptionsEnabled = false
-                    activity?.finish()
-                },
-                onDismissFn = {
-                    showDeveloperOptionsEnabled = false
-                    val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
-                    context.startActivity(intent)
-                    activity?.finish()
-                },
-            )
+        LazyRow(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
 
-            CustomDialog(
-                showDialog = showNFCNotPresent,
-                title = "NFC Required",
-                text = "Your device does not support NFC.",
-                acceptButtonText = "Exit",
-                cancelButtonText = "Cancel",
-                onAcceptFn = {
-                    showNFCNotPresent = false
-                    activity?.finish()
-                },
-                onDismissFn = { showNFCNotPresent = false },
-            )
+            item {
+                SuggestionChip(
+                    border = BorderStroke(0.dp, Color.Transparent),
+                    colors = SuggestionChipDefaults.suggestionChipColors()
+                        .copy(containerColor = primary100.copy(alpha = 0.15f)),
+                    onClick = { rawInput = "1000" },
+                    label = {
+                        CurrencyText(
+                            currency = currency, amount = "10.00", fontSize = 16.sp
+                        )
+                    })
+            }
 
-            CustomDialog(
-                showDialog = showNFCNotEnabled,
-                title = "NFC Required",
-                text = "This feature needs NFC. Please enable it in your device settings.",
-                acceptButtonText = "Go to Settings",
-                cancelButtonText = "Cancel",
-                onAcceptFn = {
-                    showNFCNotEnabled = false
-                    val intent = Intent(Settings.ACTION_NFC_SETTINGS)
-                    context.startActivity(intent)
-                },
-                onDismissFn = { showNFCNotEnabled = false },
-            )
+            items(20) {
 
-            FilledButton(
-                text = "Charge",
-                disabled = rawInput.isEmpty() || rawInput.toLong() <= 0,
-                isLoading = paymentLoader,
-                modifier = Modifier.fillMaxWidth(),
-                onClick = {
+                SuggestionChip(
+                    border = BorderStroke(0.dp, Color.Transparent),
+                    colors = SuggestionChipDefaults.suggestionChipColors()
+                        .copy(containerColor = primary100.copy(alpha = 0.15f)),
+                    onClick = { rawInput = "${(it + 1) * 50}00" },
+                    label = {
+                        CurrencyText(
+                            currency = currency, amount = "${(it + 1) * 50}", fontSize = 16.sp
+                        )
+                    })
+            }
+        }
 
-                    Toast.makeText(context, "Under development", Toast.LENGTH_SHORT).show()
+        Spacer(modifier = Modifier.height(32.dp))
 
-                    //Disabled
-                    if (false) {
-                        if (DeveloperOptions.isEnabled(context)) {
-                            showDeveloperOptionsEnabled = true
+        FilledButton(
+            text = "Charge",
+            disabled = rawInput.isEmpty() || rawInput.toLong() <= 0,
+            isLoading = paymentLoader,
+            modifier = Modifier
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .fillMaxWidth(),
+            onClick = {
+
+                Toast.makeText(context, "Under development", Toast.LENGTH_SHORT).show()
+
+                //Disabled
+                if (false) {
+                    if (DeveloperOptions.isEnabled(context)) {
+                        showDeveloperOptionsEnabled = true
+                    } else {
+                        var nfcStatusPair = Nfc.getStatus(context)
+
+                        if (!nfcStatusPair.first) {
+                            showNFCNotPresent = true
+                        } else if (!nfcStatusPair.second) {
+                            showNFCNotEnabled = true
                         } else {
-                            var nfcStatusPair = Nfc.getStatus(context)
+                            val uuid: UUID = UUID.randomUUID()
+                            posReferenceId = uuid.toString()
 
-                            if (!nfcStatusPair.first) {
-                                showNFCNotPresent = true
-                            } else if (!nfcStatusPair.second) {
-                                showNFCNotEnabled = true
-                            } else {
-                                val uuid: UUID = UUID.randomUUID()
-                                posReferenceId = uuid.toString()
+                            val paymentReturnUrl = PaymentReturnUrl(
+                                webhook_url = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454%22",
+                                success_url = "https://api-bpm.hiji.xyz/dgv3/success%22",
+                                decline_url = "https://api-bpm.hiji.xyz/dgv3/decline%22"
+                            )
 
-                                val paymentReturnUrl = PaymentReturnUrl(
-                                    webhook_url = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454%22",
-                                    success_url = "https://api-bpm.hiji.xyz/dgv3/success%22",
-                                    decline_url = "https://api-bpm.hiji.xyz/dgv3/decline%22"
-                                )
+                            val billingAddress = Address(
+                                country = "IN",
+                                email = merchant["email"]!!,
+                                address1 = "Chiyoda1-1",
+                                phone_number = merchant["contact"]!!,
+                                city = "Minatoku",
+                                state = "Tokyoto",
+                                postal_code = "100001"
+                            )
 
-                                val billingAddress = Address(
-                                    country = "IN",
-                                    email = merchant["email"]!!,
-                                    address1 = "Chiyoda1-1",
-                                    phone_number = merchant["contact"]!!,
-                                    city = "Minatoku",
-                                    state = "Tokyoto",
-                                    postal_code = "100001"
-                                )
+                            val shippingAddress = Address(
+                                country = "IN",
+                                email = merchant["email"]!!,
+                                address1 = "Chiyoda1-1",
+                                phone_number = merchant["contact"]!!,
+                                city = "Minatoku",
+                                state = "Tokyoto",
+                                postal_code = "100001"
+                            )
 
-                                val shippingAddress = Address(
-                                    country = "IN",
-                                    email = merchant["email"]!!,
-                                    address1 = "Chiyoda1-1",
-                                    phone_number = merchant["contact"]!!,
-                                    city = "Minatoku",
-                                    state = "Tokyoto",
-                                    postal_code = "100001"
-                                )
+                            val paymentMethod = PaymentMethod(
+                                type = "daspay"
+                            )
 
-                                val paymentMethod = PaymentMethod(
-                                    type = "daspay"
-                                )
+                            val paymentRequest = PaymentRequest(
+                                amount = formattedAmount,
+                                currency = "USD",
+                                merchant_txn_ref = "TEST00989012878787878787878787",
+                                customer_ip = getDeviceIpAddress(),
+                                merchant_id = merchant["dasmid"]!!,
+                                return_url = paymentReturnUrl,
+                                billing_address = billingAddress,
+                                shipping_address = shippingAddress,
+                                payment_method = paymentMethod,
+                                time_zone = getDeviceTimeZone()
+                            )
 
-                                val paymentRequest = PaymentRequest(
-                                    amount = formattedAmount,
-                                    currency = "USD",
-                                    merchant_txn_ref = "TEST00989012878787878787878787",
-                                    customer_ip = getDeviceIpAddress(),
-                                    merchant_id = merchant["dasmid"]!!,
-                                    return_url = paymentReturnUrl,
-                                    billing_address = billingAddress,
-                                    shipping_address = shippingAddress,
-                                    payment_method = paymentMethod,
-                                    time_zone = getDeviceTimeZone()
-                                )
+                            scope.launch {
+                                paymentLoader = true
 
-                                scope.launch {
-                                    paymentLoader = true
+                                try {
 
-                                    try {
+                                    val paymentResponse: PaymentResponse? =
+                                        payment(context, paymentRequest)
+                                    println("paymentResponse: $paymentResponse")
 
-                                        val paymentResponse: PaymentResponse? =
-                                            payment(context, paymentRequest)
-                                        println("paymentResponse: $paymentResponse")
-
-                                        if (paymentResponse == null) {
-                                            Toast.makeText(
-                                                context,
-                                                "2: Token invalid! Please login again.",
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                            navController.navigate("loginScreen") {
-                                                popUpTo(0) { inclusive = true }
-                                            }
-                                        }
-
-                                        paymentResponse?.let {
-                                            if (it.success) {
-                                                launcher.launch(
-                                                    PoiRequest.ActionNew(
-                                                        tranType = TranType.SALE,
-                                                        amount = Amount(
-                                                            BigDecimal(formattedAmount),
-                                                            Currency.getInstance("USD"),
-                                                        ),
-                                                        profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
-                                                        posReference = it.transaction_details.id
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    } catch (e: Exception) {
-                                        SharedPreferences.clearSharedPreferences(context)
+                                    if (paymentResponse == null) {
+                                        Toast.makeText(
+                                            context,
+                                            "2: Token invalid! Please login again.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
                                         navController.navigate("loginScreen") {
                                             popUpTo(0) { inclusive = true }
                                         }
-
-                                        println("Error: ${e.toString()}")
-                                    } finally {
-                                        paymentLoader = false
                                     }
+
+                                    paymentResponse?.let {
+                                        if (it.success) {
+                                            launcher.launch(
+                                                PoiRequest.ActionNew(
+                                                    tranType = TranType.SALE,
+                                                    amount = Amount(
+                                                        BigDecimal(formattedAmount),
+                                                        Currency.getInstance("USD"),
+                                                    ),
+                                                    profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
+                                                    posReference = it.transaction_details.id
+                                                )
+                                            )
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    SharedPreferences.clearSharedPreferences(context)
+                                    navController.navigate("loginScreen") {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+
+                                    println("Error: ${e.toString()}")
+                                } finally {
+                                    paymentLoader = false
                                 }
                             }
                         }
                     }
-                })
-        }
-
+                }
+            })
     }
+}
+
+fun Modifier.dashedBorder(
+    color: Color,
+    shape: Shape,
+    strokeWidth: Dp = 2.dp,
+    dashLength: Dp = 4.dp,
+    gapLength: Dp = 4.dp,
+    cap: StrokeCap = StrokeCap.Round,
+) = this.drawWithContent {
+
+
+    val outline = shape.createOutline(size, layoutDirection, density = this)
+
+    val dashedStroke = Stroke(
+        cap = cap, width = strokeWidth.toPx(), pathEffect = PathEffect.dashPathEffect(
+            intervals = floatArrayOf(dashLength.toPx(), gapLength.toPx())
+        )
+    )
+    drawContent()
+
+    drawOutline(outline = outline, style = dashedStroke, brush = SolidColor(color))
 }

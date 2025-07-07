@@ -32,23 +32,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
+import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.DatePickerModal
 import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.Orange10
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
-import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary900
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -214,9 +211,7 @@ fun BottomSectionContent(navController: NavController) {
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(8.dp))
                         .background(iconBackgroundColor)
-                        .clickable(onClick = {
-                            showInsights = !showInsights
-                        }),
+                        .clickable(onClick = { showInsights = !showInsights }),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
@@ -264,23 +259,11 @@ fun BottomSectionContent(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    text = buildAnnotatedString {
-                        withStyle(
-                            SpanStyle(
-                                primary100.copy(alpha = 0.5f), fontWeight = FontWeight.Light
-                            )
-                        ) { append("$currency ") }
-
-                        withStyle(SpanStyle(primary100)) { append(receivalAmount.toString()) }
-                    },
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = primary100,
-                    modifier = Modifier.padding(bottom = 10.dp)
+                CurrencyText(
+                    currency = currency, amount = receivalAmount.toString(), fontSize = 36.sp
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 var transactions = transactionList?.data?.records?.filter {
 
@@ -304,13 +287,13 @@ fun BottomSectionContent(navController: NavController) {
                 }
 
                 if (showInsights) Insights(
-                    transactions = transactions!!.toTypedArray(),
+                    transactions = transactions?.toTypedArray(),
                     currency = currency,
                     updateReceivalAmount = {
                         updateReceivalAmount(it)
                     }) else Transactions(
                     navController,
-                    transactions = transactions!!.toTypedArray(),
+                    transactions = transactions?.toTypedArray(),
                     updateReceivalAmount = {
                         updateReceivalAmount(it)
                     })

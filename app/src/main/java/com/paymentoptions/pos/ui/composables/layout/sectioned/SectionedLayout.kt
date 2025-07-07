@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
+import com.paymentoptions.pos.ui.composables._components.buttons.BackButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ReceiveMoneyFAB
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
@@ -37,6 +38,7 @@ import com.paymentoptions.pos.ui.composables._components.images.TapToPayImage
 import com.paymentoptions.pos.ui.theme.primary100
 
 val RECEIVE_MONEY_BUTTON_HEIGHT_IN_DP = 60.dp
+val DEFAULT_BOTTOM_SECTION_PADDING_IN_DP = 16.dp
 
 @Composable
 fun SectionedLayout(
@@ -45,8 +47,8 @@ fun SectionedLayout(
     bottomSectionMinHeightRatio: Float = 0.2f,
     bottomSectionMaxHeightRatio: Float = 0.73f,
     enableBottomNavigationBar: Boolean = true,
-    showMenuBarButton: Boolean = false,
-    defaultBottomSectionPadding: Dp = 16.dp,
+    showBackButton: Boolean = false,
+    defaultBottomSectionPadding: Dp = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
 ) {
     val bottomSectionMinHeightDp =
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMinHeightRatio))
@@ -54,9 +56,9 @@ fun SectionedLayout(
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMaxHeightRatio))
     var showMoreItems by remember { mutableStateOf(false) }
 
-
     val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.8f else 0.05f)
     val borderRadiusInDp = 32.dp
+//    val scrollState = rememberScrollState()
 
     fun toggleShowMoreItems() {
         showMoreItems = !showMoreItems
@@ -98,6 +100,7 @@ fun SectionedLayout(
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min)
                     .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
+//                    .verticalScroll(scrollState)
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(2f)
                     .background(color = Color.Transparent)
@@ -113,19 +116,19 @@ fun SectionedLayout(
                         end = defaultBottomSectionPadding,
                         bottom = if (enableBottomNavigationBar) defaultBottomSectionPadding.plus(
                             20.dp
-                        ) else if (showMenuBarButton) 0.dp else 20.dp
+                        ) else if (showBackButton) 0.dp else defaultBottomSectionPadding
                     ), horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
                 bottomSectionContent()
 
-//                if (!enableBottomNavigationBarState) {
-//                    Spacer(modifier = Modifier.height(20.dp))
-//                    ShowBottomMenuBarButton(
-//                        showMenuBarButton = showMenuBarButton, onClickShowMenuBarButton = {
-//                            navController.popBackStack()
-//                        })
-//                }
+
+                if (showBackButton) {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    BackButton(onClickShowMenuBarButton = { navController.popBackStack() })
+                }
+
+
             }
 
             //Just an overlay

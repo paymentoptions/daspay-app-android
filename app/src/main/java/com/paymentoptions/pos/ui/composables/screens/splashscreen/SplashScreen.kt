@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.ui.composables.screens.loading
+package com.paymentoptions.pos.ui.composables.screens.splashscreen
 
 import android.os.Handler
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +13,7 @@ import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayout
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 
 @Composable
-fun LoadingScreen(navController: NavController) {
+fun SplashScreen(navController: NavController) {
     Handler().postDelayed({
         navController.navigate(Screens.AuthCheck.route)
     }, 1000)

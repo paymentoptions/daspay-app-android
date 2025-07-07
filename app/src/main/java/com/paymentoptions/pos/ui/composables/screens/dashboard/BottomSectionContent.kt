@@ -8,13 +8,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,15 +22,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
+import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -43,7 +41,7 @@ import kotlin.math.ceil
 @Composable
 fun BottomSectionContent(navController: NavController) {
     val context = LocalContext.current
-    var receivalAmount: Float? by remember { mutableStateOf<Float?>(null) }
+    var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf("") }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
@@ -91,6 +89,7 @@ fun BottomSectionContent(navController: NavController) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
+
             Text(
                 text = "Receival for the day",
                 fontSize = 16.sp,
@@ -100,23 +99,11 @@ fun BottomSectionContent(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(
-                        SpanStyle(
-                            primary100.copy(alpha = 0.5f), fontWeight = FontWeight.Light
-                        )
-                    ) { append("$currency ") }
-
-                    withStyle(SpanStyle(primary100)) { append(receivalAmount.toString()) }
-                },
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                color = primary100,
-                modifier = Modifier.padding(bottom = 10.dp)
+            CurrencyText(
+                currency = currency, amount = receivalAmount.toString(), fontSize = 36.sp
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             FilledButton(
                 text = "View Insights",
@@ -148,9 +135,7 @@ fun BottomSectionContent(navController: NavController) {
                     },
                     label = {
                         Text(
-                            text = "View All",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold
+                            text = "View All", fontSize = 14.sp, fontWeight = FontWeight.Bold
                         )
                     })
             }

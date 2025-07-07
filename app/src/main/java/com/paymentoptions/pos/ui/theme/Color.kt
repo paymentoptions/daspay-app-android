@@ -13,6 +13,7 @@ val primary200 = Color(0xFF7277A8)
 val primary300 = Color(0xFF3154D1)
 val primary400 = Color(0xFF2B54A3)
 val primary500 = Color(0xFF0A307A)
+val primary600 = Color(0xFF234E7A)
 val primary900 = Color(0xFF031F68)
 
 
@@ -39,7 +40,6 @@ val secondaryEnabledButtonColor = Color.White
 val secondaryEnabledButtonTextColor = primary500
 val secondaryDisabledButtonColor = Color.Gray
 val secondaryDisabledButtonTextColor = primary500
-
 
 val green200 = Color(0xFF44A101)
 val green500 = Color(0xFF03992B)
