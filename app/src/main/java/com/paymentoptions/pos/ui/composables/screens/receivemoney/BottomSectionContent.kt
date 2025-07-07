@@ -137,7 +137,7 @@ fun BottomSectionContent(navController: NavController) {
     val context = LocalContext.current
     val activity = context as? Activity
     val scope = rememberCoroutineScope()
-    var showInsights by remember { mutableStateOf(true) }
+    var showReceiveMoney by remember { mutableStateOf(true) }
 
     val authDetails = SharedPreferences.getAuthDetails(context)
 
@@ -276,17 +276,16 @@ fun BottomSectionContent(navController: NavController) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-
             Text(
                 text = "Receive Money",
                 modifier = Modifier
                     .padding(6.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(if (showInsights) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                    .background(if (showReceiveMoney) Color.White.copy(alpha = 0.9f) else Color.Transparent)
                     .padding(10.dp)
                     .weight(1f)
                     .clickable(onClick = {
-                        showInsights = true
+                        showReceiveMoney = true
                     }),
                 textAlign = TextAlign.Center,
                 fontSize = 14.sp,
@@ -298,11 +297,11 @@ fun BottomSectionContent(navController: NavController) {
                 modifier = Modifier
                     .padding(6.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(if (!showInsights) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                    .background(if (!showReceiveMoney) Color.White.copy(alpha = 0.9f) else Color.Transparent)
                     .padding(10.dp)
                     .weight(1f)
                     .clickable(onClick = {
-                        showInsights = false
+                        showReceiveMoney = false
                     }),
                 textAlign = TextAlign.Center,
                 fontSize = 14.sp,
@@ -311,14 +310,14 @@ fun BottomSectionContent(navController: NavController) {
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Column(
             modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Receive Money",
+                text = if (showReceiveMoney) "Receive Money" else "Pre-Authorize",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = primary900,
@@ -329,7 +328,7 @@ fun BottomSectionContent(navController: NavController) {
             CurrencyText(currency = currency, amount = formattedAmount, fontSize = 36.sp)
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Column(modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)) {
             TextField(

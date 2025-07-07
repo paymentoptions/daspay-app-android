@@ -89,7 +89,6 @@ fun BottomSectionContent(navController: NavController) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-
             Text(
                 text = "Receival for the day",
                 fontSize = 16.sp,
