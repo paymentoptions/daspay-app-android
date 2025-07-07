@@ -13,9 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,7 +35,7 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
-import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.bannerBgColor
 import com.paymentoptions.pos.ui.theme.primary100
@@ -93,7 +91,7 @@ fun BottomSectionContent(navController: NavController) {
 
     var selectedTab by remember { mutableStateOf<Tab>(tabs[0]) }
 
-    val scrollState = rememberScrollState()
+//    val scrollState = rememberScrollState()
     val context = LocalContext.current
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
@@ -197,7 +195,7 @@ fun BottomSectionContent(navController: NavController) {
                 .padding(top = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            CustomCircularProgressIndicator()
+            MyCircularProgressIndicator()
         } else {
             if (transactionList == null) {
                 Toast.makeText(
@@ -226,7 +224,7 @@ fun BottomSectionContent(navController: NavController) {
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier
                     .fillMaxSize()
-                    .verticalScroll(scrollState)
+//                    .verticalScroll(scrollState)
             ) {
 
                 for (transaction in transactions!!.toTypedArray()) {

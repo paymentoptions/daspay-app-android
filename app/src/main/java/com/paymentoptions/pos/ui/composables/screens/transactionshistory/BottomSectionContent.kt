@@ -1,6 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.transactionshistory
 
-import CustomDropdown
+import MyDropdown
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,8 +40,8 @@ import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
-import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.DatePickerModal
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.Orange10
@@ -171,7 +171,7 @@ fun BottomSectionContent(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            CustomCircularProgressIndicator(null, Orange10)
+            MyCircularProgressIndicator(null, Orange10)
         }
     } else {
         currency = transactionList?.data?.records?.first()?.CurrencyCode ?: ""
@@ -199,7 +199,7 @@ fun BottomSectionContent(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                CustomDropdown(
+                MyDropdown(
                     filters,
                     selectedFilter,
                     onFilterChange = { selectedFilter = it },

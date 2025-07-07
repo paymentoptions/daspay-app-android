@@ -1,7 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens.settings
 
 import BiometricAuthScreen
-import CustomDialog
+import MyDialog
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -62,7 +62,7 @@ fun BottomSectionContent(navController: NavController) {
     val lastLoginString: String =
         SimpleDateFormat("DD MMMM YYYY | hh:mm a").format(authDetails?.data?.auth_time ?: "")
 
-    CustomDialog(
+    MyDialog(
         showDialog = showSignOutConfirmationDialog,
         title = "Confirmation Required",
         text = "Do you want to log out?",

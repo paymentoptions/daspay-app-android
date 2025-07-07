@@ -31,7 +31,6 @@ fun BottomSectionContent(navController: NavController) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
 
-
         ScreenTitleWithCloseButton(title = "Help & Support", navController = navController)
 
         Spacer(modifier = Modifier.height(10.dp))

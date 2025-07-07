@@ -29,7 +29,7 @@ import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.primary100
 
 @Composable
-fun CustomDropdown(
+fun MyDropdown(
     filters: Map<String, String>,
     selectedFilter: Map.Entry<String, String>,
     onFilterChange: (Map.Entry<String, String>) -> Unit,

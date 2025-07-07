@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,10 +47,10 @@ fun SectionedLayout(
     navController: NavController,
     bottomSectionContent: @Composable () -> Unit,
     bottomSectionMinHeightRatio: Float = 0.2f,
-    bottomSectionMaxHeightRatio: Float = 0.73f,
+    bottomSectionMaxHeightRatio: Float = 0.8f,
     enableBottomNavigationBar: Boolean = true,
     showBackButton: Boolean = false,
-    defaultBottomSectionPadding: Dp = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
+    defaultBottomSectionPaddingInDp: Dp = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
 ) {
     val bottomSectionMinHeightDp =
         Dp(LocalConfiguration.current.screenHeightDp.times(bottomSectionMinHeightRatio))
@@ -58,7 +60,7 @@ fun SectionedLayout(
 
     val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.8f else 0.05f)
     val borderRadiusInDp = 32.dp
-//    val scrollState = rememberScrollState()
+    val scrollState = rememberScrollState()
 
     fun toggleShowMoreItems() {
         showMoreItems = !showMoreItems
@@ -100,7 +102,7 @@ fun SectionedLayout(
                     .fillMaxWidth()
                     .height(IntrinsicSize.Min)
                     .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
-//                    .verticalScroll(scrollState)
+                    .verticalScroll(scrollState)
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(2f)
                     .background(color = Color.Transparent)
@@ -111,24 +113,21 @@ fun SectionedLayout(
                     )
                     .background(color = Color.White)
                     .padding(
-                        start = defaultBottomSectionPadding,
-                        top = defaultBottomSectionPadding,
-                        end = defaultBottomSectionPadding,
-                        bottom = if (enableBottomNavigationBar) defaultBottomSectionPadding.plus(
-                            20.dp
-                        ) else if (showBackButton) 0.dp else defaultBottomSectionPadding
+                        start = defaultBottomSectionPaddingInDp,
+                        top = defaultBottomSectionPaddingInDp,
+                        end = defaultBottomSectionPaddingInDp,
+                        bottom = if (enableBottomNavigationBar) defaultBottomSectionPaddingInDp.plus(
+                            5.dp
+                        ) else if (showBackButton) 0.dp else defaultBottomSectionPaddingInDp
                     ), horizontalAlignment = Alignment.CenterHorizontally
 
             ) {
                 bottomSectionContent()
 
-
                 if (showBackButton) {
                     Spacer(modifier = Modifier.height(20.dp))
                     BackButton(onClickShowMenuBarButton = { navController.popBackStack() })
                 }
-
-
             }
 
             //Just an overlay

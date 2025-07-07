@@ -1,6 +1,6 @@
 package com.paymentoptions.pos.ui.composables.layout.sectioned
 
-import CustomDialog
+import MyDialog
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -168,7 +168,7 @@ fun MyBottomNavigationBar(
     var signOutResponse: SignOutResponse? = null
     var selected by remember { mutableStateOf<BottomNavigationBarItem>(home) }
 
-    CustomDialog(
+    MyDialog(
         showDialog = showSignOutConfirmationDialog,
         title = "Confirmation Required",
         text = "Do you want to log out?",

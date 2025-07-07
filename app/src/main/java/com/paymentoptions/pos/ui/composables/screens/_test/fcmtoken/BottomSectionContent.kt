@@ -1,9 +1,12 @@
+package com.paymentoptions.pos.ui.composables.screens._test.fcmtoken
+
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
@@ -15,16 +18,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
-import com.paymentoptions.pos.ui.theme.Orange10
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables.screens.notifications.ScreenTitleWithCloseButton
+import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.primary500
+
 
 @Composable
-fun FcmTokenScreen(navController: NavController) {
+fun BottomSectionContent(navController: NavController) {
 
     val context = LocalContext.current
     var fcmToken by remember { mutableStateOf<String?>("") }
@@ -37,25 +42,30 @@ fun FcmTokenScreen(navController: NavController) {
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxHeight()
-            .padding(10.dp),
-        verticalArrangement = Arrangement.Center
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Text("FCM Token")
+
+        ScreenTitleWithCloseButton(title = "FCM Token", navController = navController)
+
+        Spacer(modifier = Modifier.height(20.dp))
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(0.5.dp, color = Color.Gray),
+                .border(2.dp, color = primary100.copy(alpha = 0.2f)),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
 
             SelectionContainer {
-                if (loaderState)
-                    CustomCircularProgressIndicator("Loading...", Orange10)
-                else
-                    Text(fcmToken.toString(), Modifier.padding(50.dp))
+                if (loaderState) MyCircularProgressIndicator("Loading...", primary500)
+                else Text(
+                    text = fcmToken.toString(),
+                    modifier = Modifier.padding(20.dp),
+                    color = primary500
+                )
             }
         }
     }

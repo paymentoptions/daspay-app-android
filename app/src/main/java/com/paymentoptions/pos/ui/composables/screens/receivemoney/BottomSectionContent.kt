@@ -1,6 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.receivemoney
 
-import CustomDialog
+import MyDialog
 import android.app.Activity
 import android.content.Intent
 import android.provider.Settings
@@ -157,7 +157,7 @@ fun BottomSectionContent(navController: NavController) {
     merchant["email"] = getKeyFromToken(decodedJwtPayloadJson, "email")
     merchant["contact"] = getKeyFromToken(decodedJwtPayloadJson, "custom:ContactNo")
 
-    CustomDialog(
+    MyDialog(
         showDialog = showTransactionStatus,
         title = "Transaction Status",
         text = transactionDetailsText,
@@ -213,7 +213,7 @@ fun BottomSectionContent(navController: NavController) {
 
     val currency = "HKD"
 
-    CustomDialog(
+    MyDialog(
         showDialog = showDeveloperOptionsEnabled,
         title = "Error",
         text = "You need to disable developer options to proceed further.",
@@ -231,7 +231,7 @@ fun BottomSectionContent(navController: NavController) {
         },
     )
 
-    CustomDialog(
+    MyDialog(
         showDialog = showNFCNotPresent,
         title = "NFC Required",
         text = "Your device does not support NFC.",
@@ -244,7 +244,7 @@ fun BottomSectionContent(navController: NavController) {
         onDismissFn = { showNFCNotPresent = false },
     )
 
-    CustomDialog(
+    MyDialog(
         showDialog = showNFCNotEnabled,
         title = "NFC Required",
         text = "This feature needs NFC. Please enable it in your device settings.",

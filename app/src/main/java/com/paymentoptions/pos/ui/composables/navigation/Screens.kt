@@ -29,5 +29,6 @@ sealed class Screens(val route: String) {
     object AppVersion : Screens(route = "AppVersion")
 
     //Misc
-    object SplashScreen : Screens(route = "Loading")
+    object SplashScreen : Screens(route = "Splash")
+    object FcmTokenScreen : Screens(route = "Fcm")
 }

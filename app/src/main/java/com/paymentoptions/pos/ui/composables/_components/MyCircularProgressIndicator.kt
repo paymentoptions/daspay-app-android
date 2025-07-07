@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CustomCircularProgressIndicator(text: String? = null, color: Color = Color.White) {
+fun MyCircularProgressIndicator(text: String? = null, color: Color = Color.White) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,

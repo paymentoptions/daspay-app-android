@@ -11,7 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.theme.primary900
 
 @Composable
@@ -32,7 +32,7 @@ fun OutlinedButton(
         ),
         shape = RoundedCornerShape(18.dp)
     ) {
-        if (isLoading) CustomCircularProgressIndicator(color = Color.White)
+        if (isLoading) MyCircularProgressIndicator(color = Color.White)
         else Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Bold)
     }
 }

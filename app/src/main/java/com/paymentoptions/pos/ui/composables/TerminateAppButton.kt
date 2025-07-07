@@ -1,10 +1,10 @@
 package com.paymentoptions.pos.ui.composables
 
 import android.app.Activity
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun TerminateAppButton() {

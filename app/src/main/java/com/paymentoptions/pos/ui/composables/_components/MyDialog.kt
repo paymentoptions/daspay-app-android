@@ -13,7 +13,7 @@ import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.primary500
 
 @Composable
-fun CustomDialog(
+fun MyDialog(
     showDialog: Boolean,
     title: String,
     text: String,

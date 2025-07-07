@@ -3,8 +3,6 @@ package com.paymentoptions.pos.ui.composables.screens.dashboard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,7 +21,7 @@ fun Transactions(
     transactions: Array<TransactionListDataRecord>?,
     updateReceivalAmount: (Float) -> Unit,
 ) {
-    val scrollState = rememberScrollState()
+//    val scrollState = rememberScrollState()
     var selectedFilterKey by remember { mutableStateOf("ALL") }
     var transactionsWithTrackId = mutableMapOf<String, Boolean>()
 
@@ -33,7 +31,7 @@ fun Transactions(
         horizontalAlignment = Alignment.End,
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(scrollState)
+//            .verticalScroll(scrollState)
     ) {
 
         var earningAmount = 0.0f

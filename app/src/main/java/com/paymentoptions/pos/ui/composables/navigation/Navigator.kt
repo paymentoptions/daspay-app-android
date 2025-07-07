@@ -4,18 +4,19 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.paymentoptions.pos.ui.composables.screens._test.fcmtoken.FcmTokenScreen
 import com.paymentoptions.pos.ui.composables.screens.authcheckscreen.AuthCheckScreen
 import com.paymentoptions.pos.ui.composables.screens.dashboard.DashboardScreen
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.composables.screens.foodmenu.FoodMenuScreen
 import com.paymentoptions.pos.ui.composables.screens.helpandsupport.HelpAndSupportScreen
-import com.paymentoptions.pos.ui.composables.screens.splashscreen.SplashScreen
 import com.paymentoptions.pos.ui.composables.screens.notifications.NotificationsScreen
 import com.paymentoptions.pos.ui.composables.screens.receivemoney.ReceiveMoneyScreen
 import com.paymentoptions.pos.ui.composables.screens.refund.RefundScreen
 import com.paymentoptions.pos.ui.composables.screens.settings.SettingsScreen
 import com.paymentoptions.pos.ui.composables.screens.signIn.SignInScreen
 import com.paymentoptions.pos.ui.composables.screens.signout.SignOutScreen
+import com.paymentoptions.pos.ui.composables.screens.splashscreen.SplashScreen
 import com.paymentoptions.pos.ui.composables.screens.token.TokenScreen
 import com.paymentoptions.pos.ui.composables.screens.transactionshistory.TransactionHistoryScreen
 
@@ -64,5 +65,6 @@ fun Navigator() {
 
         //Misc
         composable(Screens.SplashScreen.route) { SplashScreen(navController) }
+        composable(Screens.FcmTokenScreen.route) { FcmTokenScreen(navController) }
     }
 }

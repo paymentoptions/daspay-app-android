@@ -29,7 +29,7 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
-import com.paymentoptions.pos.ui.composables._components.CustomCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.Orange10
@@ -77,7 +77,7 @@ fun BottomSectionContent(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CustomCircularProgressIndicator(null, Orange10)
+        MyCircularProgressIndicator(null, Orange10)
     } else {
 
         currency = transactionList?.data?.records?.first()?.CurrencyCode ?: ""
@@ -102,7 +102,7 @@ fun BottomSectionContent(navController: NavController) {
                 currency = currency, amount = receivalAmount.toString(), fontSize = 36.sp
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             FilledButton(
                 text = "View Insights",
