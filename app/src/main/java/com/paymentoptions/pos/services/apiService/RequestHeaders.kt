@@ -25,3 +25,16 @@ fun generateRequestHeaders(authToken: String = ""): Map<String, String> {
     println("requestHeaders: $requestHeaders")
     return requestHeaders
 }
+
+fun generatePaymentRequestHeaders(authToken: String = ""): Map<String, String> {
+    val requestHeaders = mapOf<String, String>(
+        "x-secret-key" to "We@ve",
+        "x-api-key" to "bLm8c1C0fL3FtPzrjSr0",
+        "content-type" to "application/json",
+        "Cookie" to "reqid=9ba02754-19cb-4b47-ba3b-e656f04cd7d7",
+        "Authorization" to authToken
+    )
+
+    println("requestHeaders: $requestHeaders")
+    return requestHeaders
+}

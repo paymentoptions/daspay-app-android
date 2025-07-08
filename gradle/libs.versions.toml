@@ -5,6 +5,7 @@ composeBomVersion = "2025.05.00"
 converterGson = "2.9.0"
 firebaseAnalytics = "22.4.0"
 firebaseBom = "33.13.0"
+foundation = "1.8.3"
 headlessStage = "1.2.8"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
@@ -24,11 +25,13 @@ pagingCompose = "3.3.6"
 retrofit = "2.9.0"
 firebaseMessagingKtx = "24.1.1"
 ycharts = "2.1.0"
+runtime = "1.0.0-alpha04"
 
 [libraries]
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 androidx-compose-bom-v20250500 = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
@@ -57,6 +60,7 @@ minehades = { module = "com.theminesec:minehades", version.ref = "minehades" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 ycharts = { module = "co.yml:ycharts", version.ref = "ycharts" }
+androidx-runtime = { group = "androidx.xr.runtime", name = "runtime", version.ref = "runtime" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -4,6 +4,7 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.platform.debugInspectorInfo
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -13,6 +14,7 @@ import com.paymentoptions.pos.device.LockScreenOrientation
 import com.paymentoptions.pos.device.NetworkStatusComposable
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.theminesec.sdk.headless.HeadlessSetup
+import com.theminesec.sdk.headless.SetupOptionBuilder
 import kotlinx.coroutines.launch
 
 
@@ -47,6 +49,14 @@ class MainActivity : FragmentActivity() {
     }
 
     fun setup() = lifecycleScope.launch {
-        HeadlessSetup.initialSetup(this@MainActivity)
+
+        HeadlessSetup.initialSetup(this@MainActivity){
+            withTestCapk = true
+
+        }
+        HeadlessSetup.getEmvParams()
+        HeadlessSetup.getCapks()
+        HeadlessSetup.getTermParam()
+
     }
 }

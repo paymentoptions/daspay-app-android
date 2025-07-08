@@ -70,6 +70,7 @@ import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.bottomStroke
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary100
@@ -144,7 +145,7 @@ fun BottomSectionContent(navController: NavController) {
 
     if (authDetails == null) {
         Toast.makeText(context, "Token invalid! Please login again.", Toast.LENGTH_LONG).show()
-        navController.navigate("loginScreen") {
+        navController.navigate(Screens.SignIn.route) {
             popUpTo(0) { inclusive = true }
         }
         return
@@ -158,7 +159,7 @@ fun BottomSectionContent(navController: NavController) {
     merchant["name"] = getKeyFromToken(decodedJwtPayloadJson, "name")
     merchant["email"] = getKeyFromToken(decodedJwtPayloadJson, "email")
     merchant["contact"] = getKeyFromToken(decodedJwtPayloadJson, "custom:ContactNo")
-
+   // Log.d("Get Merchant-->2",merchant.toString())
     MyDialog(
         showDialog = showTransactionStatus,
         title = "Transaction Status",
@@ -469,11 +470,11 @@ fun BottomSectionContent(navController: NavController) {
                 .fillMaxWidth(),
             onClick = {
 
-                Toast.makeText(context, "Under development", Toast.LENGTH_SHORT).show()
+                //Toast.makeText(context, "Under development", Toast.LENGTH_SHORT).show()
 
                 //Disabled
-                if (false) {
-                    if (DeveloperOptions.isEnabled(context)) {
+
+                    if (!DeveloperOptions.isEnabled(context)) {
                         showDeveloperOptionsEnabled = true
                     } else {
                         var nfcStatusPair = Nfc.getStatus(context)
@@ -518,7 +519,7 @@ fun BottomSectionContent(navController: NavController) {
 
                             val paymentRequest = PaymentRequest(
                                 amount = formattedAmount,
-                                currency = "USD",
+                                currency = currency,
                                 merchant_txn_ref = "TEST00989012878787878787878787",
                                 customer_ip = getDeviceIpAddress(),
                                 merchant_id = merchant["dasmid"]!!,
@@ -528,7 +529,7 @@ fun BottomSectionContent(navController: NavController) {
                                 payment_method = paymentMethod,
                                 time_zone = getDeviceTimeZone()
                             )
-
+                            //Log.d(")
                             scope.launch {
                                 paymentLoader = true
 
@@ -544,7 +545,7 @@ fun BottomSectionContent(navController: NavController) {
                                             "2: Token invalid! Please login again.",
                                             Toast.LENGTH_LONG
                                         ).show()
-                                        navController.navigate("loginScreen") {
+                                        navController.navigate(Screens.SignIn.route) {
                                             popUpTo(0) { inclusive = true }
                                         }
                                     }
@@ -566,7 +567,7 @@ fun BottomSectionContent(navController: NavController) {
                                     }
                                 } catch (e: Exception) {
                                     SharedPreferences.clearSharedPreferences(context)
-                                    navController.navigate("loginScreen") {
+                                    navController.navigate(Screens.SignIn.route) {
                                         popUpTo(0) { inclusive = true }
                                     }
 
@@ -577,7 +578,6 @@ fun BottomSectionContent(navController: NavController) {
                             }
                         }
                     }
-                }
             })
     }
 }

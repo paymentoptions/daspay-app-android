@@ -3,6 +3,7 @@ package com.paymentoptions.pos.utils
 import android.util.Base64
 import org.json.JSONArray
 import org.json.JSONObject
+import android.util.Log
 
 fun decodeJwtPayload(token: String): JSONObject {
     val parts = token.split(".")
@@ -22,7 +23,8 @@ fun getDasmidFromToken(decodedTokenJson: JSONObject): String {
     for (i in 0 until jsonArray.length()) {
         result.add(jsonArray.getString(i))
     }
-    val dasmid = result[result.size - 1]
+    //Log.d("Get Merchant-->2",result.toString())
+    val dasmid = result[0]
     return dasmid
 }
 

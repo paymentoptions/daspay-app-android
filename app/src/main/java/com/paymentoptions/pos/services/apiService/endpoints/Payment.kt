@@ -5,8 +5,10 @@ import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.PaymentRequest
 import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
+import com.paymentoptions.pos.services.apiService.generatePaymentRequestHeaders
 import com.paymentoptions.pos.services.apiService.generateRequestHeaders
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
+import android.util.Log
 
 suspend fun payment(
     context: Context,
@@ -32,7 +34,7 @@ suspend fun payment(
         val idToken = authDetails?.data?.token?.idToken
 
         val requestHeaders =
-            generateRequestHeaders(idToken ?: "")
+            generatePaymentRequestHeaders(idToken ?: "")
 
         var paymentResponse: PaymentResponse? = null
         paymentResponse = RetrofitClient.api.payment(requestHeaders, paymentRequest)
