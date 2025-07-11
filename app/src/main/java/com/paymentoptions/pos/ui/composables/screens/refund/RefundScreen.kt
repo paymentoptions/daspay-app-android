@@ -1,13 +1,20 @@
 package com.paymentoptions.pos.ui.composables.screens.refund
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun RefundScreen(navController: NavController) {
     SectionedLayout(
-        navController = navController, bottomSectionContent = {
+        navController = navController,
+        bottomSectionContent = {
             BottomSectionContent(navController)
-        })
+        },
+        bottomSectionMaxHeightRatio = 0.6f,
+        showBottomNavigationBar = false,
+        showBackButton = true,
+        defaultBottomSectionPaddingInDp = 0.dp,
+        imageBelowLogo = { })
 }

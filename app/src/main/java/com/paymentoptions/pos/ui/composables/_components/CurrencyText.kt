@@ -2,6 +2,7 @@ package com.paymentoptions.pos.ui.composables._components
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -11,16 +12,21 @@ import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.theme.primary100
 
 @Composable
-fun CurrencyText(currency: String, amount: String, fontSize: TextUnit = 36.sp) {
+fun CurrencyText(
+    currency: String,
+    amount: String,
+    fontSize: TextUnit = 36.sp,
+    color: Color = primary100,
+) {
     Text(
         text = buildAnnotatedString {
             withStyle(
                 SpanStyle(
-                    primary100.copy(alpha = 0.7f), fontWeight = FontWeight.Medium
+                    color.copy(alpha = 0.7f), fontWeight = FontWeight.Medium
                 )
             ) { append("$currency ") }
 
-            withStyle(SpanStyle(primary100)) { append(amount) }
+            withStyle(SpanStyle(color)) { append(amount) }
         },
         fontSize = fontSize,
         fontWeight = FontWeight.Bold,

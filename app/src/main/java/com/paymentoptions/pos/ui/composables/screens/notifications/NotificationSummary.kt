@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.notifications
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.ui.theme.borderThickPrimary100
 import com.paymentoptions.pos.ui.theme.green200
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
@@ -57,7 +57,7 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
         colors = CardDefaults.cardColors().copy(
             containerColor = Color.White
         ),
-        border = BorderStroke(2.dp, primary500.copy(alpha = 0.2f)),
+        border = borderThickPrimary100,
         shape = RoundedCornerShape(32.dp)
     ) {
 

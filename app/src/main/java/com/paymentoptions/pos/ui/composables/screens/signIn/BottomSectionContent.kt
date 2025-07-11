@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,8 +21,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.device.SharedPreferences
@@ -29,45 +33,53 @@ import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.services.apiService.endpoints.signIn
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
-import com.paymentoptions.pos.ui.composables._components.inputs.PasswordInput
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.validation.validateEmail
 import com.paymentoptions.pos.utils.validation.validateOtp
 import com.paymentoptions.pos.utils.validation.validatePassword
 import kotlinx.coroutines.launch
 
-
-data class Credentials(
+sealed class CredentialModel(
     val email: String,
     val password: String,
-)
+) {
+    object Ankit :
+        CredentialModel(email = "ankitkambale097@myyahoo.com", password = "Test12345678@#")
+
+    object Vijay : CredentialModel(email = "vijacip629@daupload.com", password = "Test123456789@#")
+    object Kavita : CredentialModel(email = "kavitest15@ghunowa.com", password = "Kavios@12345678")
+}
 
 @Composable
 fun BottomSectionContent(navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
 
-    val allCredentials = listOf(
-        Credentials(email = "ankitkambale097@myyahoo.com", password = "Test12345678@#"),
-        Credentials(email = "vijacip629@daupload.com", password = "Test123456789@#"),
-        Credentials(email = "kavitest15@ghunowa.com", password = "Kavios@12345678")
-    )
+    val credentialModel = CredentialModel.Vijay
 
-    val credentials = allCredentials[1]
-
-    var email by remember { mutableStateOf(credentials.email) }
-    var password by remember { mutableStateOf(credentials.password) }
-
+    val emailState = rememberTextFieldState(initialText = credentialModel.email)
     var emailError by remember { mutableStateOf(false) }
-    var passwordError by remember { mutableStateOf(false) }
-    var passwordVisible by remember { mutableStateOf(false) }
 
-    var otp by remember { mutableStateOf("") }
+    val passwordState = rememberTextFieldState(initialText = credentialModel.password)
+    var passwordError by remember { mutableStateOf(false) }
+
+    val otpState = rememberTextFieldState()
     var otpError by remember { mutableStateOf(false) }
 
-    var showDrawer by remember { mutableStateOf(false) }
-    var isLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(emailState.text) {
+        emailError = !validateEmail(emailState.text.toString())
+    }
+
+    LaunchedEffect(passwordState.text) {
+        passwordError = !validatePassword(passwordState.text.toString())
+    }
+
+    LaunchedEffect(otpState.text) {
+        otpError = !validateOtp(otpState.text.toString())
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -81,38 +93,31 @@ fun BottomSectionContent(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         BasicTextInput(
-            value = email,
-            label = "Registered Email",
-            placeholder = "Enter your registered Email",
-            onChange = {
-                email = it
-                emailError = !validateEmail(email)
-            },
-            error = emailError,
-            errorText = "Invalid email",
+            state = emailState,
+            label = "Enter your registered email",
+            placeholder = "Enter Email",
+            isError = emailError,
             modifier = Modifier.fillMaxWidth()
         )
 
-        PasswordInput(
-            value = password,
-            label = "Password",
-            placeholder = "Enter your password",
-            onChange = {
-                password = it
-                passwordError = !validatePassword(password)
-            },
-            error = passwordError,
-            modifier = Modifier.fillMaxWidth(),
-            visible = passwordVisible,
-            onClickTrailingIcon = {
-                passwordVisible = !passwordVisible
-            })
+        Spacer(modifier = Modifier.height(8.dp))
 
         BasicTextInput(
-            value = otp, label = "OTP", placeholder = "6-digit OTP", {
-                otp = it
-                otpError = !validateOtp(otp)
-            }, modifier = Modifier.fillMaxWidth()
+            state = passwordState,
+            label = "Enter your password",
+            placeholder = "Enter Password",
+            modifier = Modifier.fillMaxWidth(),
+            isSecure = true
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        BasicTextInput(
+            state = otpState,
+            label = "Enter the 6-digit code sent on your registered email",
+            placeholder = "Enter OTP",
+            modifier = Modifier.fillMaxWidth(),
+            isSecure = true
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -121,24 +126,30 @@ fun BottomSectionContent(navController: NavController) {
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Didn't receive the code?")
-
-            TextButton(onClick = { /* TODO: resend OTP */ }) {
-                Text("Resend Code", textDecoration = TextDecoration.Underline)
-            }
+            Text(
+                "Didn't receive the code?",
+                color = purple50,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Resend Code", textDecoration = TextDecoration.Underline, fontSize = 12.sp)
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
         FilledButton(
             text = "Proceed",
+            disabled = emailError || passwordError,
+            isLoading = isLoading,
             onClick = {
                 scope.launch {
                     isLoading = true
                     var signInResponse: SignInResponse? = null
 
                     try {
-                        signInResponse = signIn(email, password)
+                        signInResponse =
+                            signIn(emailState.text.toString(), passwordState.text.toString())
                         println("signInResponse: $signInResponse")
 
                         if (signInResponse == null) {
@@ -161,7 +172,6 @@ fun BottomSectionContent(navController: NavController) {
                                 }
 
                                 SharedPreferences.saveAuthDetails(context, signInResponse)
-                                showDrawer = true
                                 navController.navigate(Screens.Token.route)
                             }
                         }
@@ -172,8 +182,6 @@ fun BottomSectionContent(navController: NavController) {
                     }
                 }
             },
-            isLoading = isLoading,
-            disabled = emailError || passwordError,
             modifier = Modifier.fillMaxWidth()
         )
     }

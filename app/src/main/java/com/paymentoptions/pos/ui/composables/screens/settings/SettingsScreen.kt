@@ -9,5 +9,6 @@ fun SettingsScreen(navController: NavController) {
     SectionedLayout(
         navController = navController, bottomSectionContent = {
             BottomSectionContent(navController)
-        })
+        }, showBottomNavigationBar = false
+    )
 }

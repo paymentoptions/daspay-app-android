@@ -12,9 +12,9 @@ fun ReceiveMoneyScreen(navController: NavController) {
         bottomSectionContent = {
             BottomSectionContent(navController)
         },
-        bottomSectionMaxHeightRatio = 0.9f,
-        enableBottomNavigationBar = false,
+        bottomSectionMaxHeightRatio = 0.95f,
+        showBottomNavigationBar = false,
         showBackButton = true,
-        defaultBottomSectionPaddingInDp = 0.dp
+        defaultBottomSectionPaddingInDp = 0.dp,
     )
 }

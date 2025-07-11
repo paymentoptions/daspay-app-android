@@ -1,7 +1,7 @@
 package com.paymentoptions.pos.services.apiService
 
 fun generateRequestHeaders(authToken: String = ""): Map<String, String> {
-    val requestHeaders = mapOf<String, String>(
+    val headers = mapOf<String, String>(
         "accept" to "*/*",
         "accept-language" to "en-US,en;q=0.9",
         "cache-control" to "no-cache",
@@ -22,12 +22,12 @@ fun generateRequestHeaders(authToken: String = ""): Map<String, String> {
         "authorization" to authToken
     )
 
-    println("requestHeaders: $requestHeaders")
-    return requestHeaders
+    println("requestHeaders: $headers")
+    return headers
 }
 
 fun generatePaymentRequestHeaders(authToken: String = ""): Map<String, String> {
-    val requestHeaders = mapOf<String, String>(
+    val headers = mapOf<String, String>(
         "x-secret-key" to "We@ve",
         "x-api-key" to "bLm8c1C0fL3FtPzrjSr0",
         "content-type" to "application/json",
@@ -35,6 +35,6 @@ fun generatePaymentRequestHeaders(authToken: String = ""): Map<String, String> {
         "Authorization" to authToken
     )
 
-    println("requestHeaders: $requestHeaders")
-    return requestHeaders
+    println("generatePaymentRequestHeaders: $headers")
+    return headers
 }

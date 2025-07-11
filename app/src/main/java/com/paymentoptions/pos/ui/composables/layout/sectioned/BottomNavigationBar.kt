@@ -1,7 +1,6 @@
 package com.paymentoptions.pos.ui.composables.layout.sectioned
 
 import MyDialog
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -53,6 +52,7 @@ import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
 import com.paymentoptions.pos.ui.composables.navigation.Screens
+import com.paymentoptions.pos.ui.theme.borderThickPrimary100
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
@@ -229,7 +229,7 @@ fun MyBottomNavigationBar(
                         colors = CardDefaults.cardColors(
                             containerColor = Color.White.copy(alpha = 0.1f),
                         ),
-                        border = BorderStroke(2.dp, primary100.copy(alpha = 0.2f)),
+                        border = borderThickPrimary100,
                     ) {
 
                         Item(
@@ -251,7 +251,7 @@ fun MyBottomNavigationBar(
                         colors = CardDefaults.cardColors(
                             containerColor = Color.White.copy(alpha = 0.1f),
                         ),
-                        border = BorderStroke(2.dp, primary100.copy(alpha = 0.2f)),
+                        border = borderThickPrimary100,
                     ) {
 
                         Item(

@@ -8,11 +8,9 @@ import androidx.compose.ui.res.painterResource
 import com.paymentoptions.pos.R
 
 @Composable
-fun BackgroundImage(modifier: Modifier = Modifier) {
+fun CreditCardImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.banner_bg),
-        contentDescription = "App Background",
-        contentScale = ContentScale.Crop,
-        modifier = modifier
+        painter = painterResource(id = R.drawable.credit_card), // Replace with your image resource
+        contentDescription = "Credit Card", contentScale = ContentScale.Fit, modifier = modifier
     )
 }

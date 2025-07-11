@@ -2,6 +2,7 @@ package com.paymentoptions.pos.ui.composables.screens.settings
 
 import MyDialog
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -155,7 +157,7 @@ fun BottomSectionContent(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(50.dp))
 
-                HorizontalDivider(Modifier.fillMaxWidth())
+                HorizontalDivider(modifier = Modifier.background(Color.White.copy(alpha = 0.2f)))
 
                 Spacer(modifier = Modifier.height(20.dp))
 

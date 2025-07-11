@@ -28,6 +28,7 @@ data class AppTypography(
     val labelNormal: TextStyle,
     val labelSmall: TextStyle,
     val footnote: TextStyle,
+    val status: TextStyle,
 )
 
 //Shape
@@ -68,13 +69,13 @@ val LocalAppTypography = staticCompositionLocalOf {
         labelNormal = TextStyle.Default,
         labelSmall = TextStyle.Default,
         footnote = TextStyle.Default,
+        status = TextStyle.Default,
     )
 }
 
 val LocalAppShape = staticCompositionLocalOf {
     AppShape(
-        container = RectangleShape,
-        button = RectangleShape
+        container = RectangleShape, button = RectangleShape
     )
 }
 

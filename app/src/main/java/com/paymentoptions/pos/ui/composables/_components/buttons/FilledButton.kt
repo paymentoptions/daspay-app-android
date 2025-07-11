@@ -28,7 +28,7 @@ fun FilledButton(
         enabled = !disabled,
         onClick = onClick,
         modifier = modifier
-            .height(40.dp)
+            .height(56.dp)
             .background(
                 brush = if (!disabled) enabledFilledButtonGradientBrush else disabledFilledButtonGradientBrush,
                 shape = RoundedCornerShape(8.dp)

@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,20 +27,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.ui.composables.navigation.Screens
+import com.paymentoptions.pos.ui.theme.borderThinPrimary100
 import com.paymentoptions.pos.ui.theme.green200
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
-import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary200
 import com.paymentoptions.pos.ui.theme.primary500
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
 
+var THE_TRANSACTION: TransactionListDataRecord? = null
 
 @Composable
-fun TransactionSummary(transaction: TransactionListDataRecord) {
+fun TransactionSummary(navController: NavController, transaction: TransactionListDataRecord) {
 
     val transactionAmount = transaction.amount.toFloat()
     val isTransactionAmountPositive = transactionAmount > 0
@@ -62,9 +64,12 @@ fun TransactionSummary(transaction: TransactionListDataRecord) {
         colors = CardDefaults.cardColors().copy(
             containerColor = Color.White,
         ),
-        border = BorderStroke(1.dp, primary100.copy(alpha = 0.2f)),
-        shape = RoundedCornerShape(16.dp)
-    ) {
+        border = borderThinPrimary100,
+        shape = RoundedCornerShape(16.dp),
+        onClick = {
+            THE_TRANSACTION = transaction
+            navController.navigate(Screens.Refund.route)
+        }) {
 
         Row(
             modifier = Modifier

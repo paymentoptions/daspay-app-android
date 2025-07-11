@@ -9,7 +9,7 @@ import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 @Composable
 fun SimpleLayout(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Box(modifier = modifier.fillMaxSize()) {
-        BackgroundImage(modifier = Modifier)
+        BackgroundImage(modifier = Modifier.fillMaxSize())
         content()
     }
 }

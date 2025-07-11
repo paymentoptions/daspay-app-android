@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.ui.composables.screens.authcheckscreen
+package com.paymentoptions.pos.ui.composables.screens.authcheck
 
 import android.app.Activity
 import android.widget.Toast
@@ -28,6 +28,7 @@ import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
+import com.paymentoptions.pos.ui.theme.AppTheme
 
 @Composable
 fun BottomSectionContent(navController: NavController) {
@@ -78,7 +79,11 @@ fun BottomSectionContent(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            Text(text = "You are not signed in.", textAlign = TextAlign.Center)
+            Text(
+                text = "You are not signed in.",
+                textAlign = TextAlign.Center,
+                style = AppTheme.typography.footnote
+            )
             Spacer(modifier = Modifier.height(20.dp))
 
             FilledButton(text = "Sign in", onClick = {

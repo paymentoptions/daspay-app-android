@@ -22,7 +22,7 @@ import com.paymentoptions.pos.ui.theme.purple50
 @Composable
 fun BottomSectionContent(navController: NavController) {
     val text =
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent vehicula pellentesque odio, sit amet volutpat nisl porta vel. In quis tortor accumsan, venenatis urna eget, tempor massa. \n\n" + "Donec gravida eros quis arcu pellentesque, vitae elementum lectus lacinia. Cras id efficitur nibh. Vestibulum ante ipsum primis in faucibus"
+        "Need assistance? We’re here to help you get the most out of DASPay.\n" + "\n" + "If you have any questions about using the app, payments, or features, please reach out to us. Our support team will get back to you as soon as possible to assist with your queries.\n" + "\n"
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -35,14 +35,20 @@ fun BottomSectionContent(navController: NavController) {
 
         Column {
             Text(text, textAlign = TextAlign.Justify, color = purple50, fontSize = 14.sp)
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                "You can contact us anytime at:",
+                textAlign = TextAlign.Justify,
+                color = purple50,
+                fontSize = 14.sp
+            )
+            Spacer(modifier = Modifier.height(10.dp))
             LinkWithIcon(
-                text = "support@DasPay.com",
-                url = "mailto:support@DASPay.com",
+                text = "support@paymentoptions.com",
+                url = "mailto:support@paymentoptions.com",
                 icon = Icons.Outlined.Mail
             )
+            Spacer(modifier = Modifier.height(30.dp))
         }
-
-        Spacer(modifier = Modifier.height(30.dp))
     }
 }

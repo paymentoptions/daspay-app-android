@@ -35,7 +35,7 @@ private val typography = AppTypography(
         fontFamily = Inter,
         fontWeight = FontWeight.ExtraBold,
         fontSize = 36.sp,
-        brush = textGradientBrush
+        brush = textHorizontalGradientBrush
     ),
     titleNormal = TextStyle(
         fontFamily = Inter,
@@ -43,8 +43,16 @@ private val typography = AppTypography(
         fontWeight = FontWeight.SemiBold,
         color = primary900,
     ),
+
     footnote = TextStyle(
         fontFamily = Inter, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = purple50
+    ),
+
+    status = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 36.sp,
+        brush = textVerticalGradientBrush
     ),
 
     titleLarge = TextStyle(

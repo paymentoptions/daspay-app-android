@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,7 +31,7 @@ import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.borderThinPrimary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import kotlin.math.ceil
@@ -44,7 +43,7 @@ fun BottomSectionContent(navController: NavController) {
     var currency by remember { mutableStateOf("") }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
-    var take: Int by remember { mutableIntStateOf(10) }
+    var take: Int by remember { mutableIntStateOf(100) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
     var maxPage: Int by remember { mutableIntStateOf(1) }
 
@@ -123,7 +122,7 @@ fun BottomSectionContent(navController: NavController) {
                 )
 
                 SuggestionChip(
-                    border = BorderStroke(1.dp, color = primary100.copy(alpha = 0.2f)),
+                    border = borderThinPrimary100,
                     onClick = {
 //                navController.navigate(Screens.TransactionHistory.route)
                     },

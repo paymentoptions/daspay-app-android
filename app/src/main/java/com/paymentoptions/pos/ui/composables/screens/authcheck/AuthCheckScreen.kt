@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.ui.composables.screens.authcheckscreen
+package com.paymentoptions.pos.ui.composables.screens.authcheck
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
@@ -9,6 +9,6 @@ fun AuthCheckScreen(navController: NavController) {
     SectionedLayout(
         navController = navController, bottomSectionContent = {
             BottomSectionContent(navController)
-        }, enableBottomNavigationBar = false
+        }, showBottomNavigationBar = false
     )
 }

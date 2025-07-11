@@ -48,7 +48,7 @@ fun Transactions(
                     false
             }
 
-            if (!skip) TransactionSummary(transaction)
+            if (!skip) TransactionSummary(navController, transaction)
         }
 
         updateReceivalAmount(earningAmount)

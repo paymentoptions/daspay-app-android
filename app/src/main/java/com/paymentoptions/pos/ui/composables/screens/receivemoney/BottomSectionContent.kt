@@ -7,7 +7,6 @@ import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -27,8 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,11 +44,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,17 +62,15 @@ import com.paymentoptions.pos.services.apiService.PaymentReturnUrl
 import com.paymentoptions.pos.services.apiService.endpoints.payment
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
-import com.paymentoptions.pos.ui.composables._components.inputs.bottomStroke
+import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
+import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
-import com.paymentoptions.pos.ui.theme.purple50
-import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getDasmidFromToken
 import com.paymentoptions.pos.utils.getDeviceIpAddress
@@ -159,7 +151,7 @@ fun BottomSectionContent(navController: NavController) {
     merchant["name"] = getKeyFromToken(decodedJwtPayloadJson, "name")
     merchant["email"] = getKeyFromToken(decodedJwtPayloadJson, "email")
     merchant["contact"] = getKeyFromToken(decodedJwtPayloadJson, "custom:ContactNo")
-   // Log.d("Get Merchant-->2",merchant.toString())
+    // Log.d("Get Merchant-->2",merchant.toString())
     MyDialog(
         showDialog = showTransactionStatus,
         title = "Transaction Status",
@@ -328,52 +320,14 @@ fun BottomSectionContent(navController: NavController) {
             CurrencyText(currency = currency, amount = formattedAmount)
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Column(modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)) {
-            TextField(
-                value = note,
-                onValueChange = { if (note.length < 50) note = it },
-                placeholder = {
-                    Text(
-                        text = "Add a note (optional)", color = Color.Gray, modifier = Modifier,
-                        fontStyle = FontStyle.Italic,
-                        fontSize = 12.sp,
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-//                    .height(40.dp)
-                    .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
-                    .bottomStroke(strokeWidth = 0.dp, color = Color.Transparent),
-                shape = RoundedCornerShape(8.dp),
-                singleLine = true,
-                textStyle = TextStyle(
-                    fontSize = 12.sp,
-                    textDecoration = TextDecoration.None,
-                ),
-                colors = TextFieldDefaults.colors().copy(
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White,
-                    unfocusedLabelColor = primary100,
-                    focusedLabelColor = primary100,
-                    focusedTextColor = purple50,
-                    unfocusedTextColor = Color.LightGray,
-                    errorContainerColor = red500,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                ),
-                maxLines = 1,
-            )
-
-            Text(
-                text = "Max ${note.length}/50 characters",
-                modifier = Modifier.fillMaxWidth(),
-                style = AppTheme.typography.footnote,
-                textAlign = TextAlign.End
-            )
-        }
+        DashedBorderInput(
+            text = note,
+            onChange = { note = it },
+            modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            maxLength = 50
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
@@ -433,7 +387,7 @@ fun BottomSectionContent(navController: NavController) {
 
             item {
                 SuggestionChip(
-                    border = BorderStroke(0.dp, Color.Transparent),
+                    border = noBorder,
                     colors = SuggestionChipDefaults.suggestionChipColors()
                         .copy(containerColor = primary100.copy(alpha = 0.15f)),
                     onClick = { rawInput = "1000" },
@@ -443,9 +397,8 @@ fun BottomSectionContent(navController: NavController) {
             }
 
             items(20) {
-
                 SuggestionChip(
-                    border = BorderStroke(0.dp, Color.Transparent),
+                    border = noBorder,
                     colors = SuggestionChipDefaults.suggestionChipColors()
                         .copy(containerColor = primary100.copy(alpha = 0.15f)),
                     onClick = { rawInput = "${(it + 1) * 50}00" },
@@ -474,110 +427,110 @@ fun BottomSectionContent(navController: NavController) {
 
                 //Disabled
 
-                    if (!DeveloperOptions.isEnabled(context)) {
-                        showDeveloperOptionsEnabled = true
+                if (!DeveloperOptions.isEnabled(context)) {
+                    showDeveloperOptionsEnabled = true
+                } else {
+                    var nfcStatusPair = Nfc.getStatus(context)
+
+                    if (!nfcStatusPair.first) {
+                        showNFCNotPresent = true
+                    } else if (!nfcStatusPair.second) {
+                        showNFCNotEnabled = true
                     } else {
-                        var nfcStatusPair = Nfc.getStatus(context)
+                        val uuid: UUID = UUID.randomUUID()
+                        posReferenceId = uuid.toString()
 
-                        if (!nfcStatusPair.first) {
-                            showNFCNotPresent = true
-                        } else if (!nfcStatusPair.second) {
-                            showNFCNotEnabled = true
-                        } else {
-                            val uuid: UUID = UUID.randomUUID()
-                            posReferenceId = uuid.toString()
+                        val paymentReturnUrl = PaymentReturnUrl(
+                            webhook_url = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454%22",
+                            success_url = "https://api-bpm.hiji.xyz/dgv3/success%22",
+                            decline_url = "https://api-bpm.hiji.xyz/dgv3/decline%22"
+                        )
 
-                            val paymentReturnUrl = PaymentReturnUrl(
-                                webhook_url = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454%22",
-                                success_url = "https://api-bpm.hiji.xyz/dgv3/success%22",
-                                decline_url = "https://api-bpm.hiji.xyz/dgv3/decline%22"
-                            )
+                        val billingAddress = Address(
+                            country = "IN",
+                            email = merchant["email"]!!,
+                            address1 = "Chiyoda1-1",
+                            phone_number = merchant["contact"]!!,
+                            city = "Minatoku",
+                            state = "Tokyoto",
+                            postal_code = "100001"
+                        )
 
-                            val billingAddress = Address(
-                                country = "IN",
-                                email = merchant["email"]!!,
-                                address1 = "Chiyoda1-1",
-                                phone_number = merchant["contact"]!!,
-                                city = "Minatoku",
-                                state = "Tokyoto",
-                                postal_code = "100001"
-                            )
+                        val shippingAddress = Address(
+                            country = "IN",
+                            email = merchant["email"]!!,
+                            address1 = "Chiyoda1-1",
+                            phone_number = merchant["contact"]!!,
+                            city = "Minatoku",
+                            state = "Tokyoto",
+                            postal_code = "100001"
+                        )
 
-                            val shippingAddress = Address(
-                                country = "IN",
-                                email = merchant["email"]!!,
-                                address1 = "Chiyoda1-1",
-                                phone_number = merchant["contact"]!!,
-                                city = "Minatoku",
-                                state = "Tokyoto",
-                                postal_code = "100001"
-                            )
+                        val paymentMethod = PaymentMethod(
+                            type = "daspay"
+                        )
 
-                            val paymentMethod = PaymentMethod(
-                                type = "daspay"
-                            )
+                        val paymentRequest = PaymentRequest(
+                            amount = formattedAmount,
+                            currency = currency,
+                            merchant_txn_ref = "TEST00989012878787878787878787",
+                            customer_ip = getDeviceIpAddress(),
+                            merchant_id = merchant["dasmid"]!!,
+                            return_url = paymentReturnUrl,
+                            billing_address = billingAddress,
+                            shipping_address = shippingAddress,
+                            payment_method = paymentMethod,
+                            time_zone = getDeviceTimeZone()
+                        )
+                        //Log.d(")
+                        scope.launch {
+                            paymentLoader = true
 
-                            val paymentRequest = PaymentRequest(
-                                amount = formattedAmount,
-                                currency = currency,
-                                merchant_txn_ref = "TEST00989012878787878787878787",
-                                customer_ip = getDeviceIpAddress(),
-                                merchant_id = merchant["dasmid"]!!,
-                                return_url = paymentReturnUrl,
-                                billing_address = billingAddress,
-                                shipping_address = shippingAddress,
-                                payment_method = paymentMethod,
-                                time_zone = getDeviceTimeZone()
-                            )
-                            //Log.d(")
-                            scope.launch {
-                                paymentLoader = true
+                            try {
 
-                                try {
+                                val paymentResponse: PaymentResponse? =
+                                    payment(context, paymentRequest)
+                                println("paymentResponse: $paymentResponse")
 
-                                    val paymentResponse: PaymentResponse? =
-                                        payment(context, paymentRequest)
-                                    println("paymentResponse: $paymentResponse")
-
-                                    if (paymentResponse == null) {
-                                        Toast.makeText(
-                                            context,
-                                            "2: Token invalid! Please login again.",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                        navController.navigate(Screens.SignIn.route) {
-                                            popUpTo(0) { inclusive = true }
-                                        }
-                                    }
-
-                                    paymentResponse?.let {
-                                        if (it.success) {
-                                            launcher.launch(
-                                                PoiRequest.ActionNew(
-                                                    tranType = TranType.SALE,
-                                                    amount = Amount(
-                                                        BigDecimal(formattedAmount),
-                                                        Currency.getInstance("USD"),
-                                                    ),
-                                                    profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
-                                                    posReference = it.transaction_details.id
-                                                )
-                                            )
-                                        }
-                                    }
-                                } catch (e: Exception) {
-                                    SharedPreferences.clearSharedPreferences(context)
+                                if (paymentResponse == null) {
+                                    Toast.makeText(
+                                        context,
+                                        "2: Token invalid! Please login again.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
                                     navController.navigate(Screens.SignIn.route) {
                                         popUpTo(0) { inclusive = true }
                                     }
-
-                                    println("Error: ${e.toString()}")
-                                } finally {
-                                    paymentLoader = false
                                 }
+
+                                paymentResponse?.let {
+                                    if (it.success) {
+                                        launcher.launch(
+                                            PoiRequest.ActionNew(
+                                                tranType = TranType.SALE,
+                                                amount = Amount(
+                                                    BigDecimal(formattedAmount),
+                                                    Currency.getInstance("USD"),
+                                                ),
+                                                profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
+                                                posReference = it.transaction_details.id
+                                            )
+                                        )
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                SharedPreferences.clearSharedPreferences(context)
+                                navController.navigate(Screens.SignIn.route) {
+                                    popUpTo(0) { inclusive = true }
+                                }
+
+                                println("Error: ${e.toString()}")
+                            } finally {
+                                paymentLoader = false
                             }
                         }
                     }
+                }
             })
     }
 }

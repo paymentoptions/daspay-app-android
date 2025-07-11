@@ -1,7 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.token
 
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,14 +9,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Backspace
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +37,10 @@ import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.borderThickPrimary100
+import com.paymentoptions.pos.ui.theme.borderThickPrimary500
+import com.paymentoptions.pos.ui.theme.linkColor
+import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary50
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
@@ -61,8 +63,11 @@ fun BottomSectionContent(navController: NavController) {
         openFingerprintScan = false
     })
 
+    val buttonBorder = borderThickPrimary100
+
     Column(
-        modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = "Enter Token", style = AppTheme.typography.screenTitle
@@ -94,7 +99,7 @@ fun BottomSectionContent(navController: NavController) {
                     enabled = false,
                     onClick = {},
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .clip(RoundedCornerShape(12.dp))
@@ -118,7 +123,7 @@ fun BottomSectionContent(navController: NavController) {
                     enabled = false,
                     onClick = {},
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -130,22 +135,33 @@ fun BottomSectionContent(navController: NavController) {
             }
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
         Row(
             modifier = Modifier.align(alignment = Alignment.End),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Didn't receive the code?")
-            TextButton(onClick = { /* TODO: resend OTP */ }) {
-                Text("Resend Code", textDecoration = TextDecoration.Underline)
-            }
+            Text(
+                "Didn't receive the code?",
+                color = purple50,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                "Resend Code",
+                fontSize = 12.sp,
+                textDecoration = TextDecoration.Underline,
+                color = linkColor
+            )
         }
 
+        Spacer(modifier = Modifier.height(24.dp))
 
         //Keypad
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 30.dp),
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
@@ -160,7 +176,7 @@ fun BottomSectionContent(navController: NavController) {
                         otp.value = otp.value + "1"
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = borderThickPrimary500,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -176,7 +192,7 @@ fun BottomSectionContent(navController: NavController) {
                         otp.value = otp.value + "2"
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -192,7 +208,7 @@ fun BottomSectionContent(navController: NavController) {
                         otp.value = otp.value + "3"
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -214,7 +230,7 @@ fun BottomSectionContent(navController: NavController) {
                         otp.value = otp.value + "4"
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -230,7 +246,7 @@ fun BottomSectionContent(navController: NavController) {
                         otp.value = otp.value + "5"
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -246,7 +262,7 @@ fun BottomSectionContent(navController: NavController) {
                         otp.value = otp.value + "6"
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -268,7 +284,7 @@ fun BottomSectionContent(navController: NavController) {
                         otp.value = otp.value + "7"
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -284,7 +300,7 @@ fun BottomSectionContent(navController: NavController) {
                         otp.value = otp.value + "8"
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -300,7 +316,7 @@ fun BottomSectionContent(navController: NavController) {
                         otp.value = otp.value + "9"
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -330,7 +346,7 @@ fun BottomSectionContent(navController: NavController) {
                         otp.value = otp.value + "0"
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, primary500.copy(alpha = 0.2f)),
+                    border = buttonBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -348,7 +364,7 @@ fun BottomSectionContent(navController: NavController) {
                         )
                     },
                     shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color.Transparent),
+                    border = noBorder,
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
@@ -363,6 +379,8 @@ fun BottomSectionContent(navController: NavController) {
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         FilledButton(
             text = "Confirm",

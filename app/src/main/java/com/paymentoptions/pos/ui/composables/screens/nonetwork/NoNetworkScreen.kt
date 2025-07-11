@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
@@ -15,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
+import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayout
 
 
@@ -27,7 +29,11 @@ fun NoNetworkScreen() {
             modifier = Modifier.fillMaxSize()
         ) {
 
-            LogoImage()
+            LogoImage(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(LOGO_HEIGHT_IN_DP)
+            )
             Spacer(modifier = Modifier.height(80.dp))
             CircularProgressIndicator(
                 color = Color.White,

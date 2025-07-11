@@ -206,7 +206,6 @@ fun BottomSectionContent(navController: NavController) {
                 }
             }
 
-
             transactions = transactionList?.data?.records?.filter {
 
                 var filterIn = when (selectedTab.text) {
@@ -222,8 +221,7 @@ fun BottomSectionContent(navController: NavController) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.End,
-                modifier = Modifier
-                    .fillMaxSize()
+                modifier = Modifier.fillMaxSize()
 //                    .verticalScroll(scrollState)
             ) {
 

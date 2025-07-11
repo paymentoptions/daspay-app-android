@@ -9,6 +9,6 @@ fun SignInScreen(navController: NavController) {
     SectionedLayout(
         navController = navController, bottomSectionContent = {
             BottomSectionContent(navController)
-        }, enableBottomNavigationBar = false
+        }, showBottomNavigationBar = false
     )
 }
