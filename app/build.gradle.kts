@@ -41,7 +41,7 @@ android {
         compose = true
     }
 
-    packagingOptions {
+    packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
 
@@ -85,13 +85,11 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
 
-
     //RetroFit
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-
 
 //    Minesec
 //    releaseImplementation("com.theminesec.sdk:headless:1.0.17")
@@ -103,5 +101,4 @@ dependencies {
 
     //ycharts
     implementation(libs.ycharts)
-
 }

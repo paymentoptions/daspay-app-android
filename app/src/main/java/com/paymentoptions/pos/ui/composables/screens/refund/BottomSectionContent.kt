@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Lightbulb
 import androidx.compose.material3.AssistChip
@@ -15,10 +16,6 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,13 +45,13 @@ fun BottomSectionContent(
     transaction: TransactionListDataRecord? = THE_TRANSACTION,
 ) {
     val currency = "HKD"
-    var note by remember { mutableStateOf("") }
 
     val dateString =
         transaction?.Date ?: OffsetDateTime.now().toString()  //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
+    val noteState = rememberTextFieldState()
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -80,10 +77,10 @@ fun BottomSectionContent(
         Spacer(modifier = Modifier.height(16.dp))
 
         DashedBorderInput(
-            text = note,
-            onChange = { note = it },
-            modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-            maxLength = 50
+            state = noteState,
+            modifier = Modifier.padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            placeholder = "Add a note (optional)",
+            maxLength = 50,
         )
 
         Spacer(modifier = Modifier.height(20.dp))

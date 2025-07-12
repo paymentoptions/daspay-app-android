@@ -4,14 +4,17 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.maxLength
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -43,6 +46,7 @@ fun BasicTextInput(
     modifier: Modifier = Modifier,
     isError: Boolean = false,
     isSecure: Boolean = false,
+    maxLength: Int = 50,
 ) {
     var showText by remember { mutableStateOf(false) }
 
@@ -58,20 +62,25 @@ fun BasicTextInput(
 
         Box {
             TextField(
-                state = state, isError = isError, placeholder = {
+                state = state,
+                isError = isError,
+                placeholder = {
                     Text(
                         placeholder,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500.copy(alpha = 0.2f)
                     )
-                }, outputTransformation = OutputTransformation {
+                },
+                inputTransformation = InputTransformation.maxLength(maxLength),
+                outputTransformation = OutputTransformation {
 
                     if (isSecure && !showText) replace(
                         0, this.length, '*'.toString().repeat(this.length)
                     )
 
-                }, colors = TextFieldDefaults.colors(
+                },
+                colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
                     focusedTextColor = primary500,
                     focusedIndicatorColor = Color.Transparent,
@@ -84,12 +93,15 @@ fun BasicTextInput(
                     errorTextColor = red300,
                     errorIndicatorColor = Color.Transparent,
                     errorCursorColor = red300.copy(alpha = 0.1f),
-                ), modifier = Modifier
+                ),
+                modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(46.dp)
                     .border(
                         border = borderThickPrimary100, shape = RoundedCornerShape(8.dp)
-                    ), lineLimits = TextFieldLineLimits.SingleLine
+                    ),
+                lineLimits = TextFieldLineLimits.SingleLine,
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             )
 
             if (isSecure) Icon(

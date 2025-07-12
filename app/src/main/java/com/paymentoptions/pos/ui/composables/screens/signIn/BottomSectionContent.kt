@@ -97,7 +97,8 @@ fun BottomSectionContent(navController: NavController) {
             label = "Enter your registered email",
             placeholder = "Enter Email",
             isError = emailError,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            maxLength = 40
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -107,7 +108,8 @@ fun BottomSectionContent(navController: NavController) {
             label = "Enter your password",
             placeholder = "Enter Password",
             modifier = Modifier.fillMaxWidth(),
-            isSecure = true
+            isSecure = true,
+            maxLength = 32
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -117,7 +119,8 @@ fun BottomSectionContent(navController: NavController) {
             label = "Enter the 6-digit code sent on your registered email",
             placeholder = "Enter OTP",
             modifier = Modifier.fillMaxWidth(),
-            isSecure = true
+            isSecure = true,
+            maxLength = 6
         )
 
         Spacer(modifier = Modifier.height(8.dp))

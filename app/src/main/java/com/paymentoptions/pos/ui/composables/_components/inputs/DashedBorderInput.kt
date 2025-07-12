@@ -1,8 +1,14 @@
 package com.paymentoptions.pos.ui.composables._components.inputs
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.InputTransformation
+import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.maxLength
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -26,38 +32,23 @@ import com.paymentoptions.pos.ui.theme.red500
 
 @Composable
 fun DashedBorderInput(
-    text: String,
-    onChange: (newText: String) -> Unit,
+    state: TextFieldState,
     modifier: Modifier = Modifier,
+    placeholder: String,
     maxLength: Int = 50,
 ) {
 
     Column(modifier = modifier) {
         TextField(
-            value = text,
-            onValueChange = {
-                if (text.length <= maxLength) onChange(
-                    it
-                )
-            },
+            state = state,
             placeholder = {
                 Text(
-                    text = "Add a note (optional)", color = Color.Gray, modifier = Modifier,
+                    text = placeholder, color = Color.Gray, modifier = Modifier,
                     fontStyle = FontStyle.Italic,
                     fontSize = 12.sp,
                 )
             },
-            modifier = Modifier
-                .fillMaxWidth()
-//                    .height(40.dp)
-                .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
-                .bottomStroke(strokeWidth = 0.dp, color = Color.Transparent),
-            shape = RoundedCornerShape(8.dp),
-            singleLine = true,
-            textStyle = TextStyle(
-                fontSize = 12.sp,
-                textDecoration = TextDecoration.None,
-            ),
+            inputTransformation = InputTransformation.maxLength(maxLength),
             colors = TextFieldDefaults.colors().copy(
                 unfocusedContainerColor = Color.White,
                 focusedContainerColor = Color.White,
@@ -70,11 +61,23 @@ fun DashedBorderInput(
                 disabledIndicatorColor = Color.Transparent,
                 focusedIndicatorColor = Color.Transparent,
             ),
-            maxLines = 1,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp)
+                .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
+                .bottomStroke(strokeWidth = 0.dp, color = Color.Transparent),
+            shape = RoundedCornerShape(8.dp),
+            lineLimits = TextFieldLineLimits.SingleLine,
+
+            textStyle = TextStyle(
+                fontSize = 16.sp,
+                textDecoration = TextDecoration.None,
+            ),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
         )
 
         Text(
-            text = "Max ${text.length}/$maxLength characters",
+            text = "Max ${state.text.length}/$maxLength characters",
             modifier = Modifier.fillMaxWidth(),
             style = AppTheme.typography.footnote,
             textAlign = TextAlign.End
@@ -92,5 +95,4 @@ fun Modifier.bottomStroke(color: Color, strokeWidth: Dp = 2.dp): Modifier = this
             end = Offset(x = size.width, y = size.height - strokePx / 2),
             strokeWidth = strokePx
         )
-    }
-)
+    })

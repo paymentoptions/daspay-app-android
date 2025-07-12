@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Icon
@@ -107,7 +108,6 @@ fun BottomSectionContent(navController: NavController) {
     }
 
     val formattedAmount = formatAmount(rawInput)
-    var note by remember { mutableStateOf("") }
 
     val onKeyPress: (String) -> Unit = { key ->
         when (key) {
@@ -134,6 +134,8 @@ fun BottomSectionContent(navController: NavController) {
     var showReceiveMoney by remember { mutableStateOf(true) }
 
     val authDetails = SharedPreferences.getAuthDetails(context)
+
+    val noteState = rememberTextFieldState()
 
     if (authDetails == null) {
         Toast.makeText(context, "Token invalid! Please login again.", Toast.LENGTH_LONG).show()
@@ -323,10 +325,10 @@ fun BottomSectionContent(navController: NavController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         DashedBorderInput(
-            text = note,
-            onChange = { note = it },
+            state = noteState,
             modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-            maxLength = 50
+            placeholder = "Add a note (optional)",
+            maxLength = 50,
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -538,8 +540,8 @@ fun BottomSectionContent(navController: NavController) {
 fun Modifier.dashedBorder(
     color: Color,
     shape: Shape,
-    strokeWidth: Dp = 2.dp,
-    dashLength: Dp = 4.dp,
+    strokeWidth: Dp = 1.5.dp,
+    dashLength: Dp = 1.dp,
     gapLength: Dp = 4.dp,
     cap: StrokeCap = StrokeCap.Round,
 ) = this.drawWithContent {
