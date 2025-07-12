@@ -15,16 +15,6 @@ import androidx.compose.ui.unit.dp
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 
-//fun DrawScope.createOvalBottomPath(): Path {
-//    val path = Path()
-//    path.moveTo(0f, 0f) // Top-left corner
-//    path.lineTo(size.width, 0f) // Top-right corner
-//    path.lineTo(size.width, size.height - size.width / 2) // Bottom-right corner (before oval)
-//    path.quadraticBezierTo(size.width / 2, size.height, 0f, size.height - size.width / 2) // Oval bottom-left
-//    path.close()
-//    return path
-//}
-
 @Composable
 fun BackButton(
     onClickShowMenuBarButton: () -> Unit,

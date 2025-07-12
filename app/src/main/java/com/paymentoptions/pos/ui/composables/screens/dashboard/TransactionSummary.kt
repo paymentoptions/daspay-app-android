@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,16 +61,18 @@ fun TransactionSummary(navController: NavController, transaction: TransactionLis
 //        DateUtils.MINUTE_IN_MILLIS
 //    )
 
+    val borderRadius = 20.dp
     Card(
         colors = CardDefaults.cardColors().copy(
             containerColor = Color.White,
-        ),
-        border = borderThinPrimary100,
-        shape = RoundedCornerShape(16.dp),
-        onClick = {
+        ), border = borderThinPrimary100, shape = RoundedCornerShape(borderRadius), onClick = {
             THE_TRANSACTION = transaction
             navController.navigate(Screens.Refund.route)
-        }) {
+        }, modifier = Modifier.shadow(
+            elevation = 4.dp, shape = RoundedCornerShape(borderRadius),
+            ambientColor = Color(0xFFD8F0FF)
+        )
+    ) {
 
         Row(
             modifier = Modifier

@@ -4,10 +4,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 val enabledFilledButtonGradientBrush =
-    Brush.horizontalGradient(colorStops = arrayOf(0f to primary300, 1f to primary100))
+    Brush.horizontalGradient(colorStops = arrayOf(0f to primary300, 1f to primary75))
 val disabledFilledButtonGradientBrush = Brush.horizontalGradient(
     colorStops = arrayOf(
-        0f to primary300.copy(alpha = 0.2f), 1f to primary100.copy(alpha = 0.2f)
+        0f to primary300.copy(alpha = 0.2f), 1f to primary75.copy(alpha = 0.2f)
     )
 )
 

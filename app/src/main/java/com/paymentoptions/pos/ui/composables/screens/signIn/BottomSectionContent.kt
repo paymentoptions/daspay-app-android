@@ -185,7 +185,9 @@ fun BottomSectionContent(navController: NavController) {
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(59.dp)
         )
     }
 }

@@ -82,7 +82,11 @@ fun BottomSectionContent(
             Spacer(modifier = Modifier.height(16.dp))
 
             FilledButton(
-                text = "View Full Receipt", onClick = { }, modifier = Modifier.width(200.dp)
+                text = "View Full Receipt",
+                onClick = { },
+                modifier = Modifier
+                    .width(200.dp)
+                    .height(29.dp)
             )
         }
 
@@ -334,6 +338,7 @@ fun BottomSectionContent(
                     onClick = { showRefundStatus = !showRefundStatus },
                     modifier = Modifier
                         .width(260.dp)
+                        .height(29.dp)
                         .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 )
 

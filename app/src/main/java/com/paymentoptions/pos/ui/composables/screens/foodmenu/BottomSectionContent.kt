@@ -305,7 +305,11 @@ fun BottomSectionContent(navController: NavController) {
             Spacer(modifier = Modifier.height(20.dp))
 
             FilledButton(
-                text = "Review and Confirm", onClick = {}, modifier = Modifier.fillMaxWidth()
+                text = "Review and Confirm",
+                onClick = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(59.dp)
             )
         }
 

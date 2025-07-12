@@ -1,4 +1,5 @@
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
@@ -46,14 +47,18 @@ fun MyDialog(
                 if (showAcceptButton) FilledButton(
                     text = acceptButtonText,
                     onClick = onAcceptFn,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(37.dp)
                 )
             },
             dismissButton = {
                 if (showCancelButton) OutlinedButton(
                     text = cancelButtonText,
                     onClick = onDismissFn,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(37.dp)
                 )
             },
             onDismissRequest = onDismissFn,

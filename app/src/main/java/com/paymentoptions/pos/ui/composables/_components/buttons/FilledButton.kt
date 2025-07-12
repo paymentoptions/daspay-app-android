@@ -1,7 +1,6 @@
 package com.paymentoptions.pos.ui.composables._components.buttons
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -25,21 +24,15 @@ fun FilledButton(
     disabled: Boolean = false,
 ) {
     Button(
-        enabled = !disabled,
-        onClick = onClick,
-        modifier = modifier
-            .height(56.dp)
-            .background(
+        enabled = !disabled, onClick = onClick, modifier = modifier.background(
                 brush = if (!disabled) enabledFilledButtonGradientBrush else disabledFilledButtonGradientBrush,
                 shape = RoundedCornerShape(8.dp)
-            ),
-        colors = ButtonDefaults.buttonColors().copy(
+        ), colors = ButtonDefaults.buttonColors().copy(
             contentColor = Color.White,
             containerColor = Color.Transparent,
             disabledContentColor = Color.White,
             disabledContainerColor = Color.Transparent,
-        ),
-        shape = RoundedCornerShape(8.dp)
+        ), shape = RoundedCornerShape(6.dp)
     ) {
 
         if (isLoading) MyCircularProgressIndicator(color = Color.White)

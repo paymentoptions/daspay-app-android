@@ -103,7 +103,10 @@ fun BottomSectionContent(navController: NavController) {
             FilledButton(
                 text = "View Insights",
                 onClick = { navController.navigate(Screens.TransactionHistory.route) },
-                modifier = Modifier.width(160.dp)
+                modifier = Modifier
+                    .width(160.dp)
+                    .height(37.dp),
+
             )
 
             Spacer(Modifier.height(20.dp))

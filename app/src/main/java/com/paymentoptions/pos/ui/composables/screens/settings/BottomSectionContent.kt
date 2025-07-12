@@ -191,7 +191,9 @@ fun BottomSectionContent(navController: NavController) {
                 FilledButton(
                     text = "Logout", onClick = {
                         showSignOutConfirmationDialog = true
-                    }, isLoading = signOutLoader, modifier = Modifier.fillMaxWidth()
+                    }, isLoading = signOutLoader, modifier = Modifier
+                        .fillMaxWidth()
+                        .height(59.dp)
                 )
             }
         }

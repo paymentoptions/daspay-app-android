@@ -422,7 +422,8 @@ fun BottomSectionContent(navController: NavController) {
             isLoading = paymentLoader,
             modifier = Modifier
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .height(59.dp),
             onClick = {
 
                 //Toast.makeText(context, "Under development", Toast.LENGTH_SHORT).show()

@@ -59,7 +59,11 @@ fun BottomSectionContent(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(20.dp))
 
-            FilledButton(text = "Cancel and Quit", onClick = { activity?.finish() })
+            FilledButton(
+                text = "Cancel and Quit",
+                onClick = { activity?.finish() },
+                modifier = Modifier.height(37.dp)
+            )
         }
     } else if (isAuthenticated) FingerprintScanScreen(
         navController = navController,
@@ -89,13 +93,19 @@ fun BottomSectionContent(navController: NavController) {
             FilledButton(text = "Sign in", onClick = {
                 SharedPreferences.clearSharedPreferences(context)
                 navController.navigate(Screens.SignIn.route)
-            }, modifier = Modifier.fillMaxWidth())
+            }, modifier = Modifier
+                .fillMaxWidth()
+                .height(37.dp)
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedButton(text = "Quit", onClick = {
                 activity?.finish()
-            }, modifier = Modifier.fillMaxWidth())
+            }, modifier = Modifier
+                .fillMaxWidth()
+                .height(37.dp)
+            )
         }
 
     }

@@ -3,6 +3,7 @@ package com.paymentoptions.pos.ui.theme
 import androidx.compose.ui.graphics.Color
 
 val primary50 = Color(0xFF2482E8)
+val primary75 = Color(0xFF436BFA)
 val primary100 = Color(0xFF436CFB)
 val primary200 = Color(0xFF7277A8)
 val primary300 = Color(0xFF3154D1)

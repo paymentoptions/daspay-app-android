@@ -201,6 +201,7 @@ fun BottomSectionContent(
             onClick = {},
             modifier = Modifier
                 .fillMaxWidth()
+                .height(59.dp)
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
         )
     }

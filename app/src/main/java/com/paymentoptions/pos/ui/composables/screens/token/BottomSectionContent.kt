@@ -386,7 +386,9 @@ fun BottomSectionContent(navController: NavController) {
             text = "Confirm",
             onClick = { openFingerprintScan = true },
             disabled = otp.value.length < 6,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(59.dp)
         )
     }
 }
