@@ -23,7 +23,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -33,12 +32,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.theme.AppTheme
-import com.paymentoptions.pos.ui.theme.borderThickPrimary100
-import com.paymentoptions.pos.ui.theme.borderThickPrimary500
+import com.paymentoptions.pos.ui.theme.borderThick
 import com.paymentoptions.pos.ui.theme.linkColor
 import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary50
@@ -63,7 +62,7 @@ fun BottomSectionContent(navController: NavController) {
         openFingerprintScan = false
     })
 
-    val buttonBorder = borderThickPrimary100
+    borderThick
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -95,42 +94,39 @@ fun BottomSectionContent(navController: NavController) {
 
             otp.value.toList().forEachIndexed { index, digit ->
 
-                OutlinedButton(
-                    enabled = false,
-                    onClick = {},
-                    shape = RoundedCornerShape(12.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(primary50)
-
-                        .weight(1f)
-                ) {
-                    Text(
-                        digit.toString(),
-                        color = Color.White,
-                        fontSize = 30.sp,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = TextAlign.Center
-                    )
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = false,
+                        onClick = {},
+                        border = noBorder,
+                        modifier = Modifier
+                            .height(70.dp)
+                            .background(primary50)
+                    ) {
+                        Text(
+                            digit.toString(),
+                            color = Color.White,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
 
             (1..emptyBoxCount).toList().forEachIndexed { index, item ->
 
-                OutlinedButton(
-                    enabled = false,
-                    onClick = {},
-                    shape = RoundedCornerShape(12.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = false,
+                        border = noBorder,
+                        onClick = {},
+                        modifier = Modifier.height(70.dp)
+                    ) {
+                        Text(
+                            "", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
+                        )
+                    }
                 }
             }
         }
@@ -160,9 +156,7 @@ fun BottomSectionContent(navController: NavController) {
 
         //Keypad
         Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
             Row(
@@ -170,52 +164,134 @@ fun BottomSectionContent(navController: NavController) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
-                OutlinedButton(
-                    enabled = otp.value.length < 6,
-                    onClick = {
-                        otp.value = otp.value + "1"
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = borderThickPrimary500,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "1", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = otp.value.length < 6, onClick = {
+                            otp.value = otp.value + "1"
+                        }, border = noBorder, modifier = Modifier
+                            .fillMaxWidth()
+                            .height(70.dp)
+
+                    ) {
+                        Text(
+                            "1",
+                            color = primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
                 }
 
-                OutlinedButton(
-                    enabled = otp.value.length < 6,
-                    onClick = {
-                        otp.value = otp.value + "2"
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "2", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = otp.value.length < 6,
+                        onClick = {
+                            otp.value = otp.value + "2"
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = noBorder,
+                        modifier = Modifier
+                            .height(70.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            "2",
+                            color = primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
                 }
 
-                OutlinedButton(
-                    enabled = otp.value.length < 6,
-                    onClick = {
-                        otp.value = otp.value + "3"
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "3", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = otp.value.length < 6,
+                        onClick = {
+                            otp.value = otp.value + "3"
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = noBorder,
+                        modifier = Modifier
+                            .height(70.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            "3",
+                            color = primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+                }
+            }
+
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = otp.value.length < 6,
+                        onClick = {
+                            otp.value = otp.value + "4"
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = noBorder,
+                        modifier = Modifier
+                            .height(70.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            "4",
+                            color = primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+                }
+
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = otp.value.length < 6,
+                        onClick = {
+                            otp.value = otp.value + "5"
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = noBorder,
+                        modifier = Modifier
+                            .height(70.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            "5",
+                            color = primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+                }
+
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = otp.value.length < 6,
+                        onClick = {
+                            otp.value = otp.value + "6"
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = noBorder,
+                        modifier = Modifier
+                            .height(70.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            "6",
+                            color = primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
                 }
             }
 
@@ -224,106 +300,69 @@ fun BottomSectionContent(navController: NavController) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
-                OutlinedButton(
-                    enabled = otp.value.length < 6,
-                    onClick = {
-                        otp.value = otp.value + "4"
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "4", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
+
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = otp.value.length < 6,
+                        onClick = {
+                            otp.value = otp.value + "7"
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = noBorder,
+                        modifier = Modifier
+                            .height(70.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            "7",
+                            color = primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
                 }
 
-                OutlinedButton(
-                    enabled = otp.value.length < 6,
-                    onClick = {
-                        otp.value = otp.value + "5"
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "5", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
+
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = otp.value.length < 6,
+                        onClick = {
+                            otp.value = otp.value + "8"
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = noBorder,
+                        modifier = Modifier
+                            .height(70.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            "8",
+                            color = primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
                 }
 
-                OutlinedButton(
-                    enabled = otp.value.length < 6,
-                    onClick = {
-                        otp.value = otp.value + "6"
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "6", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-
-                OutlinedButton(
-                    enabled = otp.value.length < 6,
-                    onClick = {
-                        otp.value = otp.value + "7"
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "7", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
-                }
-
-                OutlinedButton(
-                    enabled = otp.value.length < 6,
-                    onClick = {
-                        otp.value = otp.value + "8"
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "8", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
-                }
-
-                OutlinedButton(
-                    enabled = otp.value.length < 6,
-                    onClick = {
-                        otp.value = otp.value + "9"
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "9", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = otp.value.length < 6,
+                        onClick = {
+                            otp.value = otp.value + "9"
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = noBorder,
+                        modifier = Modifier
+                            .height(70.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            "9",
+                            color = primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
                 }
             }
 
@@ -336,24 +375,27 @@ fun BottomSectionContent(navController: NavController) {
                     modifier = Modifier
                         .height(70.dp)
                         .weight(1f)
-                ) {
+                ) {}
 
-                }
-
-                OutlinedButton(
-                    enabled = otp.value.length < 6,
-                    onClick = {
-                        otp.value = otp.value + "0"
-                    },
-                    shape = RoundedCornerShape(8.dp),
-                    border = buttonBorder,
-                    modifier = Modifier
-                        .height(70.dp)
-                        .weight(1f)
-                ) {
-                    Text(
-                        "0", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                    )
+                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    OutlinedButton(
+                        enabled = otp.value.length < 6,
+                        onClick = {
+                            otp.value = otp.value + "0"
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = noBorder,
+                        modifier = Modifier
+                            .height(70.dp)
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            "0",
+                            color = primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
                 }
 
                 OutlinedButton(

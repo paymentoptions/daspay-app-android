@@ -42,7 +42,7 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-import com.paymentoptions.pos.ui.theme.borderThickPrimary100
+import com.paymentoptions.pos.ui.theme.borderThick
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary600
@@ -181,7 +181,7 @@ fun BottomSectionContent(navController: NavController) {
                     //Add to cart button
                     if (foodItem.cartQuantity == 0) {
                         FilterChip(
-                            border = borderThickPrimary100,
+                            border = borderThick,
                             colors = FilterChipDefaults.filterChipColors().copy(
                                 containerColor = Color.White
                             ),
@@ -204,7 +204,7 @@ fun BottomSectionContent(navController: NavController) {
                             })
                     } else {
                         FilterChip(
-                            border = borderThickPrimary100,
+                            border = borderThick,
                             colors = FilterChipDefaults.filterChipColors().copy(
                                 containerColor = primary500, selectedLabelColor = Color.White
                             ),

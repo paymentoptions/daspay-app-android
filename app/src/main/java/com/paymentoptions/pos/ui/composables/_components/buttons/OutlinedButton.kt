@@ -25,7 +25,7 @@ fun OutlinedButton(
     Button(
         enabled = !disabled,
         onClick = onClick,
-        modifier = modifier.border(1.dp, Color.LightGray, shape = RoundedCornerShape(8.dp)),
+        modifier = modifier.border(1.dp, Color.LightGray, shape = RoundedCornerShape(6.dp)),
         colors = ButtonDefaults.buttonColors().copy(
             contentColor = primary900, containerColor = Color.Transparent
         )

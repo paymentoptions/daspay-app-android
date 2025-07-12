@@ -31,7 +31,7 @@ import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.theme.borderThinPrimary100
+import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import kotlin.math.ceil
@@ -125,7 +125,7 @@ fun BottomSectionContent(navController: NavController) {
                 )
 
                 SuggestionChip(
-                    border = borderThinPrimary100,
+                    border = borderThin,
                     onClick = {
 //                navController.navigate(Screens.TransactionHistory.route)
                     },

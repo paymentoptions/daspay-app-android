@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.theme.borderThinPrimary100
+import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.green200
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
@@ -65,7 +65,7 @@ fun TransactionSummary(navController: NavController, transaction: TransactionLis
     Card(
         colors = CardDefaults.cardColors().copy(
             containerColor = Color.White,
-        ), border = borderThinPrimary100, shape = RoundedCornerShape(borderRadius), onClick = {
+        ), border = borderThin, shape = RoundedCornerShape(borderRadius), onClick = {
             THE_TRANSACTION = transaction
             navController.navigate(Screens.Refund.route)
         }, modifier = Modifier.shadow(

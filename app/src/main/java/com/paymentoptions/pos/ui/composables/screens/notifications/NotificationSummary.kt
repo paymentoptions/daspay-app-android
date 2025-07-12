@@ -23,13 +23,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.ui.theme.borderThickPrimary100
+import com.paymentoptions.pos.ui.theme.borderThick
 import com.paymentoptions.pos.ui.theme.green200
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
@@ -52,13 +53,18 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
 
     val isCardTransaction = true
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY | hh:mm a").format(date)
+    val borderRadius = 20.dp
 
     Card(
         colors = CardDefaults.cardColors().copy(
             containerColor = Color.White
         ),
-        border = borderThickPrimary100,
-        shape = RoundedCornerShape(32.dp)
+        border = borderThick,
+        shape = RoundedCornerShape(borderRadius),
+        modifier = Modifier.shadow(
+            elevation = 4.dp, shape = RoundedCornerShape(borderRadius),
+            ambientColor = Color(0xFFD8F0FF)
+        )
     ) {
 
         Row(

@@ -26,7 +26,7 @@ fun FilledButton(
     Button(
         enabled = !disabled, onClick = onClick, modifier = modifier.background(
                 brush = if (!disabled) enabledFilledButtonGradientBrush else disabledFilledButtonGradientBrush,
-                shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(6.dp)
         ), colors = ButtonDefaults.buttonColors().copy(
             contentColor = Color.White,
             containerColor = Color.Transparent,

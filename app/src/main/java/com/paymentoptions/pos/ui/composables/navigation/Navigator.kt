@@ -25,7 +25,7 @@ import com.paymentoptions.pos.ui.composables.screens.transactionshistory.Transac
 @Composable
 fun Navigator() {
     val navController = rememberNavController()
-    val startDestination = Screens.Splash.route
+    val startDestination = Screens.Dashboard.route
 
 //    LaunchedEffect(navController) {
 //        navController.currentBackStackEntryFlow.collect { backStackEntry ->

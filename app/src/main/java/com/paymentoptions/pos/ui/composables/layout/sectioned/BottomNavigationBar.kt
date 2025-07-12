@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -26,9 +27,7 @@ import androidx.compose.material.icons.outlined.MoneyOff
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,8 +50,8 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
+import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.theme.borderThickPrimary100
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
@@ -126,7 +125,7 @@ fun Item(
 
         Box(
             modifier = Modifier
-                .size(36.dp)
+                .size(if (inMore) 51.dp else 39.dp)
                 .clip(RoundedCornerShape(50))
                 .background(if (item.hideIcon || !inMore) Color.Transparent else iconBackgroundColor),
             contentAlignment = Alignment.Center
@@ -134,18 +133,20 @@ fun Item(
             if (!item.hideIcon) Icon(
                 imageVector = item.icon,
                 contentDescription = item.title,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(22.dp),
                 tint = primary500
             )
         }
+
+        Spacer(modifier = Modifier.height(if (inMore) 16.dp else 4.dp))
 
         Text(
             item.title,
             textAlign = TextAlign.Center,
             minLines = minLines,
             maxLines = maxLines,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
+            fontSize = if (inMore) 14.sp else 12.sp,
+            fontWeight = if (inMore) FontWeight.Normal else FontWeight.SemiBold,
             color = if (item.hideIcon) primary100 else primary500
         )
     }
@@ -213,25 +214,20 @@ fun MyBottomNavigationBar(
 
     Column(modifier = modifier) {
         if (showMoreItems) Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Transparent)
+                .padding(bottom = 20.dp)
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .padding(16.dp)
-                    .padding(bottom = 20.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.padding(16.dp)
             ) {
                 items(itemsInMore.size) {
 
-                    OutlinedCard(
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.1f),
-                        ),
-                        border = borderThickPrimary100,
-                    ) {
-
+                    MyElevatedCard {
                         Item(
                             itemsInMore[it],
                             more,
@@ -247,13 +243,7 @@ fun MyBottomNavigationBar(
                 }
 
                 item {
-                    OutlinedCard(
-                        colors = CardDefaults.cardColors(
-                            containerColor = Color.White.copy(alpha = 0.1f),
-                        ),
-                        border = borderThickPrimary100,
-                    ) {
-
+                    MyElevatedCard {
                         Item(
                             BottomNavigationBarItem(
                                 title = "Log Out",

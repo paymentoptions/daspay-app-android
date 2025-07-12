@@ -31,5 +31,7 @@ fun ReceiveMoneyFAB(
             .size(RECEIVE_MONEY_BUTTON_HEIGHT_IN_DP)
             .background(brush = enabledFilledButtonGradientBrush, shape = RoundedCornerShape(50))
             .padding(10.dp)
-            .clickable { navController.navigate(Screens.ReceiveMoney.route) })
+            .clickable { navController.navigate(Screens.ReceiveMoney.route) }
+
+    )
 }

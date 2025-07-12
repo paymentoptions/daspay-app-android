@@ -25,4 +25,7 @@ val red300 = Color(0xFFDB4747)
 val red400 = Color(0xC1F44336)
 val red500 = Color(0xFFE00000)
 
+val borderColor = Color(0xFFB9E2FC)
+val shadowColor = Color(0xFF85C9EE)
+
 
