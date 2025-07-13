@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,13 +25,19 @@ fun Transactions(
 //    val scrollState = rememberScrollState()
     var selectedFilterKey by remember { mutableStateOf("ALL") }
     var transactionsWithTrackId = mutableMapOf<String, Boolean>()
+    var longClickedTransactionId by remember { mutableStateOf("") }
+    var backPressHandled by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = !backPressHandled) {
+        longClickedTransactionId = ""
+        backPressHandled = true
+    }
 
     if (transactions == null || transactions.isEmpty()) NoData(text = "No transactions found")
     else Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.End,
-        modifier = Modifier
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
 //            .verticalScroll(scrollState)
     ) {
 
@@ -48,7 +55,11 @@ fun Transactions(
                     false
             }
 
-            if (!skip) TransactionSummary(navController, transaction)
+            if (!skip) TransactionSummary(
+                navController, transaction, longClickedTransactionId, onLongClick = {
+                    longClickedTransactionId = if (longClickedTransactionId.isEmpty()) it
+                    else if (longClickedTransactionId == it) "" else it
+                })
         }
 
         updateReceivalAmount(earningAmount)

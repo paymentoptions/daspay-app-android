@@ -47,7 +47,6 @@ sealed class CredentialModel(
 ) {
     object Ankit :
         CredentialModel(email = "ankitkambale097@myyahoo.com", password = "Test12345678@#")
-
     object Vijay : CredentialModel(email = "vijacip629@daupload.com", password = "Test123456789@#")
     object Kavita : CredentialModel(email = "kavitest15@ghunowa.com", password = "Kavios@12345678")
 }
@@ -143,7 +142,7 @@ fun BottomSectionContent(navController: NavController) {
 
         FilledButton(
             text = "Proceed",
-            disabled = emailError || passwordError,
+            disabled = emailError || passwordError || otpError,
             isLoading = isLoading,
             onClick = {
                 scope.launch {

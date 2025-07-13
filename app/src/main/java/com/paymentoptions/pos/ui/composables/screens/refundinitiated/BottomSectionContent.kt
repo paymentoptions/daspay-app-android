@@ -84,9 +84,11 @@ fun BottomSectionContent(
             FilledButton(
                 text = "View Full Receipt",
                 onClick = { },
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .width(200.dp)
-                    .height(29.dp)
+                    .height(19.dp)
             )
         }
 

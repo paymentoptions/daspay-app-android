@@ -51,7 +51,7 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
 
-    val isCardTransaction = true
+    val isCardTransaction = transaction.PaymentType == "CARDPAYMENT"
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY | hh:mm a").format(date)
     val borderRadius = 20.dp
 
@@ -62,7 +62,8 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
         border = borderThick,
         shape = RoundedCornerShape(borderRadius),
         modifier = Modifier.shadow(
-            elevation = 4.dp, shape = RoundedCornerShape(borderRadius),
+            elevation = 4.dp,
+            shape = RoundedCornerShape(borderRadius),
             ambientColor = Color(0xFFD8F0FF)
         )
     ) {

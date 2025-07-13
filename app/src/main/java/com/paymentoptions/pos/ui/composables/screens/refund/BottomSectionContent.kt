@@ -29,6 +29,7 @@ import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens.dashboard.THE_TRANSACTION
+//import com.paymentoptions.pos.ui.composables.screens.dashboard.getTheTransaction
 import com.paymentoptions.pos.ui.composables.screens.notifications.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.noBorder
@@ -42,10 +43,9 @@ import java.util.Date
 @Composable
 fun BottomSectionContent(
     navController: NavController,
-    transaction: TransactionListDataRecord? = THE_TRANSACTION,
+    transaction: TransactionListDataRecord? = THE_TRANSACTION, //getTheTransaction(),
 ) {
     val currency = "HKD"
-
     val dateString =
         transaction?.Date ?: OffsetDateTime.now().toString()  //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
@@ -71,7 +71,7 @@ fun BottomSectionContent(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            CurrencyText(currency = currency, amount = "123.12") //transaction.amount.toString())
+            CurrencyText(currency = currency, amount = transaction?.amount.toString())
         }
 
         Spacer(modifier = Modifier.height(16.dp))

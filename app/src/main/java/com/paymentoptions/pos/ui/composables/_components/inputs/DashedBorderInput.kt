@@ -68,7 +68,6 @@ fun DashedBorderInput(
                 .bottomStroke(strokeWidth = 0.dp, color = Color.Transparent),
             shape = RoundedCornerShape(8.dp),
             lineLimits = TextFieldLineLimits.SingleLine,
-
             textStyle = TextStyle(
                 fontSize = 16.sp,
                 textDecoration = TextDecoration.None,

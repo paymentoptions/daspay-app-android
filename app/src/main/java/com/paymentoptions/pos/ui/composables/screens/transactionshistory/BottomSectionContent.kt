@@ -42,6 +42,7 @@ import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
@@ -163,7 +164,9 @@ fun BottomSectionContent(navController: NavController) {
 
     if (!apiResponseAvailable) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -173,7 +176,9 @@ fun BottomSectionContent(navController: NavController) {
         currency = transactionList?.data?.records?.first()?.CurrencyCode ?: ""
 
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
 
@@ -181,7 +186,9 @@ fun BottomSectionContent(navController: NavController) {
 
             Text(
                 text = "Transaction History",
-                modifier = Modifier.align(alignment = Alignment.Start),
+                modifier = Modifier
+                    .align(alignment = Alignment.Start)
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
                 style = AppTheme.typography.titleNormal
             )
 
@@ -189,6 +196,7 @@ fun BottomSectionContent(navController: NavController) {
 
             Row(
                 modifier = Modifier
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                     .fillMaxWidth()
                     .height(50.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -236,8 +244,9 @@ fun BottomSectionContent(navController: NavController) {
             Spacer(modifier = Modifier.height(20.dp))
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .padding(horizontal = if (showInsights) DEFAULT_BOTTOM_SECTION_PADDING_IN_DP else 0.dp)
+                    .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = receivalForText,

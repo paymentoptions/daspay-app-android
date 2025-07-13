@@ -45,6 +45,14 @@ class SharedPreferences {
             return getBoolean(context, "biometrics")
         }
 
+        fun getImmersiveModeStatus(context: Context): Boolean {
+            return getBoolean(context, "immersive")
+        }
+
+        fun saveImmersiveModeStatus(context: Context, status: Boolean = false) {
+            saveBoolean(context, "immersive", status)
+        }
+
         fun saveAuthDetails(context: Context, authDetails: SignInResponse) = runBlocking {
             val authDetailsString = Json.encodeToString(authDetails)
             saveKeyValue(context, "auth_details", authDetailsString)

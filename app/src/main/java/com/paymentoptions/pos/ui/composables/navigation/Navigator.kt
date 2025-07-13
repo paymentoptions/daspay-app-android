@@ -25,7 +25,7 @@ import com.paymentoptions.pos.ui.composables.screens.transactionshistory.Transac
 @Composable
 fun Navigator() {
     val navController = rememberNavController()
-    val startDestination = Screens.Dashboard.route
+    val startDestination = Screens.Splash.route
 
 //    LaunchedEffect(navController) {
 //        navController.currentBackStackEntryFlow.collect { backStackEntry ->
@@ -35,7 +35,6 @@ fun Navigator() {
 //    }
 
     NavHost(navController = navController, startDestination = startDestination) {
-
         //Biometrics & Auth Check
         composable(Screens.FingerprintScan.route) { FingerprintScanScreen(navController, {}, {}) }
         //composable(Screens.FaceRecognition.route) { (navController) }

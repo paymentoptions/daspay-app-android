@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,7 +53,7 @@ fun SectionedLayout(
     navController: NavController,
     bottomSectionContent: @Composable () -> Unit,
     bottomSectionMinHeightRatio: Float = 0.1f,
-    bottomSectionMaxHeightRatio: Float = .95f,
+    bottomSectionMaxHeightRatio: Float = .8f,
     showBottomNavigationBar: Boolean = true,
     showBackButton: Boolean = false,
     defaultBottomSectionPaddingInDp: Dp = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
@@ -86,134 +87,142 @@ fun SectionedLayout(
         showMoreItems = !showMoreItems
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        BackgroundImage(
-            modifier = Modifier
-                .fillMaxSize()
-                .zIndex(1f)
-        )
-
+    Scaffold {
         Box(
             modifier = Modifier
+                .padding(it)
                 .fillMaxSize()
-                .align(alignment = Alignment.TopCenter)
-                .padding(bottom = if (showBottomNavigationBar) BOTTOM_NAVIGATION_HEIGHT_IN_DP else 0.dp)
-                .zIndex(2f)
-                .clickable(
-                    enabled = !showMoreItems,
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() },
-                    onClick = { })
         ) {
 
-            //Top Section
-            Column(
+            BackgroundImage(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = LOGO_TOP_PADDING_IN_DP)
-                    .align(alignment = Alignment.TopCenter)
+                    .fillMaxSize()
                     .zIndex(1f)
-            ) {
-                LogoImage(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(LOGO_HEIGHT_IN_DP)
-                )
-                Spacer(modifier = Modifier.height(25.dp))
+            )
 
-                imageBelowLogo()
-
-            }
-
-            //Bottom Section
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(
-                        top = if (alwaysShowLogo) LOGO_TOP_PADDING_IN_DP.times(1.6f)
-                            .plus(LOGO_HEIGHT_IN_DP) else 0.dp
-                    )
-                    .height(IntrinsicSize.Min)
-                    .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
-                    .verticalScroll(scrollState)
-                    .align(alignment = Alignment.BottomCenter)
-                    .zIndex(2f)
-                    .background(color = Color.Transparent)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = borderRadiusInDp, topEnd = borderRadiusInDp
-                        )
-                    )
-                    .background(color = Color.White)
-                    .padding(
-                        start = defaultBottomSectionPaddingInDp,
-                        top = defaultBottomSectionPaddingInDp,
-                        end = defaultBottomSectionPaddingInDp,
-                        bottom = if (showBottomNavigationBar) defaultBottomSectionPaddingInDp.plus(
-                            25.dp
-                        ) else if (showBackButton) 0.dp else defaultBottomSectionPaddingInDp.plus(10.dp)
-                    ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
-
-            ) {
-                bottomSectionContent()
-
-                if (showBackButton) {
-                    Spacer(modifier = Modifier.height(20.dp))
-                    BackButton(onClickShowMenuBarButton = { navController.popBackStack() })
-                }
-            }
-
-            //Just an overlay
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(overlayColor)
-                    .zIndex(3f)
-            )
-        }
-
-        //Bottom Navigation Bar
-        if (showBottomNavigationBar) {
-            ReceiveMoneyFAB(
-                navController,
-                modifier = Modifier
-                    .align(alignment = Alignment.BottomCenter)
-                    .zIndex(5f)
-                    .padding(bottom = BOTTOM_NAVIGATION_HEIGHT_IN_DP.div(2).plus(5.dp))
-            )
-
-            Row(
-                modifier = Modifier
-                    .background(Color.White)
-                    .background(overlayColor)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = if (showMoreItems) borderRadiusInDp else 20.dp,
-                            topEnd = if (showMoreItems) borderRadiusInDp else 20.dp
-                        )
-                    )
-                    .background(if (showMoreItems) Color.White else Color.Transparent)
-                    .background(primary100.copy(alpha = 0.04f))
-                    .align(alignment = Alignment.BottomCenter)
-                    .zIndex(4f)
-
+                    .align(alignment = Alignment.TopCenter)
+                    .padding(bottom = if (showBottomNavigationBar) BOTTOM_NAVIGATION_HEIGHT_IN_DP else 0.dp)
+                    .zIndex(2f)
+                    .clickable(
+                        enabled = !showMoreItems,
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = { })
             ) {
 
-                val modifier = if (showMoreItems) Modifier else Modifier.clip(
-                    BottomNavShape(
-                        cornerRadius = with(LocalDensity.current) { 20.dp.toPx() },
-                        dockRadius = with(LocalDensity.current) { 38.dp.toPx() },
+                //Top Section
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = LOGO_TOP_PADDING_IN_DP)
+                        .align(alignment = Alignment.TopCenter)
+                        .zIndex(1f)
+                ) {
+                    LogoImage(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(LOGO_HEIGHT_IN_DP)
                     )
+                    Spacer(modifier = Modifier.height(25.dp))
+
+                    imageBelowLogo()
+
+                }
+
+                //Bottom Section
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            top = if (alwaysShowLogo) LOGO_TOP_PADDING_IN_DP.times(1.6f)
+                                .plus(LOGO_HEIGHT_IN_DP) else 0.dp
+                        )
+                        .height(IntrinsicSize.Min)
+                        .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
+                        .verticalScroll(scrollState)
+                        .align(alignment = Alignment.BottomCenter)
+                        .zIndex(2f)
+                        .background(color = Color.Transparent)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = borderRadiusInDp, topEnd = borderRadiusInDp
+                            )
+                        )
+                        .background(color = Color.White)
+                        .padding(
+                            start = defaultBottomSectionPaddingInDp,
+                            top = defaultBottomSectionPaddingInDp,
+                            end = defaultBottomSectionPaddingInDp,
+                            bottom = if (showBottomNavigationBar) defaultBottomSectionPaddingInDp.plus(
+                                25.dp
+                            ) else if (showBackButton) 0.dp else defaultBottomSectionPaddingInDp.plus(
+                                10.dp
+                            )
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+
+                ) {
+                    bottomSectionContent()
+
+                    if (showBackButton) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        BackButton(onClickShowMenuBarButton = { navController.popBackStack() })
+                    }
+                }
+
+                //Just an overlay
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(overlayColor)
+                        .zIndex(3f)
+                )
+            }
+
+            //Bottom Navigation Bar
+            if (showBottomNavigationBar) {
+                ReceiveMoneyFAB(
+                    navController,
+                    modifier = Modifier
+                        .align(alignment = Alignment.BottomCenter)
+                        .zIndex(5f)
+                        .padding(bottom = BOTTOM_NAVIGATION_HEIGHT_IN_DP.div(2).plus(5.dp))
                 )
 
-                MyBottomNavigationBar(
-                    navController, modifier = modifier, showMoreItems, onClickShowMoreItems = {
-                        toggleShowMoreItems()
-                    }, BOTTOM_NAVIGATION_HEIGHT_IN_DP
-                )
+                Row(
+                    modifier = Modifier
+                        .background(Color.White)
+                        .background(overlayColor)
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = if (showMoreItems) borderRadiusInDp else 20.dp,
+                                topEnd = if (showMoreItems) borderRadiusInDp else 20.dp
+                            )
+                        )
+                        .background(if (showMoreItems) Color.White else Color.Transparent)
+                        .background(primary100.copy(alpha = 0.04f))
+                        .align(alignment = Alignment.BottomCenter)
+                        .zIndex(4f)
+
+                ) {
+
+                    val modifier = if (showMoreItems) Modifier else Modifier.clip(
+                        BottomNavShape(
+                            cornerRadius = with(LocalDensity.current) { 20.dp.toPx() },
+                            dockRadius = with(LocalDensity.current) { 38.dp.toPx() },
+                        )
+                    )
+
+                    MyBottomNavigationBar(
+                        navController, modifier = modifier, showMoreItems, onClickShowMoreItems = {
+                            toggleShowMoreItems()
+                        }, BOTTOM_NAVIGATION_HEIGHT_IN_DP
+                    )
+                }
             }
         }
     }

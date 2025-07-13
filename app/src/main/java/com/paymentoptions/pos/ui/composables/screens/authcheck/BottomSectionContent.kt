@@ -90,21 +90,19 @@ fun BottomSectionContent(navController: NavController) {
             )
             Spacer(modifier = Modifier.height(20.dp))
 
-            FilledButton(text = "Sign in", onClick = {
+            FilledButton(
+                text = "Sign in", onClick = {
                 SharedPreferences.clearSharedPreferences(context)
                 navController.navigate(Screens.SignIn.route)
-            }, modifier = Modifier
-                .fillMaxWidth()
-                .height(37.dp)
+                }, modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            OutlinedButton(text = "Quit", onClick = {
-                activity?.finish()
-            }, modifier = Modifier
-                .fillMaxWidth()
-                .height(37.dp)
+            OutlinedButton(
+                text = "Quit", onClick = {
+                    activity?.finish()
+                }, modifier = Modifier.fillMaxWidth()
             )
         }
 

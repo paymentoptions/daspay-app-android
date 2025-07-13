@@ -101,4 +101,7 @@ dependencies {
 
     //ycharts
     implementation(libs.ycharts)
+
+    //System UI Color
+    implementation(libs.accompanist.systemuicontroller)
 }

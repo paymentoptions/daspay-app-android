@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
@@ -62,6 +63,8 @@ fun BottomSectionContent(navController: NavController) {
     var authDetails = SharedPreferences.getAuthDetails(context)
     val username = authDetails?.data?.name ?: ""
     val email = authDetails?.data?.email ?: ""
+    rememberSystemUiController()
+//    var immersiveMode by remember { mutableStateOf(systemUiController.isSystemBarsVisible) }
 
     val lastLoginString: String =
         SimpleDateFormat("DD MMMM YYYY | hh:mm a").format(authDetails?.data?.auth_time ?: "")
@@ -193,6 +196,43 @@ fun BottomSectionContent(navController: NavController) {
                         )
                     )
                 }
+
+                //ImmersiveMode Toggle
+//                Row(
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    modifier = Modifier.fillMaxWidth(),
+//                ) {
+//                    Text(
+//                        "Immersive Mode",
+//                        fontWeight = FontWeight.Bold,
+//                        color = primary500,
+//                        fontSize = 15.sp
+//                    )
+//                    Switch(
+//                        colors = SwitchDefaults.colors().copy(
+//                            checkedTrackColor = primary100
+//                        ), checked = immersiveMode, onCheckedChange = {
+//                            try {
+//                                systemUiController.isSystemBarsVisible =
+//                                    !systemUiController.isSystemBarsVisible
+//                                immersiveMode = !immersiveMode
+//
+//                                SharedPreferences.saveImmersiveModeStatus(context, !immersiveMode)
+//
+//                            } catch (_: Exception) {
+//                                Toast.makeText(
+//                                    context, "Unable to set immersive mode", Toast.LENGTH_LONG
+//                                ).show()
+//                            }
+//                        }, modifier = Modifier.shadow(
+//                            elevation = 8.dp,
+//                            shape = RoundedCornerShape(16.dp),
+//                            ambientColor = if (biometricsEnabled) Color.Gray.copy(0.25f) else Color.Transparent,
+//                            spotColor = if (biometricsEnabled) Color.Gray.copy(0.25f) else Color.Transparent
+//                        )
+//                    )
+//                }
 
                 Spacer(modifier = Modifier.height(20.dp))
 

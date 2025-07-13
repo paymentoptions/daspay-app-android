@@ -8,8 +8,8 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 fun NotificationsScreen(navController: NavController) {
     SectionedLayout(
         navController = navController,
-        bottomSectionMinHeightRatio = 0.9f,
-        bottomSectionMaxHeightRatio = 0.95f,
+        bottomSectionMinHeightRatio = 0.7f,
+        bottomSectionMaxHeightRatio = 0.85f,
         bottomSectionContent = { BottomSectionContent(navController) },
         showBottomNavigationBar = false,
         alwaysShowLogo = false

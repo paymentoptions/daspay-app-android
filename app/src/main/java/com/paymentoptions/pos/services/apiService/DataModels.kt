@@ -61,6 +61,7 @@ data class RefreshTokenRequest(
 
 data class TransactionListDataRecord(
     val uuid: String,
+    val MerchantRefID: String,
     val LegalName: String,
     val LegalNameInEnglish: String,
     val DASMID: String,
@@ -89,6 +90,7 @@ data class TransactionListDataRecord(
     val ResponseCode: String,
     val TransactionID: Int,
     val IntegrationType: String,
+    val PaymentType: String,
 )
 
 data class TransactionListData(

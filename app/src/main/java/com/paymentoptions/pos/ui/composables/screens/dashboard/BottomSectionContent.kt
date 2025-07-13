@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
@@ -30,6 +31,7 @@ import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
+import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.primary500
@@ -43,7 +45,7 @@ fun BottomSectionContent(navController: NavController) {
     var currency by remember { mutableStateOf("") }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
-    var take: Int by remember { mutableIntStateOf(100) }
+    var take: Int by remember { mutableIntStateOf(10) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
     var maxPage: Int by remember { mutableIntStateOf(1) }
 
@@ -57,12 +59,10 @@ fun BottomSectionContent(navController: NavController) {
             val skip = (currentPage - 1) * take
             transactionList = transactionsList(context, take, skip)
 
-            if (transactionList == null) {
-                maxPage = 0
-            } else {
-                maxPage =
-                    ceil(transactionList!!.data.total_count.toDouble() / take.toDouble()).toInt()
-            }
+            if (transactionList == null) maxPage = 0
+            else maxPage =
+                ceil(transactionList!!.data.total_count.toDouble() / take.toDouble()).toInt()
+
             apiResponseAvailable = true
         } catch (e: Exception) {
 
@@ -71,7 +71,9 @@ fun BottomSectionContent(navController: NavController) {
     }
 
     if (!apiResponseAvailable) Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -81,7 +83,9 @@ fun BottomSectionContent(navController: NavController) {
         currency = transactionList?.data?.records?.first()?.CurrencyCode ?: ""
 
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
 
@@ -92,11 +96,16 @@ fun BottomSectionContent(navController: NavController) {
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = primary900,
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            CurrencyText(currency = currency, amount = receivalAmount.toString())
+            CurrencyText(
+                currency = currency,
+                amount = receivalAmount.toString(),
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -104,15 +113,18 @@ fun BottomSectionContent(navController: NavController) {
                 text = "View Insights",
                 onClick = { navController.navigate(Screens.TransactionHistory.route) },
                 modifier = Modifier
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                     .width(160.dp)
                     .height(37.dp),
 
-            )
+                )
 
             Spacer(Modifier.height(20.dp))
 
             Row(
-                Modifier.fillMaxWidth(),
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -124,16 +136,13 @@ fun BottomSectionContent(navController: NavController) {
                     color = primary500,
                 )
 
-                SuggestionChip(
-                    border = borderThin,
-                    onClick = {
+                SuggestionChip(border = borderThin, onClick = {
 //                navController.navigate(Screens.TransactionHistory.route)
-                    },
-                    label = {
-                        Text(
-                            text = "View All", fontSize = 14.sp, fontWeight = FontWeight.Bold
-                        )
-                    })
+                }, label = {
+                    Text(
+                        text = "View All", fontSize = 14.sp, fontWeight = FontWeight.Bold
+                    )
+                })
             }
 
             Spacer(Modifier.height(10.dp))
