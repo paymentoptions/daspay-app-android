@@ -50,11 +50,9 @@ fun Insights(
 
     if (transactions == null || transactions.isEmpty()) NoData(text = "No transactions found")
     else Column(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = Modifier.fillMaxWidth()
 //            .verticalScroll(scrollState)
-        ,
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        , verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
 
         transactions.forEachIndexed { index, transaction ->
@@ -65,27 +63,29 @@ fun Insights(
             if (amount > chartMaxValue) chartMaxValue = amount
             if (amount < chartMinValue) chartMinValue = amount
 
-            barData.add(
-                BarData(
-                    point = Point(x = index.toFloat(), y = transaction.amount.toFloat()),
-                    color = if (transaction.TransactionType == "REFUND") red500.copy(alpha = 0.5f) else Color.Green.copy(
-                        alpha = 0.5f
-                    ),
-                    label = "${date.dayOfMonth} ${date.month}",
-                    gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                    description = if (transaction.TransactionType == "REFUND") "Refund" else "Earning",
+            if (transaction.status == "SUCCESSFUL") {
+                barData.add(
+                    BarData(
+                        point = Point(x = index.toFloat(), y = transaction.amount.toFloat()),
+                        color = if (transaction.TransactionType == "REFUND") red500.copy(alpha = 0.5f) else Color.Green.copy(
+                            alpha = 0.5f
+                        ),
+                        label = "${date.dayOfMonth} ${date.month}",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = if (transaction.TransactionType == "REFUND") "Refund" else "Earning",
+                    )
                 )
-            )
 
-            when (transaction.TransactionType) {
-                "PURCHASE" -> {
-                    saleTransactionCount++
-                    earningAmount += amount
-                }
+                when (transaction.TransactionType) {
+                    "PURCHASE" -> {
+                        saleTransactionCount++
+                        earningAmount += amount
+                    }
 
-                "REFUND" -> {
-                    refundTransactionCount++
-                    refundAmount += amount
+                    "REFUND" -> {
+                        refundTransactionCount++
+                        refundAmount += amount
+                    }
                 }
             }
         }
@@ -93,7 +93,7 @@ fun Insights(
         updateReceivalAmount(earningAmount)
 
         //Bar Graph
-        Row(
+        if (barData.isNotEmpty()) Row(
             modifier = Modifier.fillMaxWidth()
 
         ) {
@@ -109,7 +109,11 @@ fun Insights(
                     .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
                     .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
                     .backgroundColor(Color.White).labelData { index ->
-                        "$currency ${(index * (chartMaxValue / (barData.size - 1))).roundToInt()}"
+                        try {
+                            "$currency ${(index * (chartMaxValue / (barData.size - 1))).roundToInt()}"
+                        } catch (e: Exception) {
+                            "0"
+                        }
                     }.build()
 
             val barChartData = BarChartData(
@@ -127,6 +131,7 @@ fun Insights(
                 barChartData = barChartData
             )
         }
+
 
         //Stats
         Column(
