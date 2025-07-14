@@ -16,18 +16,10 @@ suspend fun transactionsList(
         var authDetails = SharedPreferences.getAuthDetails(context)
         val username = authDetails?.data?.email ?: ""
         val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails)
+        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
 
-        if (shouldRefreshToken) {
-            val refreshTokenResponse = refreshTokens(username, refreshToken)
-            if (refreshTokenResponse == null) {
-                SharedPreferences.clearSharedPreferences(context)
-                return null
-            } else
-                SharedPreferences.saveAuthDetails(context, refreshTokenResponse)
-        }
+        if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
-        authDetails = SharedPreferences.getAuthDetails(context)
         val idToken = authDetails?.data?.token?.idToken
         val requestHeaders = generateRequestHeaders(idToken ?: "")
 

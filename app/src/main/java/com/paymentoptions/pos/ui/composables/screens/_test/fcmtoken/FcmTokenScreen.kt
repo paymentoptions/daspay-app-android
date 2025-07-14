@@ -6,8 +6,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun FcmTokenScreen(navController: NavController) {
-    SectionedLayout(
-        navController = navController, bottomSectionContent = {
-            BottomSectionContent(navController)
-        })
+    SectionedLayout(navController = navController) {
+        BottomSectionContent(navController)
+    }
 }

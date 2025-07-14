@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,15 +49,17 @@ sealed class CredentialModel(
 ) {
     object Ankit :
         CredentialModel(email = "ankitkambale097@myyahoo.com", password = "Test12345678@#")
+
     object Vijay : CredentialModel(email = "vijacip629@daupload.com", password = "Test123456789@#")
     object Kavita : CredentialModel(email = "kavitest15@ghunowa.com", password = "Kavios@12345678")
 }
 
 @Composable
-fun BottomSectionContent(navController: NavController) {
+fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     val credentialModel = CredentialModel.Vijay
 
@@ -81,7 +85,9 @@ fun BottomSectionContent(navController: NavController) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(scrollState, enabled = enableScrolling),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(

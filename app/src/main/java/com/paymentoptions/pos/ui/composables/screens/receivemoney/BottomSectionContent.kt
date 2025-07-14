@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Icon
@@ -72,6 +74,7 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.utils.conditional
 import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getDasmidFromToken
 import com.paymentoptions.pos.utils.getDeviceIpAddress
@@ -88,8 +91,8 @@ import java.util.Currency
 import java.util.UUID
 
 @Composable
-fun BottomSectionContent(navController: NavController) {
-
+fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
+    val scrollState = rememberScrollState()
     var showNFCNotPresent by remember { mutableStateOf(false) }
     var showTransactionStatus by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
@@ -167,6 +170,7 @@ fun BottomSectionContent(navController: NavController) {
     val launcher = rememberLauncherForActivityResult(
         HeadlessActivity.contract(ClientHeadlessImpl::class.java)
     ) {
+
 
         var completedSaleTranId: String? = ""
         var completedSalePosReference: String? = ""
@@ -340,7 +344,7 @@ fun BottomSectionContent(navController: NavController) {
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxWidth()
                 .background(Color.White)
-        ) {
+                .conditional(enableScrolling) { verticalScroll(scrollState) }) {
 
             buttons.forEach { row ->
                 Row(
@@ -406,9 +410,7 @@ fun BottomSectionContent(navController: NavController) {
                     onClick = { rawInput = "${(it + 1) * 50}00" },
                     label = {
                         CurrencyText(
-                            currency = currency,
-                            amount = "${(it + 1) * 50}",
-                            fontSize = 16.sp
+                            currency = currency, amount = "${(it + 1) * 50}", fontSize = 16.sp
                         )
                     })
             }

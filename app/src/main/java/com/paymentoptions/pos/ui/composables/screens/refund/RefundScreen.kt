@@ -7,14 +7,20 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun RefundScreen(navController: NavController) {
+    val enableScrollingInsideBottomSectionContent = false
+
     SectionedLayout(
         navController = navController,
-        bottomSectionContent = {
-            BottomSectionContent(navController)
-        },
-        bottomSectionMaxHeightRatio = 0.6f,
+        bottomSectionMaxHeightRatio = 0.3f,
         showBottomNavigationBar = false,
         showBackButton = true,
         defaultBottomSectionPaddingInDp = 0.dp,
-        imageBelowLogo = { })
+        imageBelowLogo = { },
+        enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+    ) {
+        BottomSectionContent(
+            navController,
+            enableScrolling = enableScrollingInsideBottomSectionContent
+        )
+    }
 }

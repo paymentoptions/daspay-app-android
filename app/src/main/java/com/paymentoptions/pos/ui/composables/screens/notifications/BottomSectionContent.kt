@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,6 +42,7 @@ import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.bannerBgColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.utils.conditional
 import kotlin.math.ceil
 
 data class Tab(
@@ -78,7 +81,7 @@ fun FilterButton(filter: Tab, selected: Tab, onClick: () -> Unit) {
 }
 
 @Composable
-fun BottomSectionContent(navController: NavController) {
+fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
 
     var tabs = remember {
         mutableStateListOf<Tab>(
@@ -91,7 +94,7 @@ fun BottomSectionContent(navController: NavController) {
 
     var selectedTab by remember { mutableStateOf<Tab>(tabs[0]) }
 
-//    val scrollState = rememberScrollState()
+    val scrollState = rememberScrollState()
     val context = LocalContext.current
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
@@ -122,24 +125,20 @@ fun BottomSectionContent(navController: NavController) {
 
     LaunchedEffect(transactionList) {
         transactions = transactionList?.data?.records?.filter { transaction ->
-            when (transaction.status) {
-                "SUCCESSFUL" -> {
-                    tabs[0] = Tab(tabs[0].text, tabs[0].matchText, tabs[0].newCount + 1)
-                    tabs[1] = Tab(tabs[1].text, tabs[1].matchText, tabs[1].newCount + 1)
-                }
 
-                "REFUND" -> {
-                    tabs[0] = Tab(tabs[0].text, tabs[0].matchText, tabs[0].newCount + 1)
-                    tabs[2] = Tab(tabs[2].text, tabs[2].matchText, tabs[2].newCount + 1)
-                }
+            tabs[0] = Tab(tabs[0].text, tabs[0].matchText, tabs[0].newCount + 1)
 
-                "NOTSUCCESSFUL" -> {
-                    tabs[0] = Tab(tabs[0].text, tabs[0].matchText, tabs[0].newCount + 1)
-                    tabs[3] = Tab(tabs[3].text, tabs[3].matchText, tabs[3].newCount + 1)
-                }
+            if (transaction.status == "NOTSUCCESSFUL") tabs[3] = Tab(
+                tabs[3].text, tabs[3].matchText, tabs[3].newCount + 1
+            )
+            else if (transaction.status == "SUCCESSFUL") {
+                if (transaction.TransactionType == "PURCHASE") tabs[1] =
+                    Tab(tabs[1].text, tabs[1].matchText, tabs[1].newCount + 1)
+                else if (transaction.TransactionType == "REFUND") tabs[2] =
+                    Tab(tabs[2].text, tabs[2].matchText, tabs[2].newCount + 1)
             }
-            selectedTab.matchText == transaction.status
 
+            selectedTab.matchText == transaction.status
         }
     }
 
@@ -181,9 +180,7 @@ fun BottomSectionContent(navController: NavController) {
         ) {
 
             tabs.forEachIndexed { index, filter ->
-                FilterButton(filter = filter, selectedTab, onClick = {
-                    selectedTab = filter
-                })
+                FilterButton(filter = filter, selectedTab, onClick = { selectedTab = filter })
             }
         }
 
@@ -218,12 +215,15 @@ fun BottomSectionContent(navController: NavController) {
 
                 filterIn
             }
+
+
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.End,
-                modifier = Modifier.fillMaxSize()
-//                    .verticalScroll(scrollState)
-            ) {
+                modifier = Modifier
+                    .fillMaxSize()
+                    .conditional(enableScrolling) { verticalScroll(scrollState) })
+            {
 
                 for (transaction in transactions!!.toTypedArray()) {
 
@@ -248,11 +248,11 @@ fun allFilterFn(transaction: TransactionListDataRecord): Boolean {
 }
 
 fun receivedFilterFn(transaction: TransactionListDataRecord): Boolean {
-    return transaction.status == "SUCCESSFUL"
+    return transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL"
 }
 
 fun refundedFilterFn(transaction: TransactionListDataRecord): Boolean {
-    return transaction.status == "REFUND"
+    return transaction.TransactionType == "REFUND" && transaction.status == "SUCCESSFUL"
 }
 
 fun failedFilterFn(transaction: TransactionListDataRecord): Boolean {

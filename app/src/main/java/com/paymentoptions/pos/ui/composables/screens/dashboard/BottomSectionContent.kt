@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,10 +38,11 @@ import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.utils.conditional
 import kotlin.math.ceil
 
 @Composable
-fun BottomSectionContent(navController: NavController) {
+fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf("") }
@@ -48,6 +51,7 @@ fun BottomSectionContent(navController: NavController) {
     var take: Int by remember { mutableIntStateOf(10) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
     var maxPage: Int by remember { mutableIntStateOf(1) }
+    val scrollState = rememberScrollState()
 
     fun updateReceivalAmount(newAmount: Float) {
         receivalAmount = newAmount
@@ -147,12 +151,17 @@ fun BottomSectionContent(navController: NavController) {
 
             Spacer(Modifier.height(10.dp))
 
-            Transactions(
-                navController,
-                transactions = transactionList?.data?.records,
-                updateReceivalAmount = {
-                    updateReceivalAmount(it)
-                })
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .conditional(enableScrolling) { verticalScroll(scrollState) }) {
+                Transactions(
+                    navController,
+                    transactions = transactionList?.data?.records,
+                    updateReceivalAmount = {
+                        updateReceivalAmount(it)
+                    })
+            }
         }
     }
 

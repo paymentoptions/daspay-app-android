@@ -92,11 +92,22 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
 
             Column(modifier = Modifier.weight(8f)) {
 
-                Text(
-                    transaction.status.uppercase(),
-                    modifier = Modifier.background(green200.copy(alpha = 0.2f)),
-                    color = green500
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        transaction.status.uppercase(),
+                        modifier = Modifier.background(green200.copy(alpha = 0.2f)),
+                        color = green500
+                    )
+
+                    if (false) Text(
+                        transaction.TransactionType.uppercase(),
+                        modifier = Modifier.background(Color.Yellow.copy(alpha = 0.2f)),
+                        color = green500
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 

@@ -66,7 +66,7 @@ data class Cart(
 )
 
 @Composable
-fun BottomSectionContent(navController: NavController) {
+fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
 
     val foodCategories = listOf("Beverages", "Burgers & Fries", "Cake", "Pizza & Pasta")
     var selectedFoodCategoryIndex by remember { mutableIntStateOf(0) }
@@ -100,12 +100,9 @@ fun BottomSectionContent(navController: NavController) {
         Spacer(modifier = Modifier.height(10.dp))
 
         FoodCategories(
-            foodCategories = foodCategories,
-            selectedIndex = selectedFoodCategoryIndex,
-            onClick = {
+            foodCategories = foodCategories, selectedIndex = selectedFoodCategoryIndex, onClick = {
                 selectedFoodCategoryIndex = it
-            },
-            modifier = Modifier
+            }, modifier = Modifier
                 .padding(
                     start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
                     top = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,

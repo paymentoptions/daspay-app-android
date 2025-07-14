@@ -6,12 +6,19 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun NotificationsScreen(navController: NavController) {
+    val enableScrollingInsideBottomSectionContent = true
+
     SectionedLayout(
         navController = navController,
         bottomSectionMinHeightRatio = 0.7f,
         bottomSectionMaxHeightRatio = 0.85f,
-        bottomSectionContent = { BottomSectionContent(navController) },
         showBottomNavigationBar = false,
-        alwaysShowLogo = false
-    )
+        alwaysShowLogo = false,
+        enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+    ) {
+        BottomSectionContent(
+            navController,
+            enableScrolling = enableScrollingInsideBottomSectionContent
+        )
+    }
 }

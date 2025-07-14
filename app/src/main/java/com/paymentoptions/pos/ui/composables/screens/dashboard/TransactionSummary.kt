@@ -49,7 +49,7 @@ import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
 
-var THE_TRANSACTION: TransactionListDataRecord? = null
+var TRANSACTION_TO_BE_REFUNDED: TransactionListDataRecord? = null
 
 @Composable
 fun TransactionSummary(
@@ -175,7 +175,7 @@ fun TransactionSummary(
                 .weight(if (isLongClicked) 2f else 0.1f)
                 .clickable {
                     navController.navigate(Screens.Refund.route)
-                    THE_TRANSACTION = transaction
+                    TRANSACTION_TO_BE_REFUNDED = transaction
                 },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)

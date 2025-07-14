@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.outlined.Email
@@ -39,7 +41,7 @@ import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-import com.paymentoptions.pos.ui.composables.screens.dashboard.THE_TRANSACTION
+import com.paymentoptions.pos.ui.composables.screens.dashboard.TRANSACTION_TO_BE_REFUNDED
 import com.paymentoptions.pos.ui.composables.screens.notifications.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
@@ -50,14 +52,17 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.conditional
 
 @Composable
 fun BottomSectionContent(
     navController: NavController,
-    transaction: TransactionListDataRecord? = THE_TRANSACTION,
+    transaction: TransactionListDataRecord? = TRANSACTION_TO_BE_REFUNDED,
+    enableScrolling: Boolean = false,
 ) {
     val currency = "HKD"
     var showRefundStatus by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -221,7 +226,10 @@ fun BottomSectionContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                    .conditional(enableScrolling) {
+                        verticalScroll(scrollState)
+                    },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {

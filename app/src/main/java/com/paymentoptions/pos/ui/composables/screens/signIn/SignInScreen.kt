@@ -6,9 +6,13 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun SignInScreen(navController: NavController) {
+    val scrollingInsideBottomSectionContent = true
+
     SectionedLayout(
-        navController = navController, bottomSectionContent = {
-            BottomSectionContent(navController)
-        }, showBottomNavigationBar = false
-    )
+        navController = navController,
+        showBottomNavigationBar = false,
+        enableScrollingOfBottomSectionContent = !scrollingInsideBottomSectionContent
+    ) {
+        BottomSectionContent(navController, enableScrolling = scrollingInsideBottomSectionContent)
+    }
 }

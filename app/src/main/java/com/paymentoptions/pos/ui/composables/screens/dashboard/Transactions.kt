@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -11,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
@@ -23,6 +25,7 @@ fun Transactions(
     updateReceivalAmount: (Float) -> Unit,
 ) {
 //    val scrollState = rememberScrollState()
+    val context = LocalContext.current
     var selectedFilterKey by remember { mutableStateOf("ALL") }
     var transactionsWithTrackId = mutableMapOf<String, Boolean>()
     var longClickedTransactionId by remember { mutableStateOf("") }
@@ -55,10 +58,20 @@ fun Transactions(
                     false
             }
 
+//            println("transaction.TransactionType : ${transaction.TransactionType}")
+//            if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") skip = false
+
             if (!skip) TransactionSummary(
                 navController, transaction, longClickedTransactionId, onLongClick = {
-                    longClickedTransactionId = if (longClickedTransactionId.isEmpty()) it
-                    else if (longClickedTransactionId == it) "" else it
+
+                    if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
+                        longClickedTransactionId = if (longClickedTransactionId.isEmpty()) it
+                        else if (longClickedTransactionId == it) "" else it
+                    } else Toast.makeText(
+                        context,
+                        "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 })
         }
 

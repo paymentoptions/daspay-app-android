@@ -124,7 +124,6 @@ data class TransactionListResponse(
     val data: TransactionListData,
 )
 
-
 data class RefundRequest(
     val id: String,
     val merchant_id: String,

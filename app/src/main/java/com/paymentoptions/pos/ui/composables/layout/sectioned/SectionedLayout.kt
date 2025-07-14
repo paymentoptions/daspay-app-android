@@ -41,6 +41,7 @@ import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
 import com.paymentoptions.pos.ui.composables._components.images.TapToPayImage
 import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.utils.conditional
 
 val LOGO_TOP_PADDING_IN_DP = 50.dp
 val LOGO_HEIGHT_IN_DP = 60.dp
@@ -51,7 +52,6 @@ val DEFAULT_BOTTOM_SECTION_PADDING_IN_DP = 16.dp
 @Composable
 fun SectionedLayout(
     navController: NavController,
-    bottomSectionContent: @Composable () -> Unit,
     bottomSectionMinHeightRatio: Float = 0.1f,
     bottomSectionMaxHeightRatio: Float = .8f,
     showBottomNavigationBar: Boolean = true,
@@ -65,6 +65,8 @@ fun SectionedLayout(
                 .height(280.dp)
         )
     },
+    enableScrollingOfBottomSectionContent: Boolean = true,
+    bottomSectionContent: @Composable () -> Unit = {},
 ) {
 
     val configuration = LocalConfiguration.current
@@ -132,6 +134,7 @@ fun SectionedLayout(
 
                 }
 
+
                 //Bottom Section
                 Column(
                     modifier = Modifier
@@ -142,7 +145,9 @@ fun SectionedLayout(
                         )
                         .height(IntrinsicSize.Min)
                         .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
-                        .verticalScroll(scrollState)
+                        .conditional(enableScrollingOfBottomSectionContent) {
+                            verticalScroll(scrollState)
+                        }
                         .align(alignment = Alignment.BottomCenter)
                         .zIndex(2f)
                         .background(color = Color.Transparent)

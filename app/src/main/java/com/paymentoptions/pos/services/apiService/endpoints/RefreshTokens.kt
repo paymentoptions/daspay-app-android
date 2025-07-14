@@ -1,19 +1,29 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
+import android.content.Context
+import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.RefreshTokenRequest
 import com.paymentoptions.pos.services.apiService.RetrofitClient
+import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.services.apiService.generateRequestHeaders
-import kotlinx.coroutines.runBlocking
 
-fun refreshTokens(username: String = "", refreshToken: String = "") = runBlocking {
+suspend fun refreshTokens(
+    context: Context,
+    username: String = "",
+    refreshToken: String = "",
+): SignInResponse? {
+    println("---> Refreshing tokens")
     try {
         val requestHeaders = generateRequestHeaders()
         val refreshTokenRequest = RefreshTokenRequest(username, refreshToken)
         val refreshTokenResponse =
             RetrofitClient.api.refreshToken(requestHeaders, refreshTokenRequest)
-        return@runBlocking refreshTokenResponse
+
+        SharedPreferences.saveAuthDetails(context, refreshTokenResponse)
+        return refreshTokenResponse
     } catch (e: Exception) {
         println("refreshTokensError: $e")
-        return@runBlocking null
+        SharedPreferences.clearSharedPreferences(context)
+        return null
     }
 }

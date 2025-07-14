@@ -14,19 +14,10 @@ suspend fun signOut(context: Context): SignOutResponse? {
         var authDetails = SharedPreferences.getAuthDetails(context)
         val username = authDetails?.data?.email ?: ""
         var refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails)
+        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
 
-        if (shouldRefreshToken) {
-            val refreshTokenResponse = refreshTokens(username, refreshToken)
+        if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
-            if (refreshTokenResponse == null) {
-                SharedPreferences.clearSharedPreferences(context)
-                return null
-            } else
-                SharedPreferences.saveAuthDetails(context, refreshTokenResponse)
-        }
-
-        authDetails = SharedPreferences.getAuthDetails(context)
         val accessToken = authDetails?.data?.token?.accessToken ?: ""
         val idToken = authDetails?.data?.token?.idToken ?: ""
         refreshToken = authDetails?.data?.token?.refreshToken ?: ""

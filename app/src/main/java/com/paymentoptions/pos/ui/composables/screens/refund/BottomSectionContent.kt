@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.refund
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,26 +17,35 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.services.apiService.RefundRequest
+import com.paymentoptions.pos.services.apiService.RefundResponse
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.endpoints.refund
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-import com.paymentoptions.pos.ui.composables.screens.dashboard.THE_TRANSACTION
-//import com.paymentoptions.pos.ui.composables.screens.dashboard.getTheTransaction
+import com.paymentoptions.pos.ui.composables.screens.dashboard.TRANSACTION_TO_BE_REFUNDED
 import com.paymentoptions.pos.ui.composables.screens.notifications.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -43,8 +53,11 @@ import java.util.Date
 @Composable
 fun BottomSectionContent(
     navController: NavController,
-    transaction: TransactionListDataRecord? = THE_TRANSACTION, //getTheTransaction(),
+    transaction: TransactionListDataRecord? = TRANSACTION_TO_BE_REFUNDED,
+    enableScrolling: Boolean = false,
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val currency = "HKD"
     val dateString =
         transaction?.Date ?: OffsetDateTime.now().toString()  //"2025-04-23T03:38:57.349+00:00"
@@ -52,6 +65,7 @@ fun BottomSectionContent(
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
     val noteState = rememberTextFieldState()
+    var isLoading by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -198,7 +212,37 @@ fun BottomSectionContent(
 
         FilledButton(
             text = "Initiate Refund",
-            onClick = {},
+            onClick = {
+                scope.launch {
+                    isLoading = true
+
+                    var refundResponse: RefundResponse? = null
+
+                    try {
+
+                        val refundRequest = RefundRequest(
+                            id = transaction?.uuid.toString(),
+                            merchant_id = transaction?.DASMID.toString(),
+                            refundAmount = transaction?.amount?.toFloat() ?: 0.0f,
+//                            note = noteState.text
+                        )
+
+                        refundResponse = refund(context = context, refundRequest = refundRequest)
+
+                        if (refundResponse == null) throw Exception("Error processing refund1")
+                        else Toast.makeText(
+                            context,
+                            "Refund processed successfully",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Error processing refund", Toast.LENGTH_LONG).show()
+                    } finally {
+                        isLoading = false
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(59.dp)

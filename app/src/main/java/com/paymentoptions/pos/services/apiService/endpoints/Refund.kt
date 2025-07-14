@@ -10,35 +10,27 @@ import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun refund(
     context: Context,
-    transactionId: String,
-    merchantId: String,
-    amount: Float,
+    refundRequest: RefundRequest,
 ): RefundResponse? {
+
     try {
         var authDetails = SharedPreferences.getAuthDetails(context)
-        val username = authDetails?.data?.email ?: ""
-        val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails)
+        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
 
         if (shouldRefreshToken) {
-            val refreshTokenResponse = refreshTokens(username, refreshToken)
-
-            if (refreshTokenResponse == null) {
-                SharedPreferences.clearSharedPreferences(context)
-                return null
-            } else
-                SharedPreferences.saveAuthDetails(context, refreshTokenResponse)
+            val username = authDetails?.data?.email ?: ""
+            val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
+            authDetails = refreshTokens(context, username, refreshToken)
         }
 
-        authDetails = SharedPreferences.getAuthDetails(context)
         val idToken = authDetails?.data?.token?.idToken
+        val requestHeaders = generateRequestHeaders(idToken ?: "")
 
-        val requestHeaders =
-            generateRequestHeaders(idToken ?: "")
-        val refundRequest = RefundRequest(transactionId, merchantId, amount)
+        println("refundRequest: $refundRequest | $authDetails")
+        var refundResponse: RefundResponse? =
+            RetrofitClient.api.refund(requestHeaders, refundRequest)
 
-        var refundResponse: RefundResponse? = null
-        refundResponse = RetrofitClient.api.refund(requestHeaders, refundRequest)
+        println("refundResponse: $refundResponse")
         return refundResponse
     } catch (e: Exception) {
         println("RefundError: $e")

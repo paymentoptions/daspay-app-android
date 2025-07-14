@@ -6,9 +6,16 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun TokenScreen(navController: NavController) {
+    val enableScrollingInsideBottomSectionContent = true
+
     SectionedLayout(
-        navController = navController, bottomSectionContent = {
-            BottomSectionContent(navController)
-        }, showBottomNavigationBar = false
-    )
+        navController = navController,
+        showBottomNavigationBar = false,
+        enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+    ) {
+        BottomSectionContent(
+            navController,
+            enableScrolling = enableScrollingInsideBottomSectionContent
+        )
+    }
 }

@@ -109,7 +109,7 @@ fun Insights(
                     .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
                     .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
                     .backgroundColor(Color.White).labelData { index ->
-                        "${currency} ${(index * (chartMaxValue / (barData.size - 1))).roundToInt()}"
+                        "$currency ${(index * (chartMaxValue / (barData.size - 1))).roundToInt()}"
                     }.build()
 
             val barChartData = BarChartData(

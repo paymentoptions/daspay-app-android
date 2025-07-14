@@ -54,7 +54,7 @@ import kotlin.math.ceil
 
 
 @Composable
-fun BottomSectionContent(navController: NavController) {
+fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf("") }

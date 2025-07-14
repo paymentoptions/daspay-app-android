@@ -9,10 +9,17 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 @Composable
 fun DashboardScreen(navController: NavController) {
 
+    val enableScrollingInsideBottomSectionContent = true
+
     NotificationPermission()
     SectionedLayout(
-        navController = navController, bottomSectionContent = {
-            BottomSectionContent(navController)
-        }, defaultBottomSectionPaddingInDp = 0.dp
-    )
+        navController = navController,
+        defaultBottomSectionPaddingInDp = 0.dp,
+        enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+    ) {
+        BottomSectionContent(
+            navController,
+            enableScrolling = enableScrollingInsideBottomSectionContent
+        )
+    }
 }

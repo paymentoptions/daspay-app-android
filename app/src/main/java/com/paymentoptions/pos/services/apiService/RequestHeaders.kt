@@ -19,6 +19,12 @@ fun generateRequestHeaders(authToken: String = ""): Map<String, String> {
         "user-agent" to "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "x-api-key" to "bLm8c1C0fL3FtPzrjSr0",
         "x-authorization" to "F_FvwWj_L1wHkrMeg2c3Iv0Te52j_aJm",
+
+        //for refund only ----------------------------------------
+//        "x-authorization" to "-Qt4aQg9lb4I1rOTJGZdFXTXCh13UjcS",
+//        "Cookie" to "reqid=5ddc7193-ac13-4517-a104-2ec6f2057215",
+        //---------------------------------------------------------
+
         "authorization" to authToken
     )
 
