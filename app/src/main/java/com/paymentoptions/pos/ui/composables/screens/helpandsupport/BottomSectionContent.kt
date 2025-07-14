@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
-import com.paymentoptions.pos.ui.composables.screens.notifications.ScreenTitleWithCloseButton
+import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.theme.purple50
 
 

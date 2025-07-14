@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
-import com.paymentoptions.pos.ui.composables.screens.notifications.ScreenTitleWithCloseButton
+import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 

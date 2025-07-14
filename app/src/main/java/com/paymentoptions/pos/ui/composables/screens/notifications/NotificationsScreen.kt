@@ -10,7 +10,7 @@ fun NotificationsScreen(navController: NavController) {
 
     SectionedLayout(
         navController = navController,
-        bottomSectionMinHeightRatio = 0.7f,
+        bottomSectionMinHeightRatio = 0.85f,
         bottomSectionMaxHeightRatio = 0.85f,
         showBottomNavigationBar = false,
         alwaysShowLogo = false,

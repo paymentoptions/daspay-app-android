@@ -40,9 +40,9 @@ import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
+import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens.dashboard.TRANSACTION_TO_BE_REFUNDED
-import com.paymentoptions.pos.ui.composables.screens.notifications.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500

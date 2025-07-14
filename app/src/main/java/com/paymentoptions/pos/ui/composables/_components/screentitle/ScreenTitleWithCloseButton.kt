@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.ui.composables.screens.notifications
+package com.paymentoptions.pos.ui.composables._components.screentitle
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row

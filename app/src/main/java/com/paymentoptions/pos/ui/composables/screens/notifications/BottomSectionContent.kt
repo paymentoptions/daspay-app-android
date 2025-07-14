@@ -38,6 +38,7 @@ import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.bannerBgColor
 import com.paymentoptions.pos.ui.theme.primary100
@@ -216,14 +217,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 filterIn
             }
 
-
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.End,
                 modifier = Modifier
                     .fillMaxSize()
-                    .conditional(enableScrolling) { verticalScroll(scrollState) })
-            {
+                    .conditional(enableScrolling) { verticalScroll(scrollState) }) {
 
                 for (transaction in transactions!!.toTypedArray()) {
 
