@@ -219,7 +219,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalAlignment = Alignment.End,
                 modifier = Modifier
                     .fillMaxSize()
                     .conditional(enableScrolling) { verticalScroll(scrollState) }) {

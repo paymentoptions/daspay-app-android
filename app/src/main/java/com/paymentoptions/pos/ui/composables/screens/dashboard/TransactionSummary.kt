@@ -86,14 +86,15 @@ fun TransactionSummary(
     ) {
 
         Card(
-            colors = CardDefaults.cardColors().copy(
-                containerColor = Color.White,
-            ), border = borderThin, shape = RoundedCornerShape(
+            colors = CardDefaults.cardColors().copy(containerColor = Color.White),
+            border = borderThin,
+            shape = RoundedCornerShape(
                 topStart = if (isLongClicked) 0.dp else borderRadius,
                 topEnd = borderRadius,
                 bottomStart = if (isLongClicked) 0.dp else borderRadius,
                 bottomEnd = borderRadius
-            ), modifier = Modifier
+            ),
+            modifier = Modifier
                 .shadow(
                     elevation = if (isLongClicked) 16.dp else 4.dp, shape = RoundedCornerShape(
                         topStart = if (isLongClicked) 0.dp else borderRadius,

@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
@@ -47,6 +49,7 @@ import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.utils.conditional
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -60,6 +63,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var currency by remember { mutableStateOf("") }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
+    val scrollState = rememberScrollState()
 
     var take: Int by remember { mutableIntStateOf(50) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
@@ -132,15 +136,22 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
 
             "Week" -> {
-                receivalForText = "Receival for the week"
-                receivalForTimePeriodText = SimpleDateFormat("MMMM YYYY").format(Date())
-                receivalAmount = 0.0f
+                val today = OffsetDateTime.now().toLocalDateTime()
+                val sevenDaysAgo = today.minusWeeks(1)
 
+                receivalForText = "Receival for the week"
+                receivalForTimePeriodText =
+                    "${sevenDaysAgo.dayOfMonth} ${sevenDaysAgo.month}, ${sevenDaysAgo.year} to ${today.dayOfMonth} ${today.month}, ${today.year}"
+                receivalAmount = 0.0f
             }
 
             "Month" -> {
+                val today = OffsetDateTime.now().toLocalDateTime()
+                val thirtyDaysAgo = today.minusWeeks(30)
+
                 receivalForText = "Receival for the month"
-                receivalForTimePeriodText = SimpleDateFormat("MMMM YYYY").format(Date())
+                receivalForTimePeriodText =
+                    "${thirtyDaysAgo.dayOfMonth} ${thirtyDaysAgo.month}, ${thirtyDaysAgo.year} to ${today.dayOfMonth} ${today.month}, ${today.year}"
                 receivalAmount = 0.0f
 
             }
@@ -271,9 +282,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 var transactions = transactionList?.data?.records?.filter {
 
                     var filterIn = when (selectedFilter.key) {
-                        "Today" -> dayFilterFn(it)
-                        "Week" -> weekFilterFn(it)
-                        "Month" -> monthFilterFn(it)
+                        "Today" -> todayFilterFn(it)
+                        "Week" -> last7DaysFilterFn(it)
+                        "Month" -> last30DaysFilterFn(it)
                         "Custom" -> {
                             if (fromDateCustomFilter != null && toDateCustomFilter != null) customFilterFn(
                                 it,
@@ -289,43 +300,56 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     filterIn
                 }
 
-                if (showInsights) Insights(
-                    transactions = transactions?.toTypedArray(),
-                    currency = currency,
-                    updateReceivalAmount = {
-                        updateReceivalAmount(it)
-                    }) else Transactions(
-                    navController,
-                    transactions = transactions?.toTypedArray(),
-                    updateReceivalAmount = {
-                        updateReceivalAmount(it)
-                    })
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .conditional(enableScrolling) { verticalScroll(scrollState) }) {
 
+                    if (showInsights) Insights(
+                        transactions = transactions?.toTypedArray(),
+                        currency = currency,
+                        updateReceivalAmount = {
+                            updateReceivalAmount(it)
+                        }) else Transactions(
+                        navController,
+                        transactions = transactions?.toTypedArray(),
+                        updateReceivalAmount = {
+                            updateReceivalAmount(it)
+                        })
+                }
 
             }
         }
     }
 }
 
-fun dayFilterFn(transaction: TransactionListDataRecord): Boolean {
+fun todayFilterFn(transaction: TransactionListDataRecord): Boolean {
     val today = OffsetDateTime.now().toLocalDateTime()
     val transactionDate = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
 
     return today.dayOfMonth == transactionDate.dayOfMonth && today.month == transactionDate.month && today.year == transactionDate.year
 }
 
-fun weekFilterFn(transaction: TransactionListDataRecord): Boolean {
+//fun thisMonthFilterFn(transaction: TransactionListDataRecord): Boolean {
+//    val today = OffsetDateTime.now().toLocalDateTime()
+//    val transactionDate = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
+//
+//    return today.month == transactionDate.month && today.year == transactionDate.year
+//}
+
+fun dayFilterFn(transaction: TransactionListDataRecord, dayDifference: Long = 1): Boolean {
     val today = OffsetDateTime.now().toLocalDateTime()
     val transactionDate = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
 
-    return transactionDate > today.minusWeeks(2)
+    return transactionDate > today.minusDays(dayDifference)
 }
 
-fun monthFilterFn(transaction: TransactionListDataRecord): Boolean {
-    val today = OffsetDateTime.now().toLocalDateTime()
-    val transactionDate = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
+fun last7DaysFilterFn(transaction: TransactionListDataRecord): Boolean {
+    return dayFilterFn(transaction, 7)
+}
 
-    return today.month == transactionDate.month && today.year == transactionDate.year
+fun last30DaysFilterFn(transaction: TransactionListDataRecord): Boolean {
+    return dayFilterFn(transaction, 30)
 }
 
 fun customFilterFn(
