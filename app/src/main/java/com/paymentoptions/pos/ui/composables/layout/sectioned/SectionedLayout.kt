@@ -43,7 +43,7 @@ import com.paymentoptions.pos.ui.composables._components.images.TapToPayImage
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.utils.conditional
 
-val LOGO_TOP_PADDING_IN_DP = 50.dp
+val LOGO_TOP_PADDING_IN_DP = 45.dp
 val LOGO_HEIGHT_IN_DP = 60.dp
 val RECEIVE_MONEY_BUTTON_HEIGHT_IN_DP = 60.dp
 val DEFAULT_BOTTOM_SECTION_PADDING_IN_DP = 16.dp
@@ -53,7 +53,7 @@ val DEFAULT_BOTTOM_SECTION_PADDING_IN_DP = 16.dp
 fun SectionedLayout(
     navController: NavController,
     bottomSectionMinHeightRatio: Float = 0.1f,
-    bottomSectionMaxHeightRatio: Float = 0.8f,
+    bottomSectionMaxHeightRatio: Float = 0.9f,
     showBottomNavigationBar: Boolean = true,
     showBackButton: Boolean = false,
     defaultBottomSectionPaddingInDp: Dp = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
@@ -78,8 +78,6 @@ fun SectionedLayout(
 
 
     var showMoreItems by remember { mutableStateOf(false) }
-
-//    println("configuration: ${configuration.screenHeightDp} | $bottomSectionMinHeightDp | $bottomSectionMaxHeightDp")
 
     val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.8f else 0.05f)
     val borderRadiusInDp = 32.dp
@@ -140,7 +138,7 @@ fun SectionedLayout(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            top = if (alwaysShowLogo) LOGO_TOP_PADDING_IN_DP.times(1.6f)
+                            top = if (alwaysShowLogo) LOGO_TOP_PADDING_IN_DP.times(1.5f)
                                 .plus(LOGO_HEIGHT_IN_DP) else 0.dp
                         )
                         .height(IntrinsicSize.Min)

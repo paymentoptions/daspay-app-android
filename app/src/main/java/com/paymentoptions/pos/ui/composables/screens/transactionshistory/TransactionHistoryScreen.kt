@@ -13,6 +13,7 @@ fun TransactionHistoryScreen(navController: NavController) {
 
     SectionedLayout(
         navController = navController,
+        bottomSectionMinHeightRatio = 0.9f,
         bottomSectionMaxHeightRatio = 0.9f,
         defaultBottomSectionPaddingInDp = 0.dp,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent

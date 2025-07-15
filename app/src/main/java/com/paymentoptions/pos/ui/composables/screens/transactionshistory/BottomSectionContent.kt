@@ -217,7 +217,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     filters,
                     selectedFilter,
                     onFilterChange = { selectedFilter = it },
-                    icon = Icons.Default.CalendarMonth
+                    icon = Icons.Default.CalendarMonth,
+                    modifier = Modifier.fillMaxHeight()
                 )
 
                 Row(

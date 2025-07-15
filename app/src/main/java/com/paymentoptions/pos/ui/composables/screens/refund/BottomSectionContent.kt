@@ -83,15 +83,13 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
 
-            Spacer(modifier = Modifier.height(10.dp))
-
             ScreenTitleWithCloseButton(
                 navController = navController,
                 title = "Refund",
                 modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
             )
 
-            Spacer(Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             var transactions = transactionList?.data?.records?.filter {
                 it.status == "SUCCESSFUL" && it.TransactionType == "PURCHASE"
