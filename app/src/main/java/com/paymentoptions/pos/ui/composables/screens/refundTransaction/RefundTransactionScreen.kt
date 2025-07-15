@@ -11,7 +11,6 @@ fun RefundTransactionScreen(navController: NavController) {
 
     SectionedLayout(
         navController = navController,
-        bottomSectionMaxHeightRatio = 0.3f,
         showBottomNavigationBar = false,
         showBackButton = true,
         defaultBottomSectionPaddingInDp = 0.dp,

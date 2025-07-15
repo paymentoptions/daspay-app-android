@@ -177,7 +177,7 @@ fun TransactionSummary(
                 .padding(8.dp)
                 .weight(if (isLongClicked) 2f else 0.1f)
                 .clickable {
-                    navController.navigate(Screens.Refund.route)
+                    navController.navigate(Screens.RefundTransaction.route)
                     TRANSACTION_TO_BE_REFUNDED = transaction
                 },
             horizontalAlignment = Alignment.CenterHorizontally,
