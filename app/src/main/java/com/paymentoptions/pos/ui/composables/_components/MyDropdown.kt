@@ -7,9 +7,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -23,10 +21,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.ui.theme.AppTheme
-import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.borderThick
 
 @Composable
 fun MyDropdown(
@@ -42,8 +42,8 @@ fun MyDropdown(
         Row(
             modifier = Modifier
                 .fillMaxHeight()
-                .border(1.dp, primary100.copy(alpha = 0.2f), shape = RoundedCornerShape(4.dp))
-                .padding(vertical = 4.dp, horizontal = 8.dp)
+                .border(borderThick)
+                .padding(vertical = 4.dp, horizontal = 12.dp)
                 .clickable(onClick = { expanded = true }),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -64,9 +64,8 @@ fun MyDropdown(
             Spacer(modifier = Modifier.width(70.dp))
 
             Icon(
-                imageVector = Icons.Default.ArrowDownward,
+                painter = painterResource(R.drawable.down_arrow),
                 contentDescription = "Calender",
-                modifier = Modifier.size(20.dp)
             )
         }
 

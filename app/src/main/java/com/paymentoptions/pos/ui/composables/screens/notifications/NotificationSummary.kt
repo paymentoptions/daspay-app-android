@@ -30,7 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.ui.theme.borderThick
+import com.paymentoptions.pos.ui.theme.borderThin
+import com.paymentoptions.pos.ui.theme.borderThinError
 import com.paymentoptions.pos.ui.theme.green200
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
@@ -44,6 +45,7 @@ import java.util.Date
 @Composable
 fun NotificationSummary(transaction: TransactionListDataRecord) {
 
+    val successful = transaction.status == "SUCCESSFUL"
     val transactionAmount = transaction.amount.toFloat()
     val isTransactionAmountPositive = transactionAmount > 0
 
@@ -59,7 +61,7 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
         colors = CardDefaults.cardColors().copy(
             containerColor = Color.White
         ),
-        border = borderThick,
+        border = if (successful) borderThin else borderThinError,
         shape = RoundedCornerShape(borderRadius),
         modifier = Modifier.shadow(
             elevation = 4.dp,

@@ -38,6 +38,7 @@ import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.borderThin
+import com.paymentoptions.pos.ui.theme.borderThinError
 import com.paymentoptions.pos.ui.theme.green200
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
@@ -59,6 +60,7 @@ fun TransactionSummary(
     onLongClick: (String) -> Unit = {},
 ) {
 
+    val successful = transaction.status == "SUCCESSFUL"
     val transactionAmount = transaction.amount.toFloat()
     val isTransactionAmountPositive = transactionAmount > 0
     val isCardTransaction = transaction.PaymentType == "CARDPAYMENT"
@@ -87,7 +89,7 @@ fun TransactionSummary(
 
         Card(
             colors = CardDefaults.cardColors().copy(containerColor = Color.White),
-            border = borderThin,
+            border = if (successful) borderThin else borderThinError,
             shape = RoundedCornerShape(
                 topStart = if (isLongClicked) 0.dp else borderRadius,
                 topEnd = borderRadius,

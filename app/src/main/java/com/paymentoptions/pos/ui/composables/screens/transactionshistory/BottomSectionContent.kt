@@ -127,7 +127,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     }
 
     LaunchedEffect(selectedFilter, fromDateCustomFilter, toDateCustomFilter) {
-
         when (selectedFilter.key) {
             "Today" -> {
                 receivalForText = "Receival for the day"
