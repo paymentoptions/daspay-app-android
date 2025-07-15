@@ -39,8 +39,7 @@ fun Insights(
     currency: String,
     updateReceivalAmount: (Float) -> Unit,
 ) {
-//    val scrollState = rememberScrollState()
-    var saleTransactionCount = 0
+    var earningTransactionCount = 0
     var earningAmount = 0.0f
     var refundTransactionCount = 0
     var refundAmount = 0.0f
@@ -50,20 +49,19 @@ fun Insights(
 
     if (transactions == null || transactions.isEmpty()) NoData(text = "No transactions found")
     else Column(
-        modifier = Modifier.fillMaxWidth()
-//            .verticalScroll(scrollState)
-        , verticalArrangement = Arrangement.spacedBy(20.dp)
+        modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
 
         transactions.forEachIndexed { index, transaction ->
 
-            val amount = transaction.amount.toFloat()
-            val date = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
-
-            if (amount > chartMaxValue) chartMaxValue = amount
-            if (amount < chartMinValue) chartMinValue = amount
-
             if (transaction.status == "SUCCESSFUL") {
+
+                val date = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
+
+                val amount = transaction.amount.toFloat()
+                if (amount > chartMaxValue) chartMaxValue = amount
+                if (amount < chartMinValue) chartMinValue = amount
+
                 barData.add(
                     BarData(
                         point = Point(x = index.toFloat(), y = transaction.amount.toFloat()),
@@ -72,13 +70,13 @@ fun Insights(
                         ),
                         label = "${date.dayOfMonth} ${date.month}",
                         gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = if (transaction.TransactionType == "REFUND") "Refund" else "Earning",
+                        description = if (transaction.TransactionType == "REFUND") "Refund" else "Purchase",
                     )
                 )
 
                 when (transaction.TransactionType) {
                     "PURCHASE" -> {
-                        saleTransactionCount++
+                        earningTransactionCount++
                         earningAmount += amount
                     }
 
@@ -153,7 +151,7 @@ fun Insights(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Transactions # $saleTransactionCount",
+                        "Transactions # $earningTransactionCount",
                         style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal)
                     )
 

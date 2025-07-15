@@ -47,6 +47,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf("") }
     var apiResponseAvailable by remember { mutableStateOf(false) }
+    var viewAll by remember { mutableStateOf(false) }
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
     var take: Int by remember { mutableIntStateOf(10) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
@@ -57,7 +58,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         receivalAmount = newAmount
     }
 
-    LaunchedEffect(currentPage) {
+    LaunchedEffect(viewAll) {
+        take = if (viewAll) transactionList?.data?.total_count ?: 10 else 10
+    }
+
+    LaunchedEffect(currentPage, take) {
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
@@ -120,8 +125,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                     .width(160.dp)
                     .height(37.dp),
-
-                )
+            )
 
             Spacer(Modifier.height(20.dp))
 
@@ -134,17 +138,20 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             ) {
 
                 Text(
-                    text = "Recent Transactions",
+                    text = if (viewAll) "All Transactions" else "Recent Transactions",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = primary500,
                 )
 
                 SuggestionChip(border = borderThin, onClick = {
+                    viewAll = !viewAll
 //                navController.navigate(Screens.TransactionHistory.route)
                 }, label = {
                     Text(
-                        text = "View All", fontSize = 14.sp, fontWeight = FontWeight.Bold
+                        text = if (viewAll) "View recent" else "View All",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 })
             }

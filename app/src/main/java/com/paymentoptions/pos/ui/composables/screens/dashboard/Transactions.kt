@@ -24,7 +24,6 @@ fun Transactions(
     transactions: Array<TransactionListDataRecord>?,
     updateReceivalAmount: (Float) -> Unit,
 ) {
-//    val scrollState = rememberScrollState()
     val context = LocalContext.current
     var selectedFilterKey by remember { mutableStateOf("ALL") }
     var transactionsWithTrackId = mutableMapOf<String, Boolean>()
@@ -45,36 +44,34 @@ fun Transactions(
     ) {
 
         var earningAmount = 0.0f
+
         for (transaction in transactions) {
 
-            if (transaction.TransactionType == "PURCHASE") earningAmount += transaction.amount.toFloat()
-
+            if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] = true
             var skip = true
 
-            if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] = true
-
             if (!transactionsWithTrackId.contains(transaction.uuid)) {
-                if ((selectedFilterKey === "ALL" || (selectedFilterKey == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selectedFilterKey == transaction.TransactionType.uppercase())) skip =
+                if ((selectedFilterKey == "ALL" || (selectedFilterKey == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selectedFilterKey == transaction.TransactionType.uppercase())) skip =
                     false
             }
 
-//            println("transaction.TransactionType : ${transaction.TransactionType}")
-//            if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") skip = false
+            if (!skip) {
+                if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") earningAmount += transaction.amount.toFloat()
 
-            if (!skip) TransactionSummary(
-                navController, transaction, longClickedTransactionId, onLongClick = {
+                TransactionSummary(
+                    navController, transaction, longClickedTransactionId, onLongClick = {
 
-                    if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
-                        longClickedTransactionId = if (longClickedTransactionId.isEmpty()) it
-                        else if (longClickedTransactionId == it) "" else it
-                    } else Toast.makeText(
-                        context,
-                        "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                })
+                        if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
+                            longClickedTransactionId = if (longClickedTransactionId.isEmpty()) it
+                            else if (longClickedTransactionId == it) "" else it
+                        } else Toast.makeText(
+                            context,
+                            "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    })
+            }
         }
-
         updateReceivalAmount(earningAmount)
     }
 }

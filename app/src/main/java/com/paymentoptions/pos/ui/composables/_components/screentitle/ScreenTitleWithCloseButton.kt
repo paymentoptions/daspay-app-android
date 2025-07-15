@@ -18,10 +18,14 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.theme.AppTheme
 
 @Composable
-fun ScreenTitleWithCloseButton(navController: NavController, title: String = "") {
+fun ScreenTitleWithCloseButton(
+    navController: NavController,
+    modifier: Modifier = Modifier,
+    title: String = "",
+) {
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

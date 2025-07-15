@@ -65,7 +65,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
     val scrollState = rememberScrollState()
 
-    var take: Int by remember { mutableIntStateOf(50) }
+    var take: Int by remember { mutableIntStateOf(10) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
     var maxPage: Int by remember { mutableIntStateOf(1) }
 
@@ -295,7 +295,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                         else -> false
                     }
-
                     filterIn
                 }
 

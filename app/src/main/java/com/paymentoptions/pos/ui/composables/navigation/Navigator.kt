@@ -13,6 +13,7 @@ import com.paymentoptions.pos.ui.composables.screens.helpandsupport.HelpAndSuppo
 import com.paymentoptions.pos.ui.composables.screens.notifications.NotificationsScreen
 import com.paymentoptions.pos.ui.composables.screens.receivemoney.ReceiveMoneyScreen
 import com.paymentoptions.pos.ui.composables.screens.refund.RefundScreen
+import com.paymentoptions.pos.ui.composables.screens.refundTransaction.RefundTransactionScreen
 import com.paymentoptions.pos.ui.composables.screens.refundinitiated.RefundInitiatedScreen
 import com.paymentoptions.pos.ui.composables.screens.settings.SettingsScreen
 import com.paymentoptions.pos.ui.composables.screens.signIn.SignInScreen
@@ -25,7 +26,7 @@ import com.paymentoptions.pos.ui.composables.screens.transactionshistory.Transac
 @Composable
 fun Navigator() {
     val navController = rememberNavController()
-    val startDestination = Screens.Splash.route
+    val startDestination = Screens.Refund.route
 
 //    LaunchedEffect(navController) {
 //        navController.currentBackStackEntryFlow.collect { backStackEntry ->
@@ -57,6 +58,7 @@ fun Navigator() {
         composable(Screens.TransactionHistory.route) { TransactionHistoryScreen(navController) }
 
         composable(Screens.Refund.route) { RefundScreen(navController) }
+        composable(Screens.RefundTransaction.route) { RefundTransactionScreen(navController) }
         composable(Screens.RefundInitiated.route) { RefundInitiatedScreen(navController) }
 
         composable(Screens.Settings.route) { SettingsScreen(navController) }

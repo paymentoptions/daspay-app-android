@@ -25,7 +25,6 @@ suspend fun transactionsList(
 
         val transactionListResponse =
             RetrofitClient.api.transactionsList(requestHeaders, take, skip)
-        println("transactionListResponse: $transactionListResponse")
 
         return transactionListResponse
     } catch (e: Exception) {
