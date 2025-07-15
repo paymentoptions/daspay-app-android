@@ -53,7 +53,7 @@ val DEFAULT_BOTTOM_SECTION_PADDING_IN_DP = 16.dp
 fun SectionedLayout(
     navController: NavController,
     bottomSectionMinHeightRatio: Float = 0.1f,
-    bottomSectionMaxHeightRatio: Float = .8f,
+    bottomSectionMaxHeightRatio: Float = 0.8f,
     showBottomNavigationBar: Boolean = true,
     showBackButton: Boolean = false,
     defaultBottomSectionPaddingInDp: Dp = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
