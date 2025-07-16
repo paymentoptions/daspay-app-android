@@ -132,7 +132,6 @@ fun SectionedLayout(
 
                 }
 
-
                 //Bottom Section
                 Column(
                     modifier = Modifier
@@ -166,7 +165,7 @@ fun SectionedLayout(
                             )
                         ),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
+                    verticalArrangement = Arrangement.SpaceBetween
 
                 ) {
                     bottomSectionContent()

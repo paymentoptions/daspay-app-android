@@ -74,15 +74,16 @@ fun BottomSectionContent(
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            .conditional(enableScrolling) { verticalScroll(scrollState) },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        Column(
-            modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             ScreenTitleWithCloseButton(navController = navController)
+
             Text(
                 text = "Refund Initiated",
                 fontSize = 16.sp,
@@ -110,12 +111,10 @@ fun BottomSectionContent(
 
         Column(
             modifier = Modifier
-                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxSize()
                 .background(
                     brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(8.dp)
-                )
-                .conditional(enableScrolling) { verticalScroll(scrollState) },
+                ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
@@ -359,8 +358,6 @@ fun BottomSectionContent(
                         .height(39.dp)
                         .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 )
-
-                Spacer(modifier = Modifier.height(100.dp))
             }
         }
     }

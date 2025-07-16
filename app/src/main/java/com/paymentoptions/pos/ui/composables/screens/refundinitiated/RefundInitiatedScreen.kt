@@ -14,15 +14,14 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun RefundInitiatedScreen(navController: NavController) {
-    val enableScrollingInsideBottomSectionContent = true
+    val enableScrollingInsideBottomSectionContent = false
 
     SectionedLayout(
         navController = navController,
         showBottomNavigationBar = false,
         showBackButton = true,
         defaultBottomSectionPaddingInDp = 0.dp,
-        bottomSectionMinHeightRatio = 0.9f,
-        bottomSectionMaxHeightRatio = 0.9f,
+        bottomSectionMaxHeightRatio = 0.95f,
         imageBelowLogo = {
             CreditCardImage(
                 modifier = Modifier
