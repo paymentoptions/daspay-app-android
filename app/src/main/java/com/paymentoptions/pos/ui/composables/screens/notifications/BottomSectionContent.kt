@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -35,11 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
-import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.bannerBgColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
@@ -83,6 +83,7 @@ fun FilterButton(filter: Tab, selected: Tab, onClick: () -> Unit) {
 
 @Composable
 fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
+    val context = LocalContext.current
 
     var tabs = remember {
         mutableStateListOf<Tab>(
@@ -92,77 +93,65 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             Tab("Failed", "NOTSUCCESSFUL")
         )
     }
-
     var selectedTab by remember { mutableStateOf<Tab>(tabs[0]) }
 
-    val scrollState = rememberScrollState()
-    val context = LocalContext.current
-    var apiResponseAvailable by remember { mutableStateOf(false) }
-    var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
-    var take: Int by remember { mutableIntStateOf(100) }
-    var currentPage: Int by remember { mutableIntStateOf(1) }
-    var maxPage: Int by remember { mutableIntStateOf(1) }
     var transactionsWithTrackId = mutableMapOf<String, Boolean>()
-    var transactions by remember { mutableStateOf<List<TransactionListDataRecord>?>(listOf()) }
+    val scrollState = rememberScrollState()
+    var apiResponseAvailable by remember { mutableStateOf(false) }
+    var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
 
-    LaunchedEffect(currentPage) {
-        apiResponseAvailable = false
-        try {
-            val skip = (currentPage - 1) * take
-            transactionList = transactionsList(context, take, skip)
-
-            if (transactionList == null) {
-                maxPage = 0
-            } else {
-                maxPage =
-                    ceil(transactionList!!.data.total_count.toDouble() / take.toDouble()).toInt()
-            }
-            apiResponseAvailable = true
-        } catch (e: Exception) {
-
+    var take: Int by remember { mutableIntStateOf(10) }
+    var currentPage: Int by remember { mutableIntStateOf(1) }
+    var maxPage: Int by remember { mutableIntStateOf(0) }
+    val scrollingEndReached by remember {
+        derivedStateOf {
+            scrollState.value == scrollState.maxValue
         }
-        apiResponseAvailable = true
-    }
-
-    LaunchedEffect(transactionList) {
-        transactions = transactionList?.data?.records?.filter { transaction ->
-
-            tabs[0] = Tab(tabs[0].text, tabs[0].matchText, tabs[0].newCount + 1)
-
-            if (transaction.status == "NOTSUCCESSFUL") tabs[3] = Tab(
-                tabs[3].text, tabs[3].matchText, tabs[3].newCount + 1
-            )
-            else if (transaction.status == "SUCCESSFUL") {
-                if (transaction.TransactionType == "PURCHASE") tabs[1] =
-                    Tab(tabs[1].text, tabs[1].matchText, tabs[1].newCount + 1)
-                else if (transaction.TransactionType == "REFUND") tabs[2] =
-                    Tab(tabs[2].text, tabs[2].matchText, tabs[2].newCount + 1)
-            }
-
-            selectedTab.matchText == transaction.status
-        }
-    }
-
-    fun firstPageHandler() {
-        currentPage = 1
-    }
-
-    fun backPageHandler() {
-        currentPage--
     }
 
     fun nextPageHandler() {
-        currentPage++
+        if (currentPage < maxPage) currentPage++
     }
 
-    fun lastPageHandler() {
-        currentPage = maxPage
-    }
+    LaunchedEffect(currentPage, take) {
+        apiResponseAvailable = false
+        try {
+            val skip = (currentPage - 1) * take
+            val transactionListFromAPI = transactionsList(context, take, skip)
 
-    fun exitToLoginScreen() {
-        navController.navigate("loginScreen") {
-            popUpTo(0) { inclusive = true }
+            if (transactionListFromAPI != null) {
+                maxPage =
+                    ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
+
+                transactionListFromAPI.data.records.filter { transaction ->
+
+                    tabs[0] = Tab(tabs[0].text, tabs[0].matchText, tabs[0].newCount + 1)
+
+                    if (transaction.status == "NOTSUCCESSFUL") tabs[3] = Tab(
+                        tabs[3].text, tabs[3].matchText, tabs[3].newCount + 1
+                    )
+                    else if (transaction.status == "SUCCESSFUL") {
+                        if (transaction.TransactionType == "PURCHASE") tabs[1] =
+                            Tab(tabs[1].text, tabs[1].matchText, tabs[1].newCount + 1)
+                        else if (transaction.TransactionType == "REFUND") tabs[2] =
+                            Tab(tabs[2].text, tabs[2].matchText, tabs[2].newCount + 1)
+                    }
+
+                    true
+                }
+
+                transactions = transactions.plus(transactionListFromAPI.data.records)
+            }
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
+        } finally {
+            apiResponseAvailable = true
         }
+    }
+
+    if (scrollingEndReached) LaunchedEffect(Unit) {
+        nextPageHandler()
+        scrollState.scrollTo(0)
     }
 
     Column(
@@ -195,49 +184,46 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         ) {
             MyCircularProgressIndicator()
         } else {
-            if (transactionList == null) {
-                Toast.makeText(
-                    context, "Token expired. Please log in again.", Toast.LENGTH_LONG
-                ).show()
-                navController.navigate(Screens.SignIn.route) {
-                    popUpTo(0) { inclusive = true }
-                }
-            }
-
-            transactions = transactionList?.data?.records?.filter {
-
-                var filterIn = when (selectedTab.text) {
-                    "All" -> allFilterFn(it)
-                    "Received" -> receivedFilterFn(it)
-                    "Refunded" -> refundedFilterFn(it)
-                    "Failed" -> failedFilterFn(it)
-                    else -> false
+            if (transactions.isEmpty()) NoData(text = "No notifications")
+            else {
+                val filteredTransactions = transactions.filter {
+                    transactionFilterLogic(selectedTab, it)
                 }
 
-                filterIn
-            }
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .conditional(enableScrolling) {
+                            verticalScroll(scrollState)
+                        }) {
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .conditional(enableScrolling) { verticalScroll(scrollState) }) {
+                    filteredTransactions.forEach { transaction ->
 
-                for (transaction in transactions!!.toTypedArray()) {
+                        var skip = true
+                        if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] =
+                            true
 
-                    var skip = true
-                    if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] =
-                        true
+                        if (!transactionsWithTrackId.contains(transaction.uuid)) {
+                            if ((selectedTab.text.uppercase() == "ALL" || (selectedTab.matchText == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selectedTab.text.uppercase() == transaction.TransactionType.uppercase())) skip =
+                                false
+                        }
 
-                    if (!transactionsWithTrackId.contains(transaction.uuid)) {
-                        if ((selectedTab.text.uppercase() == "ALL" || (selectedTab.matchText == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selectedTab.text.uppercase() == transaction.TransactionType.uppercase())) skip =
-                            false
+                        if (!skip) NotificationSummary(transaction)
                     }
-
-                    if (!skip) NotificationSummary(transaction)
                 }
             }
         }
+    }
+}
+
+fun transactionFilterLogic(selectedTab: Tab, transaction: TransactionListDataRecord): Boolean {
+    return when (selectedTab.text) {
+        "All" -> allFilterFn(transaction)
+        "Received" -> receivedFilterFn(transaction)
+        "Refunded" -> refundedFilterFn(transaction)
+        "Failed" -> failedFilterFn(transaction)
+        else -> false
     }
 }
 

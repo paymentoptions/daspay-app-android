@@ -21,7 +21,8 @@ fun RefundInitiatedScreen(navController: NavController) {
         showBottomNavigationBar = false,
         showBackButton = true,
         defaultBottomSectionPaddingInDp = 0.dp,
-        bottomSectionMaxHeightRatio = 0.75f,
+        bottomSectionMinHeightRatio = 0.9f,
+        bottomSectionMaxHeightRatio = 0.9f,
         imageBelowLogo = {
             CreditCardImage(
                 modifier = Modifier
@@ -36,8 +37,7 @@ fun RefundInitiatedScreen(navController: NavController) {
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
     ) {
         BottomSectionContent(
-            navController,
-            enableScrolling = enableScrollingInsideBottomSectionContent
+            navController, enableScrolling = enableScrollingInsideBottomSectionContent
         )
     }
 }

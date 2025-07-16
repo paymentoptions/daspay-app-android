@@ -1,6 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.refundTransaction
 
-import android.widget.Toast
+import android.os.Handler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,7 +39,9 @@ import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
 import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.dashboard.TRANSACTION_TO_BE_REFUNDED
+import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary500
@@ -55,6 +57,7 @@ fun BottomSectionContent(
     navController: NavController,
     transaction: TransactionListDataRecord? = TRANSACTION_TO_BE_REFUNDED,
     enableScrolling: Boolean = false,
+    updateRefundStatus: (StatusScreenType?) -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -213,13 +216,15 @@ fun BottomSectionContent(
         FilledButton(
             text = "Initiate Refund",
             onClick = {
+
+
                 scope.launch {
                     isLoading = true
 
                     var refundResponse: RefundResponse? = null
 
                     try {
-
+                        updateRefundStatus(StatusScreenType.PROCESSING)
                         val refundRequest = RefundRequest(
                             id = transaction?.uuid.toString(),
                             merchant_id = transaction?.DASMID.toString(),
@@ -229,15 +234,24 @@ fun BottomSectionContent(
 
                         refundResponse = refund(context = context, refundRequest = refundRequest)
 
-                        if (refundResponse == null) throw Exception("Error processing refund1")
-                        else Toast.makeText(
-                            context,
-                            "Refund processed successfully",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        if (refundResponse == null) throw Exception("Error processing refund")
+                        else {
+//                            Toast.makeText(
+//                                context, "Refund processed successfully", Toast.LENGTH_LONG
+//                            ).show()
+                            updateRefundStatus(StatusScreenType.SUCCESS)
 
+                            Handler().postDelayed({
+                                navController.navigate(Screens.RefundInitiated.route)
+                            }, 2000)
+
+                        }
                     } catch (e: Exception) {
-                        Toast.makeText(context, "Error processing refund", Toast.LENGTH_LONG).show()
+//                        Toast.makeText(context, "Error processing refund", Toast.LENGTH_LONG).show()
+                        updateRefundStatus(StatusScreenType.ERROR)
+                        Handler().postDelayed({
+                            navController.navigate(Screens.RefundInitiated.route)
+                        }, 2000)
                     } finally {
                         isLoading = false
                     }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -53,6 +54,9 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.conditional
+import java.text.SimpleDateFormat
+import java.time.OffsetDateTime
+import java.util.Date
 
 @Composable
 fun BottomSectionContent(
@@ -63,6 +67,11 @@ fun BottomSectionContent(
     val currency = "HKD"
     var showRefundStatus by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+    val dateString =
+        transaction?.Date ?: OffsetDateTime.now().toString()  //"2025-04-23T03:38:57.349+00:00"
+    val dateTime = OffsetDateTime.parse(dateString)
+    val date: Date = Date.from(dateTime.toInstant())
+    val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -82,7 +91,7 @@ fun BottomSectionContent(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            CurrencyText(currency = currency, amount = "123.12") //transaction.amount.toString())
+            CurrencyText(currency = currency, amount = transaction?.amount.toString())
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -93,7 +102,7 @@ fun BottomSectionContent(
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .width(200.dp)
-                    .height(19.dp)
+                    .height(39.dp)
             )
         }
 
@@ -102,10 +111,12 @@ fun BottomSectionContent(
         Column(
             modifier = Modifier
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                .fillMaxWidth()
+                .fillMaxSize()
                 .background(
                     brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(8.dp)
-                ), verticalArrangement = Arrangement.spacedBy(16.dp)
+                )
+                .conditional(enableScrolling) { verticalScroll(scrollState) },
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
             Spacer(modifier = Modifier.height(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP))
@@ -171,7 +182,7 @@ fun BottomSectionContent(
                     )
 
                     Text(
-                        transaction?.Date.toString(),
+                        dateStringFormatted,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -226,10 +237,7 @@ fun BottomSectionContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                    .conditional(enableScrolling) {
-                        verticalScroll(scrollState)
-                    },
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -348,11 +356,11 @@ fun BottomSectionContent(
                     onClick = { showRefundStatus = !showRefundStatus },
                     modifier = Modifier
                         .width(260.dp)
-                        .height(29.dp)
+                        .height(39.dp)
                         .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 )
 
-
+                Spacer(modifier = Modifier.height(100.dp))
             }
         }
     }

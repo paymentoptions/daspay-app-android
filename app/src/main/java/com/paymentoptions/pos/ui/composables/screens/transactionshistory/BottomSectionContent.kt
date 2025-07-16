@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens.transactionshistory
 
 import MyDropdown
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
@@ -62,7 +62,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf("") }
     var apiResponseAvailable by remember { mutableStateOf(false) }
-    var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
+    var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
     val scrollState = rememberScrollState()
 
     var take: Int by remember { mutableIntStateOf(10) }
@@ -112,15 +112,16 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            transactionList = transactionsList(context, take, skip)
+            val transactionListFromAPI = transactionsList(context, take, skip)
 
-            if (transactionList == null) maxPage = 0
-            else maxPage =
-                ceil(transactionList!!.data.total_count.toDouble() / transactionList!!.data.total_count.toDouble()).toInt()
+            if (transactionListFromAPI != null) {
+                maxPage =
+                    ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
 
-            apiResponseAvailable = true
+                transactions = transactions.plus(transactionListFromAPI.data.records)
+            }
         } catch (e: Exception) {
-
+            Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
         } finally {
             apiResponseAvailable = true
         }
@@ -183,7 +184,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             MyCircularProgressIndicator()
         }
     } else {
-        currency = transactionList?.data?.records?.first()?.CurrencyCode ?: ""
+        currency = transactions.firstOrNull()?.CurrencyCode ?: ""
 
         Column(
             modifier = Modifier
@@ -279,7 +280,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                var transactions = transactionList?.data?.records?.filter {
+                var filteredTransactions = transactions.filter {
 
                     var filterIn = when (selectedFilter.key) {
                         "Today" -> todayFilterFn(it)
@@ -305,14 +306,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         .conditional(enableScrolling) { verticalScroll(scrollState) }) {
 
                     if (showInsights) Insights(
-                        transactions = transactions?.toTypedArray(),
+                        transactions = filteredTransactions,
                         currency = currency,
                         updateReceivalAmount = {
                             updateReceivalAmount(it)
                         }) else Transactions(
-                        navController,
-                        transactions = transactions?.toTypedArray(),
-                        updateReceivalAmount = {
+                        navController, transactions = filteredTransactions, updateReceivalAmount = {
                             updateReceivalAmount(it)
                         })
                 }

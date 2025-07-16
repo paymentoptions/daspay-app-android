@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.refund
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.services.apiService.TransactionListResponse
+import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
@@ -37,7 +38,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf("") }
     var apiResponseAvailable by remember { mutableStateOf(false) }
-    var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
+    var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
     var take: Int by remember { mutableIntStateOf(100) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
     var maxPage: Int by remember { mutableIntStateOf(1) }
@@ -51,15 +52,16 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            transactionList = transactionsList(context, take, skip)
+            val transactionListFromAPI = transactionsList(context, take, skip)
 
-            if (transactionList == null) maxPage = 0
-            else maxPage =
-                ceil(transactionList!!.data.total_count.toDouble() / take.toDouble()).toInt()
+            if (transactionListFromAPI != null) {
+                maxPage =
+                    ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
 
-            apiResponseAvailable = true
+                transactions = transactions.plus(transactionListFromAPI.data.records)
+            }
         } catch (e: Exception) {
-
+            Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
         } finally {
             apiResponseAvailable = true
         }
@@ -74,7 +76,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     ) {
         MyCircularProgressIndicator()
     } else {
-        currency = transactionList?.data?.records?.first()?.CurrencyCode ?: ""
+        currency = transactions.firstOrNull()?.CurrencyCode ?: ""
 
         Column(
             modifier = Modifier
@@ -91,7 +93,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            var transactions = transactionList?.data?.records?.filter {
+            var transactions = transactions.filter {
                 it.status == "SUCCESSFUL" && it.TransactionType == "PURCHASE"
             }
 
@@ -101,7 +103,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     .conditional(enableScrolling) { verticalScroll(scrollState) }) {
                 Transactions(
                     navController,
-                    transactions = transactions?.toTypedArray(),
+                    transactions = transactions,
                     updateReceivalAmount = { updateReceivalAmount(it) })
             }
         }

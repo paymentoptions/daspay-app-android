@@ -21,7 +21,7 @@ import com.paymentoptions.pos.ui.composables._components.NoData
 @Composable
 fun Transactions(
     navController: NavController,
-    transactions: Array<TransactionListDataRecord>?,
+    transactions: List<TransactionListDataRecord>,
     updateReceivalAmount: (Float) -> Unit,
 ) {
     val context = LocalContext.current
@@ -35,7 +35,7 @@ fun Transactions(
         backPressHandled = true
     }
 
-    if (transactions == null || transactions.isEmpty()) NoData(text = "No transactions found")
+    if (transactions.isEmpty()) NoData(text = "No transactions found")
     else Column(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.End,

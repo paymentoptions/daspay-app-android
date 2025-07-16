@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -28,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.services.apiService.TransactionListResponse
+import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
@@ -48,58 +50,73 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var currency by remember { mutableStateOf("") }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var viewAll by remember { mutableStateOf(false) }
-    var transactionList by remember { mutableStateOf<TransactionListResponse?>(null) }
+    var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
     var take: Int by remember { mutableIntStateOf(10) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
-    var maxPage: Int by remember { mutableIntStateOf(1) }
+    var maxPage: Int by remember { mutableIntStateOf(0) }
     val scrollState = rememberScrollState()
+    val scrollingEndReached by remember {
+        derivedStateOf {
+            scrollState.value == scrollState.maxValue
+        }
+    }
+    var totalTransactionCount by remember { mutableIntStateOf(10) }
 
-    fun updateReceivalAmount(newAmount: Float) {
-        receivalAmount = newAmount
+    fun nextPageHandler() {
+        if (currentPage < maxPage) currentPage++
     }
 
     LaunchedEffect(viewAll) {
-        take = if (viewAll) transactionList?.data?.total_count ?: 10 else 10
+        take = if (viewAll) totalTransactionCount else 10
+        currentPage = 1
+        transactions = listOf<TransactionListDataRecord>()
     }
 
     LaunchedEffect(currentPage, take) {
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            transactionList = transactionsList(context, take, skip)
+            val transactionListFromAPI = transactionsList(context, take, skip)
 
-            if (transactionList == null) maxPage = 0
-            else maxPage =
-                ceil(transactionList!!.data.total_count.toDouble() / take.toDouble()).toInt()
+            if (transactionListFromAPI != null) {
+                maxPage =
+                    ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
 
-            apiResponseAvailable = true
+                totalTransactionCount = transactionListFromAPI.data.total_count
+                transactions = transactions.plus(transactionListFromAPI.data.records)
+            }
         } catch (e: Exception) {
-
+            Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
+        } finally {
+            apiResponseAvailable = true
         }
-        apiResponseAvailable = true
+
     }
 
-    if (!apiResponseAvailable) Column(
+    if (scrollingEndReached && !viewAll) LaunchedEffect(Unit) {
+        nextPageHandler()
+        scrollState.scrollTo(0)
+    }
+
+    fun updateReceivalAmount(newAmount: Float) {
+        receivalAmount = newAmount
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        MyCircularProgressIndicator()
-    } else {
 
-        currency = transactionList?.data?.records?.first()?.CurrencyCode ?: ""
+        currency = transactions.firstOrNull()?.CurrencyCode ?: ""
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .padding(vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            Spacer(modifier = Modifier.height(10.dp))
-
             Text(
                 text = "Receival for the day",
                 fontSize = 16.sp,
@@ -144,10 +161,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     color = primary500,
                 )
 
-                SuggestionChip(border = borderThin, onClick = {
-                    viewAll = !viewAll
-//                navController.navigate(Screens.TransactionHistory.route)
-                }, label = {
+                SuggestionChip(border = borderThin, onClick = { viewAll = !viewAll }, label = {
                     Text(
                         text = if (viewAll) "View recent" else "View All",
                         fontSize = 14.sp,
@@ -156,20 +170,20 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 })
             }
 
-            Spacer(Modifier.height(10.dp))
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .conditional(enableScrolling) { verticalScroll(scrollState) }) {
-                Transactions(
-                    navController,
-                    transactions = transactionList?.data?.records,
-                    updateReceivalAmount = {
-                        updateReceivalAmount(it)
-                    })
-            }
+        }
+
+        if (!apiResponseAvailable) {
+            MyCircularProgressIndicator()
+        } else Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .conditional(enableScrolling) { verticalScroll(scrollState) }) {
+
+            Transactions(
+                navController, transactions = transactions, updateReceivalAmount = {
+                    updateReceivalAmount(it)
+                })
         }
     }
-
 }

@@ -35,7 +35,7 @@ import kotlin.math.roundToInt
 
 @Composable
 fun Insights(
-    transactions: Array<TransactionListDataRecord>?,
+    transactions: List<TransactionListDataRecord>,
     currency: String,
     updateReceivalAmount: (Float) -> Unit,
 ) {
@@ -47,7 +47,7 @@ fun Insights(
     var chartMinValue = 0.0f
     var barData: MutableList<BarData> = mutableListOf()
 
-    if (transactions == null || transactions.isEmpty()) NoData(text = "No transactions found")
+    if (transactions.isEmpty()) NoData(text = "No transactions found")
     else Column(
         modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
