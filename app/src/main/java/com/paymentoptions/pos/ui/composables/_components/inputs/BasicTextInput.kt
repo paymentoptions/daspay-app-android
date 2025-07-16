@@ -32,9 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.ui.theme.borderThick
+import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
@@ -43,24 +44,28 @@ import com.paymentoptions.pos.ui.theme.red300
 @Composable
 fun BasicTextInput(
     state: TextFieldState,
-    label: String,
     placeholder: String,
     modifier: Modifier = Modifier,
+    label: String = "",
     isError: Boolean = false,
     isSecure: Boolean = false,
+    textFieldHeight: Dp = 46.dp,
     maxLength: Int = 50,
 ) {
     var showText by remember { mutableStateOf(false) }
 
     Column(modifier = modifier) {
-        Text(
-            text = label,
-            fontSize = 14.sp,
-            color = if (isError) red300 else purple50,
-            fontWeight = FontWeight.Medium,
-        )
 
-        Spacer(modifier = Modifier.height(4.dp))
+        if (label.isNotEmpty()) {
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                color = if (isError) red300 else purple50,
+                fontWeight = FontWeight.Medium,
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+        }
 
         Box {
             TextField(
@@ -98,13 +103,15 @@ fun BasicTextInput(
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(46.dp)
+                    .height(textFieldHeight)
                     .shadow(
-                        elevation = 2.dp, shape = RoundedCornerShape(6.dp),
-                        ambientColor = Color.LightGray, spotColor = primary100
+                        elevation = 2.dp,
+                        shape = RoundedCornerShape(6.dp),
+                        ambientColor = Color.LightGray,
+                        spotColor = primary100
                     )
                     .border(
-                        border = borderThick, shape = RoundedCornerShape(6.dp)
+                        border = borderThin, shape = RoundedCornerShape(6.dp)
                     ),
                 lineLimits = TextFieldLineLimits.SingleLine,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)

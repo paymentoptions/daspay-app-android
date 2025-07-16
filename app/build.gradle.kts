@@ -104,4 +104,8 @@ dependencies {
 
     //System UI Color
     implementation(libs.accompanist.systemuicontroller)
+
+    //Coil
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network.okhttp)
 }

@@ -7,7 +7,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun FoodMenuScreen(navController: NavController) {
-    val enableScrollingInsideBottomSectionContent = false
+    val enableScrollingInsideBottomSectionContent = true
 
     SectionedLayout(
         navController = navController,
