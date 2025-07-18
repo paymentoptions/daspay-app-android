@@ -41,12 +41,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
@@ -62,6 +64,7 @@ val BOTTOM_NAVIGATION_HEIGHT_IN_DP = 70.dp
 data class BottomNavigationBarItem(
     val title: String,
     val icon: ImageVector,
+    val svgIcon: Int? = null,
     val route: String,
     val hideIcon: Boolean = false,
 )
@@ -97,7 +100,10 @@ val itemsInMore = listOf<BottomNavigationBarItem>(
         icon = Icons.Outlined.CreditCard,
         route = Screens.TransactionHistory.route
     ), BottomNavigationBarItem(
-        title = "Refund", icon = Icons.Outlined.MoneyOff, route = Screens.Refund.route
+        title = "Refund",
+        icon = Icons.Outlined.MoneyOff,
+        svgIcon = R.drawable.refund,
+        route = Screens.Refund.route
     ), BottomNavigationBarItem(
         title = "Settings", icon = Icons.Outlined.Settings, route = Screens.Settings.route
     ), BottomNavigationBarItem(
@@ -130,10 +136,17 @@ fun Item(
                 .background(if (item.hideIcon || !inMore) Color.Transparent else iconBackgroundColor),
             contentAlignment = Alignment.Center
         ) {
-            if (!item.hideIcon) Icon(
+            if (!item.hideIcon) if (item.svgIcon != null) Icon(
+                painter = painterResource(R.drawable.refund),
+                contentDescription = item.title,
+                modifier = Modifier.size(24.dp),
+                tint = primary500
+            )
+            else Icon(
+
                 imageVector = item.icon,
                 contentDescription = item.title,
-                modifier = Modifier.size(22.dp),
+                modifier = Modifier.size(24.dp),
                 tint = primary500
             )
         }
@@ -145,6 +158,7 @@ fun Item(
             textAlign = TextAlign.Center,
             minLines = minLines,
             maxLines = maxLines,
+//            style = TextStyle(lineBreak = LineBreak.Heading, ),
             fontSize = if (inMore) 14.sp else 12.sp,
             fontWeight = if (inMore) FontWeight.Normal else FontWeight.SemiBold,
             color = if (item.hideIcon) primary100 else primary500
@@ -234,7 +248,7 @@ fun MyBottomNavigationBar(
                             onSelected = { navController.navigate(itemsInMore[it].route) },
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(20.dp),
+                                .padding(16.dp),
                             minLines = 2,
                             maxLines = 2,
                             inMore = true
@@ -254,7 +268,7 @@ fun MyBottomNavigationBar(
                             onSelected = { showSignOutConfirmationDialog = true },
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(20.dp),
+                                .padding(16.dp),
                             minLines = 2,
                             maxLines = 2,
                             inMore = true

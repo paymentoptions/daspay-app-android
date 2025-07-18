@@ -17,6 +17,7 @@ fun TransactionHistoryScreen(navController: NavController) {
         bottomSectionMinHeightRatio = 0.9f,
         bottomSectionMaxHeightRatio = 0.9f,
         bottomSectionPaddingInDp = 0.dp,
+        alwaysShowLogo = false,
         bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
     ) {

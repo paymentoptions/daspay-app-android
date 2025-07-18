@@ -16,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Money
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -29,11 +28,13 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -115,7 +116,7 @@ fun TransactionSummary(
         ) {
 
             Row(
-                modifier = Modifier.padding(22.dp),
+                modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -174,7 +175,7 @@ fun TransactionSummary(
                 .background(
                     red300.copy(alpha = 0.2f), shape = RoundedCornerShape(8.dp)
                 )
-                .padding(8.dp)
+                .padding(6.dp)
                 .weight(2f)
                 .clickable {
                     navController.navigate(Screens.RefundTransaction.route)
@@ -184,12 +185,13 @@ fun TransactionSummary(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Icon(
-                Icons.Outlined.Refresh,
+                painter = painterResource(R.drawable.refund),
                 tint = red500,
                 contentDescription = "Refund",
+                modifier = Modifier.size(20.dp)
             )
             Text(
-                text = "Refund", color = red500, fontSize = 12.sp, fontWeight = FontWeight.Medium
+                text = "Refund", color = red500, fontSize = 11.sp, fontWeight = FontWeight.Medium
             )
         }
     }
