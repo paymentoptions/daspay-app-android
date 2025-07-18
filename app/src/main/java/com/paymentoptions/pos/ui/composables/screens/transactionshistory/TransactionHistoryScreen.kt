@@ -4,6 +4,7 @@ package com.paymentoptions.pos.ui.composables.screens.transactionshistory
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 
@@ -15,12 +16,12 @@ fun TransactionHistoryScreen(navController: NavController) {
         navController = navController,
         bottomSectionMinHeightRatio = 0.9f,
         bottomSectionMaxHeightRatio = 0.9f,
-        defaultBottomSectionPaddingInDp = 0.dp,
+        bottomSectionPaddingInDp = 0.dp,
+        bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
     ) {
         BottomSectionContent(
-            navController,
-            enableScrolling = enableScrollingInsideBottomSectionContent
+            navController, enableScrolling = enableScrollingInsideBottomSectionContent
         )
     }
 }

@@ -16,12 +16,12 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 
 @Composable
-fun BackButton(
-    onClickShowMenuBarButton: () -> Unit,
+fun ToggleBottomNavigationBarButton(
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     IconButton(
-        onClick = onClickShowMenuBarButton,
+        onClick = onClick,
         modifier = modifier
             .width(30.dp)
             .height(40.dp)

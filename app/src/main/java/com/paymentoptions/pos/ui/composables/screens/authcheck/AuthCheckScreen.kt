@@ -6,7 +6,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun AuthCheckScreen(navController: NavController) {
-    SectionedLayout(navController = navController, showBottomNavigationBar = false) {
+    SectionedLayout(navController = navController) {
         BottomSectionContent(navController)
     }
 }

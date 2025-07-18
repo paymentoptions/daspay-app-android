@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -103,6 +102,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var take: Int by remember { mutableIntStateOf(10) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
     var maxPage: Int by remember { mutableIntStateOf(0) }
+
     val scrollingEndReached by remember {
         derivedStateOf {
             scrollState.value == scrollState.maxValue
@@ -176,40 +176,40 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        if (!apiResponseAvailable) Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 20.dp),
+        Column(
+            modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            MyCircularProgressIndicator()
-        } else {
-            if (transactions.isEmpty()) NoData(text = "No notifications")
+
+            if (!apiResponseAvailable) MyCircularProgressIndicator()
             else {
-                val filteredTransactions = transactions.filter {
-                    transactionFilterLogic(selectedTab, it)
-                }
+                if (transactions.isEmpty()) NoData(text = "No notifications")
+                else {
+                    val filteredTransactions = transactions.filter {
+                        transactionFilterLogic(selectedTab, it)
+                    }
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .conditional(enableScrolling) {
-                            verticalScroll(scrollState)
-                        }) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .conditional(enableScrolling) {
+                                verticalScroll(scrollState)
+                            }) {
 
-                    filteredTransactions.forEach { transaction ->
+                        filteredTransactions.forEachIndexed { index, transaction ->
 
-                        var skip = true
-                        if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] =
-                            true
+                            var skip = true
+                            if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] =
+                                true
 
-                        if (!transactionsWithTrackId.contains(transaction.uuid)) {
-                            if ((selectedTab.text.uppercase() == "ALL" || (selectedTab.matchText == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selectedTab.text.uppercase() == transaction.TransactionType.uppercase())) skip =
-                                false
+                            if (!transactionsWithTrackId.contains(transaction.uuid)) {
+                                if ((selectedTab.text.uppercase() == "ALL" || (selectedTab.matchText == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selectedTab.text.uppercase() == transaction.TransactionType.uppercase())) skip =
+                                    false
+                            }
+
+                            if (!skip) NotificationSummary(transaction)
                         }
-
-                        if (!skip) NotificationSummary(transaction)
                     }
                 }
             }

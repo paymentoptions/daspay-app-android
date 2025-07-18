@@ -217,7 +217,7 @@ fun MyBottomNavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.Transparent)
-                .padding(bottom = 20.dp)
+                .padding(bottom = 30.dp)
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),

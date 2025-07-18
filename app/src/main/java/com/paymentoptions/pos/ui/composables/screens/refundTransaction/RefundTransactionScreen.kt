@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
@@ -28,9 +29,8 @@ fun RefundTransactionScreen(navController: NavController) {
         null -> {
             SectionedLayout(
                 navController = navController,
-                showBottomNavigationBar = false,
-                showBackButton = true,
-                defaultBottomSectionPaddingInDp = 0.dp,
+                bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+                bottomSectionPaddingInDp = 0.dp,
                 imageBelowLogo = { },
                 enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
             ) {
@@ -66,8 +66,7 @@ fun RefundTransactionScreen(navController: NavController) {
 
         StatusScreenType.ERROR -> {
             val dataMessage = MessageForStatusScreen(
-                text = "Refund Failed",
-                statusScreenType = StatusScreenType.ERROR
+                text = "Refund Failed", statusScreenType = StatusScreenType.ERROR
             )
             StatusScreen(navController, dataMessage, strategyFn = {
                 Handler().postDelayed({

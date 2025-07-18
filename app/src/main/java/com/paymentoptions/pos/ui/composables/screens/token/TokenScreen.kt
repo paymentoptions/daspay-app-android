@@ -10,12 +10,10 @@ fun TokenScreen(navController: NavController) {
 
     SectionedLayout(
         navController = navController,
-        showBottomNavigationBar = false,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
     ) {
         BottomSectionContent(
-            navController,
-            enableScrolling = enableScrollingInsideBottomSectionContent
+            navController, enableScrolling = enableScrollingInsideBottomSectionContent
         )
     }
 }

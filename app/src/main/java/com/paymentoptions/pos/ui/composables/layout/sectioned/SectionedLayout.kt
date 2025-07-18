@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
@@ -35,12 +36,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
-import com.paymentoptions.pos.ui.composables._components.buttons.BackButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ReceiveMoneyFAB
+import com.paymentoptions.pos.ui.composables._components.buttons.ToggleBottomNavigationBarButton
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
 import com.paymentoptions.pos.ui.composables._components.images.TapToPayImage
 import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.conditional
 
 val LOGO_TOP_PADDING_IN_DP = 45.dp
@@ -48,15 +50,18 @@ val LOGO_HEIGHT_IN_DP = 60.dp
 val RECEIVE_MONEY_BUTTON_HEIGHT_IN_DP = 60.dp
 val DEFAULT_BOTTOM_SECTION_PADDING_IN_DP = 16.dp
 
+enum class BottomBarContent {
+    NOTHING, NAVIGATION_BAR, TOGGLE_BUTTON
+}
+
 @SuppressLint("ConfigurationScreenWidthHeight")
 @Composable
 fun SectionedLayout(
     navController: NavController,
     bottomSectionMinHeightRatio: Float = 0.1f,
     bottomSectionMaxHeightRatio: Float = 0.9f,
-    showBottomNavigationBar: Boolean = true,
-    showBackButton: Boolean = false,
-    defaultBottomSectionPaddingInDp: Dp = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
+    bottomBarContent: BottomBarContent = BottomBarContent.NOTHING,
+    bottomSectionPaddingInDp: Dp = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
     alwaysShowLogo: Boolean = true,
     imageBelowLogo: @Composable () -> Unit = {
         TapToPayImage(
@@ -69,6 +74,8 @@ fun SectionedLayout(
     bottomSectionContent: @Composable () -> Unit = {},
 ) {
 
+    var bottomBarContentState by remember { mutableStateOf(bottomBarContent) }
+
     val configuration = LocalConfiguration.current
 
     val bottomSectionMinHeightDp =
@@ -76,16 +83,11 @@ fun SectionedLayout(
     var bottomSectionMaxHeightDp =
         configuration.screenHeightDp.dp.times(bottomSectionMaxHeightRatio)
 
-
     var showMoreItems by remember { mutableStateOf(false) }
 
     val overlayColor = Color.Black.copy(alpha = if (showMoreItems) 0.8f else 0.05f)
     val borderRadiusInDp = 32.dp
     val scrollState = rememberScrollState()
-
-    fun toggleShowMoreItems() {
-        showMoreItems = !showMoreItems
-    }
 
     Scaffold {
         Box(
@@ -104,7 +106,7 @@ fun SectionedLayout(
                 modifier = Modifier
                     .fillMaxSize()
                     .align(alignment = Alignment.TopCenter)
-                    .padding(bottom = if (showBottomNavigationBar) BOTTOM_NAVIGATION_HEIGHT_IN_DP else 0.dp)
+                    .padding(bottom = if (bottomBarContentState === BottomBarContent.NAVIGATION_BAR) BOTTOM_NAVIGATION_HEIGHT_IN_DP else 0.dp)
                     .zIndex(2f)
                     .clickable(
                         enabled = !showMoreItems,
@@ -142,38 +144,44 @@ fun SectionedLayout(
                         )
                         .height(IntrinsicSize.Min)
                         .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
-                        .conditional(enableScrollingOfBottomSectionContent) {
-                            verticalScroll(scrollState)
-                        }
                         .align(alignment = Alignment.BottomCenter)
                         .zIndex(2f)
-                        .background(color = Color.Transparent)
                         .clip(
                             RoundedCornerShape(
                                 topStart = borderRadiusInDp, topEnd = borderRadiusInDp
                             )
                         )
-                        .background(color = Color.White)
-                        .padding(
-                            start = defaultBottomSectionPaddingInDp,
-                            top = defaultBottomSectionPaddingInDp,
-                            end = defaultBottomSectionPaddingInDp,
-                            bottom = if (showBottomNavigationBar) defaultBottomSectionPaddingInDp.plus(
-                                25.dp
-                            ) else if (showBackButton) 0.dp else defaultBottomSectionPaddingInDp.plus(
-                                10.dp
-                            )
-                        ),
+                        .background(color = Color.White),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceBetween
-
+//                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    bottomSectionContent()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                start = bottomSectionPaddingInDp,
+                                top = bottomSectionPaddingInDp,
+                                end = bottomSectionPaddingInDp,
+                                bottom = when (bottomBarContentState) {
+                                    BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp.plus(
+                                        25.dp
+                                    )
 
-                    if (showBackButton) {
-                        Spacer(modifier = Modifier.height(20.dp))
-                        BackButton(onClickShowMenuBarButton = { navController.popBackStack() })
+                                    BottomBarContent.TOGGLE_BUTTON -> 10.dp
+                                    BottomBarContent.NOTHING -> 10.dp
+                                }
+                            )
+                            .weight(1f)
+                            .conditional(enableScrollingOfBottomSectionContent) {
+                                verticalScroll(scrollState)
+                            }) {
+                        bottomSectionContent()
                     }
+
+                    if (bottomBarContentState === BottomBarContent.TOGGLE_BUTTON) ToggleBottomNavigationBarButton(
+                        onClick = { bottomBarContentState = BottomBarContent.NAVIGATION_BAR },
+
+                        )
                 }
 
                 //Just an overlay
@@ -186,13 +194,19 @@ fun SectionedLayout(
             }
 
             //Bottom Navigation Bar
-            if (showBottomNavigationBar) {
+            if (bottomBarContentState === BottomBarContent.NAVIGATION_BAR) {
                 ReceiveMoneyFAB(
                     navController,
                     modifier = Modifier
                         .align(alignment = Alignment.BottomCenter)
+                        .offset(y = BOTTOM_NAVIGATION_HEIGHT_IN_DP.div(-2).plus(-5.dp))
                         .zIndex(5f)
-                        .padding(bottom = BOTTOM_NAVIGATION_HEIGHT_IN_DP.div(2).plus(5.dp))
+                        .shadow(
+                            30.dp,
+                            shape = RoundedCornerShape(50),
+                            spotColor = primary900,
+                            ambientColor = Color.Black
+                        )
                 )
 
                 Row(
@@ -206,7 +220,7 @@ fun SectionedLayout(
                             )
                         )
                         .background(if (showMoreItems) Color.White else Color.Transparent)
-                        .background(primary100.copy(alpha = 0.04f))
+                        .conditional(showMoreItems) { background(primary100.copy(alpha = 0.04f)) }
                         .align(alignment = Alignment.BottomCenter)
                         .zIndex(4f)
 
@@ -221,8 +235,8 @@ fun SectionedLayout(
 
                     MyBottomNavigationBar(
                         navController, modifier = modifier, showMoreItems, onClickShowMoreItems = {
-                            toggleShowMoreItems()
-                        }, BOTTOM_NAVIGATION_HEIGHT_IN_DP
+                            showMoreItems = !showMoreItems
+                        }, bottomNavigationBarHeightInDp = BOTTOM_NAVIGATION_HEIGHT_IN_DP
                     )
                 }
             }

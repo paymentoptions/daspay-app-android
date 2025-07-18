@@ -45,7 +45,7 @@ fun Transactions(
 
         var earningAmount = 0.0f
 
-        for (transaction in transactions) {
+        transactions.forEachIndexed { index, transaction ->
 
             if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] = true
             var skip = true

@@ -10,7 +10,6 @@ fun SignInScreen(navController: NavController) {
 
     SectionedLayout(
         navController = navController,
-        showBottomNavigationBar = false,
         enableScrollingOfBottomSectionContent = !scrollingInsideBottomSectionContent
     ) {
         BottomSectionContent(navController, enableScrolling = scrollingInsideBottomSectionContent)

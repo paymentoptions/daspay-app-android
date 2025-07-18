@@ -263,8 +263,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        Spacer(modifier = Modifier.height(10.dp))
-
         Row(
             Modifier
                 .fillMaxWidth()
@@ -344,7 +342,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxWidth()
                 .background(Color.White)
-                .conditional(enableScrolling) { verticalScroll(scrollState) }) {
+                .conditional(enableScrolling) {
+                    weight(1f).verticalScroll(scrollState)
+                }) {
 
             buttons.forEach { row ->
                 Row(

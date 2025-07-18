@@ -10,6 +10,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables._components.images.CreditCardImage
+import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
@@ -18,9 +19,8 @@ fun RefundInitiatedScreen(navController: NavController) {
 
     SectionedLayout(
         navController = navController,
-        showBottomNavigationBar = false,
-        showBackButton = true,
-        defaultBottomSectionPaddingInDp = 0.dp,
+        bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+        bottomSectionPaddingInDp = 0.dp,
         bottomSectionMaxHeightRatio = 0.95f,
         imageBelowLogo = {
             CreditCardImage(

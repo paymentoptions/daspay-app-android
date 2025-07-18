@@ -115,7 +115,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var selectedFoodCategoryIndex by remember { mutableIntStateOf(0) }
     var foodItems = remember {
         listOf<FoodItem>(
-            cappuccinoSmall, cappuccinoMedium, cappuccinoRegular, cappuccinoLarge
+            cappuccinoSmall,
+            cappuccinoMedium,
+            cappuccinoRegular,
+            cappuccinoLarge
         )
     }
     var searchState = rememberTextFieldState()
@@ -138,12 +141,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
+        Spacer(modifier = Modifier.height(10.dp))
+
         //Search bar & Cart
         Row(
             modifier = Modifier
-                .padding(
-                    horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP, vertical = 10.dp
-                )
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxWidth()
                 .height(52.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -160,31 +163,32 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             )
         }
 
+        Spacer(modifier = Modifier.height(10.dp))
+
         FoodCategories(
-            foodCategories = foodCategories, selectedIndex = selectedFoodCategoryIndex, onClick = {
+            foodCategories = foodCategories,
+            selectedIndex = selectedFoodCategoryIndex,
+            onClick = {
                 selectedFoodCategoryIndex = it
-            }, modifier = Modifier
-                .padding(
-                    start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
-                    top = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
-                    bottom = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-                )
+            },
+            modifier = Modifier
+                .padding(start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxWidth()
                 .height(40.dp)
         )
 
+        Spacer(modifier = Modifier.height(20.dp))
 
         //Food Item List
         Column(
             modifier = Modifier
                 .padding(
-                    horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP, vertical = 10.dp
+                    horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
                 )
                 .conditional(enableScrolling) {
-                    verticalScroll(scrollState)
+                    weight(1f).verticalScroll(scrollState)
                 }
-                .fillMaxWidth()
-                .weight(1f)) {
+                .fillMaxWidth()) {
             foodItems.filter { foodItem -> searchLogic(foodItem, searchState.text.toString()) }
                 .forEachIndexed { index, foodItem ->
                     Row(
@@ -277,16 +281,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 }
         }
 
+        Spacer(modifier = Modifier.height(10.dp))
+
         //Cart details
         Column(
             modifier = Modifier
-//                .background(iconBackgroundColor)
-                .padding(
-                    start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
-                    end = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
-                    top = 20.dp,
-                    bottom = 10.dp
-                )
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxWidth()
         ) {
             Row(

@@ -12,13 +12,11 @@ fun NotificationsScreen(navController: NavController) {
         navController = navController,
         bottomSectionMinHeightRatio = 0.85f,
         bottomSectionMaxHeightRatio = 0.85f,
-        showBottomNavigationBar = false,
         alwaysShowLogo = false,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
     ) {
         BottomSectionContent(
-            navController,
-            enableScrolling = enableScrollingInsideBottomSectionContent
+            navController, enableScrolling = enableScrollingInsideBottomSectionContent
         )
     }
 }
