@@ -1,0 +1,205 @@
+package com.paymentoptions.pos.ui.composables.screens.foodorderflow.foodmenu
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import co.yml.charts.common.extensions.formatToSinglePrecision
+import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
+import com.paymentoptions.pos.ui.composables._components.inputs.SearchInput
+import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.screens.foodorderflow.Cart
+import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FlowStage
+import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FoodItem
+import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.utils.modifiers.conditional
+
+
+fun searchLogic(foodItem: FoodItem, searchTerm: String): Boolean {
+    return if (searchTerm.isEmpty()) true else {
+        val searchInString = foodItem.name + " " + foodItem.category + " " + foodItem.size
+        searchInString.lowercase().contains(searchTerm)
+    }
+}
+
+@Composable
+fun FoodMenuBottomSectionContent(
+    navController: NavController,
+    enableScrolling: Boolean = false,
+    cartState: Cart,
+    updateCartState: (Cart) -> Unit,
+    updateFlowStage: (FlowStage) -> Unit,
+) {
+    val scrollState = rememberScrollState()
+    val foodCategories = listOf("Beverages", "Burgers & Fries", "Cake", "Pizza & Pasta")
+    var selectedFoodCategoryIndex by remember { mutableIntStateOf(0) }
+    var searchState = rememberTextFieldState()
+
+//    fun updateCartState(itemQuantity: Int, itemTotal: Float) {
+//        cartState = cartState.copy(itemQuantity = itemQuantity, itemTotal = itemTotal)
+//    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        //Search bar & Cart
+        Row(
+            modifier = Modifier
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .fillMaxWidth()
+                .height(52.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            SearchInput(
+                state = searchState, modifier = Modifier
+                    .weight(4f)
+                    .fillMaxHeight(), maxLength = 20
+            )
+
+            CartIcon(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        FoodCategories(
+            foodCategories = foodCategories,
+            selectedIndex = selectedFoodCategoryIndex,
+            onClick = {
+                selectedFoodCategoryIndex = it
+            },
+            modifier = Modifier
+                .padding(start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .fillMaxWidth()
+                .height(40.dp)
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        //Food Item List
+        Column(
+            modifier = Modifier
+                .padding(
+                    horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+                )
+                .conditional(enableScrolling) {
+                    weight(1f).verticalScroll(scrollState)
+                }
+                .fillMaxWidth()) {
+            cartState.foodItems.filter { foodItem ->
+                searchLogic(
+                    foodItem, searchState.text.toString()
+                )
+            }.forEachIndexed { index, foodItem ->
+
+                FoodSummary(
+                    foodItem,
+                    cartState,
+                    updateItemInCartState = { itemQuantity, itemTotal ->
+                        updateCartState(
+                            cartState.copy(
+                                itemQuantity = itemQuantity, itemTotal = itemTotal
+                            )
+                        )
+                    },
+                )
+
+                if (index + 1 < cartState.foodItems.size) HorizontalDivider(
+                    modifier = Modifier
+                        .padding(vertical = 10.dp)
+                        .background(Color.White.copy(alpha = 0.8f)),
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        //Cart details
+        Column(
+            modifier = Modifier
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "Quantity", fontSize = 12.sp, fontWeight = FontWeight.Normal, color = primary500
+                )
+
+                Text(
+                    cartState.itemQuantity.toString(),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = primary500
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White.copy(alpha = 0.2f))
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    "Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primary500
+                )
+
+                CurrencyText(
+                    currency = "HKD",
+                    amount = cartState.itemTotal.formatToSinglePrecision(),
+                    fontSize = 16.sp,
+                    color = primary500
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            FilledButton(
+                disabled = cartState.itemQuantity <= 0, text = "Review and Confirm", onClick = {
+                    updateFlowStage(FlowStage.REVIEW_CART)
+                }, modifier = Modifier
+                    .fillMaxWidth()
+                    .height(59.dp)
+            )
+        }
+    }
+}

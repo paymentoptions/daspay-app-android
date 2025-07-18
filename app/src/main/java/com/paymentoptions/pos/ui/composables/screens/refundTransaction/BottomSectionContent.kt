@@ -192,7 +192,7 @@ fun BottomSectionContent(
             onClick = { },
             label = {
                 Text(
-                    "Refunded amount will be transferred to the original source of payment",
+                    "Refunded itemTotal will be transferred to the original source of payment",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Light,
                     color = purple50

@@ -8,7 +8,7 @@ import com.paymentoptions.pos.ui.composables.screens._test.fcmtoken.FcmTokenScre
 import com.paymentoptions.pos.ui.composables.screens.authcheck.AuthCheckScreen
 import com.paymentoptions.pos.ui.composables.screens.dashboard.DashboardScreen
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
-import com.paymentoptions.pos.ui.composables.screens.foodmenu.FoodMenuScreen
+import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FoodOrderFlow
 import com.paymentoptions.pos.ui.composables.screens.helpandsupport.HelpAndSupportScreen
 import com.paymentoptions.pos.ui.composables.screens.notifications.NotificationsScreen
 import com.paymentoptions.pos.ui.composables.screens.receivemoney.ReceiveMoneyScreen
@@ -25,7 +25,7 @@ import com.paymentoptions.pos.ui.composables.screens.transactionshistory.Transac
 @Composable
 fun Navigator() {
     val navController = rememberNavController()
-    val startDestination = Screens.Splash.route
+    val startDestination = Screens.FoodOrder.route
 
 //    LaunchedEffect(navController) {
 //        navController.currentBackStackEntryFlow.collect { backStackEntry ->
@@ -47,7 +47,7 @@ fun Navigator() {
         //Bottom Navigation
         composable(Screens.Dashboard.route) { DashboardScreen(navController) }
 
-        composable(Screens.FoodMenu.route) { FoodMenuScreen(navController) }
+        composable(Screens.FoodOrder.route) { FoodOrderFlow(navController) }
 //        composable(Screens.ReviewOrder.route) { ReviewOrderScreen(navController) }
 //        composable(Screens.AdditionalCharge.route) { AdditionalChargeScreen(navController) }
 

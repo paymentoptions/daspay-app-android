@@ -20,21 +20,25 @@ fun CurrencyText(
     modifier: Modifier = Modifier,
     fontSize: TextUnit = 36.sp,
     color: Color = primary100,
+    textAlign: TextAlign = TextAlign.Center,
+    addSpaceAfterCurrency: Boolean = true,
 ) {
+
+
     Text(
         text = buildAnnotatedString {
-            withStyle(
+            if (currency.isNotEmpty()) withStyle(
                 SpanStyle(
                     color.copy(alpha = 0.7f), fontWeight = FontWeight.Medium
                 )
-            ) { append("$currency ") }
+            ) { append(currency + (if (addSpaceAfterCurrency) " " else "")) }
 
-            withStyle(SpanStyle(color)) { append(amount) }
+            if (amount.isNotEmpty()) withStyle(SpanStyle(color)) { append(amount) }
         },
         fontSize = fontSize,
         fontWeight = FontWeight.Bold,
         color = primary100,
-        textAlign = TextAlign.Center,
+        textAlign = textAlign,
         modifier = modifier
     )
 }

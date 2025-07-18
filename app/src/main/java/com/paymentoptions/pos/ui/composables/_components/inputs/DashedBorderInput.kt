@@ -24,11 +24,11 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.ui.composables.screens.receivemoney.dashedBorder
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.utils.modifiers.dashedBorder
 
 @Composable
 fun DashedBorderInput(

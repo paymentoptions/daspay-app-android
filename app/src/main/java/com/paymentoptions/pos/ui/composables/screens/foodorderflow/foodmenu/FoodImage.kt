@@ -1,11 +1,10 @@
-package com.paymentoptions.pos.ui.composables.screens.foodmenu
+package com.paymentoptions.pos.ui.composables.screens.foodorderflow.foodmenu
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,11 +41,11 @@ fun FoodImage(
 
         Box(
             modifier = Modifier
-                .offset(x = (-5).dp)
-                .size(20.dp)
+//                .offset(x = (-5).dp)
+                .size(16.dp)
                 .border(
-                    BorderStroke(2.dp, if (isVegetarian) green500 else red500),
-                    shape = RoundedCornerShape(8.dp)
+                    BorderStroke(1.dp, if (isVegetarian) green500 else red500),
+                    shape = RoundedCornerShape(6.dp)
                 )
                 .background(Color.White, shape = RoundedCornerShape(8.dp))
                 .padding(2.dp)
@@ -57,7 +56,7 @@ fun FoodImage(
 
             Box(
                 modifier = Modifier
-                    .size(10.dp)
+                    .size(8.dp)
                     .background(
                         if (isVegetarian) green500 else red500, shape = RoundedCornerShape(50)
                     )

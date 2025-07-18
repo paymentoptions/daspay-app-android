@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.ui.composables.screens.foodmenu
+package com.paymentoptions.pos.ui.composables.screens.foodorderflow.foodmenu
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FoodItem
 import com.paymentoptions.pos.ui.theme.primary500
 
 @Composable

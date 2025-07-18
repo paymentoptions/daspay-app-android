@@ -14,7 +14,7 @@ sealed class Screens(val route: String) {
 
     //Bottom Navigation -----------------------------------------------
     object Dashboard : Screens(route = "Dashboard")
-    object FoodMenu : Screens(route = "FoodMenu")
+    object FoodOrder : Screens(route = "FoodOrder")
     object ReceiveMoney : Screens(route = "ReceiveMoney")
     object Notifications : Screens(route = "Notifications")
     //-----------------------------------------------------------------
