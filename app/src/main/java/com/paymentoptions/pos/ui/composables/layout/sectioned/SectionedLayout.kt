@@ -198,7 +198,7 @@ fun SectionedLayout(
                 navController,
                 modifier = Modifier
                     .align(alignment = Alignment.BottomCenter)
-                    .offset(y = BOTTOM_NAVIGATION_HEIGHT_IN_DP.div(-2).plus(-5.dp))
+                    .offset(y = BOTTOM_NAVIGATION_HEIGHT_IN_DP.div(-2).plus((-5).dp))
                     .zIndex(5f)
                     .shadow(
                         30.dp,

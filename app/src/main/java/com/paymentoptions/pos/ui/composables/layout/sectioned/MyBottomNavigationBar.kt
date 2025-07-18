@@ -41,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -52,6 +53,7 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
+import com.paymentoptions.pos.ui.composables._components.BottomNavShape
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
@@ -151,17 +153,16 @@ fun Item(
             )
         }
 
-        Spacer(modifier = Modifier.height(if (inMore) 16.dp else 4.dp))
+        Spacer(modifier = Modifier.height(if (inMore) 8.dp else 4.dp))
 
         Text(
             item.title,
             textAlign = TextAlign.Center,
             minLines = minLines,
             maxLines = maxLines,
-//            style = TextStyle(lineBreak = LineBreak.Heading, ),
             fontSize = if (inMore) 14.sp else 12.sp,
             fontWeight = if (inMore) FontWeight.Normal else FontWeight.SemiBold,
-            color = if (item.hideIcon) primary100 else primary500
+            color = if (item.hideIcon) primary100 else primary500,
         )
     }
 }
@@ -227,6 +228,14 @@ fun MyBottomNavigationBar(
         onDismissFn = { showSignOutConfirmationDialog = false })
 
     Column(modifier = modifier) {
+
+        val modifier1 = if (showMoreItems) Modifier.clip(
+            BottomNavShape(
+                cornerRadius = with(LocalDensity.current) { 20.dp.toPx() },
+                dockRadius = with(LocalDensity.current) { 38.dp.toPx() },
+            )
+        ) else Modifier
+
         if (showMoreItems) Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -279,7 +288,7 @@ fun MyBottomNavigationBar(
         }
 
         Row(
-            modifier = Modifier
+            modifier = modifier1
                 .fillMaxWidth()
                 .height(bottomNavigationBarHeightInDp)
                 .background(Color.White),
