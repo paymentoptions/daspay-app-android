@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.utils
+package com.paymentoptions.pos.utils.modifiers
 
 import androidx.compose.ui.Modifier
 

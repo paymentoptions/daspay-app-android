@@ -53,7 +53,7 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
-import com.paymentoptions.pos.utils.conditional
+import com.paymentoptions.pos.utils.modifiers.conditional
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date

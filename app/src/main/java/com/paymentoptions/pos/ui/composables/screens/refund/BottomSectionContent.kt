@@ -29,7 +29,7 @@ import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndic
 import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
-import com.paymentoptions.pos.utils.conditional
+import com.paymentoptions.pos.utils.modifiers.conditional
 import kotlin.math.ceil
 
 @Composable

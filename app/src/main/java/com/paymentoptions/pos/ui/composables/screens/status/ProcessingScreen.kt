@@ -27,7 +27,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayout
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.red300
-import com.paymentoptions.pos.utils.conditional
+import com.paymentoptions.pos.utils.modifiers.conditional
 
 enum class StatusScreenType {
     ERROR, PROCESSING, SUCCESS

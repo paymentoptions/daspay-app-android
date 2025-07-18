@@ -49,7 +49,7 @@ import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary900
-import com.paymentoptions.pos.utils.conditional
+import com.paymentoptions.pos.utils.modifiers.conditional
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date

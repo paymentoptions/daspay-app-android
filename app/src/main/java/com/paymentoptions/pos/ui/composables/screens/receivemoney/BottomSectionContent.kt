@@ -74,12 +74,13 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
-import com.paymentoptions.pos.utils.conditional
 import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getDasmidFromToken
 import com.paymentoptions.pos.utils.getDeviceIpAddress
 import com.paymentoptions.pos.utils.getDeviceTimeZone
 import com.paymentoptions.pos.utils.getKeyFromToken
+import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.utils.modifiers.noRippleClickable
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
@@ -152,11 +153,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val decodedJwtPayloadJson = decodeJwtPayload(authDetails.data.token.idToken)
     val currency = "HKD"
 
+
     merchant["dasmid"] = getDasmidFromToken(decodedJwtPayloadJson)
     merchant["name"] = getKeyFromToken(decodedJwtPayloadJson, "name")
     merchant["email"] = getKeyFromToken(decodedJwtPayloadJson, "email")
     merchant["contact"] = getKeyFromToken(decodedJwtPayloadJson, "custom:ContactNo")
-    // Log.d("Get Merchant-->2",merchant.toString())
+
     MyDialog(
         showDialog = showTransactionStatus,
         title = "Transaction Status",
@@ -170,7 +172,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val launcher = rememberLauncherForActivityResult(
         HeadlessActivity.contract(ClientHeadlessImpl::class.java)
     ) {
-
 
         var completedSaleTranId: String? = ""
         var completedSalePosReference: String? = ""
@@ -281,9 +282,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     .background(if (showReceiveMoney) Color.White.copy(alpha = 0.9f) else Color.Transparent)
                     .padding(10.dp)
                     .weight(1f)
-                    .clickable(onClick = {
+                    .noRippleClickable(enabled = !showReceiveMoney) {
                         showReceiveMoney = true
-                    }),
+                    },
                 textAlign = TextAlign.Center,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
@@ -297,9 +298,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     .background(if (!showReceiveMoney) Color.White.copy(alpha = 0.9f) else Color.Transparent)
                     .padding(10.dp)
                     .weight(1f)
-                    .clickable(onClick = {
+                    .noRippleClickable(enabled = showReceiveMoney) {
                         showReceiveMoney = false
-                    }),
+                    },
                 textAlign = TextAlign.Center,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,

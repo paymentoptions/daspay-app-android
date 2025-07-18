@@ -12,6 +12,8 @@ fun SystemUiController() {
     systemUiController.setSystemBarsColor(
         color = Color.White, darkIcons = true
     )
+
+    systemUiController.isSystemBarsVisible = false
 }
 
 @Composable

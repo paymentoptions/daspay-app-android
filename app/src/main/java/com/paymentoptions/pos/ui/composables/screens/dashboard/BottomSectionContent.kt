@@ -40,7 +40,7 @@ import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
-import com.paymentoptions.pos.utils.conditional
+import com.paymentoptions.pos.utils.modifiers.conditional
 import kotlin.math.ceil
 
 @Composable

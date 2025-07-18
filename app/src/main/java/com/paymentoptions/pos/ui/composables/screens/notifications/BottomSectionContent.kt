@@ -42,7 +42,7 @@ import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitle
 import com.paymentoptions.pos.ui.theme.bannerBgColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
-import com.paymentoptions.pos.utils.conditional
+import com.paymentoptions.pos.utils.modifiers.conditional
 import kotlin.math.ceil
 
 data class Tab(
