@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
+import com.paymentoptions.pos.services.apiService.endpoints.transactionList
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
@@ -112,7 +112,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            val transactionListFromAPI = transactionsList(context, take, skip)
+            val transactionListFromAPI = transactionList(context, take, skip)
 
             if (transactionListFromAPI != null) {
                 maxPage =

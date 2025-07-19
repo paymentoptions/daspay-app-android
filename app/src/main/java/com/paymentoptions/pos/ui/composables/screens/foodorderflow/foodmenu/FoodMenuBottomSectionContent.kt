@@ -27,20 +27,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import co.yml.charts.common.extensions.formatToSinglePrecision
+import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
+import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.SearchInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens.foodorderflow.Cart
 import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FlowStage
-import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FoodItem
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.utils.modifiers.conditional
 
 
-fun searchLogic(foodItem: FoodItem, searchTerm: String): Boolean {
+fun searchLogic(foodItem: ProductListDataRecord, searchTerm: String): Boolean {
     return if (searchTerm.isEmpty()) true else {
-        val searchInString = foodItem.name + " " + foodItem.category + " " + foodItem.size
+        val searchInString = foodItem.ProductName + " " + foodItem.CategoryID
         searchInString.lowercase().contains(searchTerm)
     }
 }
@@ -49,18 +52,16 @@ fun searchLogic(foodItem: FoodItem, searchTerm: String): Boolean {
 fun FoodMenuBottomSectionContent(
     navController: NavController,
     enableScrolling: Boolean = false,
+    foodCategoriesAvailable: Boolean,
+    foodCategories: List<CategoryListDataRecord>,
+    foodItemsAvailable: Boolean,
     cartState: Cart,
     updateCartState: (Cart) -> Unit,
     updateFlowStage: (FlowStage) -> Unit,
 ) {
     val scrollState = rememberScrollState()
-    val foodCategories = listOf("Beverages", "Burgers & Fries", "Cake", "Pizza & Pasta")
     var selectedFoodCategoryIndex by remember { mutableIntStateOf(0) }
     var searchState = rememberTextFieldState()
-
-//    fun updateCartState(itemQuantity: Int, itemTotal: Float) {
-//        cartState = cartState.copy(itemQuantity = itemQuantity, itemTotal = itemTotal)
-//    }
 
     Column(
         modifier = Modifier
@@ -93,7 +94,9 @@ fun FoodMenuBottomSectionContent(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        FoodCategories(
+
+        if (!foodCategoriesAvailable) MyCircularProgressIndicator(text = "Loading food categories...")
+        else if (foodCategories.isEmpty()) NoData(text = " No food categories available") else FoodCategories(
             foodCategories = foodCategories,
             selectedIndex = selectedFoodCategoryIndex,
             onClick = {
@@ -117,12 +120,17 @@ fun FoodMenuBottomSectionContent(
                     weight(1f).verticalScroll(scrollState)
                 }
                 .fillMaxWidth()) {
-            cartState.foodItems.filter { foodItem ->
+
+            val filteredFoodItems = cartState.foodItems.filter { foodItem ->
                 searchLogic(
                     foodItem, searchState.text.toString()
                 )
-            }.forEachIndexed { index, foodItem ->
+            }
 
+            if (!foodItemsAvailable) MyCircularProgressIndicator() else if (filteredFoodItems.isEmpty()) NoData(
+                text = "No food items found"
+            )
+            else filteredFoodItems.forEachIndexed { index, foodItem ->
                 FoodSummary(
                     foodItem,
                     cartState,
@@ -141,6 +149,7 @@ fun FoodMenuBottomSectionContent(
                         .background(Color.White.copy(alpha = 0.8f)),
                 )
             }
+
         }
 
         Spacer(modifier = Modifier.height(10.dp))

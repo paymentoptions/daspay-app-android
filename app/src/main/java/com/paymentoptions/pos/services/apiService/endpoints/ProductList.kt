@@ -2,16 +2,12 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.services.apiService.ProductListResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
-import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.generateRequestHeaders
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
-suspend fun transactionsList(
-    context: Context,
-    take: Int = 10,
-    skip: Int = 0,
-): TransactionListResponse? {
+suspend fun productList(context: Context): ProductListResponse? {
     try {
         var authDetails = SharedPreferences.getAuthDetails(context)
         val username = authDetails?.data?.email ?: ""
@@ -23,10 +19,9 @@ suspend fun transactionsList(
         val idToken = authDetails?.data?.token?.idToken
         val requestHeaders = generateRequestHeaders(idToken ?: "")
 
-        val transactionListResponse =
-            RetrofitClient.api.transactionsList(requestHeaders, take, skip)
+        val productListResponse = RetrofitClient.api.productList(requestHeaders)
 
-        return transactionListResponse
+        return productListResponse
     } catch (e: Exception) {
         println("transactionListError: $e")
         throw e

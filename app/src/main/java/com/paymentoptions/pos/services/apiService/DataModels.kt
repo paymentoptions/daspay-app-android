@@ -317,3 +317,68 @@ data class PaymentResponse(
 //    val is_live: Boolean,
 //    val transaction_type: String
 //)
+
+
+// Product categories related ----------------------------------
+data class CategoryListDataRecord(
+    val CategoryName: String,
+    val CategoryDesc: String,
+    val CategoryStatus: String,
+    val MerchantID: String,
+    val CategoryID: String,
+    val CreatedAt: String,
+    val UpdatedAt: String?,
+    val DeletedAt: String?,
+    val DeletedBy: String?,
+)
+
+data class CategoryListData(
+    val total_count: Int,
+    val records: List<CategoryListDataRecord>,
+)
+
+data class CategoryListResponse(
+    val statusCode: Int,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: CategoryListData,
+)
+// -------------------------------------------------------
+
+// Product related ---------------------------------------
+data class ProductListDataRecord(
+    val CategoryID: String,
+    val ProductName: String,
+    val ProductDesc: String,
+    val ProductStatus: Boolean,
+    val ProductPrice: Float,
+    val ProductID: String,
+    val ProductImage: String,
+    val ProductCode: String,
+    val CreatedAt: String?,
+    val UpdatedAt: String?,
+    val ProductStock: Int,
+    val MerchantID: String,
+    val Currency: String,
+    val DeletedAt: String?,
+    val DeletedBy: String?,
+
+    //Not from api
+    val isVegetarian: Boolean = true,
+    var cartQuantity: Int = 0,
+)
+
+data class ProductListResponseData(
+    val total_count: Int,
+    val records: List<ProductListDataRecord>,
+)
+
+data class ProductListResponse(
+    val statusCode: Int,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: ProductListResponseData,
+)
+// -------------------------------------------------------

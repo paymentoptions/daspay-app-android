@@ -24,8 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.ui.composables.screens.foodorderflow.Cart
-import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FoodItem
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
@@ -33,7 +33,7 @@ import com.paymentoptions.pos.utils.modifiers.conditional
 
 @Composable
 fun FoodSummary(
-    foodItem: FoodItem,
+    foodItem: ProductListDataRecord,
     cartState: Cart,
     updateItemInCartState: (Int, Float) -> Unit,
 ) {
@@ -46,7 +46,10 @@ fun FoodSummary(
     ) {
 
         FoodImage(
-            foodItem.name, foodItem.imageUrl, foodItem.isVegetarian, modifier = Modifier.size(44.dp)
+            foodItem.ProductName,
+            foodItem.ProductImage,
+            foodItem.isVegetarian,
+            modifier = Modifier.size(44.dp)
         )
 
         FoodDetail(foodItem, modifier = Modifier.weight(1f))
@@ -79,12 +82,14 @@ fun FoodSummary(
                         if (foodItem.cartQuantity > 0) {
                             foodItem.cartQuantity--
                             updateItemInCartState(
-                                cartState.itemQuantity - 1, cartState.itemTotal - foodItem.price
+                                cartState.itemQuantity - 1,
+                                cartState.itemTotal - foodItem.ProductPrice
                             )
                         } else {
                             foodItem.cartQuantity++
                             updateItemInCartState(
-                                cartState.itemQuantity + 1, cartState.itemTotal + foodItem.price
+                                cartState.itemQuantity + 1,
+                                cartState.itemTotal + foodItem.ProductPrice
                             )
                         }
                     })
@@ -100,7 +105,8 @@ fun FoodSummary(
                         if (foodItem.cartQuantity < maxQuantityPerFoodItem) {
                             foodItem.cartQuantity++
                             updateItemInCartState(
-                                cartState.itemQuantity + 1, cartState.itemTotal + foodItem.price
+                                cartState.itemQuantity + 1,
+                                cartState.itemTotal + foodItem.ProductPrice
                             )
                         }
                     },
@@ -117,7 +123,8 @@ fun FoodSummary(
                         if (foodItem.cartQuantity < maxQuantityPerFoodItem) {
                             foodItem.cartQuantity++
                             updateItemInCartState(
-                                cartState.itemQuantity + 1, cartState.itemTotal + foodItem.price
+                                cartState.itemQuantity + 1,
+                                cartState.itemTotal + foodItem.ProductPrice
                             )
                         }
                     })

@@ -24,7 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.transactionsList
+import com.paymentoptions.pos.services.apiService.endpoints.transactionList
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -52,7 +52,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            val transactionListFromAPI = transactionsList(context, take, skip)
+            val transactionListFromAPI = transactionList(context, take, skip)
 
             if (transactionListFromAPI != null) {
                 maxPage =

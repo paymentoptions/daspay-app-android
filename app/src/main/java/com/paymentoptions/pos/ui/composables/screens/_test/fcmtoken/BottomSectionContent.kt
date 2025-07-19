@@ -60,7 +60,10 @@ fun BottomSectionContent(navController: NavController) {
         ) {
 
             SelectionContainer {
-                if (loaderState) MyCircularProgressIndicator("Loading...", primary500)
+                if (loaderState) MyCircularProgressIndicator(
+                    text = "Loading...",
+                    color = primary500
+                )
                 else Text(
                     text = fcmToken.toString(),
                     modifier = Modifier.padding(20.dp),

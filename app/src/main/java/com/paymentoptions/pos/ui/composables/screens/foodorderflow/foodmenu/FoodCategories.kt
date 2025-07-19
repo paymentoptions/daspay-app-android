@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.purple50
@@ -19,7 +20,7 @@ import com.paymentoptions.pos.ui.theme.purple50
 
 @Composable
 fun FoodCategories(
-    foodCategories: List<String>,
+    foodCategories: List<CategoryListDataRecord>,
     selectedIndex: Int,
     onClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -43,7 +44,7 @@ fun FoodCategories(
                 onClick = { onClick(it) },
                 label = {
                     Text(
-                        text = foodCategories[it],
+                        text = foodCategories[it].CategoryName,
                         color = if (isSelected) primary600 else purple50,
                         fontSize = 14.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal

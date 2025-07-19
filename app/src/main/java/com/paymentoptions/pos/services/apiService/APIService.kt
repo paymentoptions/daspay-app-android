@@ -35,7 +35,7 @@ interface ApiService {
     ): SignInResponse
 
     @GET("transactions/list")
-    suspend fun transactionsList(
+    suspend fun transactionList(
         @HeaderMap headers: Map<String, String>,
         @Query("take") take: Int,
         @Query("skip") skip: Int,
@@ -59,6 +59,16 @@ interface ApiService {
         @HeaderMap headers: Map<String, String>,
         @Body post: PaymentRequest,
     ): PaymentResponse
+
+    @GET("entities/merchant/catalog/all-categories/M000001215")
+    suspend fun categoryList(
+        @HeaderMap headers: Map<String, String>,
+    ): CategoryListResponse
+
+    @GET("entities/merchant/catalog/all-categories/8c5c19ef-91ef-4ad4-bbf3-118411e90065")
+    suspend fun productList(
+        @HeaderMap headers: Map<String, String>,
+    ): ProductListResponse
 }
 
 var okHttpClient = OkHttpClient.Builder()
@@ -69,11 +79,8 @@ var okHttpClient = OkHttpClient.Builder()
 
 object RetrofitClient {
     val api: ApiService by lazy {
-        Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+        Retrofit.Builder().baseUrl(baseUrl).client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create()).build()
             .create(ApiService::class.java)
     }
 }
