@@ -22,7 +22,6 @@ import co.yml.charts.ui.barchart.BarChart
 import co.yml.charts.ui.barchart.models.BarChartData
 import co.yml.charts.ui.barchart.models.BarData
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500
@@ -44,11 +43,9 @@ fun Insights(
     var refundTransactionCount = 0
     var refundAmount = 0.0f
     var chartMaxValue = 0.0f
-    var chartMinValue = 0.0f
     var barData: MutableList<BarData> = mutableListOf()
 
-    if (transactions.isEmpty()) NoData(text = "No transactions found")
-    else Column(
+    Column(
         modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
 
@@ -56,11 +53,11 @@ fun Insights(
 
             if (transaction.status == "SUCCESSFUL") {
 
-                val date = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
+                if (index == 0) {
+                    chartMaxValue = transaction.amount.toFloat()
+                }
 
-                val amount = transaction.amount.toFloat()
-                if (amount > chartMaxValue) chartMaxValue = amount
-                if (amount < chartMinValue) chartMinValue = amount
+                val date = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
 
                 barData.add(
                     BarData(
@@ -75,13 +72,20 @@ fun Insights(
                 )
 
                 when (transaction.TransactionType) {
+
                     "PURCHASE" -> {
                         earningTransactionCount++
+
+                        val amount = transaction.amount.toFloat()
+                        if (amount > chartMaxValue) chartMaxValue = amount
                         earningAmount += amount
                     }
 
                     "REFUND" -> {
                         refundTransactionCount++
+
+                        val amount = transaction.amount.toFloat()
+                        if (amount > chartMaxValue) chartMaxValue = amount
                         refundAmount += amount
                     }
                 }
@@ -93,9 +97,7 @@ fun Insights(
         //Bar Graph
         if (barData.isNotEmpty()) Row(
             modifier = Modifier.fillMaxWidth()
-
         ) {
-
             val xAxisData =
                 AxisData.Builder().axisStepSize(2.dp).steps(barData.size - 1).bottomPadding(0.dp)
                     .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
@@ -108,17 +110,25 @@ fun Insights(
                     .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
                     .backgroundColor(Color.White).labelData { index ->
                         try {
-                            "$currency ${(index * (chartMaxValue / (barData.size - 1))).roundToInt()}"
+
+                            val label =
+                                if (barData.size == 1) chartMaxValue else index * chartMaxValue / (barData.size - 1)
+
+                            println("label :$label | $chartMaxValue")
+                            "$currency ${label.roundToInt()}"
                         } catch (e: Exception) {
                             "0"
                         }
                     }.build()
 
             val barChartData = BarChartData(
-                chartData = barData, xAxisData = xAxisData, yAxisData = yAxisData,
+                chartData = barData,
+                xAxisData = xAxisData,
+                yAxisData = yAxisData,
 //                showYAxis = false,
 //                showXAxis = false,
-                paddingTop = 0.dp, paddingEnd = 0.dp
+                paddingTop = 0.dp,
+                paddingEnd = 0.dp,
             )
 
             BarChart(
@@ -236,7 +246,7 @@ fun Insights(
                 ) {
 
                     Text(
-                        "All Transactions # ${transactions.size}",
+                        "All Transactions # ${earningTransactionCount + refundTransactionCount}",
                         style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal)
                     )
 

@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.categoryList
@@ -24,8 +25,25 @@ enum class FlowStage {
     MENU, REVIEW_CART, ADDITIONAL_CHARGE, PAYMENT, RESULT_PROCESSING, RESULT_ERROR, RESULT_SUCCESS
 }
 
-data class Cart(
-    var foodItems: List<ProductListDataRecord> = listOf<ProductListDataRecord>(),
+class FoodItem(
+    val item: ProductListDataRecord,
+    var cartQuantity: Int = 0,
+) {
+    fun decreaseQuantity() {
+        this.cartQuantity--
+    }
+
+    fun increaseQuantity() {
+        this.cartQuantity++
+    }
+
+    fun copyCartQuantity(f: FoodItem) {
+        this.cartQuantity = f.cartQuantity
+    }
+}
+
+class Cart(
+    var foodItemMapByCategory: MutableMap<String, List<FoodItem>> = mutableMapOf<String, List<FoodItem>>(),
     var timestampInMilliseconds: Long? = null,
     var itemQuantity: Int = 0,
     var itemTotal: Float = 0.0f,
@@ -33,7 +51,57 @@ data class Cart(
     var gstPercentage: Float,
     var additionalCharge: Float,
     var additionalAmountNote: String,
-)
+    var updateAvailable: Boolean = false,
+) {
+
+    fun decreaseFoodItemQuantity(foodItem: FoodItem) {
+        if (foodItem.cartQuantity > 1) {
+            foodItem.decreaseQuantity()
+            this.itemQuantity--
+            this.itemTotal -= foodItem.item.ProductPrice
+        }
+
+    }
+
+    fun increaseFoodItemQuantity(foodItem: FoodItem) {
+        if (foodItem.cartQuantity > 4) {
+            foodItem.increaseQuantity()
+            this.itemQuantity++
+            this.itemTotal += foodItem.item.ProductPrice
+        }
+    }
+
+    fun replaceFoodCategory(categoryId: String, newFoodItems: List<FoodItem>) {
+
+        val oldFoodItemsInTheCategory = this.foodItemMapByCategory[categoryId]
+        val newFoodItemsInTheCategorySorted =
+            newFoodItems.sortedBy { foodItem -> foodItem.item.CategoryID }
+
+        if (oldFoodItemsInTheCategory.isNullOrEmpty()) this.foodItemMapByCategory.plus(pair = categoryId to newFoodItems)
+        else {
+
+            newFoodItemsInTheCategorySorted.forEach { newFoodItem ->
+                val oldFoodItem =
+                    oldFoodItemsInTheCategory.find { oldFoodItem -> oldFoodItem.item.ProductID == newFoodItem.item.ProductID }
+
+                if (oldFoodItem.isNotNull()) newFoodItem.copyCartQuantity(oldFoodItem!!)
+            }
+
+            this.foodItemMapByCategory[categoryId] = newFoodItemsInTheCategorySorted
+        }
+    }
+
+    fun getFoodItems(): List<FoodItem> {
+
+        var foodItems: List<FoodItem> = listOf<FoodItem>()
+
+        this.foodItemMapByCategory.forEach { categoryFoodItemMap ->
+            foodItems.plus(categoryFoodItemMap.value)
+        }
+
+        return foodItems.filter { foodItem -> foodItem.cartQuantity > 1 }
+    }
+}
 
 @Composable
 fun FoodOrderFlow(
@@ -46,6 +114,7 @@ fun FoodOrderFlow(
     var flowStage by remember { mutableStateOf<FlowStage>(initialFlowStage) }
 
     var foodCategoryList by remember { mutableStateOf<List<CategoryListDataRecord>>(listOf()) }
+    var selectedFoodCategory by remember { mutableStateOf<CategoryListDataRecord?>(null) }
     var foodCategoryListAvailable by remember { mutableStateOf(false) }
     var foodItemListAvailable by remember { mutableStateOf(false) }
 
@@ -71,12 +140,12 @@ fun FoodOrderFlow(
     LaunchedEffect(Unit) {
         foodCategoryListAvailable = false
         try {
-
             val foodCategoryListFromAPI = categoryList(context)
 
             if (foodCategoryListFromAPI != null) foodCategoryList =
-                foodCategoryList.plus(foodCategoryListFromAPI.data.records)
+                foodCategoryListFromAPI.data.records
 
+            selectedFoodCategory = foodCategoryList.firstOrNull()
 
         } catch (e: Exception) {
             Toast.makeText(context, "Error fetching food categories from API", Toast.LENGTH_SHORT)
@@ -86,19 +155,33 @@ fun FoodOrderFlow(
         }
     }
 
-    LaunchedEffect(Unit) {
+    if (foodCategoryListAvailable) LaunchedEffect(selectedFoodCategory) {
+
         foodItemListAvailable = false
-        try {
 
-            val foodItemListFromAPI = productList(context)
+        if (selectedFoodCategory.isNotNull()) {
+            try {
+                val foodItemListFromAPI = productList(context, selectedFoodCategory!!.CategoryID)
 
-            if (foodItemListFromAPI != null) updateCartState(cartState.copy(foodItems = foodItemListFromAPI.data.records))
+                if (foodItemListFromAPI != null) {
 
-        } catch (e: Exception) {
-            Toast.makeText(context, "Error fetching products from API", Toast.LENGTH_SHORT).show()
-        } finally {
-            foodItemListAvailable = true
+                    val newFoodItems = foodItemListFromAPI.data.records.map { record ->
+                        FoodItem(item = record)
+                    }
+
+                    cartState.replaceFoodCategory(
+                        categoryId = selectedFoodCategory!!.CategoryID, newFoodItems
+                    )
+
+                } else cartState.replaceFoodCategory(
+                    selectedFoodCategory!!.CategoryID, listOf<FoodItem>()
+                )
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error fetching products from API", Toast.LENGTH_SHORT)
+                    .show()
+            }
         }
+        foodItemListAvailable = true
     }
 
     when (flowStage) {
@@ -115,9 +198,10 @@ fun FoodOrderFlow(
                 enableScrolling = enableScrollingInsideBottomSectionContent,
                 foodCategoriesAvailable = foodCategoryListAvailable,
                 foodCategories = foodCategoryList,
+                selectedFoodCategory = selectedFoodCategory,
                 foodItemsAvailable = foodItemListAvailable,
                 cartState = cartState,
-                updateCartState = { updateCartState(it) },
+//                updateCartState = { updateCartState(it) },
                 updateFlowStage = { updateFlowStage(it) })
         }
 
@@ -133,7 +217,6 @@ fun FoodOrderFlow(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
                     cartState = cartState,
-                    updateCartState = { updateCartState(it) },
                     updateFlowStage = { updateFlowStage(it) })
             }
         }
@@ -151,7 +234,6 @@ fun FoodOrderFlow(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
                     cartState = cartState,
-                    updateCartState = { updateCartState(it) },
                     updateFlowStage = { updateFlowStage(it) })
 
             }

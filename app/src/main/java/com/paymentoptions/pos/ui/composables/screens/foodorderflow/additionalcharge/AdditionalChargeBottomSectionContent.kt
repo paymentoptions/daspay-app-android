@@ -57,7 +57,6 @@ fun AdditionalChargeBottomSectionContent(
     navController: NavController,
     enableScrolling: Boolean = false,
     cartState: Cart,
-    updateCartState: (Cart) -> Unit,
     updateFlowStage: (FlowStage) -> Unit,
 ) {
     val scrollState = rememberScrollState()
@@ -206,7 +205,7 @@ fun AdditionalChargeBottomSectionContent(
                         .copy(containerColor = primary100.copy(alpha = 0.15f)),
                     onClick = { rawInput = "1000" },
                     label = {
-                        CurrencyText(currency = currency, amount = "10.00", fontSize = 16.sp)
+                        CurrencyText(currency = currency, amount = "10", fontSize = 16.sp)
                     })
             }
 
@@ -234,12 +233,9 @@ fun AdditionalChargeBottomSectionContent(
                 .fillMaxWidth()
                 .height(59.dp),
             onClick = {
-                updateCartState(
-                    cartState.copy(
-                        additionalAmountNote = noteState.text.toString(),
-                        additionalCharge = rawInput.toFloat().div(100)
-                    )
-                )
+                cartState.additionalAmountNote = noteState.text.toString()
+                cartState.additionalCharge = rawInput.toFloat().div(100)
+                cartState.updateAvailable = true
                 updateFlowStage(FlowStage.REVIEW_CART)
             })
     }

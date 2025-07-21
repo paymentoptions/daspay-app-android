@@ -10,11 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.services.apiService.ProductListDataRecord
+import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FoodItem
 import com.paymentoptions.pos.ui.theme.primary500
 
 @Composable
-fun FoodDetail(foodItem: ProductListDataRecord, modifier: Modifier = Modifier) {
+fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -23,14 +23,14 @@ fun FoodDetail(foodItem: ProductListDataRecord, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                foodItem.ProductStock.toString(),
+                foodItem.item.ProductStock.toString(),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
                 color = primary500
             )
 
             Text(
-                foodItem.Currency,
+                foodItem.item.Currency,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500.copy(alpha = 0.5f)
@@ -41,14 +41,14 @@ fun FoodDetail(foodItem: ProductListDataRecord, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                foodItem.ProductName,
+                foodItem.item.ProductName,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = primary500
             )
 
             Text(
-                "+ ${foodItem.ProductPrice}",
+                "+ ${foodItem.item.ProductPrice}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = primary500

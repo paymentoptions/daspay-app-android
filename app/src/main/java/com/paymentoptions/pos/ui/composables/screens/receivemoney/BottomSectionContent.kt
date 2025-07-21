@@ -391,7 +391,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         .copy(containerColor = primary100.copy(alpha = 0.15f)),
                     onClick = { rawInput = "1000" },
                     label = {
-                        CurrencyText(currency = currency, amount = "10.00", fontSize = 16.sp)
+                        CurrencyText(currency = currency, amount = "10", fontSize = 16.sp)
                     })
             }
 

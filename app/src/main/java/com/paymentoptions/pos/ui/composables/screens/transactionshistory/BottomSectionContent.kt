@@ -65,7 +65,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
     val scrollState = rememberScrollState()
 
-    var take: Int by remember { mutableIntStateOf(10) }
+    var take: Int by remember { mutableIntStateOf(Int.MAX_VALUE) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
     var maxPage: Int by remember { mutableIntStateOf(1) }
 
@@ -137,7 +137,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             "Week" -> {
                 val today = OffsetDateTime.now().toLocalDateTime()
-                val sevenDaysAgo = today.minusWeeks(1)
+                val sevenDaysAgo = today.minusDays(7)
 
                 receivalForText = "Receival for the week"
                 receivalForTimePeriodText =
@@ -147,7 +147,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             "Month" -> {
                 val today = OffsetDateTime.now().toLocalDateTime()
-                val thirtyDaysAgo = today.minusWeeks(30)
+                val thirtyDaysAgo = today.minusDays(30)
 
                 receivalForText = "Receival for the month"
                 receivalForTimePeriodText =

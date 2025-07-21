@@ -8,6 +8,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.HeaderMap
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
@@ -60,14 +61,16 @@ interface ApiService {
         @Body post: PaymentRequest,
     ): PaymentResponse
 
-    @GET("entities/merchant/catalog/all-categories/M000001215")
+    @GET("entities/merchant/catalog/all-categories/{dasmid}")
     suspend fun categoryList(
         @HeaderMap headers: Map<String, String>,
+        @Path("dasmid") dasmid: String,
     ): CategoryListResponse
 
-    @GET("entities/merchant/catalog/all-categories/8c5c19ef-91ef-4ad4-bbf3-118411e90065")
+    @GET("entities/merchant/catalog/all-categories/{categoryId}")
     suspend fun productList(
         @HeaderMap headers: Map<String, String>,
+        @Path("categoryId") categoryId: String = "8c5c19ef-91ef-4ad4-bbf3-118411e90065",
     ): ProductListResponse
 }
 

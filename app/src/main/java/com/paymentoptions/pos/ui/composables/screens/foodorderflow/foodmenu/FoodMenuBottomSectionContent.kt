@@ -37,6 +37,7 @@ import com.paymentoptions.pos.ui.composables._components.inputs.SearchInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens.foodorderflow.Cart
 import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FlowStage
+import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FoodItem
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.utils.modifiers.conditional
 
@@ -54,9 +55,10 @@ fun FoodMenuBottomSectionContent(
     enableScrolling: Boolean = false,
     foodCategoriesAvailable: Boolean,
     foodCategories: List<CategoryListDataRecord>,
+    selectedFoodCategory: CategoryListDataRecord?,
     foodItemsAvailable: Boolean,
     cartState: Cart,
-    updateCartState: (Cart) -> Unit,
+//    updateCartState: (Cart) -> Unit,
     updateFlowStage: (FlowStage) -> Unit,
 ) {
     val scrollState = rememberScrollState()
@@ -110,7 +112,7 @@ fun FoodMenuBottomSectionContent(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        //Food Item List
+        //Food item List
         Column(
             modifier = Modifier
                 .padding(
@@ -121,9 +123,13 @@ fun FoodMenuBottomSectionContent(
                 }
                 .fillMaxWidth()) {
 
-            val filteredFoodItems = cartState.foodItems.filter { foodItem ->
+            val foodItemsInCategory =
+                cartState.foodItemMapByCategory[selectedFoodCategory?.CategoryID]
+                    ?: listOf<FoodItem>()
+
+            val filteredFoodItems = foodItemsInCategory.filter { foodItem ->
                 searchLogic(
-                    foodItem, searchState.text.toString()
+                    foodItem.item, searchState.text.toString()
                 )
             }
 
@@ -134,16 +140,9 @@ fun FoodMenuBottomSectionContent(
                 FoodSummary(
                     foodItem,
                     cartState,
-                    updateItemInCartState = { itemQuantity, itemTotal ->
-                        updateCartState(
-                            cartState.copy(
-                                itemQuantity = itemQuantity, itemTotal = itemTotal
-                            )
-                        )
-                    },
                 )
 
-                if (index + 1 < cartState.foodItems.size) HorizontalDivider(
+                if (index + 1 < filteredFoodItems.size) HorizontalDivider(
                     modifier = Modifier
                         .padding(vertical = 10.dp)
                         .background(Color.White.copy(alpha = 0.8f)),

@@ -7,7 +7,7 @@ import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.generateRequestHeaders
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
-suspend fun productList(context: Context): ProductListResponse? {
+suspend fun productList(context: Context, categoryId: String): ProductListResponse? {
     try {
         var authDetails = SharedPreferences.getAuthDetails(context)
         val username = authDetails?.data?.email ?: ""
@@ -19,7 +19,8 @@ suspend fun productList(context: Context): ProductListResponse? {
         val idToken = authDetails?.data?.token?.idToken
         val requestHeaders = generateRequestHeaders(idToken ?: "")
 
-        val productListResponse = RetrofitClient.api.productList(requestHeaders)
+        val productListResponse =
+            RetrofitClient.api.productList(requestHeaders, categoryId = categoryId)
 
         return productListResponse
     } catch (e: Exception) {

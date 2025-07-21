@@ -24,8 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.ui.composables.screens.foodorderflow.Cart
+import com.paymentoptions.pos.ui.composables.screens.foodorderflow.FoodItem
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
@@ -33,9 +33,8 @@ import com.paymentoptions.pos.utils.modifiers.conditional
 
 @Composable
 fun FoodSummary(
-    foodItem: ProductListDataRecord,
+    foodItem: FoodItem,
     cartState: Cart,
-    updateItemInCartState: (Int, Float) -> Unit,
 ) {
     val maxQuantityPerFoodItem = 4
 
@@ -46,9 +45,9 @@ fun FoodSummary(
     ) {
 
         FoodImage(
-            foodItem.ProductName,
-            foodItem.ProductImage,
-            foodItem.isVegetarian,
+            foodItem.item.ProductName,
+            foodItem.item.ProductImage,
+            foodItem.item.isVegetarian,
             modifier = Modifier.size(44.dp)
         )
 
@@ -79,19 +78,8 @@ fun FoodSummary(
                 modifier = Modifier
                     .weight(1f)
                     .clickable {
-                        if (foodItem.cartQuantity > 0) {
-                            foodItem.cartQuantity--
-                            updateItemInCartState(
-                                cartState.itemQuantity - 1,
-                                cartState.itemTotal - foodItem.ProductPrice
-                            )
-                        } else {
-                            foodItem.cartQuantity++
-                            updateItemInCartState(
-                                cartState.itemQuantity + 1,
-                                cartState.itemTotal + foodItem.ProductPrice
-                            )
-                        }
+                        if (foodItem.cartQuantity == 0) cartState.increaseFoodItemQuantity(foodItem)
+                        else cartState.decreaseFoodItemQuantity(foodItem)
                     })
 
             Text(
@@ -102,13 +90,9 @@ fun FoodSummary(
                 modifier = Modifier
                     .weight(if (foodItem.cartQuantity == 0) 2.5f else 1.5f)
                     .clickable(enabled = foodItem.cartQuantity == 0) {
-                        if (foodItem.cartQuantity < maxQuantityPerFoodItem) {
-                            foodItem.cartQuantity++
-                            updateItemInCartState(
-                                cartState.itemQuantity + 1,
-                                cartState.itemTotal + foodItem.ProductPrice
-                            )
-                        }
+                        if (foodItem.cartQuantity < maxQuantityPerFoodItem) cartState.increaseFoodItemQuantity(
+                            foodItem
+                        )
                     },
                 textAlign = TextAlign.Center
             )
@@ -120,13 +104,9 @@ fun FoodSummary(
                 modifier = Modifier
                     .weight(1f)
                     .clickable(enabled = foodItem.cartQuantity < maxQuantityPerFoodItem) {
-                        if (foodItem.cartQuantity < maxQuantityPerFoodItem) {
-                            foodItem.cartQuantity++
-                            updateItemInCartState(
-                                cartState.itemQuantity + 1,
-                                cartState.itemTotal + foodItem.ProductPrice
-                            )
-                        }
+                        if (foodItem.cartQuantity < maxQuantityPerFoodItem) cartState.increaseFoodItemQuantity(
+                            foodItem
+                        )
                     })
         }
     }

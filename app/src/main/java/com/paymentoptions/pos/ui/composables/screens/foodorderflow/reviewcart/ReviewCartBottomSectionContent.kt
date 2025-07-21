@@ -25,10 +25,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -64,12 +60,10 @@ fun ReviewCartBottomSectionContent(
     navController: NavController,
     enableScrolling: Boolean = false,
     cartState: Cart,
-    updateCartState: (Cart) -> Unit,
     updateFlowStage: (FlowStage) -> Unit,
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    var cartState by remember { mutableStateOf<Cart>(cartState) }
     val currency = "HKD"
 
     Column(
@@ -123,31 +117,23 @@ fun ReviewCartBottomSectionContent(
                     weight(1f).verticalScroll(scrollState)
                 }, verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            cartState.foodItems.filter { foodItem -> foodItem.cartQuantity > 0 }
-                .forEach { foodItem ->
+            cartState.getFoodItems().forEach { foodItem ->
 
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(borderThin, shape = RoundedCornerShape(16.dp))
-                            .padding(8.dp),
-                        colors = CardDefaults.cardColors().copy(
-                            containerColor = Color.Transparent
-                        )
-                    ) {
-                        FoodSummary(
-                            foodItem,
-                            cartState,
-                            updateItemInCartState = { itemQuantity, itemTotal ->
-                                updateCartState(
-                                    cartState.copy(
-                                        itemQuantity = itemQuantity, itemTotal = itemTotal
-                                    )
-                                )
-                            },
-                        )
-                    }
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(borderThin, shape = RoundedCornerShape(16.dp))
+                        .padding(8.dp),
+                    colors = CardDefaults.cardColors().copy(
+                        containerColor = Color.Transparent
+                    )
+                ) {
+                    FoodSummary(
+                        foodItem,
+                        cartState,
+                    )
                 }
+            }
         }
 
         Column(
@@ -239,7 +225,7 @@ fun ReviewCartBottomSectionContent(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "Item total", style = AppTheme.typography.footnote.copy(
+                    "item total", style = AppTheme.typography.footnote.copy(
                         fontSize = 14.sp, fontWeight = FontWeight.Normal
                     )
                 )
