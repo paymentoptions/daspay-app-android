@@ -15,7 +15,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun RefundInitiatedScreen(navController: NavController) {
-    val enableScrollingInsideBottomSectionContent = false
+    val enableScrollingInsideBottomSectionContent = true
 
     SectionedLayout(
         navController = navController,

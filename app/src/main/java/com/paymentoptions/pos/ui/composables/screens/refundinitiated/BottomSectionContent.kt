@@ -32,19 +32,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.ProgressState
+import com.paymentoptions.pos.ui.composables._components.VerticalProgressBar
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
-import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens.dashboard.TRANSACTION_TO_BE_REFUNDED
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
@@ -350,13 +355,38 @@ fun BottomSectionContent(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                OutlinedButton(
-                    text = "View Refund Status",
-                    onClick = { showRefundStatus = !showRefundStatus },
-                    modifier = Modifier
-                        .width(260.dp)
-                        .height(39.dp)
-                        .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                AssistChip(
+                    onClick = { showRefundStatus = !showRefundStatus }, label = {
+                        Text(
+                            text = "View Refund Status",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = primary500
+                        )
+                    }, border = borderThin, colors = AssistChipDefaults.assistChipColors(
+                        containerColor = Color.Transparent,
+                    ), trailingIcon = {
+                        Icon(
+                            painterResource(R.drawable.down_arrow),
+                            contentDescription = "Hint",
+                            tint = primary500,
+                            modifier = Modifier
+                                .size(AssistChipDefaults.IconSize.minus(5.dp))
+                                .rotate(180f)
+                        )
+                    })
+
+                if (!showRefundStatus) VerticalProgressBar(
+                    currentState = ProgressState.PROCESSING,
+                    submittedTitle = "Request Submitted",
+                    submittedText = "We've received your refund request.\nHang tight—we're on it!",
+                    initiatedTitle = "Refund Pending",
+                    initiatedText = "Your refund has been initiated. We're now working with your payment provider.",
+                    processingTitle = "Refund Processing",
+                    processingText = "Your refund is being processed. It usually takes 3–5 business days to complete.",
+                    completedTitle = "Refund Completed",
+                    completedText = "Success! The refund has been processed. You should see it in your account shortly.",
+                    modifier = Modifier.padding(top = 24.dp)
                 )
             }
         }

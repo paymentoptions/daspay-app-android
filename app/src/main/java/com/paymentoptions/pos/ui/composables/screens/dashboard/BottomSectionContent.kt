@@ -89,6 +89,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
         } finally {
             apiResponseAvailable = true
+//            val scrollToIndex = if (currentPage >= 2) (currentPage - 2) * take else 0
+//            println("scrollToIndex: $scrollToIndex")
+//            scrollState.scrollTo(
+//                scrollToIndex * 20
+//
+//            )
         }
 
     }
@@ -169,8 +175,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     )
                 })
             }
-
-
         }
 
         if (!apiResponseAvailable) {
