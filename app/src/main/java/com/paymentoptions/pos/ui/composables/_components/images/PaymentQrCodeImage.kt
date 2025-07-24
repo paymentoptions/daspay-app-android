@@ -8,9 +8,11 @@ import androidx.compose.ui.res.painterResource
 import com.paymentoptions.pos.R
 
 @Composable
-fun CreditCardImage(modifier: Modifier = Modifier) {
+fun PaymentQrCodeImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.credit_card), 
-        contentDescription = "Credit Card", contentScale = ContentScale.Fit, modifier = modifier
+        painter = painterResource(id = R.drawable.payment_qrcode),
+        contentDescription = "Qr code payment method",
+        contentScale = ContentScale.Fit,
+        modifier = modifier
     )
 }

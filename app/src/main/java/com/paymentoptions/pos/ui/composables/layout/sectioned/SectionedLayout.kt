@@ -28,12 +28,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
 import com.paymentoptions.pos.ui.composables._components.buttons.ReceiveMoneyFAB
 import com.paymentoptions.pos.ui.composables._components.buttons.ToggleBottomNavigationBarButton
@@ -75,12 +75,8 @@ fun SectionedLayout(
 
     var bottomBarContentState by remember { mutableStateOf(bottomBarContent) }
 
-    val configuration = LocalConfiguration.current
-
-    val bottomSectionMinHeightDp =
-        configuration.screenHeightDp.dp.times(bottomSectionMinHeightRatio)
-    var bottomSectionMaxHeightDp =
-        configuration.screenHeightDp.dp.times(bottomSectionMaxHeightRatio)
+    val bottomSectionMinHeightDp = screenRatioToDp(bottomSectionMinHeightRatio)
+    var bottomSectionMaxHeightDp = screenRatioToDp(bottomSectionMaxHeightRatio)
 
     var showMoreItems by remember { mutableStateOf(false) }
 

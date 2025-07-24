@@ -23,8 +23,6 @@ fun CurrencyText(
     textAlign: TextAlign = TextAlign.Center,
     addSpaceAfterCurrency: Boolean = true,
 ) {
-
-
     Text(
         text = buildAnnotatedString {
             if (currency.isNotEmpty()) withStyle(

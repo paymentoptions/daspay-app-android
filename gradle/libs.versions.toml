@@ -27,6 +27,7 @@ navigationCompose = "2.8.9"
 pagingCompose = "3.3.6"
 retrofit = "2.9.0"
 firebaseMessagingKtx = "24.1.1"
+signaturePad = "0.1.4"
 ycharts = "2.1.0"
 runtime = "1.0.0-alpha04"
 
@@ -65,6 +66,7 @@ material3 = { module = "androidx.compose.material3:material3", version.ref = "ma
 minehades = { module = "com.theminesec:minehades", version.ref = "minehades" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
+signature-pad = { module = "se.warting.signature:signature-pad", version.ref = "signaturePad" }
 ycharts = { module = "co.yml:ycharts", version.ref = "ycharts" }
 androidx-runtime = { group = "androidx.xr.runtime", name = "runtime", version.ref = "runtime" }
 

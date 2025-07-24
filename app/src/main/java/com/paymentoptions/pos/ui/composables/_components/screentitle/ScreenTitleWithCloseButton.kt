@@ -22,6 +22,7 @@ fun ScreenTitleWithCloseButton(
     navController: NavController,
     modifier: Modifier = Modifier,
     title: String = "",
+    onClose: () -> Unit = { navController.popBackStack() },
 ) {
 
     Row(
@@ -36,9 +37,7 @@ fun ScreenTitleWithCloseButton(
             style = AppTheme.typography.screenTitle,
         )
 
-        IconButton(onClick = {
-            navController.popBackStack()
-        }) {
+        IconButton(onClick = onClose) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",

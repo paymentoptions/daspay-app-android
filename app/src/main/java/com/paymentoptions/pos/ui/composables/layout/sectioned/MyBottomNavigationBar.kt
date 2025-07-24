@@ -76,13 +76,13 @@ val home = BottomNavigationBarItem(
 )
 
 val foodMenu = BottomNavigationBarItem(
-    title = "Food Menu", icon = Icons.Outlined.Fastfood, route = Screens.FoodOrder.route
+    title = "Food Menu", icon = Icons.Outlined.Fastfood, route = Screens.FoodOrderFlow.route
 )
 
 val receiveMoney = BottomNavigationBarItem(
     title = "Receive Money",
     icon = Icons.Outlined.Money,
-    route = Screens.ReceiveMoney.route,
+    route = Screens.ReceiveMoneyFlow.route,
     hideIcon = true
 )
 

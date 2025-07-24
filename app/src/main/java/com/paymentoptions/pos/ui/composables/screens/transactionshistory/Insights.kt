@@ -48,26 +48,24 @@ fun Insights(
     Column(
         modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
-
+        var counter = 0
         transactions.forEachIndexed { index, transaction ->
 
             if (transaction.status == "SUCCESSFUL") {
 
-                if (index == 0) {
-                    chartMaxValue = transaction.amount.toFloat()
-                }
+                if (index == 0) chartMaxValue = transaction.amount.toFloat()
 
                 val date = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
 
                 barData.add(
                     BarData(
-                        point = Point(x = index.toFloat(), y = transaction.amount.toFloat()),
+                        point = Point(x = counter++.toFloat(), y = transaction.amount.toFloat()),
                         color = if (transaction.TransactionType == "REFUND") red500.copy(alpha = 0.5f) else Color.Green.copy(
                             alpha = 0.5f
                         ),
                         label = "${date.dayOfMonth} ${date.month}",
                         gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = if (transaction.TransactionType == "REFUND") "Refund" else "Purchase",
+                        description = if (transaction.TransactionType == "REFUND") "Refund Txn #: ${transaction.uuid}" else "Purchase Txn #: ${transaction.uuid}",
                     )
                 )
 
@@ -105,16 +103,15 @@ fun Insights(
                     .labelData { index -> barData[index].label }.build()
 
             val yAxisData =
-                AxisData.Builder().axisStepSize(2.dp).steps(5).axisOffset(30.dp).endPadding(0.dp)
-                    .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
-                    .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
-                    .backgroundColor(Color.White).labelData { index ->
+                AxisData.Builder().axisStepSize(2.dp).steps(barData.size - 1).axisOffset(30.dp)
+                    .endPadding(0.dp).axisLabelColor(Color.LightGray).axisLineThickness(0.dp)
+                    .axisLabelFontSize(8.sp).axisLabelAngle(0f).axisLineColor(Color.White)
+                    .labelAndAxisLinePadding(0.dp).backgroundColor(Color.White).labelData { index ->
                         try {
 
                             val label =
                                 if (barData.size == 1) chartMaxValue else index * chartMaxValue / (barData.size - 1)
 
-                            println("label :$label | $chartMaxValue")
                             "$currency ${label.roundToInt()}"
                         } catch (e: Exception) {
                             "0"
