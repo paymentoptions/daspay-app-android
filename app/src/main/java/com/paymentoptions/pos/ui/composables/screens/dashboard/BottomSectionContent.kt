@@ -40,6 +40,7 @@ import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
 import kotlin.math.ceil
 
@@ -135,7 +136,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             CurrencyText(
                 currency = currency,
-                amount = receivalAmount.toString(),
+                amount = receivalAmount.formatToPrecisionString(),
                 modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
             )
 

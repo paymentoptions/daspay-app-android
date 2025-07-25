@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import co.yml.charts.common.extensions.formatToSinglePrecision
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
@@ -36,6 +35,7 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodOrderFlowStage
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
 
 
@@ -188,7 +188,7 @@ fun FoodMenuBottomSectionContent(
 
                 CurrencyText(
                     currency = "HKD",
-                    amount = cartState.itemTotal.formatToSinglePrecision(),
+                    amount = cartState.itemTotal.formatToPrecisionString(),
                     fontSize = 16.sp,
                     color = primary500
                 )

@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.utils.formatToPrecisionString
 
 @Composable
 fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
@@ -48,7 +49,7 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
             )
 
             Text(
-                "+ ${foodItem.item.ProductPrice}",
+                "+${foodItem.item.ProductPrice.formatToPrecisionString()}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = primary500

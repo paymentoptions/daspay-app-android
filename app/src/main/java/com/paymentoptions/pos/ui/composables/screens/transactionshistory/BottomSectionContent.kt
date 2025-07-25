@@ -49,6 +49,7 @@ import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -277,7 +278,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                CurrencyText(currency = currency, amount = receivalAmount.toString())
+                CurrencyText(currency = currency, amount = receivalAmount.formatToPrecisionString())
 
                 Spacer(modifier = Modifier.height(16.dp))
 

@@ -46,6 +46,7 @@ import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 
@@ -151,7 +152,11 @@ fun ReviewCartBottomSectionContent(
                         style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.SemiBold)
                     )
 
-                    CurrencyText(currency, cartState.additionalCharge.toString(), fontSize = 12.sp)
+                    CurrencyText(
+                        currency,
+                        cartState.additionalCharge.formatToPrecisionString(),
+                        fontSize = 12.sp
+                    )
                 }
             } else {
 
@@ -212,14 +217,14 @@ fun ReviewCartBottomSectionContent(
                 modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "item total", style = AppTheme.typography.footnote.copy(
+                    "Item total", style = AppTheme.typography.footnote.copy(
                         fontSize = 14.sp, fontWeight = FontWeight.Normal
                     )
                 )
 
                 CurrencyText(
                     currency = currency,
-                    amount = "+" + cartState.itemTotal.toString(),
+                    amount = "+" + cartState.itemTotal.formatToPrecisionString(),
                     fontSize = 14.sp
                 )
 
@@ -240,7 +245,7 @@ fun ReviewCartBottomSectionContent(
                 CurrencyText(
                     currency = currency, amount = "+" + (cartState.itemTotal.times(
                         cartState.serviceChargePercentage.div(100)
-                    ).toString()), fontSize = 14.sp
+                    ).formatToPrecisionString()), fontSize = 14.sp
                 )
 
             }
@@ -256,7 +261,7 @@ fun ReviewCartBottomSectionContent(
 
                 CurrencyText(
                     currency = currency,
-                    amount = "+" + cartState.additionalCharge.toString(),
+                    amount = "+" + cartState.additionalCharge.formatToPrecisionString(),
                     fontSize = 14.sp
                 )
 
@@ -274,7 +279,7 @@ fun ReviewCartBottomSectionContent(
                 CurrencyText(
                     currency = currency,
                     amount = "+" + cartState.itemTotal.times(cartState.gstPercentage.div(100))
-                        .toString(),
+                        .formatToPrecisionString(),
                     fontSize = 14.sp
                 )
 
@@ -295,7 +300,7 @@ fun ReviewCartBottomSectionContent(
 
                 CurrencyText(
                     currency = currency,
-                    amount = "+" + calculateGrandTotal(cartState).toString(),
+                    amount = "+" + calculateGrandTotal(cartState).formatToPrecisionString(),
                     fontSize = 14.sp
                 )
             }

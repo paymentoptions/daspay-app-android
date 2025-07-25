@@ -28,6 +28,7 @@ import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.utils.formatToPrecisionString
 import java.time.OffsetDateTime
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
@@ -182,7 +183,7 @@ fun Insights(
                     )
 
                     Text(
-                        "+ ${earningAmount.absoluteValue}",
+                        "+ ${earningAmount.absoluteValue.formatToPrecisionString()}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = green500
