@@ -224,7 +224,7 @@ fun Insights(
                     )
 
                     Text(
-                        "- ${refundAmount.absoluteValue}",
+                        "- ${refundAmount.absoluteValue.formatToPrecisionString()}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = red500
@@ -233,8 +233,7 @@ fun Insights(
             }
 
             HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color.LightGray.copy(alpha = 0.2f)
+                modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
             )
 
             //All Earnings
@@ -273,7 +272,7 @@ fun Insights(
                     )
 
                     Text(
-                        "${if (netEarningAmount > 0) "+" else if (netEarningAmount < 0) "-" else ""} ${netEarningAmount.absoluteValue}",
+                        "${if (netEarningAmount > 0) "+" else if (netEarningAmount < 0) "-" else ""} ${netEarningAmount.absoluteValue.formatToPrecisionString()}",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = primary900

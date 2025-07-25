@@ -50,7 +50,6 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
-import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import java.text.SimpleDateFormat
@@ -93,7 +92,7 @@ fun TransactionSuccessfulBottomSectionContent(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            CurrencyText(currency = currency, amount = amountToCharge.formatToPrecisionString())
+            CurrencyText(currency = currency, amount = amountToCharge.toString())
 
             Spacer(modifier = Modifier.height(16.dp))
 

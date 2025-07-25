@@ -110,14 +110,16 @@ fun InputMoneyBottomSectionContent(
     )
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .padding(bottom = 0.dp)
                 .background(iconBackgroundColor),
             verticalAlignment = Alignment.CenterVertically,
@@ -157,7 +159,7 @@ fun InputMoneyBottomSectionContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Column(
             modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
