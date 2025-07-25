@@ -88,9 +88,11 @@ fun FoodMenuBottomSectionContent(
             )
 
             CartIcon(
+                cartState = cartState,
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight()
+                    .fillMaxHeight(),
+                updateFlowStage = updateFlowStage
             )
         }
 

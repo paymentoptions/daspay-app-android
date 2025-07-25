@@ -94,7 +94,7 @@ class PaymentMethod(
 
 val tapPaymentMethod = PaymentMethod(text = "Tap", icon = Icons.Default.TapAndPlay)
 val qrCodePaymentMethod = PaymentMethod(text = "QR Code", icon = Icons.Default.QrCode)
-val cashPaymentMethod = PaymentMethod(text = "Cash", icon = Icons.Default.Money)
+val cashPaymentMethod = PaymentMethod(text = "Cash", icon = Icons.Default.Money, isEnabled = false)
 val viaLinkPaymentMethod = PaymentMethod(text = "Via Link", icon = Icons.Default.Link)
 
 val paymentMethods = listOf(
@@ -106,7 +106,6 @@ fun ReceiveMoneyFlow(
     navController: NavController,
     initialReceiveMoneyFlowStage: ReceiveMoneyFlowStage = ReceiveMoneyFlowStage.INPUT_MONEY,
 ) {
-
     val context = LocalContext.current
 
     val enableScrollingInsideBottomSectionContent = false
@@ -121,8 +120,7 @@ fun ReceiveMoneyFlow(
     var noteState by remember { mutableStateOf("") }
 
     var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(paymentMethods.first()) }
-
-    var nfcStatusPair = Nfc.getStatus(context)
+    var nfcStatusPair by remember { mutableStateOf(Nfc.getStatus(context)) }
     var showNFCNotPresent by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
 
