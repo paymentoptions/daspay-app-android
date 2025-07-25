@@ -7,7 +7,7 @@ import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.generateRequestHeaders
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 import com.paymentoptions.pos.utils.decodeJwtPayload
-import com.paymentoptions.pos.utils.getDasmidFromToken
+import com.paymentoptions.pos.utils.getMerchantIdFromToken
 
 suspend fun categoryList(context: Context): CategoryListResponse? {
     try {
@@ -22,11 +22,10 @@ suspend fun categoryList(context: Context): CategoryListResponse? {
         val requestHeaders = generateRequestHeaders(idToken ?: "")
 
         val decodedJwtPayloadJson = decodeJwtPayload(idToken ?: "")
-        val dasmid = getDasmidFromToken(decodedJwtPayloadJson)
+        val merchantId = getMerchantIdFromToken(decodedJwtPayloadJson)
 
-        println("dasmid : $dasmid")
-
-        val categoryListResponse = RetrofitClient.api.categoryList(requestHeaders, dasmid = dasmid)
+        val categoryListResponse =
+            RetrofitClient.api.categoryList(requestHeaders, merchantId = merchantId)
 
         return categoryListResponse
     } catch (e: Exception) {

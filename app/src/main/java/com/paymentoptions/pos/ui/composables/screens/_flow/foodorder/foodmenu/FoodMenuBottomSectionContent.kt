@@ -15,10 +15,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -56,13 +52,12 @@ fun FoodMenuBottomSectionContent(
     foodCategoriesAvailable: Boolean,
     foodCategories: List<CategoryListDataRecord>,
     selectedFoodCategory: CategoryListDataRecord?,
+    updateSelectedFoodCategory: (CategoryListDataRecord) -> Unit,
     foodItemsAvailable: Boolean,
     cartState: Cart,
-//    updateCartState: (Cart) -> Unit,
     updateFlowStage: (FoodOrderFlowStage) -> Unit,
 ) {
     val scrollState = rememberScrollState()
-    var selectedFoodCategoryIndex by remember { mutableIntStateOf(0) }
     var searchState = rememberTextFieldState()
 
     Column(
@@ -100,9 +95,9 @@ fun FoodMenuBottomSectionContent(
         if (!foodCategoriesAvailable) MyCircularProgressIndicator(text = "Loading food categories...")
         else if (foodCategories.isEmpty()) NoData(text = " No food categories available") else FoodCategories(
             foodCategories = foodCategories,
-            selectedIndex = selectedFoodCategoryIndex,
+            selectedFoodCategory = selectedFoodCategory,
             onClick = {
-                selectedFoodCategoryIndex = it
+                updateSelectedFoodCategory(it)
             },
             modifier = Modifier
                 .padding(start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)

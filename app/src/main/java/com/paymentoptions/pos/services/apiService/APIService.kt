@@ -61,10 +61,10 @@ interface ApiService {
         @Body post: PaymentRequest,
     ): PaymentResponse
 
-    @GET("entities/merchant/catalog/all-categories/{dasmid}")
+    @GET("entities/merchant/catalog/all-categories/{merchantId}")
     suspend fun categoryList(
         @HeaderMap headers: Map<String, String>,
-        @Path("dasmid") dasmid: String,
+        @Path("merchantId") merchantId: String,
     ): CategoryListResponse
 
     @GET("entities/merchant/catalog/all-categories/{categoryId}")

@@ -137,9 +137,9 @@ fun FoodOrderFlow(
         foodOrderFlowStage = newFoodOrderFlowStage
     }
 
-    fun updateCartState(newCart: Cart) {
-        cartState = newCart
-    }
+//    fun updateCartState(newCart: Cart) {
+//        cartState = newCart
+//    }
 
     LaunchedEffect(Unit) {
         foodCategoryListAvailable = false
@@ -166,6 +166,8 @@ fun FoodOrderFlow(
         if (selectedFoodCategory.isNotNull()) {
             try {
                 val foodItemListFromAPI = productList(context, selectedFoodCategory!!.CategoryID)
+
+                println("selectedFoodCategory: ${selectedFoodCategory!!.CategoryID} | $foodItemListFromAPI")
 
                 if (foodItemListFromAPI != null) {
 
@@ -203,9 +205,9 @@ fun FoodOrderFlow(
                 foodCategoriesAvailable = foodCategoryListAvailable,
                 foodCategories = foodCategoryList,
                 selectedFoodCategory = selectedFoodCategory,
+                updateSelectedFoodCategory = { selectedFoodCategory = it },
                 foodItemsAvailable = foodItemListAvailable,
                 cartState = cartState,
-//                updateCartState = { updateCartState(it) },
                 updateFlowStage = { updateFlowStage(it) })
         }
 

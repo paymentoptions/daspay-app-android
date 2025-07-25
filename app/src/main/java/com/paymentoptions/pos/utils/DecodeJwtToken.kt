@@ -15,23 +15,27 @@ fun decodeJwtPayload(token: String): JSONObject {
     return JSONObject(decodedPayload)
 }
 
-fun getDasmidFromToken(decodedTokenJson: JSONObject): String {
-    val rawList = decodedTokenJson["custom:DASMID"] as? String
-    val jsonArray = JSONArray(rawList)
-    val result = mutableListOf<String>()
-
-    for (i in 0 until jsonArray.length()) result.add(jsonArray.getString(i))
-
-    val dasmid = result[0]
-    return dasmid
-}
-
 fun getKeyFromToken(decodedTokenJson: JSONObject, key: String): String {
 
     return try {
-        decodedTokenJson[key] as String
+        decodedTokenJson[key] as? String ?: ""
     } catch (_: Exception) {
         "No data from API"
     }
 
 }
+
+fun getDasmidFromToken(decodedTokenJson: JSONObject): String {
+    val dasmidList = getKeyFromToken(decodedTokenJson = decodedTokenJson, key = "custom:DASMID")
+    val jsonArray = JSONArray(dasmidList)
+    val result = mutableListOf<String>()
+
+    for (i in 0 until jsonArray.length()) result.add(jsonArray.getString(i))
+
+    return result[0]
+}
+
+fun getMerchantIdFromToken(decodedTokenJson: JSONObject): String {
+    return getKeyFromToken(decodedTokenJson = decodedTokenJson, key = "custom:MerchantID")
+}
+
