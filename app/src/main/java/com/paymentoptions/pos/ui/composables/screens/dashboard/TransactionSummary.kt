@@ -71,12 +71,6 @@ fun TransactionSummary(
     val dateStringFormatted = SimpleDateFormat("dd MMMM YYYY").format(date)
     var isLongClicked = longClickedTransactionId == transaction.TransactionID.toString()
 
-//    val niceDateStr: String? = DateUtils.getRelativeTimeSpanString(
-//        now = date.getTime(),
-//        time = Calendar.getInstance().getTimeInMillis(),
-//        DateUtils.MINUTE_IN_MILLIS
-//    )
-
     val borderRadius = 20.dp
     val haptics = LocalHapticFeedback.current
 

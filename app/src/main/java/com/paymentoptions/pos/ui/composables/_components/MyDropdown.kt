@@ -1,19 +1,24 @@
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,14 +29,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
+import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderThin
+import com.paymentoptions.pos.ui.theme.primary500
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyDropdown(
+    navController: NavController,
     filters: Map<String, String>,
     selectedFilter: Map.Entry<String, String>,
     onFilterChange: (Map.Entry<String, String>) -> Unit,
@@ -39,9 +51,9 @@ fun MyDropdown(
     icon: ImageVector? = null,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
-    if (filters.isNotEmpty()) Box {
-
+    if (filters.isNotEmpty()) {
         Row(
             modifier = modifier
                 .border(borderThin, shape = RoundedCornerShape(4.dp))
@@ -70,20 +82,78 @@ fun MyDropdown(
                 contentDescription = "Calender",
             )
         }
+    }
 
+    if (expanded) ModalBottomSheet(
+        modifier = Modifier.fillMaxWidth(),
+        onDismissRequest = { expanded = false },
+        sheetState = sheetState,
+        containerColor = Color.White,
+        contentColor = primary500,
+    ) {
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.background(
-                Color.White
-            )
-        ) {
-            filters.forEach { option ->
-                DropdownMenuItem(text = { Text(option.value) }, onClick = {
-                    onFilterChange(option)
-                    expanded = false
-                }, modifier = Modifier.background(Color.White))
+        ScreenTitleWithCloseButton(
+            navController = navController,
+            title = "Transaction Period",
+            onClose = { expanded = false },
+            fontSize = 16.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
+                    vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+                )
+                .background(Color.White)
+        )
+
+        filters.entries.forEachIndexed { index, option ->
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
+                            end = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP.plus(10.dp)
+                        )
+                        .clickable {
+                            onFilterChange(option)
+//                            expanded = false
+                        },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = option.value,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .background(Color.White, shape = RoundedCornerShape(50))
+                            .border(borderThin, shape = RoundedCornerShape(50)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (selectedFilter == option) Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .background(primary500, shape = RoundedCornerShape(50))
+                        )
+                    }
+                }
+
+                if (index != filters.entries.size - 1) HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color.LightGray.copy(alpha = 0.2f)
+                )
             }
         }
     }

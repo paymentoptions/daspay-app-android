@@ -65,9 +65,6 @@ class SharedPreferences {
             val authDetailsJson =
                 authDetailsString?.let { Json.decodeFromString<SignInResponse>(it) }
 
-//            val decodedToken = decodeJwtPayload(authDetailsJson!!.data.token.idToken)
-//            println("decodedToken: $decodedToken")
-
             return authDetailsJson
         }
 

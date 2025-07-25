@@ -1,8 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder.reviewcart
 
 import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,12 +17,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,8 +39,9 @@ import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
+import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodOrderFlowStage
-import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu.FoodSummary
+import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu.FoodSummaryForReview
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.primary500
@@ -60,11 +61,13 @@ fun ReviewCartBottomSectionContent(
     navController: NavController,
     enableScrolling: Boolean = false,
     cartState: Cart,
+    updateCartSate: (Cart) -> Unit,
     updateFlowStage: (FoodOrderFlowStage) -> Unit,
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val currency = "HKD"
+    var longClickedFoodItem by remember { mutableStateOf<FoodItem?>(null) }
 
     Column(
         modifier = Modifier
@@ -110,29 +113,17 @@ fun ReviewCartBottomSectionContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-                )
                 .conditional(enableScrolling) {
                     weight(1f).verticalScroll(scrollState)
                 }, verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            cartState.getFoodItems().forEach { foodItem ->
-
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(borderThin, shape = RoundedCornerShape(16.dp))
-                        .padding(8.dp),
-                    colors = CardDefaults.cardColors().copy(
-                        containerColor = Color.Transparent
-                    )
-                ) {
-                    FoodSummary(
-                        foodItem,
-                        cartState,
-                    )
-                }
+            cartState.getFoodItemsForReview().forEach { foodItem ->
+                FoodSummaryForReview(
+                    foodItem,
+                    longClickedFoodItem,
+                    cartState,
+                    updateLongClickedFoodItem = { longClickedFoodItem = it },
+                    updateCartSate = { updateCartSate(cartState) })
             }
         }
 
@@ -202,8 +193,6 @@ fun ReviewCartBottomSectionContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -216,9 +205,7 @@ fun ReviewCartBottomSectionContent(
             )
 
             HorizontalDivider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White.copy(alpha = 0.2f))
+                modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
             )
 
             Row(
@@ -294,9 +281,7 @@ fun ReviewCartBottomSectionContent(
             }
 
             HorizontalDivider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White.copy(alpha = 0.2f))
+                modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
             )
 
             Row(
@@ -313,7 +298,6 @@ fun ReviewCartBottomSectionContent(
                     amount = "+" + calculateGrandTotal(cartState).toString(),
                     fontSize = 14.sp
                 )
-
             }
         }
 
@@ -324,7 +308,7 @@ fun ReviewCartBottomSectionContent(
             text = "Receive Money",
             onClick = {
                 Toast.makeText(context, "Under Development", Toast.LENGTH_SHORT).show()
-//                updateFlowStage(FlowStage.PAYMENT)
+//                updateFlowStage(FoodOrderFlowStage.PAYMENT)
             },
             modifier = Modifier
                 .fillMaxWidth()

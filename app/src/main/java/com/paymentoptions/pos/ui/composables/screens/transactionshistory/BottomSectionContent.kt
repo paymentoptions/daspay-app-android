@@ -215,6 +215,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             ) {
 
                 MyDropdown(
+                    navController,
                     filters,
                     selectedFilter,
                     onFilterChange = { selectedFilter = it },

@@ -67,10 +67,10 @@ interface ApiService {
         @Path("merchantId") merchantId: String,
     ): CategoryListResponse
 
-    @GET("entities/merchant/catalog/all-categories/{categoryId}")
+    @GET("entities/merchant/catalog/all-products/{categoryId}")
     suspend fun productList(
         @HeaderMap headers: Map<String, String>,
-        @Path("categoryId") categoryId: String = "8c5c19ef-91ef-4ad4-bbf3-118411e90065",
+        @Path("categoryId") categoryId: String,
     ): ProductListResponse
 }
 

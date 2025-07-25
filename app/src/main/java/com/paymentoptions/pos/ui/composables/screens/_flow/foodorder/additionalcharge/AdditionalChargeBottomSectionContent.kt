@@ -42,10 +42,12 @@ import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
+import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodOrderFlowStage
+import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.formatAmount
 import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
@@ -57,17 +59,17 @@ fun AdditionalChargeBottomSectionContent(
     navController: NavController,
     enableScrolling: Boolean = false,
     cartState: Cart,
+    updateCartSate: (Cart) -> Unit,
     updateFlowStage: (FoodOrderFlowStage) -> Unit,
 ) {
     val scrollState = rememberScrollState()
-    var rawInput by remember { mutableStateOf("") }
 
-    fun formatAmount(input: String): String {
-        if (input.isEmpty()) return "0.00"
-        val cents = input.toLong()
-        val dollars = cents / 100
-        val centPortion = (cents % 100).toString().padStart(2, '0')
-        return "$dollars.$centPortion"
+    println("cartState: ${cartState.additionalCharge}")
+
+    var rawInput by remember {
+        mutableStateOf(
+            cartState.additionalCharge.times(100).toInt().toString()
+        )
     }
 
     val formattedAmount = formatAmount(rawInput)
@@ -110,11 +112,22 @@ fun AdditionalChargeBottomSectionContent(
     val currency = "HKD"
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        Spacer(modifier = Modifier.height(20.dp))
+        ScreenTitleWithCloseButton(
+            navController,
+            title = "",
+            onClose = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+        )
+
+
 
         Column(
             modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
@@ -235,7 +248,7 @@ fun AdditionalChargeBottomSectionContent(
             onClick = {
                 cartState.additionalAmountNote = noteState.text.toString()
                 cartState.additionalCharge = rawInput.toFloat().div(100)
-                cartState.updateAvailable = true
+                updateCartSate(cartState)
                 updateFlowStage(FoodOrderFlowStage.REVIEW_CART)
             })
     }

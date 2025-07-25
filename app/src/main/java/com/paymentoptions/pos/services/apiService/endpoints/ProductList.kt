@@ -20,7 +20,7 @@ suspend fun productList(context: Context, categoryId: String): ProductListRespon
         val requestHeaders = generateRequestHeaders(idToken ?: "")
 
         val productListResponse =
-            RetrofitClient.api.productList(requestHeaders, categoryId = categoryId)
+            RetrofitClient.api.productList(headers = requestHeaders, categoryId = categoryId)
 
         return productListResponse
     } catch (e: Exception) {

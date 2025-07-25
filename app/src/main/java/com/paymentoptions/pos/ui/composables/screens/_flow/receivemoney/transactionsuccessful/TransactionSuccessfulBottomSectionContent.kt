@@ -211,9 +211,8 @@ fun TransactionSuccessfulBottomSectionContent(
             Spacer(modifier = Modifier.height(10.dp))
 
             HorizontalDivider(
-                modifier = Modifier
-                    .background(Color.White.copy(alpha = 0.1f))
-                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                color = Color.LightGray.copy(alpha = 0.2f)
             )
 
             Column(

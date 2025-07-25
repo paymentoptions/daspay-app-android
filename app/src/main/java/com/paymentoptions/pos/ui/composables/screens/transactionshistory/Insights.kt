@@ -231,7 +231,10 @@ fun Insights(
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.background(Color.White.copy(alpha = 0.2f)))
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.LightGray.copy(alpha = 0.2f)
+            )
 
             //All Earnings
             Column(

@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +14,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,12 +56,16 @@ fun FoodMenuBottomSectionContent(
     updateSelectedFoodCategory: (CategoryListDataRecord) -> Unit,
     foodItemsAvailable: Boolean,
     cartState: Cart,
+    updateCartSate: (Cart) -> Unit,
     updateFlowStage: (FoodOrderFlowStage) -> Unit,
 ) {
     val scrollState = rememberScrollState()
     var searchState = rememberTextFieldState()
+    var cartItemQuanitityState = remember {
+        derivedStateOf { cartState.itemQuantity }
+    }
 
-    Column(
+    if (cartItemQuanitityState.value > -1) Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
@@ -91,7 +96,6 @@ fun FoodMenuBottomSectionContent(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-
         if (!foodCategoriesAvailable) MyCircularProgressIndicator(text = "Loading food categories...")
         else if (foodCategories.isEmpty()) NoData(text = " No food categories available") else FoodCategories(
             foodCategories = foodCategories,
@@ -119,7 +123,7 @@ fun FoodMenuBottomSectionContent(
                 .fillMaxWidth()) {
 
             val foodItemsInCategory =
-                cartState.foodItemMapByCategory[selectedFoodCategory?.CategoryID]
+                cartState.foodItemMapByCategoryId[selectedFoodCategory?.CategoryID]
                     ?: listOf<FoodItem>()
 
             val filteredFoodItems = foodItemsInCategory.filter { foodItem ->
@@ -129,21 +133,17 @@ fun FoodMenuBottomSectionContent(
             }
 
             if (!foodItemsAvailable) MyCircularProgressIndicator() else if (filteredFoodItems.isEmpty()) NoData(
-                text = "No food items found"
+                text = if (foodItemsInCategory.isEmpty()) "No food items found in this category" else "No food items found matching your search"
             )
             else filteredFoodItems.forEachIndexed { index, foodItem ->
                 FoodSummary(
-                    foodItem,
-                    cartState,
-                )
+                    foodItem, cartState, updateCartSate = { updateCartSate(cartState) })
 
                 if (index + 1 < filteredFoodItems.size) HorizontalDivider(
-                    modifier = Modifier
-                        .padding(vertical = 10.dp)
-                        .background(Color.White.copy(alpha = 0.8f)),
+                    modifier = Modifier.padding(vertical = 10.dp),
+                    color = Color.LightGray.copy(alpha = 0.2f),
                 )
             }
-
         }
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -172,9 +172,7 @@ fun FoodMenuBottomSectionContent(
             Spacer(modifier = Modifier.height(10.dp))
 
             HorizontalDivider(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.White.copy(alpha = 0.2f))
+                modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -197,9 +195,10 @@ fun FoodMenuBottomSectionContent(
             Spacer(modifier = Modifier.height(20.dp))
 
             FilledButton(
-                disabled = cartState.itemQuantity <= 0, text = "Review and Confirm", onClick = {
-                    updateFlowStage(FoodOrderFlowStage.REVIEW_CART)
-                }, modifier = Modifier
+                disabled = cartState.itemQuantity <= 0,
+                text = "Review and Confirm",
+                onClick = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
+                modifier = Modifier
                     .fillMaxWidth()
                     .height(59.dp)
             )

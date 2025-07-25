@@ -140,7 +140,9 @@ fun ReceiptBottomSectionContent(
             )
         }
 
-        HorizontalDivider(modifier = Modifier.fillMaxWidth())
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
+        )
 
         //Section 2 : Total
         Row(
@@ -161,7 +163,9 @@ fun ReceiptBottomSectionContent(
             )
         }
 
-        HorizontalDivider(modifier = Modifier.fillMaxWidth())
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
+        )
 
 
         Column(
@@ -262,7 +266,10 @@ fun ReceiptBottomSectionContent(
         }
 
 
-        HorizontalDivider(modifier = Modifier.fillMaxWidth())
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.LightGray.copy(alpha = 0.2f)
+        )
 
         //Additional Info
         Column(

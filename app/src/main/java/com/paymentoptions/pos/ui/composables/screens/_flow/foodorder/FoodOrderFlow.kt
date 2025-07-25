@@ -21,12 +21,15 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.additionalc
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu.FoodMenuBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.reviewcart.ReviewCartBottomSectionContent
 
+const val MAX_QUANTITY_PER_FOOD_ITEM = 20
+
 enum class FoodOrderFlowStage {
     MENU, REVIEW_CART, ADDITIONAL_CHARGE, PAYMENT, RESULT_PROCESSING, RESULT_ERROR, RESULT_SUCCESS
 }
 
 class FoodItem(
     val item: ProductListDataRecord,
+    val isVegetarian: Boolean = true,
     var cartQuantity: Int = 0,
 ) {
     fun decreaseQuantity() {
@@ -40,10 +43,14 @@ class FoodItem(
     fun copyCartQuantity(f: FoodItem) {
         this.cartQuantity = f.cartQuantity
     }
+
+    override fun toString(): String {
+        return this.item.ProductName + ": " + this.cartQuantity
+    }
 }
 
 class Cart(
-    var foodItemMapByCategory: MutableMap<String, List<FoodItem>> = mutableMapOf<String, List<FoodItem>>(),
+    var foodItemMapByCategoryId: MutableMap<String, List<FoodItem>> = mutableMapOf<String, List<FoodItem>>(),
     var timestampInMilliseconds: Long? = null,
     var itemQuantity: Int = 0,
     var itemTotal: Float = 0.0f,
@@ -51,20 +58,25 @@ class Cart(
     var gstPercentage: Float,
     var additionalCharge: Float,
     var additionalAmountNote: String,
-    var updateAvailable: Boolean = false,
 ) {
+    fun removeFoodItem(foodItem: FoodItem) {
+        if (foodItem.cartQuantity > 0) {
+            this.itemTotal -= foodItem.cartQuantity * foodItem.item.ProductPrice
+            this.itemQuantity -= foodItem.cartQuantity
+            foodItem.cartQuantity = 0
+        }
+    }
 
     fun decreaseFoodItemQuantity(foodItem: FoodItem) {
-        if (foodItem.cartQuantity > 1) {
+        if (foodItem.cartQuantity > 0) {
             foodItem.decreaseQuantity()
             this.itemQuantity--
             this.itemTotal -= foodItem.item.ProductPrice
         }
-
     }
 
     fun increaseFoodItemQuantity(foodItem: FoodItem) {
-        if (foodItem.cartQuantity > 4) {
+        if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
             foodItem.increaseQuantity()
             this.itemQuantity++
             this.itemTotal += foodItem.item.ProductPrice
@@ -72,34 +84,44 @@ class Cart(
     }
 
     fun replaceFoodCategory(categoryId: String, newFoodItems: List<FoodItem>) {
-
-        val oldFoodItemsInTheCategory = this.foodItemMapByCategory[categoryId]
+        val oldFoodItemsInTheCategory = this.foodItemMapByCategoryId[categoryId]
         val newFoodItemsInTheCategorySorted =
             newFoodItems.sortedBy { foodItem -> foodItem.item.CategoryID }
 
-        if (oldFoodItemsInTheCategory.isNullOrEmpty()) this.foodItemMapByCategory.plus(pair = categoryId to newFoodItems)
+        if (oldFoodItemsInTheCategory.isNullOrEmpty()) this.foodItemMapByCategoryId[categoryId] =
+            newFoodItemsInTheCategorySorted
         else {
-
             newFoodItemsInTheCategorySorted.forEach { newFoodItem ->
                 val oldFoodItem =
                     oldFoodItemsInTheCategory.find { oldFoodItem -> oldFoodItem.item.ProductID == newFoodItem.item.ProductID }
 
                 if (oldFoodItem.isNotNull()) newFoodItem.copyCartQuantity(oldFoodItem!!)
             }
-
-            this.foodItemMapByCategory[categoryId] = newFoodItemsInTheCategorySorted
+            this.foodItemMapByCategoryId[categoryId] = newFoodItemsInTheCategorySorted
         }
     }
 
-    fun getFoodItems(): List<FoodItem> {
-
+    fun getFoodItemsForReview(): List<FoodItem> {
         var foodItems: List<FoodItem> = listOf<FoodItem>()
 
-        this.foodItemMapByCategory.forEach { categoryFoodItemMap ->
-            foodItems.plus(categoryFoodItemMap.value)
+        this.foodItemMapByCategoryId.forEach { categoryFoodItemMap ->
+            categoryFoodItemMap.value.filter { foodItem -> foodItem.cartQuantity > 0 }
+                .forEach { foodItem -> foodItems = foodItems.plus(foodItem) }
         }
+        return foodItems
+    }
 
-        return foodItems.filter { foodItem -> foodItem.cartQuantity > 1 }
+    fun copy(): Cart {
+        return Cart(
+            foodItemMapByCategoryId = this.foodItemMapByCategoryId,
+            serviceChargePercentage = this.serviceChargePercentage,
+            gstPercentage = this.gstPercentage,
+            additionalCharge = this.additionalCharge,
+            timestampInMilliseconds = this.timestampInMilliseconds,
+            itemQuantity = this.itemQuantity,
+            itemTotal = this.itemTotal,
+            additionalAmountNote = this.additionalAmountNote,
+        )
     }
 }
 
@@ -137,10 +159,6 @@ fun FoodOrderFlow(
         foodOrderFlowStage = newFoodOrderFlowStage
     }
 
-//    fun updateCartState(newCart: Cart) {
-//        cartState = newCart
-//    }
-
     LaunchedEffect(Unit) {
         foodCategoryListAvailable = false
         try {
@@ -152,8 +170,9 @@ fun FoodOrderFlow(
             selectedFoodCategory = foodCategoryList.firstOrNull()
 
         } catch (e: Exception) {
-            Toast.makeText(context, "Error fetching food categories from API", Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(
+                context, "Error fetching food categories from API", Toast.LENGTH_SHORT
+            ).show()
         } finally {
             foodCategoryListAvailable = true
         }
@@ -167,10 +186,7 @@ fun FoodOrderFlow(
             try {
                 val foodItemListFromAPI = productList(context, selectedFoodCategory!!.CategoryID)
 
-                println("selectedFoodCategory: ${selectedFoodCategory!!.CategoryID} | $foodItemListFromAPI")
-
                 if (foodItemListFromAPI != null) {
-
                     val newFoodItems = foodItemListFromAPI.data.records.map { record ->
                         FoodItem(item = record)
                     }
@@ -191,7 +207,6 @@ fun FoodOrderFlow(
     }
 
     when (foodOrderFlowStage) {
-
         FoodOrderFlowStage.MENU -> SectionedLayout(
             navController = navController,
             bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
@@ -208,6 +223,7 @@ fun FoodOrderFlow(
                 updateSelectedFoodCategory = { selectedFoodCategory = it },
                 foodItemsAvailable = foodItemListAvailable,
                 cartState = cartState,
+                updateCartSate = { cartState = it.copy() },
                 updateFlowStage = { updateFlowStage(it) })
         }
 
@@ -223,6 +239,7 @@ fun FoodOrderFlow(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
                     cartState = cartState,
+                    updateCartSate = { cartState = it.copy() },
                     updateFlowStage = { updateFlowStage(it) })
             }
         }
@@ -240,6 +257,7 @@ fun FoodOrderFlow(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
                     cartState = cartState,
+                    updateCartSate = { cartState = it.copy() },
                     updateFlowStage = { updateFlowStage(it) })
 
             }

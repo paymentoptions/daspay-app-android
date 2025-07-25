@@ -2,7 +2,6 @@ package com.paymentoptions.pos.ui.composables.screens.settings
 
 import MyDialog
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -157,12 +156,15 @@ fun BottomSectionContent(navController: NavController) {
                 Spacer(modifier = Modifier.height(30.dp))
 
                 LinkWithIcon(
-                    text = email, url = "mailto:" + email, icon = Icons.Outlined.Mail
+                    text = email, url = "mailto:$email", icon = Icons.Outlined.Mail
                 )
 
                 Spacer(modifier = Modifier.height(50.dp))
 
-                HorizontalDivider(modifier = Modifier.background(Color.White.copy(alpha = 0.2f)))
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color.LightGray.copy(alpha = 0.2f)
+                )
 
                 Spacer(modifier = Modifier.height(20.dp))
 

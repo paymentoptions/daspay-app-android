@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem
+import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.MAX_QUANTITY_PER_FOOD_ITEM
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
@@ -35,8 +36,8 @@ import com.paymentoptions.pos.utils.modifiers.conditional
 fun FoodSummary(
     foodItem: FoodItem,
     cartState: Cart,
+    updateCartSate: (Cart) -> Unit,
 ) {
-    val maxQuantityPerFoodItem = 4
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -47,14 +48,13 @@ fun FoodSummary(
         FoodImage(
             foodItem.item.ProductName,
             foodItem.item.ProductImage,
-            foodItem.item.isVegetarian,
+            foodItem.isVegetarian,
             modifier = Modifier.size(44.dp)
         )
 
         FoodDetail(foodItem, modifier = Modifier.weight(1f))
 
         //Add to cart button
-
         Row(
             modifier = Modifier
                 .width(80.dp)
@@ -80,6 +80,7 @@ fun FoodSummary(
                     .clickable {
                         if (foodItem.cartQuantity == 0) cartState.increaseFoodItemQuantity(foodItem)
                         else cartState.decreaseFoodItemQuantity(foodItem)
+                        updateCartSate(cartState)
                     })
 
             Text(
@@ -90,9 +91,10 @@ fun FoodSummary(
                 modifier = Modifier
                     .weight(if (foodItem.cartQuantity == 0) 2.5f else 1.5f)
                     .clickable(enabled = foodItem.cartQuantity == 0) {
-                        if (foodItem.cartQuantity < maxQuantityPerFoodItem) cartState.increaseFoodItemQuantity(
-                            foodItem
-                        )
+                        if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
+                            cartState.increaseFoodItemQuantity(foodItem)
+                            updateCartSate(cartState)
+                        }
                     },
                 textAlign = TextAlign.Center
             )
@@ -103,10 +105,11 @@ fun FoodSummary(
                 contentDescription = "Add",
                 modifier = Modifier
                     .weight(1f)
-                    .clickable(enabled = foodItem.cartQuantity < maxQuantityPerFoodItem) {
-                        if (foodItem.cartQuantity < maxQuantityPerFoodItem) cartState.increaseFoodItemQuantity(
-                            foodItem
-                        )
+                    .clickable(enabled = foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
+                        if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
+                            cartState.increaseFoodItemQuantity(foodItem)
+                            updateCartSate(cartState)
+                        }
                     })
         }
     }

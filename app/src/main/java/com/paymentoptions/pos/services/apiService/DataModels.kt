@@ -363,10 +363,6 @@ data class ProductListDataRecord(
     val Currency: String,
     val DeletedAt: String?,
     val DeletedBy: String?,
-
-    //Not from api
-    val isVegetarian: Boolean = true,
-    var cartQuantity: Int = 0,
 )
 
 data class ProductListResponseData(
