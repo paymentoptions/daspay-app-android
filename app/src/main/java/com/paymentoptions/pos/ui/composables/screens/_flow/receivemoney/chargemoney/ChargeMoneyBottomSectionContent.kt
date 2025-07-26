@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +27,6 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.ReceiveMoneyFlowStage
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
@@ -33,14 +34,12 @@ import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
 import com.paymentoptions.pos.utils.paymentMethods
 
-
 @Composable
 fun PaymentMethodButton(
     paymentMethod: PaymentMethod,
     selectedPaymentMethod: PaymentMethod,
     onSelected: () -> Unit,
     modifier: Modifier = Modifier,
-    updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
 ) {
 
     val isSelected = selectedPaymentMethod == paymentMethod
@@ -69,7 +68,6 @@ fun PaymentMethodButton(
         )
 
     }
-
 }
 
 @Composable
@@ -80,13 +78,15 @@ fun ChargeMoneyBottomSectionContent(
     selectedPaymentMethod: PaymentMethod,
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
     updateFlowStage: (Any) -> Unit = {},
+    onChangeAmount: () -> Unit,
 ) {
     val currency = "HKD"
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            .verticalScroll(state = rememberScrollState(), enabled = enableScrolling),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
@@ -133,7 +133,8 @@ fun ChargeMoneyBottomSectionContent(
                     .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                     .height(35.dp)
                     .scale(0.7f),
-                onClick = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) })
+                onClick = onChangeAmount
+            )
         }
     }
 }

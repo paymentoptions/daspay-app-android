@@ -1,9 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.inputnoney
 
-import MyDialog
-import android.app.Activity
-import android.content.Intent
-import android.provider.Settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,13 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
@@ -73,13 +67,9 @@ fun InputMoneyBottomSectionContent(
     updateNoteState: (String) -> Unit = {},
     updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
 ) {
-
     val scrollState = rememberScrollState()
-    val context = LocalContext.current
-    val activity = context as? Activity
     var showReceiveMoney by remember { mutableStateOf(true) }
     var paymentLoader by remember { mutableStateOf(false) }
-    var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
     val noteState = rememberTextFieldState()
     val currency = "HKD"
 
@@ -91,23 +81,6 @@ fun InputMoneyBottomSectionContent(
             else -> if (amountToCharge.length < 9) updateAmountToCharge(amountToCharge + key)
         }
     }
-
-    MyDialog(
-        showDialog = showDeveloperOptionsEnabled,
-        title = "Error",
-        text = "You need to disable developer options to proceed further.",
-        acceptButtonText = "Exit",
-        cancelButtonText = "Developer Options",
-        onAcceptFn = {
-            showDeveloperOptionsEnabled = false
-            activity?.finish()
-        },
-        onDismissFn = {
-            showDeveloperOptionsEnabled = false
-            val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
-            context.startActivity(intent)
-        },
-    )
 
     Column(
         modifier = Modifier
@@ -279,12 +252,8 @@ fun InputMoneyBottomSectionContent(
                 .fillMaxWidth()
                 .height(59.dp),
             onClick = {
-                if (!DeveloperOptions.isEnabled(context)) {
-                    showDeveloperOptionsEnabled = true
-                } else {
-                    updateNoteState(noteState.text.toString())
-                    updateFlowStage(ReceiveMoneyFlowStage.CHARGE_MONEY)
-                }
+                updateNoteState(noteState.text.toString())
+                updateFlowStage(ReceiveMoneyFlowStage.CHARGE_MONEY)
             })
     }
 }

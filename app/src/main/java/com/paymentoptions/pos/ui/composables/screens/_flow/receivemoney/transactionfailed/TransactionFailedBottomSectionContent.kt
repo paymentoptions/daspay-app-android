@@ -38,7 +38,6 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
-import com.paymentoptions.pos.utils.modifiers.conditional
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -52,7 +51,6 @@ fun TransactionFailedBottomSectionContent(
     updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
 ) {
     val currency = "HKD"
-    val scrollState = rememberScrollState()
     val dateString =
         transaction?.Date ?: OffsetDateTime.now().toString()  //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
@@ -88,7 +86,7 @@ fun TransactionFailedBottomSectionContent(
                 .background(
                     brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(8.dp)
                 )
-                .conditional(enableScrolling) { verticalScroll(scrollState) },
+                .verticalScroll(state = rememberScrollState(), enabled = enableScrolling),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 

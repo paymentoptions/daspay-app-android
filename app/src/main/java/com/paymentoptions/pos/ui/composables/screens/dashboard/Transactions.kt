@@ -40,7 +40,6 @@ fun Transactions(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         horizontalAlignment = Alignment.End,
         modifier = Modifier.fillMaxSize()
-//            .verticalScroll(scrollState)
     ) {
 
         var earningAmount = 0.0f

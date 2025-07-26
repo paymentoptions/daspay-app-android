@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receivemoney
 
 import MyDialog
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.provider.Settings
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
@@ -64,7 +66,6 @@ import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.transact
 import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.cashPaymentMethod
-import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
@@ -85,6 +86,7 @@ fun ReceiveMoneyFlow(
     initialReceiveMoneyFlowStage: ReceiveMoneyFlowStage = ReceiveMoneyFlowStage.INPUT_MONEY,
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
 
     val enableScrollingInsideBottomSectionContent = false
     val scrollState = rememberScrollState()
@@ -99,6 +101,8 @@ fun ReceiveMoneyFlow(
 
     var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(paymentMethods.first()) }
     var nfcStatusPair by remember { mutableStateOf(Nfc.getStatus(context)) }
+
+    var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
     var showNFCNotPresent by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
 
@@ -135,27 +139,49 @@ fun ReceiveMoneyFlow(
         }
 
         ReceiveMoneyFlowStage.CHARGE_MONEY -> {
+
+            val localEnableScrollingInsideBottomSectionContent = true
+
             SectionedLayout(
                 navController = navController,
                 bottomSectionMinHeightRatio = 0.35f,
                 bottomSectionMaxHeightRatio = 0.35f,
                 bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
                 bottomSectionPaddingInDp = 0.dp,
-                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                enableScrollingOfBottomSectionContent = !localEnableScrollingInsideBottomSectionContent,
                 imageBelowLogo = {
                     Column(
                         modifier = Modifier
                             .height(screenRatioToDp(0.5f))
                             .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                            .conditional(!enableScrollingInsideBottomSectionContent) {
-                                verticalScroll(scrollState)
-                            },
+                            .verticalScroll(scrollState),
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         when (selectedPaymentMethod) {
                             tapPaymentMethod -> {
-                                if (!nfcStatusPair.second) showNFCNotEnabled = true
+
+                                if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
+                                    true
+                                else if (!nfcStatusPair.second) showNFCNotEnabled = true
+
+                                MyDialog(
+                                    showDialog = showDeveloperOptionsEnabled,
+                                    title = "Caution",
+                                    text = "You need to disable developer options to proceed further.",
+                                    acceptButtonText = "Developer Options",
+                                    cancelButtonText = "Exit",
+                                    onAcceptFn = {
+                                        showDeveloperOptionsEnabled = false
+                                        activity?.finish()
+                                    },
+                                    onDismissFn = {
+                                        showDeveloperOptionsEnabled = false
+                                        val intent =
+                                            Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+                                        context.startActivity(intent)
+                                    },
+                                )
 
                                 MyDialog(
                                     showDialog = showNFCNotEnabled,
@@ -319,11 +345,9 @@ fun ReceiveMoneyFlow(
                                             modifier = Modifier.size(AssistChipDefaults.IconSize)
                                         )
                                     })
-
                             }
 
                             cashPaymentMethod -> {
-
                                 Text(
                                     text = "Please pay cash",
                                     color = Color.White,
@@ -335,7 +359,6 @@ fun ReceiveMoneyFlow(
                             }
 
                             viaLinkPaymentMethod -> {
-
                                 Text(
                                     text = "Pay via link",
                                     color = Color.White,
@@ -350,11 +373,13 @@ fun ReceiveMoneyFlow(
                 }) {
                 ChargeMoneyBottomSectionContent(
                     navController,
-                    enableScrolling = enableScrollingInsideBottomSectionContent,
+                    enableScrolling = localEnableScrollingInsideBottomSectionContent,
                     amountToCharge = formatAmount(amountToChargeState),
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
-                    updateFlowStage = { updateFlowStage(it as ReceiveMoneyFlowStage) })
+                    updateFlowStage = { updateFlowStage(it as ReceiveMoneyFlowStage) },
+                    onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) })
+
             }
         }
 
