@@ -84,11 +84,8 @@ fun SectionedLayout(
     val borderRadiusInDp = 32.dp
     val scrollState = rememberScrollState()
 
-//    Scaffold {
     Box(
-        modifier = Modifier
-//                .padding(it)
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
 
         BackgroundImage(
@@ -126,7 +123,6 @@ fun SectionedLayout(
                 Spacer(modifier = Modifier.height(25.dp))
 
                 imageBelowLogo()
-
             }
 
             //Bottom Section
@@ -153,20 +149,17 @@ fun SectionedLayout(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .weight(1f)
                         .padding(
                             start = bottomSectionPaddingInDp,
                             top = bottomSectionPaddingInDp,
                             end = bottomSectionPaddingInDp,
                             bottom = when (bottomBarContentState) {
-                                BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp.plus(
-                                    25.dp
-                                )
-
+                                BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp.plus(25.dp)
                                 BottomBarContent.TOGGLE_BUTTON -> 20.dp
                                 BottomBarContent.NOTHING -> 20.dp
                             }
                         )
-                        .weight(1f)
                         .conditional(enableScrollingOfBottomSectionContent) {
                             verticalScroll(scrollState)
                         }) {
@@ -174,9 +167,7 @@ fun SectionedLayout(
                 }
 
                 if (bottomBarContentState === BottomBarContent.TOGGLE_BUTTON) ToggleBottomNavigationBarButton(
-                    onClick = { bottomBarContentState = BottomBarContent.NAVIGATION_BAR },
-
-                    )
+                    onClick = { bottomBarContentState = BottomBarContent.NAVIGATION_BAR })
             }
 
             //Just an overlay
@@ -194,7 +185,7 @@ fun SectionedLayout(
                 navController,
                 modifier = Modifier
                     .align(alignment = Alignment.BottomCenter)
-                    .offset(y = BOTTOM_NAVIGATION_HEIGHT_IN_DP.div(-2).plus((-5).dp))
+                    .offset(y = BOTTOM_NAVIGATION_HEIGHT_IN_DP.times(-0.6f))
                     .zIndex(5f)
                     .shadow(
                         30.dp,
@@ -236,5 +227,4 @@ fun SectionedLayout(
             }
         }
     }
-//    }
 }

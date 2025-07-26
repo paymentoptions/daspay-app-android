@@ -61,7 +61,7 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import kotlinx.coroutines.launch
 
-val BOTTOM_NAVIGATION_HEIGHT_IN_DP = 70.dp
+val BOTTOM_NAVIGATION_HEIGHT_IN_DP = 75.dp
 
 data class BottomNavigationBarItem(
     val title: String,
@@ -296,35 +296,35 @@ fun MyBottomNavigationBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
 
-            Item(home, selected, onSelected = {
+            Item(home, selected, modifier = Modifier.weight(1f), onSelected = {
 //                if (selected != home) {
                 selected = home
                 navController.navigate(selected.route)
 //                }
             })
 
-            Item(foodMenu, selected, onSelected = {
+            Item(foodMenu, selected, modifier = Modifier.weight(1f), onSelected = {
                 if (selected != foodMenu) {
                     selected = foodMenu
                     navController.navigate(selected.route)
                 }
             })
 
-            Item(receiveMoney, selected, onSelected = {
+            Item(receiveMoney, selected, modifier = Modifier.weight(1.5f), onSelected = {
                 if (selected != receiveMoney) {
                     selected = receiveMoney
                     navController.navigate(selected.route)
                 }
             })
 
-            Item(notifications, selected, onSelected = {
+            Item(notifications, selected, modifier = Modifier.weight(1f), onSelected = {
                 if (selected != notifications) {
                     selected = notifications
                     navController.navigate(selected.route)
                 }
             })
 
-            Item(more, selected, onSelected = {
+            Item(more, selected, modifier = Modifier.weight(1f), onSelected = {
                 selected = more
                 onClickShowMoreItems()
 //            navController.navigate(selected.route)
