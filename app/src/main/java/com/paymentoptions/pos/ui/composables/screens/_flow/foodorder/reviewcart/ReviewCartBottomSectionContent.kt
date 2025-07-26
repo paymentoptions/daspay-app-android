@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder.reviewcart
 
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -50,13 +49,6 @@ import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 
-fun calculateGrandTotal(cart: Cart): Float {
-    val serviceCharge = cart.itemTotal.times(cart.serviceChargePercentage.div(100))
-    val gst = cart.itemTotal.times(cart.gstPercentage.div(100))
-
-    return cart.itemTotal.plus(serviceCharge).plus(gst).plus(cart.additionalCharge)
-}
-
 @Composable
 fun ReviewCartBottomSectionContent(
     navController: NavController,
@@ -65,7 +57,7 @@ fun ReviewCartBottomSectionContent(
     updateCartSate: (Cart) -> Unit,
     updateFlowStage: (FoodOrderFlowStage) -> Unit,
 ) {
-    val context = LocalContext.current
+    LocalContext.current
     val scrollState = rememberScrollState()
     val currency = "HKD"
     var longClickedFoodItem by remember { mutableStateOf<FoodItem?>(null) }
@@ -243,9 +235,9 @@ fun ReviewCartBottomSectionContent(
 
 
                 CurrencyText(
-                    currency = currency, amount = "+" + (cartState.itemTotal.times(
-                        cartState.serviceChargePercentage.div(100)
-                    ).formatToPrecisionString()), fontSize = 14.sp
+                    currency = currency,
+                    amount = "+" + cartState.calculateServiceCharge().formatToPrecisionString(),
+                    fontSize = 14.sp
                 )
 
             }
@@ -278,8 +270,7 @@ fun ReviewCartBottomSectionContent(
 
                 CurrencyText(
                     currency = currency,
-                    amount = "+" + cartState.itemTotal.times(cartState.gstPercentage.div(100))
-                        .formatToPrecisionString(),
+                    amount = "+" + cartState.calculateGstCharge().formatToPrecisionString(),
                     fontSize = 14.sp
                 )
 
@@ -300,7 +291,7 @@ fun ReviewCartBottomSectionContent(
 
                 CurrencyText(
                     currency = currency,
-                    amount = "+" + calculateGrandTotal(cartState).formatToPrecisionString(),
+                    amount = "+" + cartState.calculateGrandTotal().formatToPrecisionString(),
                     fontSize = 14.sp
                 )
             }
@@ -312,8 +303,8 @@ fun ReviewCartBottomSectionContent(
             disabled = cartState.itemQuantity == 0,
             text = "Receive Money",
             onClick = {
-                Toast.makeText(context, "Under Development", Toast.LENGTH_SHORT).show()
-//                updateFlowStage(FoodOrderFlowStage.PAYMENT)
+//                Toast.makeText(context, "Under Development", Toast.LENGTH_SHORT).show()
+                updateFlowStage(FoodOrderFlowStage.CHARGE_MONEY)
             },
             modifier = Modifier
                 .fillMaxWidth()

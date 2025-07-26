@@ -17,10 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Money
-import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.filled.TapAndPlay
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Icon
@@ -35,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -67,12 +62,14 @@ import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.receipt.
 import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.transactionfailed.TransactionFailedBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.transactionsuccessful.TransactionSuccessfulBottomSectionContent
 import com.paymentoptions.pos.ui.theme.noBorder
+import com.paymentoptions.pos.utils.PaymentMethod
+import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.utils.paymentMethods
+import com.paymentoptions.pos.utils.qrCodePaymentMethod
+import com.paymentoptions.pos.utils.tapPaymentMethod
+import com.paymentoptions.pos.utils.viaLinkPaymentMethod
 import java.util.Date
-
-enum class ReceiveMoneyFlowStage {
-    INPUT_MONEY, CHARGE_MONEY, TRANSACTION_FAILED, TRANSACTION_SUCCESSFUL, DIGITAL_SIGNATURE, RECEIPT,
-}
 
 fun formatAmount(input: String): String {
     if (input.isEmpty()) return "0.00"
@@ -81,25 +78,6 @@ fun formatAmount(input: String): String {
     val centPortion = (cents % 100).toString().padStart(2, '0')
     return "$dollars.$centPortion"
 }
-
-class PaymentMethod(
-    val text: String,
-    val icon: ImageVector,
-    var isEnabled: Boolean = true,
-) {
-    fun setIsEnabled(isEnabled: Boolean) {
-        this.isEnabled = isEnabled
-    }
-}
-
-val tapPaymentMethod = PaymentMethod(text = "Tap", icon = Icons.Default.TapAndPlay)
-val qrCodePaymentMethod = PaymentMethod(text = "QR Code", icon = Icons.Default.QrCode)
-val cashPaymentMethod = PaymentMethod(text = "Cash", icon = Icons.Default.Money, isEnabled = false)
-val viaLinkPaymentMethod = PaymentMethod(text = "Via Link", icon = Icons.Default.Link)
-
-val paymentMethods = listOf(
-    tapPaymentMethod, qrCodePaymentMethod, cashPaymentMethod, viaLinkPaymentMethod
-)
 
 @Composable
 fun ReceiveMoneyFlow(
@@ -376,7 +354,7 @@ fun ReceiveMoneyFlow(
                     amountToCharge = formatAmount(amountToChargeState),
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
-                    updateFlowStage = { updateFlowStage(it) })
+                    updateFlowStage = { updateFlowStage(it as ReceiveMoneyFlowStage) })
             }
         }
 

@@ -223,6 +223,7 @@ fun BottomSectionContent(
 
                     try {
                         updateRefundStatus(StatusScreenType.PROCESSING)
+
                         val refundRequest = RefundRequest(
                             id = transaction?.uuid.toString(),
                             merchant_id = transaction?.DASMID.toString(),

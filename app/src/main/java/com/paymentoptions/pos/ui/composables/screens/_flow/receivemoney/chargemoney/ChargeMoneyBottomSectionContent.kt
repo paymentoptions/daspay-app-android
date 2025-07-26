@@ -25,13 +25,13 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.PaymentMethod
 import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.ReceiveMoneyFlowStage
-import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.paymentMethods
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
+import com.paymentoptions.pos.utils.paymentMethods
 
 
 @Composable
@@ -79,9 +79,8 @@ fun ChargeMoneyBottomSectionContent(
     amountToCharge: String,
     selectedPaymentMethod: PaymentMethod,
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
-    updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
+    updateFlowStage: (Any) -> Unit = {},
 ) {
-
     val currency = "HKD"
 
     Column(

@@ -1,129 +1,82 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder
 
+import MyDialog
+import android.content.Intent
+import android.os.Handler
+import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
+import com.paymentoptions.pos.device.Nfc
+import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
-import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.categoryList
 import com.paymentoptions.pos.services.apiService.endpoints.productList
+import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
+import com.paymentoptions.pos.ui.composables._components.images.PaymentTapToPayImage
+import com.paymentoptions.pos.ui.composables._components.images.cardpayment.AmexImage
+import com.paymentoptions.pos.ui.composables._components.images.cardpayment.JcbImage
+import com.paymentoptions.pos.ui.composables._components.images.cardpayment.MastercardImage
+import com.paymentoptions.pos.ui.composables._components.images.cardpayment.VisaImage
+import com.paymentoptions.pos.ui.composables._components.images.qrpayment.ApplePayImage
+import com.paymentoptions.pos.ui.composables._components.images.qrpayment.GrabPayImage
+import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment2
+import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment3
+import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment4
+import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment6
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
+import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.additionalcharge.AdditionalChargeBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu.FoodMenuBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.reviewcart.ReviewCartBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.chargemoney.ChargeMoneyBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
+import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
+import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
+import com.paymentoptions.pos.ui.theme.noBorder
+import com.paymentoptions.pos.utils.PaymentMethod
+import com.paymentoptions.pos.utils.cashPaymentMethod
+import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.utils.paymentMethods
+import com.paymentoptions.pos.utils.qrCodePaymentMethod
+import com.paymentoptions.pos.utils.tapPaymentMethod
+import com.paymentoptions.pos.utils.viaLinkPaymentMethod
 
 const val MAX_QUANTITY_PER_FOOD_ITEM = 20
-
-enum class FoodOrderFlowStage {
-    MENU, REVIEW_CART, ADDITIONAL_CHARGE, PAYMENT, RESULT_PROCESSING, RESULT_ERROR, RESULT_SUCCESS
-}
-
-class FoodItem(
-    val item: ProductListDataRecord,
-    val isVegetarian: Boolean = true,
-    var cartQuantity: Int = 0,
-) {
-    fun decreaseQuantity() {
-        this.cartQuantity--
-    }
-
-    fun increaseQuantity() {
-        this.cartQuantity++
-    }
-
-    fun copyCartQuantity(f: FoodItem) {
-        this.cartQuantity = f.cartQuantity
-    }
-
-    override fun toString(): String {
-        return this.item.ProductName + ": " + this.cartQuantity
-    }
-}
-
-class Cart(
-    var foodItemMapByCategoryId: MutableMap<String, List<FoodItem>> = mutableMapOf<String, List<FoodItem>>(),
-    var timestampInMilliseconds: Long? = null,
-    var itemQuantity: Int = 0,
-    var itemTotal: Float = 0.0f,
-    var serviceChargePercentage: Float,
-    var gstPercentage: Float,
-    var additionalCharge: Float,
-    var additionalAmountNote: String,
-) {
-    fun removeFoodItem(foodItem: FoodItem) {
-        if (foodItem.cartQuantity > 0) {
-            this.itemTotal -= foodItem.cartQuantity * foodItem.item.ProductPrice
-            this.itemQuantity -= foodItem.cartQuantity
-            foodItem.cartQuantity = 0
-        }
-    }
-
-    fun decreaseFoodItemQuantity(foodItem: FoodItem) {
-        if (foodItem.cartQuantity > 0) {
-            foodItem.decreaseQuantity()
-            this.itemQuantity--
-            this.itemTotal -= foodItem.item.ProductPrice
-        }
-    }
-
-    fun increaseFoodItemQuantity(foodItem: FoodItem) {
-        if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
-            foodItem.increaseQuantity()
-            this.itemQuantity++
-            this.itemTotal += foodItem.item.ProductPrice
-        }
-    }
-
-    fun replaceFoodCategory(categoryId: String, newFoodItems: List<FoodItem>) {
-        val oldFoodItemsInTheCategory = this.foodItemMapByCategoryId[categoryId]
-        val newFoodItemsInTheCategorySorted =
-            newFoodItems.sortedBy { foodItem -> foodItem.item.CategoryID }
-
-        if (oldFoodItemsInTheCategory.isNullOrEmpty()) this.foodItemMapByCategoryId[categoryId] =
-            newFoodItemsInTheCategorySorted
-        else {
-            newFoodItemsInTheCategorySorted.forEach { newFoodItem ->
-                val oldFoodItem =
-                    oldFoodItemsInTheCategory.find { oldFoodItem -> oldFoodItem.item.ProductID == newFoodItem.item.ProductID }
-
-                if (oldFoodItem.isNotNull()) newFoodItem.copyCartQuantity(oldFoodItem!!)
-            }
-            this.foodItemMapByCategoryId[categoryId] = newFoodItemsInTheCategorySorted
-        }
-    }
-
-    fun getFoodItemsForReview(): List<FoodItem> {
-        var foodItems: List<FoodItem> = listOf<FoodItem>()
-
-        this.foodItemMapByCategoryId.forEach { categoryFoodItemMap ->
-            categoryFoodItemMap.value.filter { foodItem -> foodItem.cartQuantity > 0 }
-                .forEach { foodItem -> foodItems = foodItems.plus(foodItem) }
-        }
-        return foodItems
-    }
-
-    fun copy(): Cart {
-        return Cart(
-            foodItemMapByCategoryId = this.foodItemMapByCategoryId,
-            serviceChargePercentage = this.serviceChargePercentage,
-            gstPercentage = this.gstPercentage,
-            additionalCharge = this.additionalCharge,
-            timestampInMilliseconds = this.timestampInMilliseconds,
-            itemQuantity = this.itemQuantity,
-            itemTotal = this.itemTotal,
-            additionalAmountNote = this.additionalAmountNote,
-        )
-    }
-}
 
 @Composable
 fun FoodOrderFlow(
@@ -154,6 +107,11 @@ fun FoodOrderFlow(
             )
         )
     }
+
+    val scrollState = rememberScrollState()
+    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(paymentMethods.first()) }
+    var nfcStatusPair by remember { mutableStateOf(Nfc.getStatus(context)) }
+    var showNFCNotEnabled by remember { mutableStateOf(false) }
 
     fun updateFlowStage(newFoodOrderFlowStage: FoodOrderFlowStage) {
         foodOrderFlowStage = newFoodOrderFlowStage
@@ -245,7 +203,6 @@ fun FoodOrderFlow(
         }
 
         FoodOrderFlowStage.ADDITIONAL_CHARGE -> {
-
             SectionedLayout(
                 navController = navController,
                 bottomSectionMaxHeightRatio = 0.95f,
@@ -263,9 +220,271 @@ fun FoodOrderFlow(
             }
         }
 
-        FoodOrderFlowStage.PAYMENT -> {}
-        FoodOrderFlowStage.RESULT_PROCESSING -> {}
-        FoodOrderFlowStage.RESULT_ERROR -> {}
-        FoodOrderFlowStage.RESULT_SUCCESS -> {}
+        FoodOrderFlowStage.CHARGE_MONEY -> {
+            SectionedLayout(
+                navController = navController,
+                bottomSectionMinHeightRatio = 0.35f,
+                bottomSectionMaxHeightRatio = 0.35f,
+                bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+                bottomSectionPaddingInDp = 0.dp,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                imageBelowLogo = {
+                    Column(
+                        modifier = Modifier
+                            .height(screenRatioToDp(0.5f))
+                            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                            .conditional(!enableScrollingInsideBottomSectionContent) {
+                                verticalScroll(scrollState)
+                            },
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        when (selectedPaymentMethod) {
+                            tapPaymentMethod -> {
+                                if (!nfcStatusPair.second) showNFCNotEnabled = true
+
+                                MyDialog(
+                                    showDialog = showNFCNotEnabled,
+                                    title = "NFC Required",
+                                    text = "This feature needs NFC. Please enable it in your device settings.",
+                                    acceptButtonText = "Go to Settings",
+                                    cancelButtonText = "Cancel",
+                                    onAcceptFn = {
+                                        showNFCNotEnabled = false
+                                        val intent = Intent(Settings.ACTION_NFC_SETTINGS)
+                                        context.startActivity(intent)
+                                    },
+                                    onDismissFn = {
+                                        showNFCNotEnabled = false
+                                        selectedPaymentMethod = qrCodePaymentMethod
+                                    },
+                                )
+
+                                PaymentTapToPayImage(
+                                    modifier = Modifier
+                                        .padding(horizontal = 20.dp)
+                                        .fillMaxWidth()
+                                        .height(270.dp)
+                                        .clip(
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                )
+
+                                Text(
+                                    text = "Tap To Pay",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 18.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.height(80.dp)
+                                ) {
+                                    VisaImage(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .weight(1f)
+                                    )
+
+                                    MastercardImage(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .weight(1f)
+                                    )
+
+                                    AmexImage(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .weight(1f)
+                                    )
+
+                                    JcbImage(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .weight(1f)
+                                    )
+                                }
+                            }
+
+                            qrCodePaymentMethod -> {
+
+                                Text(
+                                    text = "Scan QR Code",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 18.sp,
+                                    textAlign = TextAlign.Center,
+                                )
+
+                                PaymentQrCodeImage(
+                                    modifier = Modifier
+                                        .padding(horizontal = 20.dp)
+                                        .fillMaxWidth()
+                                        .height(270.dp)
+                                        .clip(
+                                            shape = RoundedCornerShape(16.dp)
+                                        )
+                                )
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.height(50.dp)
+                                ) {
+                                    GrabPayImage(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .weight(1f)
+                                    )
+
+                                    QrPayment2(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .weight(1f)
+                                    )
+
+                                    QrPayment3(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .weight(1f)
+                                    )
+
+                                    QrPayment4(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .weight(1f)
+                                    )
+
+                                    ApplePayImage(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .weight(1f)
+                                    )
+
+                                    QrPayment6(
+                                        modifier = Modifier
+                                            .fillMaxHeight()
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .weight(1f)
+                                    )
+                                }
+
+                                AssistChip(
+                                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                                    onClick = { },
+                                    label = {
+                                        Text(
+                                            "Ask customer to scan with GrabPay",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Light,
+                                            color = Color.White
+                                        )
+                                    },
+                                    border = noBorder,
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        containerColor = Color.LightGray.copy(0.2f)
+                                    ),
+                                    leadingIcon = {
+                                        Icon(
+                                            Icons.Filled.Lightbulb,
+                                            contentDescription = "Hint",
+                                            tint = Color.Yellow,
+                                            modifier = Modifier.size(AssistChipDefaults.IconSize)
+                                        )
+                                    })
+
+                            }
+
+                            cashPaymentMethod -> {
+
+                                Text(
+                                    text = "Please pay cash",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 18.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+
+                            viaLinkPaymentMethod -> {
+
+                                Text(
+                                    text = "Pay via link",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 18.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                }) {
+                ChargeMoneyBottomSectionContent(
+                    navController,
+                    enableScrolling = enableScrollingInsideBottomSectionContent,
+                    amountToCharge = cartState.calculateGrandTotal().formatToPrecisionString(),
+                    selectedPaymentMethod = selectedPaymentMethod,
+                    updateSelectedPaymentMethod = { selectedPaymentMethod = it },
+                    updateFlowStage = { updateFlowStage(it as FoodOrderFlowStage) })
+            }
+        }
+
+        FoodOrderFlowStage.RESULT_PROCESSING -> {
+
+            val dataMessage = MessageForStatusScreen(
+                text = "Processing...", statusScreenType = StatusScreenType.PROCESSING
+            )
+            StatusScreen(navController, dataMessage, strategyFn = {
+//                Handler().postDelayed({
+//                    updateRefundStatus(StatusScreenType.SUCCESS)
+//                }, 2000)
+            })
+
+        }
+
+        FoodOrderFlowStage.RESULT_ERROR -> {
+
+            val dataMessage = MessageForStatusScreen(
+                text = "Payment Failed", statusScreenType = StatusScreenType.ERROR
+            )
+            StatusScreen(navController, dataMessage, strategyFn = {
+                Handler().postDelayed({
+//                    updateRefundStatus(null)
+//
+//                    Toast.makeText(
+//                        context,
+//                        "Error processing refund. Try again..",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+                }, 2000)
+            })
+        }
+
+        FoodOrderFlowStage.RESULT_SUCCESS -> {
+            val dataMessage = MessageForStatusScreen(
+                text = "Payment Successful", statusScreenType = StatusScreenType.SUCCESS
+            )
+            StatusScreen(navController, dataMessage, strategyFn = {
+//                Handler().postDelayed({
+////                    updateRefundStatus(StatusScreenType.ERROR)
+//                    navController.navigate(Screens.RefundInitiated.route)
+//                }, 2000)
+            })
+        }
     }
 }
