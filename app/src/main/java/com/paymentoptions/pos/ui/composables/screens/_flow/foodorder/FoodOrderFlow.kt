@@ -61,6 +61,7 @@ import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPaym
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.additionalcharge.AdditionalChargeBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu.FoodMenuBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.reviewcart.ReviewCartBottomSectionContent
@@ -85,7 +86,7 @@ fun FoodOrderFlow(
     initialFoodOrderFlowStage: FoodOrderFlowStage = FoodOrderFlowStage.MENU,
 ) {
     val context = LocalContext.current
-    val activity = context as? Activity
+    context as? Activity
 
     val enableScrollingInsideBottomSectionContent = true
 
@@ -135,6 +136,10 @@ fun FoodOrderFlow(
             Toast.makeText(
                 context, "Error fetching food categories from API", Toast.LENGTH_SHORT
             ).show()
+
+            if (e.toString().contains("HTTP 401")) navController.navigate(Screens.SignIn.route) {
+                popUpTo(0) { inclusive = true }
+            }
         } finally {
             foodCategoryListAvailable = true
         }
@@ -163,6 +168,12 @@ fun FoodOrderFlow(
             } catch (e: Exception) {
                 Toast.makeText(context, "Error fetching products from API", Toast.LENGTH_SHORT)
                     .show()
+
+                if (e.toString()
+                        .contains("HTTP 401")
+                ) navController.navigate(Screens.SignIn.route) {
+                    popUpTo(0) { inclusive = true }
+                }
             }
         }
         foodItemListAvailable = true
@@ -252,19 +263,19 @@ fun FoodOrderFlow(
 
                                 MyDialog(
                                     showDialog = showDeveloperOptionsEnabled,
-                                    title = "Error",
+                                    title = "Caution",
                                     text = "You need to disable developer options to proceed further.",
-                                    acceptButtonText = "Exit",
-                                    cancelButtonText = "Developer Options",
+                                    acceptButtonText = "Developer Options",
+                                    cancelButtonText = "Cancel",
                                     onAcceptFn = {
-                                        showDeveloperOptionsEnabled = false
-                                        activity?.finish()
-                                    },
-                                    onDismissFn = {
                                         showDeveloperOptionsEnabled = false
                                         val intent =
                                             Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
                                         context.startActivity(intent)
+                                    },
+                                    onDismissFn = {
+                                        showDeveloperOptionsEnabled = false
+                                        selectedPaymentMethod = qrCodePaymentMethod
                                     },
                                 )
 

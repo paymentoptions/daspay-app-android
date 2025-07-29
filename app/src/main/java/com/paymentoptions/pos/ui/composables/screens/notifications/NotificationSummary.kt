@@ -25,8 +25,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
@@ -38,6 +41,7 @@ import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.utils.timeAgo
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -54,8 +58,28 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
     val date: Date = Date.from(dateTime.toInstant())
 
     val isCardTransaction = transaction.PaymentType == "CARDPAYMENT"
-    val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY | hh:mm a").format(date)
+    val dateStringFormatted: String = SimpleDateFormat("dd MMMM, YYYY").format(date)
+    val timeAgoString = dateTime.toInstant().toEpochMilli().timeAgo()
+
     val borderRadius = 20.dp
+
+    val dateStr = buildAnnotatedString {
+        withStyle(
+            SpanStyle(
+                purple50, fontWeight = FontWeight.Medium, fontSize = 12.sp
+            )
+        ) { append(dateStringFormatted) }
+
+
+        append("   ")
+
+
+        withStyle(
+            SpanStyle(
+                color = Color(0xFF868686), fontSize = 12.sp, fontWeight = FontWeight.Medium,
+            )
+        ) { append(timeAgoString) }
+    }
 
     Card(
         colors = CardDefaults.cardColors().copy(
@@ -69,7 +93,6 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
             ambientColor = Color(0xFFD8F0FF)
         )
     ) {
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -92,7 +115,9 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            Column(modifier = Modifier.weight(8f)) {
+            Column(
+                modifier = Modifier.weight(8f), verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -111,16 +136,11 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    dateStringFormatted,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 12.sp,
-                    color = purple50
+                    dateStr, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = purple50
                 )
-
-                Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
                     text = (if (isCardTransaction) "Txn ID - " else "Cash Id - ") + transaction.TransactionID.toString(),

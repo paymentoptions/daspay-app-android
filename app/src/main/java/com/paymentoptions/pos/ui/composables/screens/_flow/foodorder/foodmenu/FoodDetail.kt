@@ -24,7 +24,7 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                foodItem.item.ProductStock.toString(),
+                foodItem.item.ProductCode,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
                 color = primary500

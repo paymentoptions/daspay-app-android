@@ -45,6 +45,7 @@ import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
@@ -123,6 +124,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
         } catch (e: Exception) {
             Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
+
+            if (e.toString().contains("HTTP 401")) navController.navigate(Screens.SignIn.route) {
+                popUpTo(0) { inclusive = true }
+            }
         } finally {
             apiResponseAvailable = true
         }

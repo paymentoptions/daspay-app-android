@@ -56,7 +56,7 @@ fun Long.timeAgo(labels: Array<String> = timeAgoLabels): String {
         diff < 30.secondsToMillis() -> labels[1] // "moments ago"
         diff < 90.secondsToMillis() -> labels[2] // "a minute ago"
         diff < 59.minutesToMillis() -> labels[3].format(diff.millisToMinutes()) // "X minutes ago"
-        diff < 90.hoursToMillis() -> labels[4] // "an hour ago"
+        diff < 90.minutesToMillis() -> labels[4] // "an hour ago"
         diff < 23.hoursToMillis() -> labels[5].format(diff.millisToHours()) // "X hours ago"
         diff < 36.hoursToMillis() -> labels[6] // "a day ago"
         diff < 7.daysToMillis() -> labels[7].format(diff.millisToDays()) // "X days ago"

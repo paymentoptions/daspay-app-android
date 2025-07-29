@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -88,6 +89,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
         } catch (e: Exception) {
             Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
+
+            if (e.toString().contains("HTTP 401")) navController.navigate(Screens.SignIn.route) {
+                popUpTo(0) { inclusive = true }
+            }
         } finally {
             apiResponseAvailable = true
 //            val scrollToIndex = if (currentPage >= 2) (currentPage - 2) * take else 0
@@ -148,7 +153,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 modifier = Modifier
                     .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                     .width(160.dp)
-                    .height(37.dp),
+                    .height(35.dp)
+                    .scale(0.8f),
             )
 
             Spacer(Modifier.height(20.dp))

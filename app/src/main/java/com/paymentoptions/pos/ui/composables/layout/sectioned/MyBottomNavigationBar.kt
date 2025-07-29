@@ -210,8 +210,6 @@ fun MyBottomNavigationBar(
                         }
                     }
                 } catch (e: Exception) {
-//                            Toast.makeText(context, "Unable to sign out", Toast.LENGTH_LONG).show()
-
                     SharedPreferences.clearSharedPreferences(context)
                     navController.navigate(Screens.SignIn.route) {
                         popUpTo(0) { inclusive = true }

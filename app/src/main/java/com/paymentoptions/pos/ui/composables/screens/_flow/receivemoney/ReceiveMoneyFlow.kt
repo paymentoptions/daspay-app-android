@@ -86,7 +86,7 @@ fun ReceiveMoneyFlow(
     initialReceiveMoneyFlowStage: ReceiveMoneyFlowStage = ReceiveMoneyFlowStage.INPUT_MONEY,
 ) {
     val context = LocalContext.current
-    val activity = context as? Activity
+    context as? Activity
 
     val enableScrollingInsideBottomSectionContent = false
     val scrollState = rememberScrollState()
@@ -170,16 +170,16 @@ fun ReceiveMoneyFlow(
                                     title = "Caution",
                                     text = "You need to disable developer options to proceed further.",
                                     acceptButtonText = "Developer Options",
-                                    cancelButtonText = "Exit",
+                                    cancelButtonText = "Cancel",
                                     onAcceptFn = {
-                                        showDeveloperOptionsEnabled = false
-                                        activity?.finish()
-                                    },
-                                    onDismissFn = {
                                         showDeveloperOptionsEnabled = false
                                         val intent =
                                             Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
                                         context.startActivity(intent)
+                                    },
+                                    onDismissFn = {
+                                        showDeveloperOptionsEnabled = false
+                                        selectedPaymentMethod = qrCodePaymentMethod
                                     },
                                 )
 

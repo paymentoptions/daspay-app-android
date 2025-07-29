@@ -23,8 +23,7 @@ suspend fun transactionList(
         val idToken = authDetails?.data?.token?.idToken
         val requestHeaders = generateRequestHeaders(idToken ?: "")
 
-        val transactionListResponse =
-            RetrofitClient.api.transactionList(requestHeaders, take, skip)
+        val transactionListResponse = RetrofitClient.api.transactionList(requestHeaders, take, skip)
 
         return transactionListResponse
     } catch (e: Exception) {

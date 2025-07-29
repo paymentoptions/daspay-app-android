@@ -73,7 +73,7 @@ fun TransactionSummary(
     val dateString = transaction.Date   //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
-    val dateStringFormatted = SimpleDateFormat("dd MMMM YYYY").format(date)
+    val dateStringFormatted = SimpleDateFormat("dd MMMM, YYYY").format(date)
     val timeAgoString = dateTime.toInstant().toEpochMilli().timeAgo()
     var isLongClicked = longClickedTransactionId == transaction.TransactionID.toString()
 
@@ -152,7 +152,10 @@ fun TransactionSummary(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                Column(modifier = Modifier.weight(8f)) {
+                Column(
+                    modifier = Modifier.weight(8f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Text(
                         dateStr,
                         fontWeight = FontWeight.Medium,
@@ -169,7 +172,11 @@ fun TransactionSummary(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                Column(horizontalAlignment = Alignment.End, modifier = Modifier.weight(3f)) {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.weight(3f)
+                ) {
                     Text(
                         transaction.CurrencyCode,
                         textAlign = TextAlign.End,

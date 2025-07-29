@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -25,10 +24,8 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
-import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
-import com.paymentoptions.pos.ui.theme.AppTheme
 
 @Composable
 fun BottomSectionContent(navController: NavController) {
@@ -78,33 +75,37 @@ fun BottomSectionContent(navController: NavController) {
         bypassBiometric = !biometricStatus
     )
     else {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Text(
-                text = "You are not signed in.",
-                textAlign = TextAlign.Center,
-                style = AppTheme.typography.footnote
-            )
-            Spacer(modifier = Modifier.height(20.dp))
 
-            FilledButton(
-                text = "Sign in", onClick = {
-                SharedPreferences.clearSharedPreferences(context)
-                navController.navigate(Screens.SignIn.route)
-                }, modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            OutlinedButton(
-                text = "Quit", onClick = {
-                    activity?.finish()
-                }, modifier = Modifier.fillMaxWidth()
-            )
+        Toast.makeText(context, "You are signed out. Please sign in.", Toast.LENGTH_SHORT).show()
+        navController.navigate(Screens.SignIn.route) {
+            popUpTo(0) { inclusive = true }
         }
-
+//        Column(
+//            modifier = Modifier.fillMaxSize(),
+//            horizontalAlignment = Alignment.CenterHorizontally,
+//            verticalArrangement = Arrangement.Center,
+//        ) {
+//            Text(
+//                text = "You are not signed in.",
+//                textAlign = TextAlign.Center,
+//                style = AppTheme.typography.footnote
+//            )
+//            Spacer(modifier = Modifier.height(20.dp))
+//
+//            FilledButton(
+//                text = "Sign in", onClick = {
+//                SharedPreferences.clearSharedPreferences(context)
+//                navController.navigate(Screens.SignIn.route)
+//                }, modifier = Modifier.fillMaxWidth()
+//            )
+//
+//            Spacer(modifier = Modifier.height(10.dp))
+//
+//            OutlinedButton(
+//                text = "Quit", onClick = {
+//                    activity?.finish()
+//                }, modifier = Modifier.fillMaxWidth()
+//            )
+//        }
     }
 }

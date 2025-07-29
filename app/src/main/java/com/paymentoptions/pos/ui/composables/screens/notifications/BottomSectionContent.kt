@@ -39,6 +39,7 @@ import com.paymentoptions.pos.services.apiService.endpoints.transactionList
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.bannerBgColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
@@ -144,6 +145,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
         } catch (e: Exception) {
             Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
+
+            if (e.toString().contains("HTTP 401"))
+                navController.navigate(Screens.SignIn.route) {
+                    popUpTo(0) { inclusive = true }
+                }
         } finally {
             apiResponseAvailable = true
         }
