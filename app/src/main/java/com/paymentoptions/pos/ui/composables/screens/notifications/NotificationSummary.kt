@@ -60,7 +60,7 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
     val isCardTransaction = transaction.PaymentType == "CARDPAYMENT"
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM, YYYY").format(date)
     val timeAgoString = dateTime.toInstant().toEpochMilli().timeAgo()
-
+    val hourPart = SimpleDateFormat("hh:mm:ss a").format(date)
     val borderRadius = 20.dp
 
     val dateStr = buildAnnotatedString {
@@ -70,15 +70,13 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
             )
         ) { append(dateStringFormatted) }
 
-
-        append("   ")
-
+        append("  ")
 
         withStyle(
             SpanStyle(
-                color = Color(0xFF868686), fontSize = 12.sp, fontWeight = FontWeight.Medium,
+                color = purple50, fontSize = 12.sp, fontWeight = FontWeight.Medium,
             )
-        ) { append(timeAgoString) }
+        ) { append(if (timeAgoString.endsWith("seconds ago")) timeAgoString else hourPart) }
     }
 
     Card(

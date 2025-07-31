@@ -1,10 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receivemoney
 
-import MyDialog
 import android.app.Activity
-import android.content.Intent
 import android.graphics.Bitmap
-import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,15 +9,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,6 +33,7 @@ import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.images.CreditCardImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentTapToPayImage
@@ -63,7 +55,6 @@ import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.inputnon
 import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.receipt.ReceiptBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.transactionfailed.TransactionFailedBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.transactionsuccessful.TransactionSuccessfulBottomSectionContent
-import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.paymentMethods
@@ -165,46 +156,46 @@ fun ReceiveMoneyFlow(
                                     true
                                 else if (!nfcStatusPair.second) showNFCNotEnabled = true
 
-                                MyDialog(
-                                    showDialog = showDeveloperOptionsEnabled,
-                                    title = "Caution",
-                                    text = "You need to disable developer options to proceed further.",
-                                    acceptButtonText = "Developer Options",
-                                    cancelButtonText = "Cancel",
-                                    onAcceptFn = {
-                                        showDeveloperOptionsEnabled = false
-                                        val intent =
-                                            Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
-                                        context.startActivity(intent)
-                                    },
-                                    onDismissFn = {
-                                        showDeveloperOptionsEnabled = false
-                                        selectedPaymentMethod = qrCodePaymentMethod
-                                    },
-                                )
-
-                                MyDialog(
-                                    showDialog = showNFCNotEnabled,
-                                    title = "NFC Required",
-                                    text = "This feature needs NFC. Please enable it in your device settings.",
-                                    acceptButtonText = "Go to Settings",
-                                    cancelButtonText = "Cancel",
-                                    onAcceptFn = {
-                                        showNFCNotEnabled = false
-                                        val intent = Intent(Settings.ACTION_NFC_SETTINGS)
-                                        context.startActivity(intent)
-                                    },
-                                    onDismissFn = {
-                                        showNFCNotEnabled = false
-                                        selectedPaymentMethod = qrCodePaymentMethod
-                                    },
-                                )
+//                                MyDialog(
+//                                    showDialog = showDeveloperOptionsEnabled,
+//                                    title = "Caution",
+//                                    text = "You need to disable developer options to proceed further.",
+//                                    acceptButtonText = "Developer Options",
+//                                    cancelButtonText = "Cancel",
+//                                    onAcceptFn = {
+//                                        showDeveloperOptionsEnabled = false
+//                                        val intent =
+//                                            Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+//                                        context.startActivity(intent)
+//                                    },
+//                                    onDismissFn = {
+//                                        showDeveloperOptionsEnabled = false
+//                                        selectedPaymentMethod = qrCodePaymentMethod
+//                                    },
+//                                )
+//
+//                                MyDialog(
+//                                    showDialog = showNFCNotEnabled,
+//                                    title = "NFC Required",
+//                                    text = "This feature needs NFC. Please enable it in your device settings.",
+//                                    acceptButtonText = "Go to Settings",
+//                                    cancelButtonText = "Cancel",
+//                                    onAcceptFn = {
+//                                        showNFCNotEnabled = false
+//                                        val intent = Intent(Settings.ACTION_NFC_SETTINGS)
+//                                        context.startActivity(intent)
+//                                    },
+//                                    onDismissFn = {
+//                                        showNFCNotEnabled = false
+//                                        selectedPaymentMethod = qrCodePaymentMethod
+//                                    },
+//                                )
 
                                 PaymentTapToPayImage(
                                     modifier = Modifier
                                         .padding(horizontal = 20.dp)
                                         .fillMaxWidth()
-                                        .height(270.dp)
+                                        .height(230.dp)
                                         .clip(
                                             shape = RoundedCornerShape(16.dp)
                                         )
@@ -222,33 +213,33 @@ fun ReceiveMoneyFlow(
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.height(80.dp)
+                                    modifier = Modifier.height(60.dp)
                                 ) {
                                     VisaImage(
                                         modifier = Modifier
                                             .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .clip(shape = RoundedCornerShape(8.dp))
                                             .weight(1f)
                                     )
 
                                     MastercardImage(
                                         modifier = Modifier
                                             .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .clip(shape = RoundedCornerShape(8.dp))
                                             .weight(1f)
                                     )
 
                                     AmexImage(
                                         modifier = Modifier
                                             .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .clip(shape = RoundedCornerShape(8.dp))
                                             .weight(1f)
                                     )
 
                                     JcbImage(
                                         modifier = Modifier
                                             .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .clip(shape = RoundedCornerShape(8.dp))
                                             .weight(1f)
                                     )
                                 }
@@ -322,29 +313,10 @@ fun ReceiveMoneyFlow(
                                     )
                                 }
 
-                                AssistChip(
-                                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-                                    onClick = { },
-                                    label = {
-                                        Text(
-                                            "Ask customer to scan with GrabPay",
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Light,
-                                            color = Color.White
-                                        )
-                                    },
-                                    border = noBorder,
-                                    colors = AssistChipDefaults.assistChipColors(
-                                        containerColor = Color.LightGray.copy(0.2f)
-                                    ),
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Filled.Lightbulb,
-                                            contentDescription = "Hint",
-                                            tint = Color.Yellow,
-                                            modifier = Modifier.size(AssistChipDefaults.IconSize)
-                                        )
-                                    })
+                                NoteChip(
+                                    text = "Ask customer to scan with GrabPay",
+                                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                )
                             }
 
                             cashPaymentMethod -> {

@@ -8,13 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.twotone.Lightbulb
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,7 +18,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,6 +28,7 @@ import com.paymentoptions.pos.services.apiService.RefundResponse
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.refund
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
 import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
@@ -43,10 +37,8 @@ import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.dashboard.TRANSACTION_TO_BE_REFUNDED
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.AppTheme
-import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
-import com.paymentoptions.pos.ui.theme.purple50
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -187,29 +179,10 @@ fun BottomSectionContent(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        AssistChip(
-            modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-            onClick = { },
-            label = {
-                Text(
-                    "Refunded itemTotal will be transferred to the original source of payment",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Light,
-                    color = purple50
-                )
-            },
-            border = noBorder,
-            colors = AssistChipDefaults.assistChipColors(
-                containerColor = Color.LightGray.copy(0.2f)
-            ),
-            leadingIcon = {
-                Icon(
-                    Icons.TwoTone.Lightbulb,
-                    contentDescription = "Hint",
-                    tint = Color(0xFFFFC107),
-                    modifier = Modifier.size(AssistChipDefaults.IconSize)
-                )
-            })
+        NoteChip(
+            text = "Refunded amount will be transferred to the original source of payment",
+            modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 

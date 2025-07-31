@@ -110,15 +110,15 @@ fun FoodSummaryForReview(
                         horizontal = if (isLongClicked) 12.dp else DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
                         vertical = 12.dp
                     ),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.Top
             ) {
 
-                FoodImage(
+                if (!isLongClicked) FoodImage(
                     foodItem.item.ProductName,
                     foodItem.item.ProductImage,
                     foodItem.isVegetarian,
-                    modifier = Modifier.size(44.dp)
+                    modifier = Modifier.size(44.dp),
                 )
 
                 FoodDetail(foodItem, modifier = Modifier.weight(1f))

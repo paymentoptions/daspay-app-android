@@ -124,10 +124,9 @@ fun AdditionalChargeBottomSectionContent(
             onClose = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
             modifier = Modifier
                 .fillMaxWidth()
+                .height(20.dp)
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
         )
-
-
 
         Column(
             modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
@@ -175,7 +174,7 @@ fun AdditionalChargeBottomSectionContent(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(70.dp)
+                                .height(60.dp)
                                 .border(
                                     2.dp, primary100.copy(alpha = 0.2f), RoundedCornerShape(8.dp)
                                 )

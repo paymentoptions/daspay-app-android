@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem
@@ -24,7 +25,7 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                foodItem.item.ProductCode,
+                foodItem.item.ProductCode.uppercase(),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
                 color = primary500
@@ -45,7 +46,8 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
                 foodItem.item.ProductName,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = primary500
+                color = primary500,
+                overflow = TextOverflow.Ellipsis
             )
 
             Text(

@@ -127,7 +127,7 @@ fun TransactionSuccessfulBottomSectionContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(8.dp)
+                    brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(20.dp)
                 )
                 .conditional(enableScrolling) { verticalScroll(scrollState) },
             verticalArrangement = Arrangement.spacedBy(16.dp)

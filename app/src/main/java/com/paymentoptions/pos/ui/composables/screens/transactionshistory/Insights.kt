@@ -145,7 +145,7 @@ fun Insights(
                 .fillMaxWidth()
 //                .background(primary100.copy(alpha = 0.2f), shape = RoundedCornerShape(16.dp))
                 .background(
-                    brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(8.dp)
+                    brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(20.dp)
                 )
                 .padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {

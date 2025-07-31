@@ -82,7 +82,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         "Today" to "Today",
         "Week" to "Week",
         "Month" to "Month",
-        "Custom" to "Custom",
+        "Custom" to "Custom Date Range",
     )
 
     var selectedFilter by remember { mutableStateOf<Map.Entry<String, String>>(filters.entries.first()) }

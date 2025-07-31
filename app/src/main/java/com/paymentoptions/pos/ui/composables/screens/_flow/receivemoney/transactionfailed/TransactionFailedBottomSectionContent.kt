@@ -84,7 +84,7 @@ fun TransactionFailedBottomSectionContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(8.dp)
+                    brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(20.dp)
                 )
                 .verticalScroll(state = rememberScrollState(), enabled = enableScrolling),
             verticalArrangement = Arrangement.spacedBy(16.dp)

@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -30,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +38,7 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ProgressState
 import com.paymentoptions.pos.ui.composables._components.VerticalProgressBar
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -46,18 +46,15 @@ import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens.dashboard.TRANSACTION_TO_BE_REFUNDED
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500
-import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
-import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.modifiers.conditional
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -81,12 +78,13 @@ fun BottomSectionContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
+        Spacer(modifier = Modifier.height(10.dp))
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            ScreenTitleWithCloseButton(navController = navController)
 
             Text(
                 text = "Refund Initiated",
@@ -107,7 +105,8 @@ fun BottomSectionContent(
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .width(200.dp)
-                    .height(39.dp)
+                    .height(35.dp)
+                    .scale(0.8f)
             )
         }
 
@@ -117,7 +116,7 @@ fun BottomSectionContent(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(8.dp)
+                    brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(20.dp)
                 )
                 .conditional(enableScrolling) { verticalScroll(scrollState) },
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -125,29 +124,10 @@ fun BottomSectionContent(
 
             Spacer(modifier = Modifier.height(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP))
 
-            AssistChip(
-                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-                onClick = { },
-                label = {
-                    Text(
-                        "The refund is being processed and should be reflected in your account within 3–5 business days",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Light,
-                        color = purple50
-                    )
-                },
-                border = noBorder,
-                colors = AssistChipDefaults.assistChipColors(
-                    containerColor = Color.LightGray.copy(0.2f)
-                ),
-                leadingIcon = {
-                    Icon(
-                        Icons.Filled.Lightbulb,
-                        contentDescription = "Hint",
-                        tint = Color.Yellow,
-                        modifier = Modifier.size(AssistChipDefaults.IconSize)
-                    )
-                })
+            NoteChip(
+                text = "The refund is being processed and should be reflected in your account within 3–5 business days",
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -155,7 +135,7 @@ fun BottomSectionContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -229,8 +209,6 @@ fun BottomSectionContent(
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(10.dp))
 
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
@@ -313,8 +291,7 @@ fun BottomSectionContent(
                             tint = primary500,
                             modifier = Modifier
                                 .size(AssistChipDefaults.IconSize.minus(5.dp))
-                                .rotate(180f)
-                        )
+                                .conditional(!showRefundStatus) { rotate(180f) })
                     })
 
                 if (!showRefundStatus) VerticalProgressBar(

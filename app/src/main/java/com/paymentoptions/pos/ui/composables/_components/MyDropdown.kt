@@ -90,6 +90,7 @@ fun MyDropdown(
         sheetState = sheetState,
         containerColor = Color.White,
         contentColor = primary500,
+        dragHandle = {}
     ) {
 
         ScreenTitleWithCloseButton(

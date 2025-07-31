@@ -77,6 +77,7 @@ fun TransactionSummary(
     val timeAgoString = dateTime.toInstant().toEpochMilli().timeAgo()
     var isLongClicked = longClickedTransactionId == transaction.TransactionID.toString()
 
+    val hourPart = SimpleDateFormat("hh:mm:ss a").format(date)
     val borderRadius = 20.dp
     val haptics = LocalHapticFeedback.current
 
@@ -87,15 +88,13 @@ fun TransactionSummary(
             )
         ) { append(dateStringFormatted) }
 
-
-        append("   ")
-
+        append("  ")
 
         withStyle(
             SpanStyle(
-                color = Color(0xFF868686), fontSize = 12.sp, fontWeight = FontWeight.Medium,
+                color = purple50, fontSize = 12.sp, fontWeight = FontWeight.Medium,
             )
-        ) { append(timeAgoString) }
+        ) { append(if (timeAgoString.endsWith("seconds ago")) timeAgoString else hourPart) }
     }
 
     Row(

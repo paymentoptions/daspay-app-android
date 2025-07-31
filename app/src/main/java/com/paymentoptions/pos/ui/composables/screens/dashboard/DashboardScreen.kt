@@ -17,6 +17,7 @@ fun DashboardScreen(navController: NavController) {
         navController = navController,
         bottomBarContent = BottomBarContent.NAVIGATION_BAR,
         bottomSectionMinHeightRatio = 0.8f,
+        bottomSectionMaxHeightRatio = 0.8f,
         bottomSectionPaddingInDp = 0.dp,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
     ) {

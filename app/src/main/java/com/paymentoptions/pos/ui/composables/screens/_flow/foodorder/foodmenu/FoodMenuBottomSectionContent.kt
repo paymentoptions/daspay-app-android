@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,12 +29,14 @@ import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoData
+import com.paymentoptions.pos.ui.composables._components.ZigZagContainer
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.SearchInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodOrderFlowStage
+import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
@@ -151,59 +154,67 @@ fun FoodMenuBottomSectionContent(
         Spacer(modifier = Modifier.height(10.dp))
 
         //Cart details
-        Column(
-            modifier = Modifier
-                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                .fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Quantity", fontSize = 12.sp, fontWeight = FontWeight.Normal, color = primary500
-                )
-
-                Text(
-                    cartState.itemQuantity.toString(),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = primary500
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primary500
-                )
-
-                CurrencyText(
-                    currency = "HKD",
-                    amount = cartState.itemTotal.formatToPrecisionString(),
-                    fontSize = 16.sp,
-                    color = primary500
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            FilledButton(
-                disabled = cartState.itemQuantity <= 0,
-                text = "Review and Confirm",
-                onClick = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
+        ZigZagContainer {
+            Column(
                 modifier = Modifier
+                    .background(brush = containerBackgroundGradientBrush)
+                    .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                     .fillMaxWidth()
-                    .height(59.dp)
-            )
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Quantity",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = primary500
+                    )
+
+                    Text(
+                        cartState.itemQuantity.toString(),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = primary500
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primary500
+                    )
+
+                    CurrencyText(
+                        currency = "HKD",
+                        amount = cartState.itemTotal.formatToPrecisionString(),
+                        fontSize = 16.sp,
+                        color = primary500
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                FilledButton(
+                    disabled = cartState.itemQuantity <= 0,
+                    text = "Review and Confirm",
+                    onClick = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(59.dp)
+                )
+            }
         }
     }
 }

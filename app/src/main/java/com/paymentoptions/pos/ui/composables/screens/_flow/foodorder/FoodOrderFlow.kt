@@ -13,15 +13,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +40,7 @@ import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.categoryList
 import com.paymentoptions.pos.services.apiService.endpoints.productList
+import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentTapToPayImage
 import com.paymentoptions.pos.ui.composables._components.images.cardpayment.AmexImage
@@ -69,7 +64,6 @@ import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.chargemo
 import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
-import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.formatToPrecisionString
@@ -418,30 +412,10 @@ fun FoodOrderFlow(
                                     )
                                 }
 
-                                AssistChip(
-                                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-                                    onClick = { },
-                                    label = {
-                                        Text(
-                                            "Ask customer to scan with GrabPay",
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Light,
-                                            color = Color.White
-                                        )
-                                    },
-                                    border = noBorder,
-                                    colors = AssistChipDefaults.assistChipColors(
-                                        containerColor = Color.LightGray.copy(0.2f)
-                                    ),
-                                    leadingIcon = {
-                                        Icon(
-                                            Icons.Filled.Lightbulb,
-                                            contentDescription = "Hint",
-                                            tint = Color.Yellow,
-                                            modifier = Modifier.size(AssistChipDefaults.IconSize)
-                                        )
-                                    })
-
+                                NoteChip(
+                                    text = "Ask customer to scan with GrabPay",
+                                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                )
                             }
 
                             cashPaymentMethod -> {

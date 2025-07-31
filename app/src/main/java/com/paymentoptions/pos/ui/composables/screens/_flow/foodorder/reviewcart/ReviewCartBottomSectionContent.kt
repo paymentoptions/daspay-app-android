@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder.reviewcart
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.ZigZagContainer
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
@@ -43,6 +45,7 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodOrderFl
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu.FoodSummaryForReview
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderThin
+import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.formatToPrecisionString
@@ -123,189 +126,230 @@ fun ReviewCartBottomSectionContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                .height(40.dp)
-                .dashedBorder(
-                    color = Color.LightGray, shape = RoundedCornerShape(8.dp)
-                )
-                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                .clickable {
-                    updateFlowStage(FoodOrderFlowStage.ADDITIONAL_CHARGE)
-                }, verticalArrangement = Arrangement.Center
+                .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+
         ) {
 
-            if (cartState.additionalCharge.toFloat() == 0.0f) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Enter Amount",
-                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.SemiBold)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Additional Charge (Optional)",
+                    style = AppTheme.typography.titleNormal.copy(
+                        color = primary900, fontSize = 14.sp, fontWeight = FontWeight.Bold
                     )
+                )
 
-                    CurrencyText(
-                        currency,
-                        cartState.additionalCharge.formatToPrecisionString(),
-                        fontSize = 12.sp
-                    )
+                if (cartState.additionalCharge != 0.0f) AssistChip(
+                    onClick = { updateFlowStage(FoodOrderFlowStage.ADDITIONAL_CHARGE) },
+                    label = {
+                        Text(
+                            "Change Amount",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = primary500
+                        )
+                    },
+                    border = borderThin,
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = Color.Transparent,
+                    ),
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .height(40.dp)
+                    .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                    .clickable {
+                        updateFlowStage(FoodOrderFlowStage.ADDITIONAL_CHARGE)
+                    }, verticalArrangement = Arrangement.Center
+            ) {
+
+                if (cartState.additionalCharge.toFloat() == 0.0f) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Enter Amount",
+                            style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.SemiBold)
+                        )
+
+                        CurrencyText(
+                            currency,
+                            cartState.additionalCharge.formatToPrecisionString(),
+                            fontSize = 12.sp
+                        )
+                    }
+                } else {
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Amount",
+                            style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.SemiBold)
+                        )
+
+                        CurrencyText(
+                            currency,
+                            "",
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.End,
+                            addSpaceAfterCurrency = false
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Note: " + cartState.additionalAmountNote,
+                            style = AppTheme.typography.footnote.copy(
+                                fontWeight = FontWeight.Light, fontStyle = FontStyle.Italic
+                            )
+                        )
+
+                        CurrencyText(
+                            "",
+                            cartState.additionalCharge.toString(),
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.End
+                        )
+                    }
                 }
-            } else {
+            }
+
+        }
+
+        ZigZagContainer {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(brush = containerBackgroundGradientBrush)
+                    .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "Summary",
+                    style = AppTheme.typography.titleNormal.copy(color = primary900)
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
+                )
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Amount",
-                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.SemiBold)
-                    )
-
-                    CurrencyText(
-                        currency,
-                        "",
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.End,
-                        addSpaceAfterCurrency = false
-                    )
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Note: " + cartState.additionalAmountNote,
-                        style = AppTheme.typography.footnote.copy(
-                            fontWeight = FontWeight.Light, fontStyle = FontStyle.Italic
+                        "Item total", style = AppTheme.typography.footnote.copy(
+                            fontSize = 14.sp, fontWeight = FontWeight.Normal
                         )
                     )
 
                     CurrencyText(
-                        "",
-                        cartState.additionalCharge.toString(),
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.End
+                        currency = currency,
+                        amount = "+" + cartState.itemTotal.formatToPrecisionString(),
+                        fontSize = 14.sp
+                    )
+
+                }
+
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Service Charge (${cartState.serviceChargePercentage}%)",
+                        style = AppTheme.typography.footnote.copy(
+                            fontSize = 14.sp, fontWeight = FontWeight.Normal
+                        )
+                    )
+
+
+                    CurrencyText(
+                        currency = currency,
+                        amount = "+" + cartState.calculateServiceCharge().formatToPrecisionString(),
+                        fontSize = 14.sp
+                    )
+
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Additional Charge", style = AppTheme.typography.footnote.copy(
+                            fontSize = 14.sp, fontWeight = FontWeight.Normal
+                        )
+                    )
+
+                    CurrencyText(
+                        currency = currency,
+                        amount = "+" + cartState.additionalCharge.formatToPrecisionString(),
+                        fontSize = 14.sp
+                    )
+
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "GST (${cartState.gstPercentage}%)",
+                        style = AppTheme.typography.footnote.copy(
+                            fontSize = 14.sp, fontWeight = FontWeight.Normal
+                        )
+                    )
+
+                    CurrencyText(
+                        currency = currency,
+                        amount = "+" + cartState.calculateGstCharge().formatToPrecisionString(),
+                        fontSize = 14.sp
+                    )
+
+                }
+
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Grand Total", style = AppTheme.typography.footnote.copy(
+                            fontSize = 14.sp, fontWeight = FontWeight.Normal
+                        )
+                    )
+
+                    CurrencyText(
+                        currency = currency,
+                        amount = "+" + cartState.calculateGrandTotal().formatToPrecisionString(),
+                        fontSize = 14.sp
                     )
                 }
             }
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-
-            Text(
-                text = "Summary", style = AppTheme.typography.titleNormal.copy(color = primary900)
-            )
-
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Item total", style = AppTheme.typography.footnote.copy(
-                        fontSize = 14.sp, fontWeight = FontWeight.Normal
-                    )
-                )
-
-                CurrencyText(
-                    currency = currency,
-                    amount = "+" + cartState.itemTotal.formatToPrecisionString(),
-                    fontSize = 14.sp
-                )
-
-            }
-
-
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Service Charge (${cartState.serviceChargePercentage}%)",
-                    style = AppTheme.typography.footnote.copy(
-                        fontSize = 14.sp, fontWeight = FontWeight.Normal
-                    )
-                )
-
-
-                CurrencyText(
-                    currency = currency,
-                    amount = "+" + cartState.calculateServiceCharge().formatToPrecisionString(),
-                    fontSize = 14.sp
-                )
-
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Additional Charge", style = AppTheme.typography.footnote.copy(
-                        fontSize = 14.sp, fontWeight = FontWeight.Normal
-                    )
-                )
-
-                CurrencyText(
-                    currency = currency,
-                    amount = "+" + cartState.additionalCharge.formatToPrecisionString(),
-                    fontSize = 14.sp
-                )
-
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "GST (${cartState.gstPercentage}%)", style = AppTheme.typography.footnote.copy(
-                        fontSize = 14.sp, fontWeight = FontWeight.Normal
-                    )
-                )
-
-                CurrencyText(
-                    currency = currency,
-                    amount = "+" + cartState.calculateGstCharge().formatToPrecisionString(),
-                    fontSize = 14.sp
-                )
-
-            }
-
-            HorizontalDivider(
-                modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Grand Total", style = AppTheme.typography.footnote.copy(
-                        fontSize = 14.sp, fontWeight = FontWeight.Normal
-                    )
-                )
-
-                CurrencyText(
-                    currency = currency,
-                    amount = "+" + cartState.calculateGrandTotal().formatToPrecisionString(),
-                    fontSize = 14.sp
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(30.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         FilledButton(
             disabled = cartState.itemQuantity == 0,
             text = "Receive Money",
-            onClick = {
-//                Toast.makeText(context, "Under Development", Toast.LENGTH_SHORT).show()
-                updateFlowStage(FoodOrderFlowStage.CHARGE_MONEY)
-            },
+            onClick = { updateFlowStage(FoodOrderFlowStage.CHARGE_MONEY) },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)

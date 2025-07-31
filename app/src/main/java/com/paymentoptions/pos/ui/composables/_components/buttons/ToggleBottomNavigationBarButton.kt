@@ -11,11 +11,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.ui.theme.primary100
-import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 
 @Composable
 fun ToggleBottomNavigationBarButton(
@@ -27,7 +27,7 @@ fun ToggleBottomNavigationBarButton(
             .width(40.dp)
             .height(28.dp)
             .background(
-                primary100.copy(alpha = 0.2f), shape = RoundedCornerShape(
+                brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(
                     topStartPercent = 50,
                     topEndPercent = 50,
                     bottomStartPercent = 0,
@@ -38,7 +38,7 @@ fun ToggleBottomNavigationBarButton(
         Icon(
             painter = painterResource(R.drawable.down_arrow),
             contentDescription = "Back button",
-            tint = primary500.copy(alpha = 0.2f),
+            tint = Color(0xFFA2C9DF),
             modifier = Modifier
                 .size(20.dp)
                 .rotate(180f)
