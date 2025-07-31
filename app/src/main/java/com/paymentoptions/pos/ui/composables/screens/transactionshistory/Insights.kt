@@ -6,14 +6,25 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.yml.charts.axis.AxisData
@@ -21,10 +32,13 @@ import co.yml.charts.common.model.Point
 import co.yml.charts.ui.barchart.BarChart
 import co.yml.charts.ui.barchart.models.BarChartData
 import co.yml.charts.ui.barchart.models.BarData
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500
+import com.paymentoptions.pos.ui.theme.noBorder
+import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
@@ -45,6 +59,27 @@ fun Insights(
     var refundAmount = 0.0f
     var chartMaxValue = 0.0f
     var barData: MutableList<BarData> = mutableListOf()
+
+    val higherPercentage = 15
+    val higherString = buildAnnotatedString {
+        withStyle(
+            SpanStyle(
+                primary500, fontWeight = FontWeight.Medium, fontSize = 12.sp
+            )
+        ) { append("Your Earnings are ") }
+
+        withStyle(
+            SpanStyle(
+                primary500, fontWeight = FontWeight.Bold, fontSize = 12.sp
+            )
+        ) { append(higherPercentage.toString()) }
+
+        withStyle(
+            SpanStyle(
+                primary500, fontWeight = FontWeight.Medium, fontSize = 12.sp
+            )
+        ) { append("% higher than yesterday") }
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -114,7 +149,7 @@ fun Insights(
                                 if (barData.size == 1) chartMaxValue else index * chartMaxValue / (barData.size - 1)
 
                             "$currency ${label.roundToInt()}"
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             "0"
                         }
                     }.build()
@@ -147,7 +182,13 @@ fun Insights(
                 .background(
                     brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(20.dp)
                 )
-                .padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(20.dp)
+                .shadow(
+                    elevation = 120.dp,
+                    shape = RoundedCornerShape(20.dp),
+                    ambientColor = Color.LightGray,
+                    spotColor = primary100
+                ), verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
             //Earnings
@@ -280,6 +321,35 @@ fun Insights(
                 }
             }
 
+
+            AssistChip(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(alignment = Alignment.CenterHorizontally),
+                onClick = { },
+                label = {
+                    Text(
+                        text = higherString,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500,
+                        lineHeight = 16.sp,
+                        modifier = Modifier.padding(vertical = 6.dp),
+                        textAlign = TextAlign.Center
+                    )
+                },
+                border = noBorder,
+                colors = AssistChipDefaults.assistChipColors(
+                    containerColor = Color.LightGray.copy(0.2f)
+                ),
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(R.drawable.higher),
+                        contentDescription = "Hint",
+                        tint = Color(0xFF1BCC91),
+                        modifier = Modifier.offset(y = 8.dp)
+                    )
+                })
 
         }
     }

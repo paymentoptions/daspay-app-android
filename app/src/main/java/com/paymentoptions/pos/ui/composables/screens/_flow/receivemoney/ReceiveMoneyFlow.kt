@@ -1,7 +1,10 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receivemoney
 
+import MyDialog
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Bitmap
+import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -156,40 +159,40 @@ fun ReceiveMoneyFlow(
                                     true
                                 else if (!nfcStatusPair.second) showNFCNotEnabled = true
 
-//                                MyDialog(
-//                                    showDialog = showDeveloperOptionsEnabled,
-//                                    title = "Caution",
-//                                    text = "You need to disable developer options to proceed further.",
-//                                    acceptButtonText = "Developer Options",
-//                                    cancelButtonText = "Cancel",
-//                                    onAcceptFn = {
-//                                        showDeveloperOptionsEnabled = false
-//                                        val intent =
-//                                            Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
-//                                        context.startActivity(intent)
-//                                    },
-//                                    onDismissFn = {
-//                                        showDeveloperOptionsEnabled = false
-//                                        selectedPaymentMethod = qrCodePaymentMethod
-//                                    },
-//                                )
-//
-//                                MyDialog(
-//                                    showDialog = showNFCNotEnabled,
-//                                    title = "NFC Required",
-//                                    text = "This feature needs NFC. Please enable it in your device settings.",
-//                                    acceptButtonText = "Go to Settings",
-//                                    cancelButtonText = "Cancel",
-//                                    onAcceptFn = {
-//                                        showNFCNotEnabled = false
-//                                        val intent = Intent(Settings.ACTION_NFC_SETTINGS)
-//                                        context.startActivity(intent)
-//                                    },
-//                                    onDismissFn = {
-//                                        showNFCNotEnabled = false
-//                                        selectedPaymentMethod = qrCodePaymentMethod
-//                                    },
-//                                )
+                                MyDialog(
+                                    showDialog = showDeveloperOptionsEnabled,
+                                    title = "Caution",
+                                    text = "You need to disable developer options to proceed further.",
+                                    acceptButtonText = "Developer Options",
+                                    cancelButtonText = "Cancel",
+                                    onAcceptFn = {
+                                        showDeveloperOptionsEnabled = false
+                                        val intent =
+                                            Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+                                        context.startActivity(intent)
+                                    },
+                                    onDismissFn = {
+                                        showDeveloperOptionsEnabled = false
+                                        selectedPaymentMethod = qrCodePaymentMethod
+                                    },
+                                )
+
+                                MyDialog(
+                                    showDialog = showNFCNotEnabled,
+                                    title = "NFC Required",
+                                    text = "This feature needs NFC. Please enable it in your device settings.",
+                                    acceptButtonText = "Go to Settings",
+                                    cancelButtonText = "Cancel",
+                                    onAcceptFn = {
+                                        showNFCNotEnabled = false
+                                        val intent = Intent(Settings.ACTION_NFC_SETTINGS)
+                                        context.startActivity(intent)
+                                    },
+                                    onDismissFn = {
+                                        showNFCNotEnabled = false
+                                        selectedPaymentMethod = qrCodePaymentMethod
+                                    },
+                                )
 
                                 PaymentTapToPayImage(
                                     modifier = Modifier

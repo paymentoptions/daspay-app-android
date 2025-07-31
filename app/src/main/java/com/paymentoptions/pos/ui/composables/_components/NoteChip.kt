@@ -26,6 +26,7 @@ fun NoteChip(
     fontWeight: FontWeight = FontWeight.Light,
     color: Color = purple50,
     icon: Int = R.drawable.hint_bulb,
+    iconTint: Color = Color(0xFFFFC107),
 ) {
     AssistChip(
         modifier = modifier,
@@ -46,7 +47,7 @@ fun NoteChip(
             Icon(
                 painter = painterResource(icon),
                 contentDescription = "Hint",
-                tint = Color(0xFFFFC107),
+                tint = iconTint,
                 modifier = Modifier.size(AssistChipDefaults.IconSize)
             )
         })
