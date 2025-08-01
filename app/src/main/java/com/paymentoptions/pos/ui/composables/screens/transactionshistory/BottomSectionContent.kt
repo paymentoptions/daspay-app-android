@@ -55,6 +55,7 @@ import com.paymentoptions.pos.utils.modifiers.conditional
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
+import java.util.Locale
 import kotlin.math.ceil
 
 
@@ -146,8 +147,13 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 val sevenDaysAgo = today.minusDays(7)
 
                 receivalForText = "Receival for the week"
-                receivalForTimePeriodText =
-                    "${sevenDaysAgo.dayOfMonth} ${sevenDaysAgo.month}, ${sevenDaysAgo.year} to ${today.dayOfMonth} ${today.month}, ${today.year}"
+                receivalForTimePeriodText = "${sevenDaysAgo.dayOfMonth} ${
+                    sevenDaysAgo.month.toString().lowercase()
+                        .replaceFirstChar { it.titlecase(Locale.ROOT) }
+                }, ${sevenDaysAgo.year} to ${today.dayOfMonth} ${
+                    today.month.toString().lowercase()
+                        .replaceFirstChar { it.titlecase(Locale.ROOT) }
+                }, ${today.year}"
                 receivalAmount = 0.0f
             }
 
@@ -156,10 +162,17 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 val thirtyDaysAgo = today.minusDays(30)
 
                 receivalForText = "Receival for the month"
-                receivalForTimePeriodText =
-                    "${thirtyDaysAgo.dayOfMonth} ${thirtyDaysAgo.month}, ${thirtyDaysAgo.year} to ${today.dayOfMonth} ${today.month}, ${today.year}"
+                receivalForTimePeriodText = run {
+                    today.month.toString()
+                    "${thirtyDaysAgo.dayOfMonth} ${
+                        thirtyDaysAgo.month.toString().lowercase()
+                            .replaceFirstChar { it.titlecase(Locale.ROOT) }
+                    }, ${thirtyDaysAgo.year} to ${today.dayOfMonth} ${
+                        today.month.toString().lowercase()
+                            .replaceFirstChar { it.titlecase(Locale.ROOT) }
+                    }, ${today.year}"
+                }
                 receivalAmount = 0.0f
-
             }
 
             "Custom" -> {

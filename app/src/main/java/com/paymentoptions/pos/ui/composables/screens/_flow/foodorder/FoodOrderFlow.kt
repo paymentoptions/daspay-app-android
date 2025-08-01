@@ -6,10 +6,13 @@ import android.content.Intent
 import android.os.Handler
 import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -32,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.device.DeveloperOptions
@@ -53,6 +57,8 @@ import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPaym
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment3
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment4
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment6
+import com.paymentoptions.pos.ui.composables._components.mytoast.ToastData
+import com.paymentoptions.pos.ui.composables._components.mytoast.ToastType
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
@@ -64,6 +70,10 @@ import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.chargemo
 import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
+import com.paymentoptions.pos.ui.theme.green100
+import com.paymentoptions.pos.ui.theme.green500
+import com.paymentoptions.pos.ui.theme.red300
+import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.formatToPrecisionString
@@ -111,6 +121,13 @@ fun FoodOrderFlow(
     var nfcStatusPair by remember { mutableStateOf(Nfc.getStatus(context)) }
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
+
+    var toastData by remember { mutableStateOf(ToastData()) }
+    var showToast by remember { mutableStateOf(false) }
+
+    fun setShowToast(show: Boolean) {
+        showToast = show
+    }
 
     fun updateFlowStage(newFoodOrderFlowStage: FoodOrderFlowStage) {
         foodOrderFlowStage = newFoodOrderFlowStage
@@ -173,6 +190,44 @@ fun FoodOrderFlow(
         foodItemListAvailable = true
     }
 
+    if (showToast) Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 100.dp)
+            .padding(horizontal = 50.dp)
+            .background(Color.Transparent)
+            .zIndex(10f), contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .background(
+                    if (toastData.type == ToastType.SUCCESS) green100.copy(alpha = 0.8f) else red300.copy(
+                        alpha = 0.8f
+                    ), shape = RoundedCornerShape(8.dp)
+                )
+                .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .align(alignment = Alignment.BottomCenter),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(if (toastData.type == ToastType.SUCCESS) green500 else red500)
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text("1", color = Color.White, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+            }
+            Text(
+                toastData.text,
+                color = if (toastData.type == ToastType.SUCCESS) green500 else red500,
+                fontWeight = FontWeight.Medium,
+                fontSize = 12.sp
+            )
+        }
+    }
+
     when (foodOrderFlowStage) {
         FoodOrderFlowStage.MENU -> SectionedLayout(
             navController = navController,
@@ -191,7 +246,9 @@ fun FoodOrderFlow(
                 foodItemsAvailable = foodItemListAvailable,
                 cartState = cartState,
                 updateCartSate = { cartState = it.copy() },
-                updateFlowStage = { updateFlowStage(it) })
+                updateFlowStage = { updateFlowStage(it) },
+                createToast = { toastData.setToast(it) },
+                setShowToast = { setShowToast(it) })
         }
 
         FoodOrderFlowStage.REVIEW_CART -> {
@@ -207,7 +264,9 @@ fun FoodOrderFlow(
                     enableScrolling = enableScrollingInsideBottomSectionContent,
                     cartState = cartState,
                     updateCartSate = { cartState = it.copy() },
-                    updateFlowStage = { updateFlowStage(it) })
+                    updateFlowStage = { updateFlowStage(it) },
+                    createToast = { toastData.setToast(it) },
+                    setShowToast = { setShowToast(it) })
             }
         }
 
@@ -358,7 +417,7 @@ fun FoodOrderFlow(
                                     modifier = Modifier
                                         .padding(horizontal = 20.dp)
                                         .fillMaxWidth()
-                                        .height(270.dp)
+                                        .height(250.dp)
                                         .clip(
                                             shape = RoundedCornerShape(16.dp)
                                         )
@@ -414,6 +473,7 @@ fun FoodOrderFlow(
 
                                 NoteChip(
                                     text = "Ask customer to scan with GrabPay",
+                                    color = Color.White,
                                     modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                                 )
                             }

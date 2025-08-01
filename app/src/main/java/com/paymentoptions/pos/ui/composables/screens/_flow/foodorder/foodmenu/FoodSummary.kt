@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu
 
+import android.os.Handler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paymentoptions.pos.ui.composables._components.mytoast.ToastData
+import com.paymentoptions.pos.ui.composables._components.mytoast.ToastType
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.MAX_QUANTITY_PER_FOOD_ITEM
@@ -37,7 +40,44 @@ fun FoodSummary(
     foodItem: FoodItem,
     cartState: Cart,
     updateCartSate: (Cart) -> Unit,
+    createToast: (ToastData) -> Unit,
+    setShowToast: (Boolean) -> Unit,
 ) {
+    fun removeQuantity() {
+        if (foodItem.cartQuantity > 0) {
+            cartState.decreaseFoodItemQuantity(foodItem)
+            updateCartSate(cartState)
+
+            createToast(
+                ToastData(
+                    type = ToastType.ERROR, text = foodItem.item.ProductName + " removed"
+                )
+            )
+            setShowToast(true)
+
+            Handler().postDelayed({
+                setShowToast(false)
+            }, 1000)
+        }
+    }
+
+    fun addQuantity() {
+        if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
+            cartState.increaseFoodItemQuantity(foodItem)
+            updateCartSate(cartState)
+
+            createToast(
+                ToastData(
+                    type = ToastType.SUCCESS, text = foodItem.item.ProductName + " added"
+                )
+            )
+            setShowToast(true)
+
+            Handler().postDelayed({
+                setShowToast(false)
+            }, 1000)
+        }
+    }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -78,9 +118,8 @@ fun FoodSummary(
                 modifier = Modifier
                     .weight(1f)
                     .clickable {
-                        if (foodItem.cartQuantity == 0) cartState.increaseFoodItemQuantity(foodItem)
-                        else cartState.decreaseFoodItemQuantity(foodItem)
-                        updateCartSate(cartState)
+                        if (foodItem.cartQuantity == 0) addQuantity()
+                        else removeQuantity()
                     })
 
             Text(
@@ -90,12 +129,7 @@ fun FoodSummary(
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .weight(if (foodItem.cartQuantity == 0) 2.5f else 1.5f)
-                    .clickable(enabled = foodItem.cartQuantity == 0) {
-                        if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
-                            cartState.increaseFoodItemQuantity(foodItem)
-                            updateCartSate(cartState)
-                        }
-                    },
+                    .clickable(enabled = foodItem.cartQuantity == 0) { addQuantity() },
                 textAlign = TextAlign.Center
             )
 
@@ -105,12 +139,7 @@ fun FoodSummary(
                 contentDescription = "Add",
                 modifier = Modifier
                     .weight(1f)
-                    .clickable(enabled = foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
-                        if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
-                            cartState.increaseFoodItemQuantity(foodItem)
-                            updateCartSate(cartState)
-                        }
-                    })
+                    .clickable(enabled = foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) { addQuantity() })
         }
     }
 }

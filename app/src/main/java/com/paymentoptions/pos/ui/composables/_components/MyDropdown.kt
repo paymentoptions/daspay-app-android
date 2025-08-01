@@ -90,8 +90,7 @@ fun MyDropdown(
         sheetState = sheetState,
         containerColor = Color.White,
         contentColor = primary500,
-        dragHandle = {}
-    ) {
+        dragHandle = {}) {
 
         ScreenTitleWithCloseButton(
             navController = navController,
@@ -145,7 +144,7 @@ fun MyDropdown(
                     ) {
                         if (selectedFilter == option) Box(
                             modifier = Modifier
-                                .size(20.dp)
+                                .size(18.dp)
                                 .background(primary500, shape = RoundedCornerShape(50))
                         )
                     }
@@ -153,6 +152,7 @@ fun MyDropdown(
 
                 if (index != filters.entries.size - 1) HorizontalDivider(
                     modifier = Modifier.fillMaxWidth(),
+                    thickness = 2.dp,
                     color = Color.LightGray.copy(alpha = 0.2f)
                 )
             }

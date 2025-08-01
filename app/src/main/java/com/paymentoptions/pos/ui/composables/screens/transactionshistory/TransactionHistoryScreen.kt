@@ -19,7 +19,8 @@ fun TransactionHistoryScreen(navController: NavController) {
         bottomSectionPaddingInDp = 0.dp,
         alwaysShowLogo = false,
         bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
-        enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+        enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+        blurTopSection = true
     ) {
         BottomSectionContent(
             navController, enableScrolling = enableScrollingInsideBottomSectionContent

@@ -63,27 +63,19 @@ fun Insights(
     val higherPercentage = 15
     val higherString = buildAnnotatedString {
         withStyle(
-            SpanStyle(
-                primary500, fontWeight = FontWeight.Medium, fontSize = 12.sp
-            )
+            SpanStyle(primary500, fontWeight = FontWeight.Medium, fontSize = 12.sp)
         ) { append("Your Earnings are ") }
 
         withStyle(
-            SpanStyle(
-                primary500, fontWeight = FontWeight.Bold, fontSize = 12.sp
-            )
+            SpanStyle(primary500, fontWeight = FontWeight.Bold, fontSize = 12.sp)
         ) { append(higherPercentage.toString()) }
 
         withStyle(
-            SpanStyle(
-                primary500, fontWeight = FontWeight.Medium, fontSize = 12.sp
-            )
+            SpanStyle(primary500, fontWeight = FontWeight.Medium, fontSize = 12.sp)
         ) { append("% higher than yesterday") }
     }
 
-    Column(
-        modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
+    Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         var counter = 0
         transactions.forEachIndexed { index, transaction ->
 
@@ -96,8 +88,8 @@ fun Insights(
                 barData.add(
                     BarData(
                         point = Point(x = counter++.toFloat(), y = transaction.amount.toFloat()),
-                        color = if (transaction.TransactionType == "REFUND") red500.copy(alpha = 0.5f) else Color.Green.copy(
-                            alpha = 0.5f
+                        color = if (transaction.TransactionType == "REFUND") red500.copy(alpha = 0.4f) else Color.Green.copy(
+                            alpha = 0.4f
                         ),
                         label = "${date.dayOfMonth} ${date.month}",
                         gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
@@ -144,7 +136,6 @@ fun Insights(
                     .axisLabelFontSize(8.sp).axisLabelAngle(0f).axisLineColor(Color.White)
                     .labelAndAxisLinePadding(0.dp).backgroundColor(Color.White).labelData { index ->
                         try {
-
                             val label =
                                 if (barData.size == 1) chartMaxValue else index * chartMaxValue / (barData.size - 1)
 
@@ -172,7 +163,6 @@ fun Insights(
                 barChartData = barChartData
             )
         }
-
 
         //Stats
         Column(

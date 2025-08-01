@@ -21,7 +21,6 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.purple50
 
-
 @Composable
 fun FoodCategories(
     foodCategories: List<CategoryListDataRecord>,

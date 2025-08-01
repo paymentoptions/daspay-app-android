@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu
 
+import android.os.Handler
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,6 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paymentoptions.pos.ui.composables._components.mytoast.ToastData
+import com.paymentoptions.pos.ui.composables._components.mytoast.ToastType
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem
@@ -54,7 +57,8 @@ fun FoodSummaryForReview(
     longClickedFoodItem: FoodItem?,
     cartState: Cart,
     updateLongClickedFoodItem: (FoodItem?) -> Unit,
-    updateCartSate: (Cart) -> Unit,
+    updateCartSate: (Cart) -> Unit, createToast: (ToastData) -> Unit,
+    setShowToast: (Boolean) -> Unit,
 ) {
     val borderRadius = 20.dp
     val haptics = LocalHapticFeedback.current
@@ -65,6 +69,43 @@ fun FoodSummaryForReview(
     BackHandler(enabled = !backPressHandled) {
         updateLongClickedFoodItem(null)
         backPressHandled = true
+    }
+
+    fun removeQuantity() {
+        if (foodItem.cartQuantity > 0) {
+            cartState.decreaseFoodItemQuantity(foodItem)
+            updateCartSate(cartState)
+        }
+
+        createToast(
+            ToastData(
+                type = ToastType.ERROR, text = foodItem.item.ProductName + " removed"
+            )
+        )
+        setShowToast(true)
+
+        Handler().postDelayed({
+            setShowToast(false)
+        }, 1000)
+    }
+
+
+    fun addQuantity() {
+        if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
+            cartState.increaseFoodItemQuantity(foodItem)
+            updateCartSate(cartState)
+        }
+
+        createToast(
+            ToastData(
+                type = ToastType.SUCCESS, text = foodItem.item.ProductName + " added"
+            )
+        )
+        setShowToast(true)
+
+        Handler().postDelayed({
+            setShowToast(false)
+        }, 1000)
     }
 
     Row(
@@ -150,8 +191,7 @@ fun FoodSummaryForReview(
                             .clickable {
                                 when (foodItem.cartQuantity) {
                                     0 -> {
-                                        cartState.increaseFoodItemQuantity(foodItem)
-                                        updateCartSate(cartState)
+                                        addQuantity()
                                     }
 
                                     1 -> {
@@ -160,8 +200,7 @@ fun FoodSummaryForReview(
 
                                     else -> {
                                         updateLongClickedFoodItem(null)
-                                        cartState.decreaseFoodItemQuantity(foodItem)
-                                        updateCartSate(cartState)
+                                        removeQuantity()
                                     }
                                 }
                             })
@@ -176,8 +215,7 @@ fun FoodSummaryForReview(
                             .clickable(enabled = foodItem.cartQuantity == 0) {
                                 if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
                                     updateLongClickedFoodItem(null)
-                                    cartState.increaseFoodItemQuantity(foodItem)
-                                    updateCartSate(cartState)
+                                    addQuantity()
                                 }
                             },
                         textAlign = TextAlign.Center
@@ -192,8 +230,7 @@ fun FoodSummaryForReview(
                             .clickable(enabled = foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
                                 if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
                                     updateLongClickedFoodItem(null)
-                                    cartState.increaseFoodItemQuantity(foodItem)
-                                    updateCartSate(cartState)
+                                    addQuantity()
                                 }
                             })
                 }
@@ -214,8 +251,7 @@ fun FoodSummaryForReview(
                 .weight(2f)
                 .clickable {
                     updateLongClickedFoodItem(null)
-                    cartState.removeFoodItem(foodItem)
-                    updateCartSate(cartState)
+                    removeQuantity()
                 })
     }
 }

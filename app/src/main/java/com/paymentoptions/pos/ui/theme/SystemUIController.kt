@@ -19,5 +19,5 @@ fun SystemUiController() {
 @Composable
 fun SetImmersiveMode(enabled: Boolean) {
     val systemUiController = rememberSystemUiController()
-    systemUiController.isSystemBarsVisible = enabled
+    systemUiController.isSystemBarsVisible = !enabled
 }

@@ -25,6 +25,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -70,9 +72,9 @@ fun SectionedLayout(
         )
     },
     enableScrollingOfBottomSectionContent: Boolean = true,
+    blurTopSection: Boolean = false,
     bottomSectionContent: @Composable () -> Unit = {},
 ) {
-
     var bottomBarContentState by remember { mutableStateOf(bottomBarContent) }
 
     val bottomSectionMinHeightDp = screenRatioToDp(bottomSectionMinHeightRatio)
@@ -114,12 +116,15 @@ fun SectionedLayout(
                     .padding(top = LOGO_TOP_PADDING_IN_DP)
                     .align(alignment = Alignment.TopCenter)
                     .zIndex(1f)
-            ) {
+                    .conditional(blurTopSection) {
+                        blur(radius = 8.dp, edgeTreatment = BlurredEdgeTreatment.Unbounded)
+                    }) {
                 LogoImage(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(LOGO_HEIGHT_IN_DP)
                 )
+
                 Spacer(modifier = Modifier.height(25.dp))
 
                 imageBelowLogo()
