@@ -6,6 +6,8 @@ import android.content.Intent
 import android.os.Handler
 import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.animation.core.animateIntOffsetAsState
+import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,8 +34,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -57,14 +62,14 @@ import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPaym
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment3
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment4
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment6
-import com.paymentoptions.pos.ui.composables._components.mytoast.ToastData
-import com.paymentoptions.pos.ui.composables._components.mytoast.ToastType
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.additionalcharge.AdditionalChargeBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu.FoodMenuBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu.ToastData
+import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.foodmenu.ToastType
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.reviewcart.ReviewCartBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.chargemoney.ChargeMoneyBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
@@ -81,6 +86,7 @@ import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.paymentoptions.pos.utils.viaLinkPaymentMethod
+import kotlin.math.roundToInt
 
 const val MAX_QUANTITY_PER_FOOD_ITEM = 20
 
@@ -124,6 +130,17 @@ fun FoodOrderFlow(
 
     var toastData by remember { mutableStateOf(ToastData()) }
     var showToast by remember { mutableStateOf(false) }
+
+    val pxToMove = with(LocalDensity.current) {
+        20.times(-1).dp.toPx().roundToInt()
+    }
+    val offset by animateIntOffsetAsState(
+        targetValue = if (showToast) {
+            IntOffset(0, pxToMove)
+        } else {
+            IntOffset.Zero
+        }, animationSpec = keyframes { durationMillis = 1000 }, label = "offset"
+    )
 
     fun setShowToast(show: Boolean) {
         showToast = show
@@ -193,18 +210,18 @@ fun FoodOrderFlow(
     if (showToast) Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = 100.dp)
+            .padding(bottom = 220.dp)
+            .offset { offset }
             .padding(horizontal = 50.dp)
             .background(Color.Transparent)
-            .zIndex(10f), contentAlignment = Alignment.Center
-    ) {
+            .zIndex(10f),
+        contentAlignment = Alignment.Center) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
                 .background(
                     if (toastData.type == ToastType.SUCCESS) green100.copy(alpha = 0.8f) else red300.copy(
-                        alpha = 0.8f
+                        alpha = 0.6f
                     ), shape = RoundedCornerShape(8.dp)
                 )
                 .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
@@ -213,11 +230,19 @@ fun FoodOrderFlow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .background(if (toastData.type == ToastType.SUCCESS) green500 else red500)
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                modifier = Modifier.background(
+                    if (toastData.type == ToastType.SUCCESS) green500 else red500,
+                    shape = RoundedCornerShape(2.dp)
+                )
+
             ) {
-                Text("1", color = Color.White, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+                Text(
+                    toastData.cartCount.toString(),
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.sp,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
             }
             Text(
                 toastData.text,

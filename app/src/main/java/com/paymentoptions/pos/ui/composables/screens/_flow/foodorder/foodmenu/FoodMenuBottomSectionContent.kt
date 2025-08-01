@@ -32,7 +32,6 @@ import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables._components.ZigZagContainer
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.SearchInput
-import com.paymentoptions.pos.ui.composables._components.mytoast.ToastData
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem

@@ -24,7 +24,7 @@ import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary900
 
 data class Email(
-    val id: String = "text@user.com",
+    val id: String = "",
     val subject: String = "Shared via DASPay",
     val text: String = "",
 )

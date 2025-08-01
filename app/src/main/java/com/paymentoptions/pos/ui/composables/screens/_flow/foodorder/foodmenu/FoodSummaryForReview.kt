@@ -38,8 +38,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.ui.composables._components.mytoast.ToastData
-import com.paymentoptions.pos.ui.composables._components.mytoast.ToastType
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem
@@ -79,7 +77,9 @@ fun FoodSummaryForReview(
 
         createToast(
             ToastData(
-                type = ToastType.ERROR, text = foodItem.item.ProductName + " removed"
+                type = ToastType.ERROR,
+                text = foodItem.item.ProductName + " removed",
+                cartCount = foodItem.cartQuantity
             )
         )
         setShowToast(true)
@@ -98,7 +98,9 @@ fun FoodSummaryForReview(
 
         createToast(
             ToastData(
-                type = ToastType.SUCCESS, text = foodItem.item.ProductName + " added"
+                type = ToastType.SUCCESS,
+                text = foodItem.item.ProductName + " added",
+                cartCount = foodItem.cartQuantity
             )
         )
         setShowToast(true)
