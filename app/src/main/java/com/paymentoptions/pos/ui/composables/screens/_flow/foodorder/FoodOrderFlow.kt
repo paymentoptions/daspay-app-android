@@ -6,6 +6,9 @@ import android.content.Intent
 import android.os.Handler
 import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntOffsetAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.background
@@ -134,6 +137,7 @@ fun FoodOrderFlow(
     val pxToMove = with(LocalDensity.current) {
         20.times(-1).dp.toPx().roundToInt()
     }
+
     val offset by animateIntOffsetAsState(
         targetValue = if (showToast) {
             IntOffset(0, pxToMove)
@@ -141,6 +145,16 @@ fun FoodOrderFlow(
             IntOffset.Zero
         }, animationSpec = keyframes { durationMillis = 1000 }, label = "offset"
     )
+
+    val alpha by animateFloatAsState(
+        targetValue = if (showToast) 1f else 0f, animationSpec = keyframes {
+            durationMillis = 1500
+            1.0f at 0 using LinearOutSlowInEasing
+            0f at 1000 using FastOutLinearInEasing
+        }, label = "keyframe"
+    )
+
+    println("alpha: $alpha")
 
     fun setShowToast(show: Boolean) {
         showToast = show
@@ -220,9 +234,9 @@ fun FoodOrderFlow(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    if (toastData.type == ToastType.SUCCESS) green100.copy(alpha = 0.8f) else red300.copy(
-                        alpha = 0.6f
-                    ), shape = RoundedCornerShape(8.dp)
+                    if (toastData.type == ToastType.SUCCESS) green100.copy(alpha = alpha) else red300.copy(
+                        alpha = alpha
+                    ), shape = RoundedCornerShape(10.dp)
                 )
                 .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .align(alignment = Alignment.BottomCenter),
@@ -231,14 +245,15 @@ fun FoodOrderFlow(
         ) {
             Box(
                 modifier = Modifier.background(
-                    if (toastData.type == ToastType.SUCCESS) green500 else red500,
-                    shape = RoundedCornerShape(2.dp)
+                    if (toastData.type == ToastType.SUCCESS) green500.copy(alpha = alpha) else red500.copy(
+                        alpha = alpha
+                    ), shape = RoundedCornerShape(2.dp)
                 )
 
             ) {
                 Text(
                     toastData.cartCount.toString(),
-                    color = Color.White,
+                    color = Color.White.copy(alpha = alpha),
                     fontWeight = FontWeight.Medium,
                     fontSize = 12.sp,
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -246,7 +261,9 @@ fun FoodOrderFlow(
             }
             Text(
                 toastData.text,
-                color = if (toastData.type == ToastType.SUCCESS) green500 else red500,
+                color = if (toastData.type == ToastType.SUCCESS) green500.copy(alpha = alpha) else red500.copy(
+                    alpha = alpha
+                ),
                 fontWeight = FontWeight.Medium,
                 fontSize = 12.sp
             )
