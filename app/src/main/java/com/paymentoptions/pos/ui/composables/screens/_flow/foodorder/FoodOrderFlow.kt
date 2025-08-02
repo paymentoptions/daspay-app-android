@@ -154,8 +154,6 @@ fun FoodOrderFlow(
         }, label = "keyframe"
     )
 
-    println("alpha: $alpha")
-
     fun setShowToast(show: Boolean) {
         showToast = show
     }
