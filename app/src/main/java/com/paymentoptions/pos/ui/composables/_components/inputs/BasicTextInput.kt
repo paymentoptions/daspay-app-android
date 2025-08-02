@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -53,6 +54,9 @@ fun BasicTextInput(
     maxLength: Int = 50,
 ) {
     var showText by remember { mutableStateOf(false) }
+    var wasFocusedAtLeastOnce by remember { mutableStateOf(false) }
+
+    var error = wasFocusedAtLeastOnce && isError
 
     Column(modifier = modifier) {
 
@@ -60,7 +64,7 @@ fun BasicTextInput(
             Text(
                 text = label,
                 fontSize = 14.sp,
-                color = if (isError) red300 else purple50,
+                color = if (error) red300 else purple50,
                 fontWeight = FontWeight.Medium,
             )
 
@@ -70,7 +74,8 @@ fun BasicTextInput(
         Box {
             TextField(
                 state = state,
-                isError = isError,
+                isError = error,
+
                 placeholder = {
                     Text(
                         placeholder,
@@ -81,11 +86,9 @@ fun BasicTextInput(
                 },
                 inputTransformation = InputTransformation.maxLength(maxLength),
                 outputTransformation = OutputTransformation {
-
                     if (isSecure && !showText) replace(
                         0, this.length, '*'.toString().repeat(this.length)
                     )
-
                 },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.White,
@@ -104,18 +107,16 @@ fun BasicTextInput(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(textFieldHeight)
+                    .onFocusChanged { if (it.isFocused) wasFocusedAtLeastOnce = true }
                     .shadow(
                         elevation = 2.dp,
                         shape = RoundedCornerShape(6.dp),
                         ambientColor = Color.LightGray,
                         spotColor = primary100
                     )
-                    .border(
-                        border = borderThin, shape = RoundedCornerShape(6.dp)
-                    ),
+                    .border(border = borderThin, shape = RoundedCornerShape(6.dp)),
                 lineLimits = TextFieldLineLimits.SingleLine,
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
-            )
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp))
 
             if (isSecure) Icon(
                 if (showText) Icons.Default.Visibility else Icons.Default.VisibilityOff,
@@ -124,9 +125,7 @@ fun BasicTextInput(
                 modifier = Modifier
                     .align(alignment = Alignment.CenterEnd)
                     .padding(end = 10.dp)
-                    .clickable {
-                        showText = !showText
-                    })
+                    .clickable { showText = !showText })
         }
     }
 }
