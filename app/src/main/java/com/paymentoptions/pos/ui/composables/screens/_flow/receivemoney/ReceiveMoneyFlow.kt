@@ -133,16 +133,12 @@ fun ReceiveMoneyFlow(
         }
 
         ReceiveMoneyFlowStage.CHARGE_MONEY -> {
-
-            val localEnableScrollingInsideBottomSectionContent = true
-
             SectionedLayout(
                 navController = navController,
-                bottomSectionMinHeightRatio = 0.35f,
-                bottomSectionMaxHeightRatio = 0.35f,
+                bottomSectionMinHeightRatio = 0.25f,
                 bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
                 bottomSectionPaddingInDp = 0.dp,
-                enableScrollingOfBottomSectionContent = !localEnableScrollingInsideBottomSectionContent,
+                enableScrollingOfBottomSectionContent = false,
                 imageBelowLogo = {
                     Column(
                         modifier = Modifier
@@ -262,7 +258,7 @@ fun ReceiveMoneyFlow(
                                     modifier = Modifier
                                         .padding(horizontal = 20.dp)
                                         .fillMaxWidth()
-                                        .height(270.dp)
+                                        .height(240.dp)
                                         .clip(
                                             shape = RoundedCornerShape(16.dp)
                                         )
@@ -318,6 +314,7 @@ fun ReceiveMoneyFlow(
 
                                 NoteChip(
                                     text = "Ask customer to scan with GrabPay",
+                                    color = Color.White,
                                     modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                                 )
                             }
@@ -348,7 +345,7 @@ fun ReceiveMoneyFlow(
                 }) {
                 ChargeMoneyBottomSectionContent(
                     navController,
-                    enableScrolling = localEnableScrollingInsideBottomSectionContent,
+                    enableScrolling = false,
                     amountToCharge = formatAmount(amountToChargeState),
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },

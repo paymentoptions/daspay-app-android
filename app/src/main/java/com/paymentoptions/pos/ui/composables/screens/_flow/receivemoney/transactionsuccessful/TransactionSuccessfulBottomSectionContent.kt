@@ -94,7 +94,7 @@ fun TransactionSuccessfulBottomSectionContent(
             Spacer(modifier = Modifier.height(8.dp))
             CurrencyText(currency = currency, amount = amountToCharge.toString())
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.scale(0.7f),
@@ -104,9 +104,9 @@ fun TransactionSuccessfulBottomSectionContent(
                 OutlinedButton(
                     text = "Refund",
                     onClick = { },
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.height(36.dp)
+                    modifier = Modifier
                 )
 
                 Spacer(modifier = Modifier.width(10.dp))
@@ -114,9 +114,9 @@ fun TransactionSuccessfulBottomSectionContent(
                 FilledButton(
                     text = "View Full Receipt",
                     onClick = { },
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.height(36.dp)
+                    modifier = Modifier
                 )
             }
         }

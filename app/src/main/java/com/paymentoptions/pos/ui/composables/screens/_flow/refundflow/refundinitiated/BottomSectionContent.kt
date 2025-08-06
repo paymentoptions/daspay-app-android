@@ -21,6 +21,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,6 +76,10 @@ fun BottomSectionContent(
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
 
+    LaunchedEffect(showRefundStatus) {
+        scrollState.scrollTo(if (showRefundStatus) scrollState.maxValue else 0)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -96,17 +101,16 @@ fun BottomSectionContent(
             Spacer(modifier = Modifier.height(8.dp))
             CurrencyText(currency = currency, amount = transaction?.amount.toString())
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             FilledButton(
                 text = "View Full Receipt",
                 onClick = { },
-                fontSize = 14.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .width(200.dp)
-                    .height(35.dp)
-                    .scale(0.8f)
+                    .scale(0.7f)
             )
         }
 
@@ -291,21 +295,26 @@ fun BottomSectionContent(
                             tint = primary500,
                             modifier = Modifier
                                 .size(AssistChipDefaults.IconSize.minus(5.dp))
-                                .conditional(!showRefundStatus) { rotate(180f) })
+                                .conditional(showRefundStatus) { rotate(180f) })
                     })
 
-                if (!showRefundStatus) VerticalProgressBar(
-                    currentState = ProgressState.PROCESSING,
-                    submittedTitle = "Request Submitted",
-                    submittedText = "We've received your refund request.\nHang tight—we're on it!",
-                    initiatedTitle = "Refund Pending",
-                    initiatedText = "Your refund has been initiated. We're now working with your payment provider.",
-                    processingTitle = "Refund Processing",
-                    processingText = "Your refund is being processed. It usually takes 3–5 business days to complete.",
-                    completedTitle = "Refund Completed",
-                    completedText = "Success! The refund has been processed. You should see it in your account shortly.",
-                    modifier = Modifier.padding(top = 24.dp)
-                )
+
+                if (showRefundStatus) {
+
+
+                    VerticalProgressBar(
+                        currentState = ProgressState.PROCESSING,
+                        submittedTitle = "Request Submitted",
+                        submittedText = "We've received your refund request.\nHang tight—we're on it!",
+                        initiatedTitle = "Refund Pending",
+                        initiatedText = "Your refund has been initiated. We're now working with your payment provider.",
+                        processingTitle = "Refund Processing",
+                        processingText = "Your refund is being processed. It usually takes 3–5 business days to complete.",
+                        completedTitle = "Refund Completed",
+                        completedText = "Success! The refund has been processed. You should see it in your account shortly.",
+                        modifier = Modifier.padding(top = 24.dp)
+                    )
+                }
             }
         }
     }

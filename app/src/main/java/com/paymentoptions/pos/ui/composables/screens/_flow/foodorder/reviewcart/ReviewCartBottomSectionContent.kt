@@ -121,7 +121,9 @@ fun ReviewCartBottomSectionContent(
                     foodItem,
                     longClickedFoodItem,
                     cartState,
-                    updateLongClickedFoodItem = { longClickedFoodItem = it },
+                    updateLongClickedFoodItem = {
+                        longClickedFoodItem = if (longClickedFoodItem === it) null else it
+                    },
                     updateCartSate = { updateCartSate(cartState) },
                     createToast = { createToast(it) },
                     setShowToast = { setShowToast(it) })
@@ -230,7 +232,6 @@ fun ReviewCartBottomSectionContent(
                     }
                 }
             }
-
         }
 
         ZigZagContainer {
@@ -263,7 +264,8 @@ fun ReviewCartBottomSectionContent(
                     CurrencyText(
                         currency = currency,
                         amount = "+" + cartState.itemTotal.formatToPrecisionString(),
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = primary500
                     )
 
                 }
@@ -284,7 +286,8 @@ fun ReviewCartBottomSectionContent(
                     CurrencyText(
                         currency = currency,
                         amount = "+" + cartState.calculateServiceCharge().formatToPrecisionString(),
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = primary500
                     )
 
                 }
@@ -302,7 +305,8 @@ fun ReviewCartBottomSectionContent(
                     CurrencyText(
                         currency = currency,
                         amount = "+" + cartState.additionalCharge.formatToPrecisionString(),
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = primary500,
                     )
 
                 }
@@ -321,7 +325,8 @@ fun ReviewCartBottomSectionContent(
                     CurrencyText(
                         currency = currency,
                         amount = "+" + cartState.calculateGstCharge().formatToPrecisionString(),
-                        fontSize = 14.sp
+                        fontSize = 14.sp,
+                        color = primary500
                     )
 
                 }
@@ -336,14 +341,16 @@ fun ReviewCartBottomSectionContent(
                 ) {
                     Text(
                         "Grand Total", style = AppTheme.typography.footnote.copy(
-                            fontSize = 14.sp, fontWeight = FontWeight.Normal
+                            fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = primary500
                         )
                     )
 
                     CurrencyText(
                         currency = currency,
                         amount = "+" + cartState.calculateGrandTotal().formatToPrecisionString(),
-                        fontSize = 14.sp
+                        fontSize = 16.sp,
+                        color = primary500,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }

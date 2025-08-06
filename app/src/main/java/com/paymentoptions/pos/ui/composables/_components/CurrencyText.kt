@@ -19,6 +19,7 @@ fun CurrencyText(
     amount: String,
     modifier: Modifier = Modifier,
     fontSize: TextUnit = 36.sp,
+    fontWeight: FontWeight = FontWeight.Bold,
     color: Color = primary100,
     textAlign: TextAlign = TextAlign.Center,
     addSpaceAfterCurrency: Boolean = true,
@@ -31,11 +32,16 @@ fun CurrencyText(
                 )
             ) { append(currency + (if (addSpaceAfterCurrency) " " else "")) }
 
-            if (amount.isNotEmpty()) withStyle(SpanStyle(color)) { append(amount) }
+            if (amount.isNotEmpty()) withStyle(
+                SpanStyle(
+                    color = color,
+                    fontWeight = fontWeight
+                )
+            ) { append(amount) }
         },
         fontSize = fontSize,
-        fontWeight = FontWeight.Bold,
-        color = primary100,
+        fontWeight = fontWeight,
+//        color = primary100,
         textAlign = textAlign,
         modifier = modifier
     )

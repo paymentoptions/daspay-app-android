@@ -14,7 +14,7 @@ fun TransactionHistoryScreen(navController: NavController) {
 
     SectionedLayout(
         navController = navController,
-        bottomSectionMinHeightRatio = 0.9f,
+        bottomSectionMinHeightRatio = 0.8f,
         bottomSectionMaxHeightRatio = 0.9f,
         bottomSectionPaddingInDp = 0.dp,
         alwaysShowLogo = false,

@@ -297,11 +297,11 @@ fun FoodOrderFlow(
                 bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
                 bottomSectionPaddingInDp = 0.dp,
                 bottomSectionMinHeightRatio = 0.9f,
-                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+                enableScrollingOfBottomSectionContent = enableScrollingInsideBottomSectionContent
             ) {
                 ReviewCartBottomSectionContent(
                     navController,
-                    enableScrolling = enableScrollingInsideBottomSectionContent,
+                    enableScrolling = !enableScrollingInsideBottomSectionContent,
                     cartState = cartState,
                     updateCartSate = { cartState = it.copy() },
                     updateFlowStage = { updateFlowStage(it) },
@@ -324,20 +324,17 @@ fun FoodOrderFlow(
                     cartState = cartState,
                     updateCartSate = { cartState = it.copy() },
                     updateFlowStage = { updateFlowStage(it) })
-
             }
         }
 
         FoodOrderFlowStage.CHARGE_MONEY -> {
-            val localEnableScrollingInsideBottomSectionContent = true
 
             SectionedLayout(
                 navController = navController,
-                bottomSectionMinHeightRatio = 0.35f,
-                bottomSectionMaxHeightRatio = 0.35f,
+                bottomSectionMinHeightRatio = 0.25f,
                 bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
                 bottomSectionPaddingInDp = 0.dp,
-                enableScrollingOfBottomSectionContent = !localEnableScrollingInsideBottomSectionContent,
+                enableScrollingOfBottomSectionContent = false,
                 imageBelowLogo = {
                     Column(
                         modifier = Modifier
@@ -393,7 +390,7 @@ fun FoodOrderFlow(
                                     modifier = Modifier
                                         .padding(horizontal = 20.dp)
                                         .fillMaxWidth()
-                                        .height(270.dp)
+                                        .height(230.dp)
                                         .clip(
                                             shape = RoundedCornerShape(16.dp)
                                         )
@@ -411,33 +408,33 @@ fun FoodOrderFlow(
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.height(80.dp)
+                                    modifier = Modifier.height(60.dp)
                                 ) {
                                     VisaImage(
                                         modifier = Modifier
                                             .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .clip(shape = RoundedCornerShape(8.dp))
                                             .weight(1f)
                                     )
 
                                     MastercardImage(
                                         modifier = Modifier
                                             .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .clip(shape = RoundedCornerShape(8.dp))
                                             .weight(1f)
                                     )
 
                                     AmexImage(
                                         modifier = Modifier
                                             .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .clip(shape = RoundedCornerShape(8.dp))
                                             .weight(1f)
                                     )
 
                                     JcbImage(
                                         modifier = Modifier
                                             .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .clip(shape = RoundedCornerShape(8.dp))
                                             .weight(1f)
                                     )
                                 }
@@ -457,7 +454,7 @@ fun FoodOrderFlow(
                                     modifier = Modifier
                                         .padding(horizontal = 20.dp)
                                         .fillMaxWidth()
-                                        .height(250.dp)
+                                        .height(240.dp)
                                         .clip(
                                             shape = RoundedCornerShape(16.dp)
                                         )
@@ -546,7 +543,7 @@ fun FoodOrderFlow(
                 }) {
                 ChargeMoneyBottomSectionContent(
                     navController,
-                    enableScrolling = localEnableScrollingInsideBottomSectionContent,
+                    enableScrolling = false,
                     amountToCharge = cartState.calculateGrandTotal().formatToPrecisionString(),
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },

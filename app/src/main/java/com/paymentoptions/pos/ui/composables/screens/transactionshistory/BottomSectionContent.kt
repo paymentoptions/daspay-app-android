@@ -376,6 +376,5 @@ fun customFilterFn(
     endDate: Long,
 ): Boolean {
     val transactionDate = OffsetDateTime.parse(transaction.Date).toInstant().epochSecond * 1000
-
     return transactionDate >= startDate && transactionDate <= endDate
 }

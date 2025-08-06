@@ -207,7 +207,7 @@ fun InputMoneyBottomSectionContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         LazyRow(
             modifier = Modifier
@@ -241,7 +241,7 @@ fun InputMoneyBottomSectionContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         FilledButton(
             text = "Charge",

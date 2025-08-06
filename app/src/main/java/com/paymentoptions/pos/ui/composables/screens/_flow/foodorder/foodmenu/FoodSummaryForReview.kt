@@ -190,7 +190,7 @@ fun FoodSummaryForReview(
                         contentDescription = if (foodItem.cartQuantity == 0) "Add" else "Remove",
                         modifier = Modifier
                             .weight(1f)
-                            .clickable {
+                            .clickable(enabled = !(foodItem.cartQuantity == 1 && isLongClicked)) {
                                 when (foodItem.cartQuantity) {
                                     0 -> {
                                         addQuantity()

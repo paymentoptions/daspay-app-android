@@ -64,11 +64,10 @@ fun AdditionalChargeBottomSectionContent(
 ) {
     val scrollState = rememberScrollState()
 
-    println("cartState: ${cartState.additionalCharge}")
-
     var rawInput by remember {
         mutableStateOf(
-            cartState.additionalCharge.times(100).toInt().toString()
+            if (cartState.additionalCharge == 0f) "" else cartState.additionalCharge.times(100)
+                .toInt().toString()
         )
     }
 
@@ -76,14 +75,8 @@ fun AdditionalChargeBottomSectionContent(
 
     val onKeyPress: (String) -> Unit = { key ->
         when (key) {
-            "←" -> {
-                if (rawInput.isNotEmpty()) rawInput = rawInput.dropLast(1)
-            }
-
-            else -> {
-                // Avoid too many digits
-                if (rawInput.length < 9) rawInput += key
-            }
+            "←" -> if (rawInput.isNotEmpty()) rawInput = rawInput.dropLast(1)
+            else -> if (rawInput.length < 9) rawInput += key
         }
     }
 
@@ -239,14 +232,14 @@ fun AdditionalChargeBottomSectionContent(
 
         FilledButton(
             text = "Add",
-            disabled = rawInput.isEmpty() || rawInput.toLong() <= 0,
             modifier = Modifier
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxWidth()
                 .height(59.dp),
             onClick = {
                 cartState.additionalAmountNote = noteState.text.toString()
-                cartState.additionalCharge = rawInput.toFloat().div(100)
+                cartState.additionalCharge =
+                    if (rawInput.isEmpty()) 0.0f else rawInput.toFloat().div(100)
                 updateCartSate(cartState)
                 updateFlowStage(FoodOrderFlowStage.REVIEW_CART)
             })

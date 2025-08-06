@@ -121,7 +121,7 @@ fun ChargeMoneyBottomSectionContent(
                 color = primary900,
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             CurrencyText(currency = currency, amount = amountToCharge)
 

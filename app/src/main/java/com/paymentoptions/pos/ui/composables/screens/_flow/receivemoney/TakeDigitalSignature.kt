@@ -112,7 +112,6 @@ fun TakeDigitalSignatureBottomSectionContent(
                     .offset(x = 20.dp)
             )
 
-            //Signing composable here
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
