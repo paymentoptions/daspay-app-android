@@ -1,9 +1,8 @@
 package com.paymentoptions.pos.ui.composables._components.buttons
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,7 +22,9 @@ import com.paymentoptions.pos.ui.theme.primary900
 
 fun ScanButton(text: String, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Icon(
             Icons.Outlined.QrCodeScanner,
@@ -35,7 +36,6 @@ fun ScanButton(text: String, modifier: Modifier = Modifier) {
                 .padding(16.dp)
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = text,
             fontSize = 14.sp,

@@ -119,21 +119,19 @@ fun BottomSectionContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+
                 .background(
                     brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(20.dp)
                 )
+                .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .conditional(enableScrolling) { verticalScroll(scrollState) },
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
-            Spacer(modifier = Modifier.height(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP))
 
             NoteChip(
                 text = "The refund is being processed and should be reflected in your account within 3–5 business days",
                 modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
             )
-
-            Spacer(modifier = Modifier.height(20.dp))
 
             Column(
                 modifier = Modifier
@@ -276,7 +274,7 @@ fun BottomSectionContent(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 AssistChip(
                     onClick = { showRefundStatus = !showRefundStatus }, label = {

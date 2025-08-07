@@ -16,16 +16,18 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.ui.theme.linkColor
 
 
 @Composable
-fun LinkWithIcon(text: String, url: String, icon: ImageVector?) {
+fun LinkWithIcon(text: String, url: String, icon: ImageVector? = null) {
     val annotatedLinkString: AnnotatedString = remember {
         buildAnnotatedString {
 
@@ -49,15 +51,13 @@ fun LinkWithIcon(text: String, url: String, icon: ImageVector?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = if (icon.isNotNull()) Arrangement.spacedBy(4.dp) else Arrangement.Center
     ) {
 
         if (icon != null) Icon(
             imageVector = icon, contentDescription = "Email", modifier = Modifier.size(18.dp)
         )
 
-        Text(annotatedLinkString)
-
-
+        Text(annotatedLinkString, textAlign = TextAlign.Center)
     }
 }

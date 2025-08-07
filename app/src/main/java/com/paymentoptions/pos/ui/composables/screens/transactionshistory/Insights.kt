@@ -15,7 +15,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -23,7 +22,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -168,17 +166,17 @@ fun Insights(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-//                .background(primary100.copy(alpha = 0.2f), shape = RoundedCornerShape(16.dp))
                 .background(
                     brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(20.dp)
                 )
                 .padding(20.dp)
                 .shadow(
                     elevation = 120.dp,
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(4.dp),
                     ambientColor = Color.LightGray,
                     spotColor = primary100
-                ), verticalArrangement = Arrangement.spacedBy(16.dp)
+                ),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
             //Earnings
@@ -313,9 +311,7 @@ fun Insights(
 
 
             AssistChip(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(alignment = Alignment.CenterHorizontally),
+                modifier = Modifier.fillMaxWidth(),
                 onClick = { },
                 label = {
                     Text(
@@ -324,8 +320,10 @@ fun Insights(
                         fontWeight = FontWeight.Medium,
                         color = primary500,
                         lineHeight = 16.sp,
-                        modifier = Modifier.padding(vertical = 6.dp),
-                        textAlign = TextAlign.Center
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+//                        textAlign = TextAlign.Center
                     )
                 },
                 border = noBorder,

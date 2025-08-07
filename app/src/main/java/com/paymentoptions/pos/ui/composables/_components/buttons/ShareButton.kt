@@ -3,9 +3,8 @@ package com.paymentoptions.pos.ui.composables._components.buttons
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,7 +35,9 @@ fun ShareButton(text: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.clickable {
             startActivity(context, shareIntent, null)
-        }, horizontalAlignment = Alignment.CenterHorizontally
+        },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Icon(
             Icons.Outlined.Share, contentDescription = "Share", modifier = Modifier
@@ -45,8 +46,6 @@ fun ShareButton(text: String, modifier: Modifier = Modifier) {
                 )
                 .padding(16.dp)
         )
-
-        Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = text,
             fontSize = 14.sp,

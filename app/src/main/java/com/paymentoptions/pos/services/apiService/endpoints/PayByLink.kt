@@ -2,14 +2,18 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.services.apiService.CategoryListResponse
+import com.paymentoptions.pos.services.apiService.PayByLinkRequest
+import com.paymentoptions.pos.services.apiService.PayByLinkResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.generateRequestHeaders
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 import com.paymentoptions.pos.utils.decodeJwtPayload
-import com.paymentoptions.pos.utils.getMerchantIdFromToken
+import com.paymentoptions.pos.utils.getDasmidFromToken
 
-suspend fun categoryList(context: Context): CategoryListResponse? {
+suspend fun payByLink(
+    context: Context,
+    payByLinkRequest: PayByLinkRequest,
+): PayByLinkResponse? {
     try {
         var authDetails = SharedPreferences.getAuthDetails(context)
         val username = authDetails?.data?.email ?: ""
@@ -22,14 +26,18 @@ suspend fun categoryList(context: Context): CategoryListResponse? {
         val requestHeaders = generateRequestHeaders(idToken ?: "")
 
         val decodedJwtPayloadJson = decodeJwtPayload(idToken ?: "")
-        val merchantId = getMerchantIdFromToken(decodedJwtPayloadJson)
+        val dasmid = getDasmidFromToken(decodedJwtPayloadJson)
 
-        val categoryListResponse =
-            RetrofitClient.api.categoryList(headers = requestHeaders, merchantId = merchantId)
+        println("payByLink: $payByLinkRequest")
+        var response: PayByLinkResponse = RetrofitClient.api.payByLink(
+            headers = requestHeaders,
+            dasmid = dasmid,
+            request = payByLinkRequest
+        )
 
-        return categoryListResponse
+        return response
     } catch (e: Exception) {
-        println("transactionListError: $e")
+        println("payByLinkError: $e")
         throw e
     }
 }

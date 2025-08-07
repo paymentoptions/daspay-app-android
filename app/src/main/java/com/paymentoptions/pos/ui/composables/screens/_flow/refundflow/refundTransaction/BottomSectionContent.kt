@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +38,7 @@ import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -49,10 +49,11 @@ fun BottomSectionContent(
     navController: NavController,
     transaction: TransactionListDataRecord? = TRANSACTION_TO_BE_REFUNDED,
     enableScrolling: Boolean = false,
+    scope: CoroutineScope,
     updateRefundStatus: (StatusScreenType?) -> Unit = {},
-) {
+
+    ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
     val currency = "HKD"
     val dateString =
         transaction?.Date ?: OffsetDateTime.now().toString()  //"2025-04-23T03:38:57.349+00:00"

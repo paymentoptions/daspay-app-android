@@ -4,10 +4,9 @@ import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -78,30 +77,28 @@ fun EmailButton(text: String, email: Email, modifier: Modifier = Modifier) {
                     .focusable(),
                 maxLength = 40,
             )
-        },
-        confirmButton = {
+        }, confirmButton = {
             FilledButton(
                 text = "Send", disabled = emailError, onClick = {
                     emailAction()
                     showDialog = false
                 }, modifier = Modifier.fillMaxWidth()
             )
-        },
-        dismissButton = {
+        }, dismissButton = {
             OutlinedButton(
                 text = "Cancel",
                 onClick = { showDialog = false },
                 modifier = Modifier.fillMaxWidth()
             )
-        },
-        onDismissRequest = { showDialog = false },
-        containerColor = Color.White
+        }, onDismissRequest = { showDialog = false }, containerColor = Color.White
     )
 
     Column(
         modifier = modifier.clickable {
             showDialog = true
-        }, horizontalAlignment = Alignment.CenterHorizontally
+        },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Icon(
             Icons.Outlined.Email,
@@ -113,7 +110,8 @@ fun EmailButton(text: String, email: Email, modifier: Modifier = Modifier) {
                 .padding(16.dp)
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+
+
         Text(
             text = text,
             fontSize = 14.sp,

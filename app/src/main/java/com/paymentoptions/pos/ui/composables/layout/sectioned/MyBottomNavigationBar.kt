@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Fastfood
+import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Money
 import androidx.compose.material.icons.outlined.MoneyOff
@@ -106,6 +107,8 @@ val itemsInMore = listOf<BottomNavigationBarItem>(
         icon = Icons.Outlined.MoneyOff,
         svgIcon = R.drawable.refund,
         route = Screens.Refund.route
+    ), BottomNavigationBarItem(
+        title = "Settlement", icon = Icons.Outlined.Handshake, route = Screens.Settlement.route
     ), BottomNavigationBarItem(
         title = "Settings", icon = Icons.Outlined.Settings, route = Screens.Settings.route
     ), BottomNavigationBarItem(

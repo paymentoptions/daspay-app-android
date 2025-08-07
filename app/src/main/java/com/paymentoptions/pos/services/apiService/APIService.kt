@@ -20,19 +20,19 @@ interface ApiService {
     @POST("auth/signIn/")
     suspend fun signIn(
         @HeaderMap headers: Map<String, String>,
-        @Body post: SignInRequest,
+        @Body request: SignInRequest,
     ): SignInResponse
 
     @POST("auth/signOut/")
     suspend fun signOut(
         @HeaderMap headers: Map<String, String>,
-        @Body post: SignOutRequest,
+        @Body request: SignOutRequest,
     ): SignOutResponse
 
     @POST("auth/refreshToken/")
     suspend fun refreshToken(
         @HeaderMap headers: Map<String, String>,
-        @Body post: RefreshTokenRequest,
+        @Body request: RefreshTokenRequest,
     ): SignInResponse
 
     @GET("transactions/list")
@@ -42,23 +42,30 @@ interface ApiService {
         @Query("skip") skip: Int,
     ): TransactionListResponse
 
+    @POST("transactions/listv2")
+    suspend fun transactionListV2(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: TransactionListV2Request,
+    ): TransactionListResponse
 
-//    @POST("paybylink/add/DASMID/JP00002347")
-//    suspend fun payByLink(
-//        @HeaderMap headers: Map<String, String>,
-//        @Body post: PayByLinkRequest,
-//    ): PayByLinkResponse
+
+    @POST("paybylink/add/DASMID/{dasmid}")
+    suspend fun payByLink(
+        @HeaderMap headers: Map<String, String>,
+        @Path("dasmid") dasmid: String,
+        @Body request: PayByLinkRequest,
+    ): PayByLinkResponse
 
     @POST("transactions/refund")
     suspend fun refund(
         @HeaderMap headers: Map<String, String>,
-        @Body post: RefundRequest,
+        @Body request: RefundRequest,
     ): RefundResponse
 
     @POST("server-to-server-interface/daspay/payment")
     suspend fun payment(
         @HeaderMap headers: Map<String, String>,
-        @Body post: PaymentRequest,
+        @Body request: PaymentRequest,
     ): PaymentResponse
 
     @GET("entities/merchant/catalog/all-categories/{merchantId}")

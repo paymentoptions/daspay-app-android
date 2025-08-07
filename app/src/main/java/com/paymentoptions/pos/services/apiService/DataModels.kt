@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService
 
 import kotlinx.serialization.Serializable
+import org.json.JSONObject
 
 @Serializable
 data class Token(
@@ -58,6 +59,42 @@ data class RefreshTokenRequest(
     val username: String,
     val refreshToken: String,
 )
+
+// Transaction List Models ------------------------------------
+data class TransactionListV2RequestFilter(
+    val field: String,
+    val operator: String,
+    val value: String,
+)
+
+data class TransactionListV2Request(
+    val take: Int,
+    val skip: Int,
+    val TimeZone: String = "Indian/Mahe",
+    val filter: Array<TransactionListV2RequestFilter>,
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as TransactionListV2Request
+
+        if (take != other.take) return false
+        if (skip != other.skip) return false
+        if (TimeZone != other.TimeZone) return false
+        if (!filter.contentEquals(other.filter)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = take
+        result = 31 * result + skip
+        result = 31 * result + TimeZone.hashCode()
+        result = 31 * result + filter.contentHashCode()
+        return result
+    }
+}
 
 data class TransactionListDataRecord(
     val uuid: String,
@@ -123,6 +160,7 @@ data class TransactionListResponse(
     val success: Boolean,
     val data: TransactionListData,
 )
+// -------------------------------------------------------
 
 data class RefundRequest(
     val id: String,
@@ -295,28 +333,55 @@ data class PaymentResponse(
 )
 // -------------------------------------------------------
 
-//
-//data class PayByLinkRequestProduct(
-//    val Currency: String,
-//    val Name: String,
-//    val Quantity: Int,
-//    val Price: Float,
-//    val TotalPrice: String
-//)
-//
-//data class PayByLinkRequest(
-//    val ExpiryDate: String,
-//    val PBLLinkName: String,
-//    val Product: List<PayByLinkRequestProduct>,
-//)
-//
-//data class PayByLinkResponse(
-//    val status: Int,
-//    val success: Boolean,
-//    val message: Int,
-//    val is_live: Boolean,
-//    val transaction_type: String
-//)
+// PayByLink related ----------------------------------
+data class PayByLinkRequestProduct(
+    val Currency: String,
+    val Name: String,
+    val Quantity: Int,
+    val Price: Float,
+    val TotalPrice: String,
+)
+
+data class PayByLinkRequest(
+    val ExpiryDate: String,
+    val PBLLinkName: String,
+    val Product: List<PayByLinkRequestProduct>,
+)
+
+data class PayByLinkResponseDataProduct(
+    val Id: String,
+    val Name: String,
+    val Price: Float,
+    val Currency: String,
+    val Quantity: Int,
+    val TotalPrice: String,
+)
+
+data class PayByLinkResponseData(
+    val ProductId: String,
+    val DASMID: String,
+    val Product: List<PayByLinkResponseDataProduct>,
+    val Amount: Float,
+    val status: String, //"ACTIVE"
+    val CreatedAt: String,
+    val UpdatedAt: String,
+    val ExpiryDate: String,
+    val ReminderDate: String,
+    val IsCustomerStatus: Boolean,
+    val Currency: String,
+    val ReturnUrl: JSONObject, //{}
+    val PBLLinkName: String,
+    val ID: String,
+)
+
+data class PayByLinkResponse(
+    val statusCode: Int,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: PayByLinkResponseData,
+)
+// -------------------------------------------------------
 
 
 // Product categories related ----------------------------------

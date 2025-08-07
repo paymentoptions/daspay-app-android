@@ -23,8 +23,8 @@ suspend fun payment(
         val idToken = authDetails?.data?.token?.idToken
         val requestHeaders = generatePaymentRequestHeaders(idToken ?: "")
 
-        var paymentResponse: PaymentResponse? = null
-        paymentResponse = RetrofitClient.api.payment(requestHeaders, paymentRequest)
+        var paymentResponse: PaymentResponse =
+            RetrofitClient.api.payment(headers = requestHeaders, request = paymentRequest)
 
         return paymentResponse
     } catch (e: Exception) {

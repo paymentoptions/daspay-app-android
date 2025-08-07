@@ -16,6 +16,7 @@ import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.Fingerprint
 import com.paymentoptions.pos.ui.composables.screens.helpandsupport.HelpAndSupportScreen
 import com.paymentoptions.pos.ui.composables.screens.notifications.NotificationsScreen
 import com.paymentoptions.pos.ui.composables.screens.settings.SettingsScreen
+import com.paymentoptions.pos.ui.composables.screens.settlement.SettlementScreen
 import com.paymentoptions.pos.ui.composables.screens.signIn.SignInScreen
 import com.paymentoptions.pos.ui.composables.screens.splash.SplashScreen
 import com.paymentoptions.pos.ui.composables.screens.token.TokenScreen
@@ -49,7 +50,7 @@ fun Navigator() {
         composable(Screens.FoodOrderFlow.route) { FoodOrderFlow(navController) }
         composable(Screens.ReceiveMoneyFlow.route) { ReceiveMoneyFlow(navController) }
         composable(Screens.Notifications.route) { NotificationsScreen(navController) }
-        // -----------------------------
+        //------------------------------------------------------------------
 
         // More Menu Items ------------------------------------------------
         composable(Screens.TransactionHistory.route) { TransactionHistoryScreen(navController) }
@@ -61,6 +62,7 @@ fun Navigator() {
         //------------------------------------------------------------------
         composable(Screens.Settings.route) { SettingsScreen(navController) }
         composable(Screens.HelpAndSupport.route) { HelpAndSupportScreen(navController) }
+        composable(Screens.Settlement.route) { SettlementScreen(navController) }
 
         //Misc
         composable(Screens.Splash.route) { SplashScreen(navController) }

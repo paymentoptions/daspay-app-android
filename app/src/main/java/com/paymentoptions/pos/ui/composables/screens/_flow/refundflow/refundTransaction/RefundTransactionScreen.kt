@@ -5,8 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
@@ -19,7 +19,7 @@ import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 fun RefundTransactionScreen(navController: NavController) {
     val enableScrollingInsideBottomSectionContent = false
     var refundStatus by remember { mutableStateOf<StatusScreenType?>(null) }
-    LocalContext.current
+    val scope = rememberCoroutineScope()
 
     fun updateRefundStatus(newRefundStatus: StatusScreenType?) {
         refundStatus = newRefundStatus
@@ -37,6 +37,7 @@ fun RefundTransactionScreen(navController: NavController) {
                 BottomSectionContent(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
+                    scope = scope,
                     updateRefundStatus = { updateRefundStatus(it) })
             }
         }
