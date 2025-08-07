@@ -2,11 +2,12 @@ package com.paymentoptions.pos.ui.composables.screens.helpandsupport
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
+import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun HelpAndSupportScreen(navController: NavController) {
-    SectionedLayout(navController = navController) {
+    SectionedLayout(navController = navController, bottomBarContent = BottomBarContent.NOTHING) {
         BottomSectionContent(navController)
     }
 }

@@ -118,33 +118,123 @@ fun Insights(
 
         updateReceivalAmount(earningAmount)
 
+        val months = arrayOf(
+            "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JULY", "AUG", "SEP", "OCT", "NOV", "DEC"
+        )
+
         //Bar Graph
-        if (barData.isNotEmpty()) Row(
+        Row(
             modifier = Modifier.fillMaxWidth()
         ) {
-            val xAxisData =
-                AxisData.Builder().axisStepSize(2.dp).steps(barData.size - 1).bottomPadding(0.dp)
-                    .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
-                    .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
-                    .labelData { index -> barData[index].label }.build()
+            val xAxisData = if (barData.isNotEmpty()) AxisData.Builder().axisStepSize(2.dp)
+                .steps(barData.size - 1).bottomPadding(0.dp).axisLabelColor(Color.LightGray)
+                .axisLineThickness(0.dp).axisLabelFontSize(8.sp).axisLabelAngle(0f)
+                .axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
+                .labelData { index -> barData[index].label }.build()
+            else AxisData.Builder().axisStepSize(2.dp).steps(barData.size - 1).bottomPadding(0.dp)
+                .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
+                .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
+                .labelData { index -> months[index] }.build()
 
-            val yAxisData =
-                AxisData.Builder().axisStepSize(2.dp).steps(barData.size - 1).axisOffset(30.dp)
-                    .endPadding(0.dp).axisLabelColor(Color.LightGray).axisLineThickness(0.dp)
-                    .axisLabelFontSize(8.sp).axisLabelAngle(0f).axisLineColor(Color.White)
-                    .labelAndAxisLinePadding(0.dp).backgroundColor(Color.White).labelData { index ->
-                        try {
-                            val label =
-                                if (barData.size == 1) chartMaxValue else index * chartMaxValue / (barData.size - 1)
+            val yAxisData = if (barData.isNotEmpty()) AxisData.Builder().axisStepSize(2.dp)
+                .steps(barData.size - 1).axisOffset(30.dp).endPadding(0.dp)
+                .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
+                .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
+                .backgroundColor(Color.White).labelData { index ->
+                    try {
+                        val label =
+                            if (barData.size == 1) chartMaxValue else index * chartMaxValue / (barData.size - 1)
 
-                            "$currency ${label.roundToInt()}"
-                        } catch (_: Exception) {
-                            "0"
-                        }
-                    }.build()
+                        "$currency ${label.roundToInt()}"
+                    } catch (_: Exception) {
+                        "0"
+                    }
+                }.build()
+            else AxisData.Builder().axisStepSize(2.dp).steps(barData.size - 1).axisOffset(30.dp)
+                .endPadding(0.dp).axisLabelColor(Color.LightGray).axisLineThickness(0.dp)
+                .axisLabelFontSize(8.sp).axisLabelAngle(0f).axisLineColor(Color.White)
+                .labelAndAxisLinePadding(0.dp).backgroundColor(Color.White).build()
+
 
             val barChartData = BarChartData(
-                chartData = barData,
+                chartData = if (barData.isNotEmpty()) barData else mutableListOf<BarData>(
+
+                    BarData(
+                        point = Point(x = 0f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    ), BarData(
+                        point = Point(x = 1f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    ), BarData(
+                        point = Point(x = 2f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    ), BarData(
+                        point = Point(x = 3f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    ), BarData(
+                        point = Point(x = 4f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    ), BarData(
+                        point = Point(x = 5f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    ), BarData(
+                        point = Point(x = 6f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    ), BarData(
+                        point = Point(x = 7f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    ), BarData(
+                        point = Point(x = 8f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    ), BarData(
+                        point = Point(x = 9f, y = 0f),
+
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    ), BarData(
+                        point = Point(x = 10f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description =
+                            "",
+                    ), BarData(
+                        point = Point(x = 11f, y = 0f),
+                        color = Color.Gray.copy(alpha = 0.4f),
+                        label = "",
+                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                        description = "",
+                    )
+                ),
                 xAxisData = xAxisData,
                 yAxisData = yAxisData,
 //                showYAxis = false,
@@ -175,8 +265,7 @@ fun Insights(
                     shape = RoundedCornerShape(4.dp),
                     ambientColor = Color.LightGray,
                     spotColor = primary100
-                ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                ), verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
             //Earnings
@@ -311,9 +400,7 @@ fun Insights(
 
 
             AssistChip(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { },
-                label = {
+                modifier = Modifier.fillMaxWidth(), onClick = { }, label = {
                     Text(
                         text = higherString,
                         fontSize = 12.sp,
@@ -325,12 +412,9 @@ fun Insights(
                             .padding(vertical = 6.dp),
 //                        textAlign = TextAlign.Center
                     )
-                },
-                border = noBorder,
-                colors = AssistChipDefaults.assistChipColors(
+                }, border = noBorder, colors = AssistChipDefaults.assistChipColors(
                     containerColor = Color.LightGray.copy(0.2f)
-                ),
-                leadingIcon = {
+                ), leadingIcon = {
                     Icon(
                         painter = painterResource(R.drawable.higher),
                         contentDescription = "Hint",

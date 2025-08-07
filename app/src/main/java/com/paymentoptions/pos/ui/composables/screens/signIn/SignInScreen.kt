@@ -2,6 +2,7 @@ package com.paymentoptions.pos.ui.composables.screens.signIn
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
+import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
@@ -10,7 +11,8 @@ fun SignInScreen(navController: NavController) {
 
     SectionedLayout(
         navController = navController,
-        enableScrollingOfBottomSectionContent = !scrollingInsideBottomSectionContent
+        enableScrollingOfBottomSectionContent = !scrollingInsideBottomSectionContent,
+        bottomBarContent = BottomBarContent.NOTHING
     ) {
         BottomSectionContent(navController, enableScrolling = scrollingInsideBottomSectionContent)
     }

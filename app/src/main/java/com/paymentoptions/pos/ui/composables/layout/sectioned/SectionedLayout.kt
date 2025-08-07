@@ -61,7 +61,7 @@ fun SectionedLayout(
     navController: NavController,
     bottomSectionMinHeightRatio: Float = 0.1f,
     bottomSectionMaxHeightRatio: Float = 0.9f,
-    bottomBarContent: BottomBarContent = BottomBarContent.NOTHING,
+    bottomBarContent: BottomBarContent,
     bottomSectionPaddingInDp: Dp = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
     alwaysShowLogo: Boolean = true,
     imageBelowLogo: @Composable () -> Unit = {
@@ -149,7 +149,6 @@ fun SectionedLayout(
                     )
                     .background(color = Color.White),
                 horizontalAlignment = Alignment.CenterHorizontally,
-//                    verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
                     modifier = Modifier

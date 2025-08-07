@@ -2,6 +2,7 @@ package com.paymentoptions.pos.ui.composables.screens.notifications
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
+import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
@@ -14,6 +15,7 @@ fun NotificationsScreen(navController: NavController) {
         bottomSectionMaxHeightRatio = 0.85f,
         alwaysShowLogo = false,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+        bottomBarContent = BottomBarContent.NOTHING,
         blurTopSection = true
     ) {
         BottomSectionContent(
