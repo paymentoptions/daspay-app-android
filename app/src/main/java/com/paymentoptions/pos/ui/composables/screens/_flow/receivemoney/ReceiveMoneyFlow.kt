@@ -99,7 +99,7 @@ fun formatAmount(input: String): String {
 @Composable
 fun ReceiveMoneyFlow(
     navController: NavController,
-    initialReceiveMoneyFlowStage: ReceiveMoneyFlowStage = ReceiveMoneyFlowStage.CHARGE_MONEY,
+    initialReceiveMoneyFlowStage: ReceiveMoneyFlowStage = ReceiveMoneyFlowStage.INPUT_MONEY,
 ) {
     val context = LocalContext.current
     context as? Activity

@@ -12,10 +12,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntOffsetAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,9 +53,19 @@ import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
+import com.paymentoptions.pos.services.apiService.PayByLinkRequest
+import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
+import com.paymentoptions.pos.services.apiService.PayByLinkResponse
 import com.paymentoptions.pos.services.apiService.endpoints.categoryList
+import com.paymentoptions.pos.services.apiService.endpoints.payByLink
 import com.paymentoptions.pos.services.apiService.endpoints.productList
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
+import com.paymentoptions.pos.ui.composables._components.buttons.Email
+import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
+import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
+import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
+import com.paymentoptions.pos.ui.composables._components.images.PayByLinkImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentTapToPayImage
 import com.paymentoptions.pos.ui.composables._components.images.cardpayment.AmexImage
@@ -80,6 +93,8 @@ import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.green100
 import com.paymentoptions.pos.ui.theme.green500
+import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.PaymentMethod
@@ -89,6 +104,8 @@ import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.paymentoptions.pos.utils.viaLinkPaymentMethod
+import java.text.SimpleDateFormat
+import java.util.Date
 import kotlin.math.roundToInt
 
 const val MAX_QUANTITY_PER_FOOD_ITEM = 20
@@ -529,14 +546,178 @@ fun FoodOrderFlow(
 
                             viaLinkPaymentMethod -> {
 
-                                Text(
-                                    text = "Pay via link",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 18.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
+                                var payByLinkRequest = PayByLinkRequest(
+                                    PBLLinkName = "PayByLink Test",
+                                    ExpiryDate = SimpleDateFormat("YYYY-dd MMMM, YYYY HH:mm:ss").format(
+                                        Date()
+                                    ), //Date().toString(),
+                                    Product = listOf<PayByLinkRequestProduct>(
+                                        PayByLinkRequestProduct(
+                                            Currency = "HKD",
+                                            Name = "No Name",
+                                            Quantity = 1,
+                                            Price = 100f,
+                                            TotalPrice = "100"
+                                        )
+                                    )
                                 )
+                                var payByLinkResponse by remember {
+                                    mutableStateOf<PayByLinkResponse?>(
+                                        null
+                                    )
+                                }
+                                var payByLinkApiResponseLoading by remember { mutableStateOf(false) }
+
+                                LaunchedEffect(Unit) {
+                                    try {
+                                        payByLinkApiResponseLoading = true
+                                        payByLinkResponse = payByLink(context, payByLinkRequest)
+
+                                        println("payByLinkResponse: $payByLinkResponse")
+
+                                    } catch (e: Exception) {
+                                        Toast.makeText(
+                                            context,
+                                            "Error generating payment link...",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } finally {
+                                        payByLinkApiResponseLoading = false
+                                    }
+                                }
+
+                                if (payByLinkApiResponseLoading) MyCircularProgressIndicator()
+                                else if (payByLinkResponse.isNotNull()) {
+
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Pay Via Link",
+                                            color = Color.White,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 18.sp,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        PayByLinkImage(
+                                            modifier = Modifier
+                                                .padding(horizontal = 20.dp)
+                                                .fillMaxWidth()
+                                                .height(110.dp)
+                                                .clip(
+                                                    shape = RoundedCornerShape(16.dp)
+                                                )
+                                        )
+
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .background(
+                                                    color = Color(0xFFDCEAFE),
+                                                    shape = RoundedCornerShape(11.dp)
+                                                )
+                                                .padding(vertical = 8.dp, horizontal = 4.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+
+                                            SelectionContainer {
+//                                            LinkWithIcon(
+//                                                text = "https://daspay/" + payByLinkResponse!!.data.ID,
+//                                                url = "https://daspay/" + payByLinkResponse!!.data.ID,
+//                                            )
+
+                                                Text(
+                                                    text = "https://daspay/" + payByLinkResponse!!.data.ID,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 18.sp,
+                                                    color = primary900,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
+                                        }
+
+                                        NoteChip(
+                                            text = "Share this link with the customer",
+                                            color = Color.White
+                                        )
+
+                                        Spacer(modifier = Modifier.height(10.dp))
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                        ) {
+                                            EmailButton(
+                                                text = "Email",
+                                                email = Email(),
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .border(
+                                                        2.dp,
+                                                        color = primary100.copy(alpha = 0.2f),
+                                                        shape = RoundedCornerShape(10.dp)
+                                                    )
+                                                    .background(
+                                                        Color.White,
+                                                        shape = RoundedCornerShape(10.dp)
+                                                    )
+                                                    .padding(horizontal = 10.dp, vertical = 20.dp)
+                                            )
+
+                                            ShareButton(
+                                                text = "Share",
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .border(
+                                                        2.dp,
+                                                        color = primary100.copy(alpha = 0.2f),
+                                                        shape = RoundedCornerShape(10.dp)
+                                                    )
+                                                    .background(
+                                                        Color.White,
+                                                        shape = RoundedCornerShape(10.dp)
+                                                    )
+                                                    .padding(horizontal = 10.dp, vertical = 20.dp)
+                                            )
+
+                                            ScanButton(
+                                                text = "Scan",
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .border(
+                                                        2.dp,
+                                                        color = primary100.copy(alpha = 0.2f),
+                                                        shape = RoundedCornerShape(10.dp)
+                                                    )
+                                                    .background(
+                                                        Color.White,
+                                                        shape = RoundedCornerShape(10.dp)
+                                                    )
+                                                    .padding(horizontal = 10.dp, vertical = 20.dp)
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Text(
+                                        text = "Error generating payment link. Try again after some time...",
+                                        color = red300,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 18.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+
+                                }
                             }
                         }
                     }
