@@ -1,6 +1,5 @@
 package com.paymentoptions.pos
 
-import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -29,10 +28,6 @@ class MainActivity : FragmentActivity() {
 
         // Hide status and navigation bars for immersive mode
         controller.hide(WindowInsetsCompat.Type.systemBars())
-    }
-
-    fun getContext(): Context {
-        return this.applicationContext
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
