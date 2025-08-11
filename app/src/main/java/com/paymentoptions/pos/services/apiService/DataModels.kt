@@ -412,6 +412,7 @@ data class CategoryListResponse(
 // -------------------------------------------------------
 
 // Product related ---------------------------------------
+@Serializable
 data class ProductListDataRecord(
     val CategoryID: String,
     val ProductName: String,

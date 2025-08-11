@@ -1,7 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder
 
 import MyDialog
-import android.app.Activity
 import android.content.Intent
 import android.os.Handler
 import android.provider.Settings
@@ -51,6 +50,7 @@ import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
+import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
@@ -116,8 +116,6 @@ fun FoodOrderFlow(
     initialFoodOrderFlowStage: FoodOrderFlowStage = FoodOrderFlowStage.MENU,
 ) {
     val context = LocalContext.current
-    context as? Activity
-
     val enableScrollingInsideBottomSectionContent = true
 
     var foodOrderFlowStage by remember {
@@ -140,6 +138,13 @@ fun FoodOrderFlow(
                 additionalAmountNote = ""
             )
         )
+    }
+
+    LaunchedEffect(Unit) {
+        val savedCart = SharedPreferences.getCart(context)
+
+        println("savedCart: $savedCart")
+        if (savedCart.isNotNull()) cartState = savedCart!!
     }
 
     val scrollState = rememberScrollState()
@@ -216,11 +221,11 @@ fun FoodOrderFlow(
                     }
 
                     cartState.replaceFoodCategory(
-                        categoryId = selectedFoodCategory!!.CategoryID, newFoodItems
+                        categoryId = selectedFoodCategory!!.CategoryID, newFoodItems, context
                     )
 
                 } else cartState.replaceFoodCategory(
-                    selectedFoodCategory!!.CategoryID, listOf<FoodItem>()
+                    selectedFoodCategory!!.CategoryID, listOf<FoodItem>(), context
                 )
             } catch (e: Exception) {
                 Toast.makeText(context, "Error fetching products from API", Toast.LENGTH_SHORT)
@@ -765,6 +770,7 @@ fun FoodOrderFlow(
         }
 
         FoodOrderFlowStage.RESULT_SUCCESS -> {
+            Cart.clearSavedCart(context)
             val dataMessage = MessageForStatusScreen(
                 text = "Payment Successful", statusScreenType = StatusScreenType.SUCCESS
             )

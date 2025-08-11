@@ -3,6 +3,7 @@ package com.paymentoptions.pos.device
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import com.paymentoptions.pos.services.apiService.SignInResponse
+import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -91,6 +92,27 @@ class SharedPreferences {
             val fcmToken = sharedPreferences.getString("fcm_token", null)
 
             return fcmToken
+        }
+
+        fun getCart(context: Context): Cart? {
+            val sharedPreferences =
+                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+
+            val cartJsonString = sharedPreferences.getString("cart", null)
+
+            val cart =
+                cartJsonString?.let { Json.decodeFromString<Cart>(it) }
+
+            return cart
+        }
+
+        fun saveCart(context: Context, cart: Cart) {
+            val cartJsonString = cart.toJson()
+            saveKeyValue(context, "cart", cartJsonString)
+        }
+
+        fun clearSavedCart(context: Context) {
+            saveKeyValue(context, "cart", "")
         }
     }
 }

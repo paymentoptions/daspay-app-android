@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -58,6 +59,8 @@ fun FoodSummaryForReview(
     updateCartSate: (Cart) -> Unit, createToast: (ToastData) -> Unit,
     setShowToast: (Boolean) -> Unit,
 ) {
+    val context = LocalContext.current
+
     val borderRadius = 20.dp
     val haptics = LocalHapticFeedback.current
     var isLongClicked = longClickedFoodItem == foodItem
@@ -71,7 +74,7 @@ fun FoodSummaryForReview(
 
     fun removeQuantity() {
         if (foodItem.cartQuantity > 0) {
-            cartState.decreaseFoodItemQuantity(foodItem)
+            cartState.decreaseFoodItemQuantity(foodItem, context)
             updateCartSate(cartState)
         }
 
@@ -89,10 +92,9 @@ fun FoodSummaryForReview(
         }, 1000)
     }
 
-
     fun addQuantity() {
         if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
-            cartState.increaseFoodItemQuantity(foodItem)
+            cartState.increaseFoodItemQuantity(foodItem, context)
             updateCartSate(cartState)
         }
 

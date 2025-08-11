@@ -1,7 +1,9 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder
 
 import com.paymentoptions.pos.services.apiService.ProductListDataRecord
+import kotlinx.serialization.Serializable
 
+@Serializable
 
 class FoodItem(
     val item: ProductListDataRecord,

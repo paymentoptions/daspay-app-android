@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,9 +42,11 @@ fun FoodSummary(
     createToast: (ToastData) -> Unit,
     setShowToast: (Boolean) -> Unit,
 ) {
+    val context = LocalContext.current
+
     fun removeQuantity() {
         if (foodItem.cartQuantity > 0) {
-            cartState.decreaseFoodItemQuantity(foodItem)
+            cartState.decreaseFoodItemQuantity(foodItem, context)
             updateCartSate(cartState)
 
             createToast(
@@ -63,7 +66,7 @@ fun FoodSummary(
 
     fun addQuantity() {
         if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
-            cartState.increaseFoodItemQuantity(foodItem)
+            cartState.increaseFoodItemQuantity(foodItem, context = context)
             updateCartSate(cartState)
 
             createToast(

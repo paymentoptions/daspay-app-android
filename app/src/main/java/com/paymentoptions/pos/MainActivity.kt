@@ -1,5 +1,6 @@
 package com.paymentoptions.pos
 
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -14,7 +15,6 @@ import com.paymentoptions.pos.device.NetworkStatusComposable
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.theminesec.sdk.headless.HeadlessSetup
 import kotlinx.coroutines.launch
-
 
 class MainActivity : FragmentActivity() {
 
@@ -31,6 +31,10 @@ class MainActivity : FragmentActivity() {
         controller.hide(WindowInsetsCompat.Type.systemBars())
     }
 
+    fun getContext(): Context {
+        return this.applicationContext
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -39,7 +43,6 @@ class MainActivity : FragmentActivity() {
 
         setContent {
 //            SystemUiController()
-
 //            val context = LocalContext.current
 //            val biometricStatus = SharedPreferences.getImmersiveModeStatus(context)
 //            SetImmersiveMode(biometricStatus)
@@ -53,13 +56,12 @@ class MainActivity : FragmentActivity() {
     }
 
     fun setup() = lifecycleScope.launch {
-
         HeadlessSetup.initialSetup(this@MainActivity) {
             withTestCapk = true
         }
+
         HeadlessSetup.getEmvParams()
         HeadlessSetup.getCapks()
         HeadlessSetup.getTermParam()
-
     }
 }

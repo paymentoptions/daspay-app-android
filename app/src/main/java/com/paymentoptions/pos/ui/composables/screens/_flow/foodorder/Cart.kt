@@ -1,8 +1,13 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodorder
 
+import android.content.Context
 import co.yml.charts.common.extensions.isNotNull
+import com.paymentoptions.pos.device.SharedPreferences
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
-
+@Serializable
 class Cart(
     var foodItemMapByCategoryId: MutableMap<String, List<FoodItem>> = mutableMapOf<String, List<FoodItem>>(),
     var timestampInMilliseconds: Long? = null,
@@ -13,36 +18,49 @@ class Cart(
     var additionalCharge: Float,
     var additionalAmountNote: String,
 ) {
+    companion object {
+        fun save(context: Context, cart: Cart) {
+            SharedPreferences.saveCart(context, cart)
+        }
+
+        fun load(context: Context): Cart? {
+            val cart = SharedPreferences.getCart(context)
+            return cart
+        }
+
+        fun clearSavedCart(context: Context) {
+            SharedPreferences.clearSavedCart(context)
+        }
+    }
+
     fun calculateServiceCharge() = itemTotal.times(serviceChargePercentage.div(100))
     fun calculateGstCharge() = itemTotal.times(gstPercentage.div(100))
     fun calculateGrandTotal() =
         itemTotal.plus(calculateServiceCharge()).plus(calculateGstCharge()).plus(additionalCharge)
 
-    fun removeFoodItem(foodItem: FoodItem) {
-        if (foodItem.cartQuantity > 0) {
-            this.itemTotal -= foodItem.cartQuantity * foodItem.item.ProductPrice
-            this.itemQuantity -= foodItem.cartQuantity
-            foodItem.cartQuantity = 0
-        }
+    fun toJson(): String {
+        return Json.encodeToString(this)
     }
 
-    fun decreaseFoodItemQuantity(foodItem: FoodItem) {
+    fun decreaseFoodItemQuantity(foodItem: FoodItem, context: Context) {
         if (foodItem.cartQuantity > 0) {
             foodItem.decreaseQuantity()
             this.itemQuantity--
             this.itemTotal -= foodItem.item.ProductPrice
+            save(context, this)
         }
     }
 
-    fun increaseFoodItemQuantity(foodItem: FoodItem) {
+    fun increaseFoodItemQuantity(foodItem: FoodItem, context: Context) {
         if (foodItem.cartQuantity < MAX_QUANTITY_PER_FOOD_ITEM) {
             foodItem.increaseQuantity()
             this.itemQuantity++
             this.itemTotal += foodItem.item.ProductPrice
+            save(context, this)
         }
     }
 
-    fun replaceFoodCategory(categoryId: String, newFoodItems: List<FoodItem>) {
+    fun replaceFoodCategory(categoryId: String, newFoodItems: List<FoodItem>, context: Context) {
         val oldFoodItemsInTheCategory = this.foodItemMapByCategoryId[categoryId]
         val newFoodItemsInTheCategorySorted =
             newFoodItems.sortedBy { foodItem -> foodItem.item.CategoryID }
@@ -58,6 +76,7 @@ class Cart(
             }
             this.foodItemMapByCategoryId[categoryId] = newFoodItemsInTheCategorySorted
         }
+        save(context, this)
     }
 
     fun getFoodItemsForReview(): List<FoodItem> {
@@ -81,5 +100,9 @@ class Cart(
             itemTotal = this.itemTotal,
             additionalAmountNote = this.additionalAmountNote,
         )
+    }
+
+    override fun toString(): String {
+        return toJson()
     }
 }
