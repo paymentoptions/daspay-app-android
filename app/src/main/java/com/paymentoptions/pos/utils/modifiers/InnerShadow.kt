@@ -13,7 +13,6 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-
 fun Modifier.innerShadow(
     color: Color = Color.Black,
     cornersRadius: Dp = 0.dp,
@@ -29,7 +28,6 @@ fun Modifier.innerShadow(
     val paint = Paint()
 
     drawIntoCanvas {
-
         paint.color = color
         paint.isAntiAlias = true
         it.saveLayer(rect, paint)
@@ -68,6 +66,7 @@ fun Modifier.innerShadow(
             rect.bottom
         }
         paint.color = Color.Black
+
         it.drawRoundRect(
             left = left + spread.toPx() / 2,
             top = top + spread.toPx() / 2,

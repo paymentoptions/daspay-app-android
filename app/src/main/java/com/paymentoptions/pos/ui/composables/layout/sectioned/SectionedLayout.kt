@@ -142,14 +142,6 @@ fun SectionedLayout(
                     )
                     .height(IntrinsicSize.Min)
                     .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
-                    .innerShadow(
-                        color = innerShadow,
-                        blur = 20.dp,
-                        spread = 10.dp,
-                        cornersRadius = borderRadiusInDp,
-                        offsetX = 0.dp,
-                        offsetY = 0.dp
-                    )
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(2f)
                     .clip(
@@ -157,7 +149,15 @@ fun SectionedLayout(
                             topStart = borderRadiusInDp, topEnd = borderRadiusInDp
                         )
                     )
-                    .background(color = Color.White),
+                    .background(color = Color.White)
+                    .innerShadow(
+                        color = innerShadow,
+                        blur = 20.dp,
+                        spread = 10.dp,
+                        cornersRadius = 0.dp,
+                        offsetX = 0.dp,
+                        offsetY = 0.dp
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(
@@ -223,6 +223,16 @@ fun SectionedLayout(
                     .conditional(showMoreItems) { background(primary100.copy(alpha = 0.04f)) }
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(4f)
+                    .conditional(showMoreItems) {
+                        innerShadow(
+                            color = innerShadow,
+                            blur = 20.dp,
+                            spread = 10.dp,
+                            cornersRadius = 0.dp,
+                            offsetX = 0.dp,
+                            offsetY = 0.dp
+                        )
+                    }
 
             ) {
 
