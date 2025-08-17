@@ -1,18 +1,23 @@
 package com.paymentoptions.pos.ui.composables._components
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.paymentoptions.pos.ui.theme.innerShadow
+import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 
 @Composable
-fun MyElevatedCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun MyElevatedCard(
+    modifier: Modifier = Modifier,
+    isSelected: Boolean = false,
+    content: @Composable () -> Unit,
+) {
     ElevatedCard(
         colors = CardDefaults.elevatedCardColors(
             containerColor = Color.White,
@@ -20,11 +25,26 @@ fun MyElevatedCard(modifier: Modifier = Modifier, content: @Composable () -> Uni
             defaultElevation = 4.dp
         ), shape = RoundedCornerShape(6.dp), modifier = modifier
             .padding(1.dp)
-            .shadow(
-                elevation = 4.dp, shape = RoundedCornerShape(6.dp), ambientColor = Color(0xFFC2E3F7)
-            )
-            .border(1.dp, color = Color(0xFFB9E2FC), shape = RoundedCornerShape(6.dp))
-
+            .conditional(isSelected) {
+                innerShadow(
+                    color = innerShadow,
+                    blur = 10.dp,
+                    spread = 3.dp,
+                    cornersRadius = 6.dp,
+                    offsetX = 0.dp,
+                    offsetY = 0.dp
+                )
+            }
+            .conditional(!isSelected) {
+                innerShadow(
+                    color = innerShadow,
+                    blur = 4.dp,
+                    spread = 0.dp,
+                    cornersRadius = 6.dp,
+                    offsetX = 0.dp,
+                    offsetY = 0.dp
+                )
+            }
     ) {
         content()
     }

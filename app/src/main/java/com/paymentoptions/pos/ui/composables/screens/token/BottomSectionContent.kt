@@ -54,6 +54,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val otp = remember { mutableStateOf("") }
     val scrollstate = rememberScrollState()
     var openFingerprintScan by remember { mutableStateOf(false) }
+    var lastClicked by remember { mutableStateOf<Int?>(null) }
 
     if (openFingerprintScan) FingerprintScanScreen(navController = navController, onAuthSuccess = {
         navController.navigate(Screens.Dashboard.route) {
@@ -98,7 +99,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             val emptyBoxCount = 6 - otp.value.length
 
             otp.value.toList().forEachIndexed { index, digit ->
-
                 MyElevatedCard(modifier = Modifier.weight(1f)) {
                     OutlinedButton(
                         enabled = false,
@@ -174,10 +174,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
 
-                    MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    MyElevatedCard(modifier = Modifier.weight(1f), isSelected = lastClicked == 1) {
                         OutlinedButton(
                             enabled = otp.value.length < 6, onClick = {
                                 otp.value = otp.value + "1"
+                                lastClicked = 1
                             }, border = noBorder, modifier = Modifier
                                 .fillMaxWidth()
                                 .height(70.dp)
@@ -192,11 +193,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         }
                     }
 
-                    MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    MyElevatedCard(modifier = Modifier.weight(1f), isSelected = lastClicked == 2) {
                         OutlinedButton(
                             enabled = otp.value.length < 6,
                             onClick = {
                                 otp.value = otp.value + "2"
+                                lastClicked = 2
                             },
                             shape = RoundedCornerShape(8.dp),
                             border = noBorder,
@@ -213,11 +215,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         }
                     }
 
-                    MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    MyElevatedCard(modifier = Modifier.weight(1f), isSelected = lastClicked == 3) {
                         OutlinedButton(
                             enabled = otp.value.length < 6,
                             onClick = {
                                 otp.value = otp.value + "3"
+                                lastClicked = 3
                             },
                             shape = RoundedCornerShape(8.dp),
                             border = noBorder,
@@ -241,11 +244,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
 
-                    MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    MyElevatedCard(modifier = Modifier.weight(1f), isSelected = lastClicked == 4) {
                         OutlinedButton(
                             enabled = otp.value.length < 6,
                             onClick = {
                                 otp.value = otp.value + "4"
+                                lastClicked = 4
                             },
                             shape = RoundedCornerShape(8.dp),
                             border = noBorder,
@@ -262,11 +266,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         }
                     }
 
-                    MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    MyElevatedCard(modifier = Modifier.weight(1f), isSelected = lastClicked == 5) {
                         OutlinedButton(
                             enabled = otp.value.length < 6,
                             onClick = {
                                 otp.value = otp.value + "5"
+                                lastClicked = 5
                             },
                             shape = RoundedCornerShape(8.dp),
                             border = noBorder,
@@ -283,11 +288,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         }
                     }
 
-                    MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    MyElevatedCard(modifier = Modifier.weight(1f), isSelected = lastClicked == 6) {
                         OutlinedButton(
                             enabled = otp.value.length < 6,
                             onClick = {
                                 otp.value = otp.value + "6"
+                                lastClicked = 6
                             },
                             shape = RoundedCornerShape(8.dp),
                             border = noBorder,
@@ -311,11 +317,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 ) {
 
 
-                    MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    MyElevatedCard(modifier = Modifier.weight(1f), isSelected = lastClicked == 7) {
                         OutlinedButton(
                             enabled = otp.value.length < 6,
                             onClick = {
                                 otp.value = otp.value + "7"
+                                lastClicked = 7
                             },
                             shape = RoundedCornerShape(8.dp),
                             border = noBorder,
@@ -333,11 +340,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     }
 
 
-                    MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    MyElevatedCard(modifier = Modifier.weight(1f), isSelected = lastClicked == 8) {
                         OutlinedButton(
                             enabled = otp.value.length < 6,
                             onClick = {
                                 otp.value = otp.value + "8"
+                                lastClicked = 8
                             },
                             shape = RoundedCornerShape(8.dp),
                             border = noBorder,
@@ -354,11 +362,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         }
                     }
 
-                    MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    MyElevatedCard(modifier = Modifier.weight(1f), isSelected = lastClicked == 9) {
                         OutlinedButton(
                             enabled = otp.value.length < 6,
                             onClick = {
                                 otp.value = otp.value + "9"
+                                lastClicked = 9
                             },
                             shape = RoundedCornerShape(8.dp),
                             border = noBorder,
@@ -387,11 +396,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             .weight(1f)
                     ) {}
 
-                    MyElevatedCard(modifier = Modifier.weight(1f)) {
+                    MyElevatedCard(modifier = Modifier.weight(1f), isSelected = lastClicked == 0) {
                         OutlinedButton(
                             enabled = otp.value.length < 6,
                             onClick = {
                                 otp.value = otp.value + "0"
+                                lastClicked = 0
                             },
                             shape = RoundedCornerShape(8.dp),
                             border = noBorder,
