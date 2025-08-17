@@ -430,6 +430,107 @@ fun BottomSectionContent(
                             )
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "Voided Transaction",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary500
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "V.SALE", style = AppTheme.typography.footnote.copy(
+                                    fontWeight = FontWeight.Normal, fontSize = 14.sp
+                                ), modifier = Modifier.weight(1f)
+                            )
+
+                            Text(
+                                "0",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = primary500,
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.Center
+                            )
+
+                            Text(
+                                "$0.00",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = primary500,
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.End
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "V.CAPTURE", style = AppTheme.typography.footnote.copy(
+                                    fontWeight = FontWeight.Normal, fontSize = 14.sp
+                                ), modifier = Modifier.weight(1f)
+                            )
+
+                            Text(
+                                "0",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = primary500,
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.Center
+                            )
+
+                            Text(
+                                "$0.00",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = primary500,
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.End
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                "V.REFUND", style = AppTheme.typography.footnote.copy(
+                                    fontWeight = FontWeight.Normal, fontSize = 14.sp
+                                ), modifier = Modifier.weight(1f)
+                            )
+
+                            Text(
+                                "0",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = primary500,
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.Center
+                            )
+
+                            Text(
+                                "$0.00",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = primary500,
+                                modifier = Modifier.weight(1f),
+                                textAlign = TextAlign.End
+                            )
+                        }
+                    }
                 }
             }
         }

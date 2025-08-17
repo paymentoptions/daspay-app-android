@@ -42,9 +42,11 @@ import com.paymentoptions.pos.ui.composables._components.buttons.ToggleBottomNav
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
 import com.paymentoptions.pos.ui.composables._components.images.TapToPayImage
+import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 
 val LOGO_TOP_PADDING_IN_DP = 45.dp
 val LOGO_HEIGHT_IN_DP = 60.dp
@@ -140,6 +142,14 @@ fun SectionedLayout(
                     )
                     .height(IntrinsicSize.Min)
                     .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
+                    .innerShadow(
+                        color = innerShadow,
+                        blur = 20.dp,
+                        spread = 10.dp,
+                        cornersRadius = borderRadiusInDp,
+                        offsetX = 0.dp,
+                        offsetY = 0.dp
+                    )
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(2f)
                     .clip(

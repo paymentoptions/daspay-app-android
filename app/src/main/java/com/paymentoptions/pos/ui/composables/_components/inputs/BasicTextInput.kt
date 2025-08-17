@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables._components.inputs
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -29,18 +27,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.ui.theme.borderThin
-import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red300
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 
 @Composable
 fun BasicTextInput(
@@ -108,13 +105,13 @@ fun BasicTextInput(
                     .fillMaxWidth()
                     .height(textFieldHeight)
                     .onFocusChanged { if (it.isFocused) wasFocusedAtLeastOnce = true }
-                    .shadow(
-                        elevation = 2.dp,
-                        shape = RoundedCornerShape(6.dp),
-                        ambientColor = Color.LightGray,
-                        spotColor = primary100
-                    )
-                    .border(border = borderThin, shape = RoundedCornerShape(6.dp)),
+                    .innerShadow(
+                        blur = 16.dp,
+                        color = innerShadow,
+                        cornersRadius = 6.dp,
+                        offsetX = 0.5.dp,
+                        offsetY = 0.5.dp
+                    ),
                 lineLimits = TextFieldLineLimits.SingleLine,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp))
 
