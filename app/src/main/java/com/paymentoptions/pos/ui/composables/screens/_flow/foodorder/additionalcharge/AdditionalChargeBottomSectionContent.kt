@@ -3,7 +3,6 @@ package com.paymentoptions.pos.ui.composables.screens._flow.foodorder.additional
 import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -48,11 +46,12 @@ import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodOrderFlowStage
 import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.formatAmount
+import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.noBorder
-import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 
 @Composable
 fun AdditionalChargeBottomSectionContent(
@@ -63,6 +62,7 @@ fun AdditionalChargeBottomSectionContent(
     updateFlowStage: (FoodOrderFlowStage) -> Unit,
 ) {
     val scrollState = rememberScrollState()
+    var lastClicked by remember { mutableStateOf<String?>(null) }
 
     var rawInput by remember {
         mutableStateOf(
@@ -74,6 +74,8 @@ fun AdditionalChargeBottomSectionContent(
     val formattedAmount = formatAmount(rawInput)
 
     val onKeyPress: (String) -> Unit = { key ->
+        lastClicked = key
+
         when (key) {
             "←" -> if (rawInput.isNotEmpty()) rawInput = rawInput.dropLast(1)
             else -> if (rawInput.length < 9) rawInput += key
@@ -168,26 +170,28 @@ fun AdditionalChargeBottomSectionContent(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(60.dp)
-                                .border(
-                                    2.dp, primary100.copy(alpha = 0.2f), RoundedCornerShape(8.dp)
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked === key) 10.dp else 4.dp,
+                                    spread = if (lastClicked === key) 3.dp else 0.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
                                 )
-                                .background(Color.White, RoundedCornerShape(8.dp))
                                 .clickable { onKeyPress(key) }, contentAlignment = Alignment.Center
                         ) {
-                            if (key == "←") {
-                                Icon(
-                                    Icons.AutoMirrored.Outlined.ArrowBack,
-                                    contentDescription = "Back",
-                                    tint = primary500,
-                                )
-                            } else {
-                                Text(
-                                    key,
-                                    color = primary500,
-                                    fontSize = 30.sp,
-                                    fontWeight = FontWeight.Normal
-                                )
-                            }
+                            if (key == "←") Icon(
+                                Icons.AutoMirrored.Outlined.ArrowBack,
+                                contentDescription = "Back",
+                                tint = primary500,
+                            )
+                            else Text(
+                                key,
+                                color = primary500,
+                                fontSize = 30.sp,
+                                fontWeight = FontWeight.Normal
+                            )
+
                         }
                     }
                 }
@@ -206,23 +210,33 @@ fun AdditionalChargeBottomSectionContent(
             item {
                 SuggestionChip(
                     border = noBorder,
-                    colors = SuggestionChipDefaults.suggestionChipColors()
-                        .copy(containerColor = primary100.copy(alpha = 0.15f)),
+                    colors = SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = Color(0xFFDFF0FC)
+                    ),
                     onClick = { rawInput = "1000" },
                     label = {
-                        CurrencyText(currency = currency, amount = "10", fontSize = 16.sp)
+                        CurrencyText(
+                            currency = currency,
+                            amount = "10",
+                            fontSize = 16.sp,
+                            addSpaceAfterCurrency = true
+                        )
                     })
             }
 
             items(20) {
                 SuggestionChip(
                     border = noBorder,
-                    colors = SuggestionChipDefaults.suggestionChipColors()
-                        .copy(containerColor = primary100.copy(alpha = 0.15f)),
+                    colors = SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = Color(0xFFDFF0FC)
+                    ),
                     onClick = { rawInput = "${(it + 1) * 50}00" },
                     label = {
                         CurrencyText(
-                            currency = currency, amount = "${(it + 1) * 50}", fontSize = 16.sp
+                            currency = currency,
+                            amount = "${(it + 1) * 50}",
+                            fontSize = 16.sp,
+                            addSpaceAfterCurrency = true
                         )
                     })
             }

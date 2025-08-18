@@ -11,7 +11,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.primary300
 
 @Composable
 fun CurrencyText(
@@ -20,9 +20,9 @@ fun CurrencyText(
     modifier: Modifier = Modifier,
     fontSize: TextUnit = 36.sp,
     fontWeight: FontWeight = FontWeight.Bold,
-    color: Color = primary100,
+    color: Color = primary300,
     textAlign: TextAlign = TextAlign.Center,
-    addSpaceAfterCurrency: Boolean = true,
+    addSpaceAfterCurrency: Boolean = false,
 ) {
     Text(
         text = buildAnnotatedString {
@@ -33,16 +33,8 @@ fun CurrencyText(
             ) { append(currency + (if (addSpaceAfterCurrency) " " else "")) }
 
             if (amount.isNotEmpty()) withStyle(
-                SpanStyle(
-                    color = color,
-                    fontWeight = fontWeight
-                )
+                SpanStyle(color = color, fontWeight = fontWeight)
             ) { append(amount) }
-        },
-        fontSize = fontSize,
-        fontWeight = fontWeight,
-//        color = primary100,
-        textAlign = textAlign,
-        modifier = modifier
+        }, fontSize = fontSize, fontWeight = fontWeight, textAlign = textAlign, modifier = modifier
     )
 }

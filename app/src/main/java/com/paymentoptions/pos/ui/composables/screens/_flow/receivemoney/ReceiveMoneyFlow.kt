@@ -8,8 +8,8 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -143,11 +143,11 @@ fun ReceiveMoneyFlow(
             bottomSectionMaxHeightRatio = 0.95f,
             bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
             bottomSectionPaddingInDp = 0.dp,
-            enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+            enableScrollingOfBottomSectionContent = false
         ) {
             InputMoneyBottomSectionContent(
                 navController,
-                enableScrolling = enableScrollingInsideBottomSectionContent,
+                enableScrolling = true,
                 updateAmountToCharge = { amountToChargeState = it },
                 amountToCharge = amountToChargeState,
                 updateNoteState = { noteState = it },
@@ -419,7 +419,7 @@ fun ReceiveMoneyFlow(
                                             modifier = Modifier
                                                 .padding(horizontal = 20.dp)
                                                 .fillMaxWidth()
-                                                .height(110.dp)
+                                                .height(100.dp)
                                                 .clip(
                                                     shape = RoundedCornerShape(16.dp)
                                                 )
@@ -427,32 +427,27 @@ fun ReceiveMoneyFlow(
 
                                         Spacer(modifier = Modifier.height(10.dp))
 
-                                        Box(
+
+                                        SelectionContainer(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .background(
                                                     color = Color(0xFFDCEAFE),
                                                     shape = RoundedCornerShape(11.dp)
                                                 )
-                                                .padding(vertical = 8.dp, horizontal = 4.dp),
-                                            contentAlignment = Alignment.Center
+                                                .padding(vertical = 16.dp, horizontal = 12.dp),
                                         ) {
-
-                                            SelectionContainer {
-//                                            LinkWithIcon(
-//                                                text = "https://daspay/" + payByLinkResponse!!.data.ID,
-//                                                url = "https://daspay/" + payByLinkResponse!!.data.ID,
-//                                            )
-
-                                                Text(
-                                                    text = "https://daspay/" + payByLinkResponse!!.data.ID,
-                                                    fontWeight = FontWeight.SemiBold,
-                                                    fontSize = 18.sp,
-                                                    color = primary900,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                            }
+                                            Text(
+                                                text = "https://daspay/" + payByLinkResponse!!.data.ID,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 16.sp,
+                                                color = primary900,
+                                                maxLines = 1,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.horizontalScroll(state = rememberScrollState())
+                                            )
                                         }
+
 
                                         NoteChip(
                                             text = "Share this link with the customer",

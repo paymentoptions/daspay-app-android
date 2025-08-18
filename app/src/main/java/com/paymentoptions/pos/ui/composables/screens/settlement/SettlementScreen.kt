@@ -14,7 +14,7 @@ fun SettlementScreen(navController: NavController) {
 
     SectionedLayout(
         navController = navController,
-        bottomSectionMinHeightRatio = 0.6f,
+        bottomSectionMinHeightRatio = 0.9f,
         bottomSectionMaxHeightRatio = 0.9f,
         bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
         bottomSectionPaddingInDp = 0.dp,

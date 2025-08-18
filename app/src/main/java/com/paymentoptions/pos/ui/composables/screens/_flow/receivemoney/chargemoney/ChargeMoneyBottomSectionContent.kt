@@ -28,9 +28,11 @@ import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
+import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.PaymentMethod
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
 import com.paymentoptions.pos.utils.paymentMethods
 
@@ -94,7 +96,15 @@ fun ChargeMoneyBottomSectionContent(
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(iconBackgroundColor),
+                .background(iconBackgroundColor)
+                .innerShadow(
+                    color = innerShadow,
+                    blur = 10.dp,
+                    spread = 10.dp,
+                    cornersRadius = 8.dp,
+                    offsetX = 0.dp,
+                    offsetY = 0.dp
+                ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {

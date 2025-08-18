@@ -1,6 +1,8 @@
 package com.paymentoptions.pos.ui.composables.screens.settlement
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,12 +41,13 @@ import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderThin
-import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
+import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
 
 val keypad = listOf(
@@ -93,7 +96,15 @@ fun BottomSectionContent(
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(iconBackgroundColor),
+                .background(iconBackgroundColor)
+                .innerShadow(
+                    color = innerShadow,
+                    blur = 10.dp,
+                    spread = 10.dp,
+                    cornersRadius = 8.dp,
+                    offsetX = 0.dp,
+                    offsetY = 0.dp
+                ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
@@ -138,8 +149,13 @@ fun BottomSectionContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(20.dp)
+                    color = Color(0xFFE6F6FF), shape = RoundedCornerShape(20.dp)
                 )
+                .border(
+                    border = BorderStroke(width = 1.dp, color = Color(0xFFCBEBFF)),
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(bottom = 24.dp)
         ) {
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -162,8 +178,8 @@ fun BottomSectionContent(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP.plus(5.dp)),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
@@ -178,7 +194,7 @@ fun BottomSectionContent(
                     )
 
                     Text(
-                        "******7890",
+                        "00000000",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -196,10 +212,7 @@ fun BottomSectionContent(
                     )
 
                     Text(
-                        "****5678",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = primary500
+                        "0000", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
                     )
                 }
 
@@ -214,7 +227,7 @@ fun BottomSectionContent(
                     )
 
                     Text(
-                        "000017",
+                        "000025",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -259,7 +272,7 @@ fun BottomSectionContent(
 
                 HorizontalDivider(
                     color = Color.LightGray.copy(alpha = 0.2f),
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
 
                 if (!showCurrent) {
@@ -304,10 +317,6 @@ fun BottomSectionContent(
                         modifier = Modifier.padding(vertical = 4.dp)
                     )
 
-
-                }
-
-                if (!showCurrent) {
                     AssistChip(
                         onClick = { showDetails = !showDetails }, label = {
                             Text(
@@ -334,12 +343,12 @@ fun BottomSectionContent(
                     //Charge Summary
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             text = "Charge Summary",
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.SemiBold,
                             color = primary500
                         )
 
@@ -431,16 +440,16 @@ fun BottomSectionContent(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
                             text = "Voided Transaction",
                             fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.SemiBold,
                             color = primary500
                         )
 
@@ -539,10 +548,10 @@ fun BottomSectionContent(
 
         FilledButton(
             text = "Settle All",
-            disabled = false,
+            disabled = !showCurrent,
             isLoading = loader,
             modifier = Modifier
-                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+//                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxWidth()
                 .height(59.dp),
             onClick = {})

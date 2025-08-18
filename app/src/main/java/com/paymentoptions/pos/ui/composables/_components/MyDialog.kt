@@ -11,7 +11,9 @@ import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 
 @Composable
 fun MyDialog(
@@ -28,6 +30,14 @@ fun MyDialog(
 
     if (showDialog) {
         AlertDialog(
+            modifier = Modifier.innerShadow(
+                color = innerShadow,
+                blur = 10.dp,
+                spread = 10.dp,
+                cornersRadius = 25.dp,
+                offsetX = 0.dp,
+                offsetY = 0.dp
+            ),
             containerColor = Color.White,
             title = {
                 Text(

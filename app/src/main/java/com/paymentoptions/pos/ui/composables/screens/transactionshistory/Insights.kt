@@ -61,15 +61,15 @@ fun Insights(
     val higherPercentage = 15
     val higherString = buildAnnotatedString {
         withStyle(
-            SpanStyle(primary500, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+            SpanStyle(primary500, fontWeight = FontWeight.Medium, fontSize = 11.sp)
         ) { append("Your Earnings are ") }
 
         withStyle(
-            SpanStyle(primary500, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+            SpanStyle(primary500, fontWeight = FontWeight.Bold, fontSize = 11.sp)
         ) { append(higherPercentage.toString()) }
 
         withStyle(
-            SpanStyle(primary500, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+            SpanStyle(primary500, fontWeight = FontWeight.Medium, fontSize = 11.sp)
         ) { append("% higher than yesterday") }
     }
 
@@ -225,8 +225,7 @@ fun Insights(
                         color = Color.Gray.copy(alpha = 0.4f),
                         label = "",
                         gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description =
-                            "",
+                        description = "",
                     ), BarData(
                         point = Point(x = 11f, y = 0f),
                         color = Color.Gray.copy(alpha = 0.4f),
@@ -398,28 +397,34 @@ fun Insights(
                 }
             }
 
-
             AssistChip(
-                modifier = Modifier.fillMaxWidth(), onClick = { }, label = {
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                onClick = { },
+                label = {
                     Text(
                         text = higherString,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500,
                         lineHeight = 16.sp,
+                        maxLines = 1,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 6.dp),
-//                        textAlign = TextAlign.Center
                     )
-                }, border = noBorder, colors = AssistChipDefaults.assistChipColors(
+                },
+                border = noBorder,
+                colors = AssistChipDefaults.assistChipColors(
                     containerColor = Color.LightGray.copy(0.2f)
-                ), leadingIcon = {
+                ),
+                leadingIcon = {
                     Icon(
+                        modifier = Modifier.offset(y = 8.dp),
                         painter = painterResource(R.drawable.higher),
                         contentDescription = "Hint",
                         tint = Color(0xFF1BCC91),
-                        modifier = Modifier.offset(y = 8.dp)
                     )
                 })
 

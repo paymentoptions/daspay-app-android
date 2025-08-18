@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CreditCard
-import androidx.compose.material.icons.outlined.Money
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -25,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -32,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.borderThinError
@@ -106,8 +105,9 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
                     .background(iconBackgroundColor), contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (isCardTransaction) Icons.Outlined.CreditCard else Icons.Outlined.Money,
-                    contentDescription = "Icon"
+                    painter = painterResource(if (isCardTransaction) R.drawable.icon_card else R.drawable.icon_money),
+                    contentDescription = "Icon",
+                    tint = purple50
                 )
             }
 
@@ -159,13 +159,16 @@ fun NotificationSummary(transaction: TransactionListDataRecord) {
                 Text(
                     transaction.CurrencyCode,
                     textAlign = TextAlign.End,
-                    color = if (isTransactionAmountPositive) green200 else red500
+                    color = if (isTransactionAmountPositive) green200 else red500,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
                 )
 
                 Text(
                     text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
                     color = if (isTransactionAmountPositive) green500 else red500,
                     fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
                     maxLines = 1
                 )
             }

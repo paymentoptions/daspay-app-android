@@ -106,9 +106,7 @@ fun FoodMenuBottomSectionContent(
         else if (foodCategories.isEmpty()) NoData(text = " No food categories available") else FoodCategories(
             foodCategories = foodCategories,
             selectedFoodCategory = selectedFoodCategory,
-            onClick = {
-                updateSelectedFoodCategory(it)
-            },
+            onClick = { updateSelectedFoodCategory(it) },
             modifier = Modifier
                 .padding(start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxWidth()
@@ -205,7 +203,8 @@ fun FoodMenuBottomSectionContent(
                         currency = "HKD",
                         amount = cartState.itemTotal.formatToPrecisionString(),
                         fontSize = 16.sp,
-                        color = primary500
+                        color = primary500,
+                        addSpaceAfterCurrency = true
                     )
                 }
 

@@ -34,6 +34,14 @@ fun ToggleBottomNavigationBarButton(
                     bottomEndPercent = 0
                 )
             )
+//            .innerShadow(
+//                color = innerShadow,
+//                blur = 20.dp,
+//                spread = 10.dp,
+//                cornersRadius = 40.dp,
+//                offsetX = 0.dp,
+//                offsetY = 0.dp
+//            )
     ) {
         Icon(
             painter = painterResource(R.drawable.down_arrow),

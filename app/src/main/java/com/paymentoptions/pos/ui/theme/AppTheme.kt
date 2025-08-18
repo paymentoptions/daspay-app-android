@@ -18,7 +18,7 @@ private val darkColorScheme = AppColorScheme(
     primary = primary500,
     onPrimary = primary100,
     secondary = primary900,
-    onSecondary = primary200,
+    onSecondary = purple50,
 )
 
 private val lightColorScheme = AppColorScheme(
@@ -27,7 +27,7 @@ private val lightColorScheme = AppColorScheme(
     primary = primary500,
     onPrimary = primary100,
     secondary = primary900,
-    onSecondary = primary200,
+    onSecondary = purple50,
 )
 
 private val typography = AppTypography(

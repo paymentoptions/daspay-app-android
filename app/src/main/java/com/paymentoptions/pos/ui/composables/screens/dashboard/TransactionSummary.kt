@@ -13,9 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.CreditCard
-import androidx.compose.material.icons.outlined.Money
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -41,12 +38,12 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
+import com.paymentoptions.pos.ui.theme.borderColor
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.borderThinError
 import com.paymentoptions.pos.ui.theme.green200
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
-import com.paymentoptions.pos.ui.theme.primary200
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red300
@@ -148,12 +145,12 @@ fun TransactionSummary(
             ),
             modifier = Modifier
                 .shadow(
-                    elevation = if (isLongClicked) 16.dp else 4.dp, shape = RoundedCornerShape(
+                    elevation = if (isLongClicked) 8.dp else 2.dp, shape = RoundedCornerShape(
                         topStart = if (isLongClicked) 0.dp else borderRadius,
                         topEnd = borderRadius,
                         bottomStart = if (isLongClicked) 0.dp else borderRadius,
                         bottomEnd = borderRadius
-                    ), ambientColor = Color(0xFFD8F0FF)
+                    ), ambientColor = borderColor
                 )
                 .combinedClickable(onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)
@@ -163,7 +160,6 @@ fun TransactionSummary(
                 })
                 .weight(if (isLongClicked) 8f else 1f)
         ) {
-
             Row(
                 modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -176,27 +172,24 @@ fun TransactionSummary(
                         .background(iconBackgroundColor), contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = if (isCardTransaction) Icons.Outlined.CreditCard else Icons.Outlined.Money,
-                        contentDescription = "Icon"
+                        painter = painterResource(if (isCardTransaction) R.drawable.icon_card else R.drawable.icon_money),
+                        contentDescription = "Icon",
+                        tint = purple50
                     )
                 }
 
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Column(
-                    modifier = Modifier.weight(8f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    modifier = Modifier.weight(8f), verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        dateStr,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
-                        color = primary200
+                        dateStr, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = purple50
                     )
                     Text(
                         text = (if (isCardTransaction) "Txn ID - " else "Cash Id - ") + transaction.TransactionID.toString(),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         color = primary500
                     )
                 }
@@ -211,13 +204,16 @@ fun TransactionSummary(
                     Text(
                         transaction.CurrencyCode,
                         textAlign = TextAlign.End,
-                        color = if (isTransactionAmountPositive) green200 else Color.Red
+                        color = if (isTransactionAmountPositive) green200 else Color.Red,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
                     )
 
                     Text(
                         text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
                         color = if (isTransactionAmountPositive) green500 else Color.Red,
                         fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
                         maxLines = 1
                     )
                 }

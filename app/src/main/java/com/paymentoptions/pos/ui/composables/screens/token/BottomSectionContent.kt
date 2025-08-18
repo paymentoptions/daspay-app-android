@@ -40,7 +40,6 @@ import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.theme.AppTheme
-import com.paymentoptions.pos.ui.theme.borderThick
 import com.paymentoptions.pos.ui.theme.linkColor
 import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary50
@@ -66,9 +65,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
         openFingerprintScan = false
     })
-
-
-    borderThick
 
     Column(
         modifier = Modifier.fillMaxWidth(),

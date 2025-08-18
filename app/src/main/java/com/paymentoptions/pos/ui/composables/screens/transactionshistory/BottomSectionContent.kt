@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionList
@@ -49,9 +51,11 @@ import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
+import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -228,10 +232,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 modifier = Modifier
                     .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                     .fillMaxWidth()
-                    .height(50.dp),
+                    .height(46.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                verticalAlignment = Alignment.CenterVertically,
+
+                ) {
 
                 MyDropdown(
                     navController,
@@ -239,7 +244,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     selectedFilter,
                     onFilterChange = { selectedFilter = it },
                     icon = Icons.Default.CalendarMonth,
-                    modifier = Modifier.fillMaxHeight()
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(205.dp)
                 )
 
                 Row(
@@ -247,19 +254,28 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(8.dp))
                         .background(iconBackgroundColor)
-                        .clickable(onClick = { showInsights = !showInsights }),
+                        .innerShadow(
+                            color = innerShadow,
+                            blur = 10.dp,
+                            spread = 10.dp,
+                            cornersRadius = 8.dp,
+                            offsetX = 0.dp,
+                            offsetY = 0.dp
+                        )
+                        .clickable(onClick = { showInsights = !showInsights })
+                        .zIndex(1f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-
                     Icon(
                         imageVector = Icons.Default.Menu,
                         contentDescription = "Show list",
                         modifier = Modifier
                             .padding(6.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(if (!showInsights) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                            .background(if (!showInsights) Color.White else Color.Transparent)
                             .padding(4.dp)
+                            .zIndex(2f)
                     )
                     Icon(
                         imageVector = Icons.Default.BarChart,
@@ -267,8 +283,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         modifier = Modifier
                             .padding(6.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(if (showInsights) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                            .background(if (showInsights) Color.White else Color.Transparent)
                             .padding(4.dp)
+                            .zIndex(2f)
                     )
                 }
             }

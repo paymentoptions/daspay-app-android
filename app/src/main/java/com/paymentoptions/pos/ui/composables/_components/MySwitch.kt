@@ -38,7 +38,7 @@ fun MySwitch(isEnabled: Boolean, onClick: (state: Boolean) -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxHeight()
-                .width(24.dp)
+                .width(29.dp)
                 .background(
                     color = androidx.compose.ui.graphics.Color.White, shape = RoundedCornerShape(50)
                 )

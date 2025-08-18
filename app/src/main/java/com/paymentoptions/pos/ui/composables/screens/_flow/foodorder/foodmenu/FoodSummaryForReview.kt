@@ -43,6 +43,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SEC
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.FoodItem
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.MAX_QUANTITY_PER_FOOD_ITEM
+import com.paymentoptions.pos.ui.theme.borderColor
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
@@ -132,12 +133,12 @@ fun FoodSummaryForReview(
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(
-                    elevation = if (isLongClicked) 16.dp else 4.dp, shape = RoundedCornerShape(
+                    elevation = if (isLongClicked) 8.dp else 2.dp, shape = RoundedCornerShape(
                         topStart = if (isLongClicked) 0.dp else borderRadius,
                         topEnd = borderRadius,
                         bottomStart = if (isLongClicked) 0.dp else borderRadius,
                         bottomEnd = borderRadius
-                    ), ambientColor = Color(0xFFD8F0FF)
+                    ), ambientColor = borderColor
                 )
                 .combinedClickable(onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)
@@ -174,9 +175,13 @@ fun FoodSummaryForReview(
                         .width(80.dp)
                         .height(36.dp)
                         .conditional(foodItem.cartQuantity == 0) {
-                            background(
-                                Color.White, shape = RoundedCornerShape(10.dp)
-                            ).border(borderThin, shape = RoundedCornerShape(10.dp))
+                            shadow(
+                                14.dp, spotColor = borderColor, shape = RoundedCornerShape(10.dp)
+                            )
+                                .background(
+                                    Color.White, shape = RoundedCornerShape(10.dp)
+                                )
+                                .border(borderThin, shape = RoundedCornerShape(10.dp))
                         }
                         .conditional(foodItem.cartQuantity != 0) {
                             background(

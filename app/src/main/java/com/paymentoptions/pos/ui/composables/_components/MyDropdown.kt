@@ -75,7 +75,7 @@ fun MyDropdown(
                 style = AppTheme.typography.titleNormal.copy(fontSize = 14.sp)
             )
 
-            Spacer(modifier = Modifier.width(70.dp))
+            Spacer(modifier = Modifier.weight(1f))
 
             Icon(
                 painter = painterResource(R.drawable.down_arrow),
@@ -107,7 +107,6 @@ fun MyDropdown(
         )
 
         filters.entries.forEachIndexed { index, option ->
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

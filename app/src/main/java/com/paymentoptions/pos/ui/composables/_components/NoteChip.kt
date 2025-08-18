@@ -42,7 +42,7 @@ fun NoteChip(
             )
         },
         border = noBorder,
-        colors = AssistChipDefaults.assistChipColors(containerColor = Color.LightGray.copy(0.2f)),
+        colors = AssistChipDefaults.assistChipColors(containerColor = color.copy(alpha = 0.05f)),
         leadingIcon = {
             Icon(
                 painter = painterResource(icon),

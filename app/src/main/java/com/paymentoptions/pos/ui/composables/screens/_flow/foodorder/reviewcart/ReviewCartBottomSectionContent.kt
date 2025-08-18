@@ -209,7 +209,6 @@ fun ReviewCartBottomSectionContent(
                             "",
                             fontSize = 12.sp,
                             textAlign = TextAlign.End,
-                            addSpaceAfterCurrency = false
                         )
                     }
                     Row(
