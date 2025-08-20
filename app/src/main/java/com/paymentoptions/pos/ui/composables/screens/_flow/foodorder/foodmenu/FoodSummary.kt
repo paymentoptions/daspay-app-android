@@ -89,7 +89,7 @@ fun FoodSummary(
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Top
+        verticalAlignment = Alignment.CenterVertically
     ) {
 
         FoodImage(
@@ -105,7 +105,7 @@ fun FoodSummary(
         Row(
             modifier = Modifier
                 .width(80.dp)
-                .height(36.dp)
+                .height(30.dp)
                 .conditional(foodItem.cartQuantity == 0) {
                     shadow(
                         14.dp, spotColor = borderColor, shape = RoundedCornerShape(10.dp)

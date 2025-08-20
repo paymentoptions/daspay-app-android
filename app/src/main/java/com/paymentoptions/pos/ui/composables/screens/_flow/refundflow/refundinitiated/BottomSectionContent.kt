@@ -298,8 +298,6 @@ fun BottomSectionContent(
 
 
                 if (showRefundStatus) {
-
-
                     VerticalProgressBar(
                         currentState = ProgressState.PROCESSING,
                         submittedTitle = "Request Submitted",

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.theme.green200
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.ui.theme.textHorizontalGradientBrush
 
 @Composable
 fun VerticalProgressBar(
@@ -61,9 +62,18 @@ fun VerticalProgressBar(
             val isComplete = progressState < currentState
             val isCurrent = progressState == currentState
 
-
-            drawCircle(
-                color = if (isComplete) completedStatePathColor else if (isCurrent) currentStatePathColor else pendingStatePathColor,
+            if (isComplete) drawCircle(
+                color = completedStatePathColor,
+                center = Offset(x.toPx(), y.toPx()),
+                radius = progressStepRadius
+            )
+            else if (isCurrent) drawCircle(
+                brush = textHorizontalGradientBrush,
+                center = Offset(x.toPx(), y.toPx()),
+                radius = progressStepRadius
+            )
+            else drawCircle(
+                color = pendingStatePathColor,
                 center = Offset(x.toPx(), y.toPx()),
                 radius = progressStepRadius
             )
@@ -71,8 +81,8 @@ fun VerticalProgressBar(
             if (!isLastStep) drawLine(
                 color = if (isComplete) completedStatePathColor else if (isCurrent) currentStatePathColor else pendingStatePathColor,
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f),
-                start = Offset(x.toPx(), y.toPx()),
-                end = Offset(x.toPx(), y.plus(78.dp).toPx()),
+                start = Offset(x.toPx(), y.plus(7.dp).toPx()),
+                end = Offset(x.toPx(), y.plus(75.dp).toPx()),
                 strokeWidth = pathLineThickness
             )
 
@@ -81,7 +91,7 @@ fun VerticalProgressBar(
                 text = title,
                 topLeft = Offset(x.plus(16.dp).toPx(), y.minus(8.dp).toPx()),
                 style = TextStyle(
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     color = if (isComplete) completedStatePathColor else currentStatePathColor,
                     fontWeight = FontWeight.Medium
                 )

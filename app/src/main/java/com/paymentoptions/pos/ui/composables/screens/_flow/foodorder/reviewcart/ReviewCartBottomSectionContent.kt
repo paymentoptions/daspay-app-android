@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -190,7 +192,8 @@ fun ReviewCartBottomSectionContent(
                         CurrencyText(
                             currency,
                             cartState.additionalCharge.formatToPrecisionString(),
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            addSpaceAfterCurrency = true
                         )
                     }
                 } else {
@@ -226,7 +229,8 @@ fun ReviewCartBottomSectionContent(
                             "",
                             cartState.additionalCharge.toString(),
                             fontSize = 12.sp,
-                            textAlign = TextAlign.End
+                            textAlign = TextAlign.End,
+                            addSpaceAfterCurrency = true
                         )
                     }
                 }
@@ -260,12 +264,7 @@ fun ReviewCartBottomSectionContent(
                         )
                     )
 
-                    CurrencyText(
-                        currency = currency,
-                        amount = "+" + cartState.itemTotal.formatToPrecisionString(),
-                        fontSize = 14.sp,
-                        color = primary500
-                    )
+                    CurrencyRow(currency = currency, amount = cartState.itemTotal)
 
                 }
 
@@ -281,14 +280,7 @@ fun ReviewCartBottomSectionContent(
                         )
                     )
 
-
-                    CurrencyText(
-                        currency = currency,
-                        amount = "+" + cartState.calculateServiceCharge().formatToPrecisionString(),
-                        fontSize = 14.sp,
-                        color = primary500
-                    )
-
+                    CurrencyRow(currency = currency, amount = cartState.calculateServiceCharge())
                 }
 
                 Row(
@@ -301,14 +293,9 @@ fun ReviewCartBottomSectionContent(
                         )
                     )
 
-                    CurrencyText(
-                        currency = currency,
-                        amount = "+" + cartState.additionalCharge.formatToPrecisionString(),
-                        fontSize = 14.sp,
-                        color = primary500,
-                    )
-
+                    CurrencyRow(currency = currency, amount = cartState.additionalCharge)
                 }
+
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -321,13 +308,7 @@ fun ReviewCartBottomSectionContent(
                         )
                     )
 
-                    CurrencyText(
-                        currency = currency,
-                        amount = "+" + cartState.calculateGstCharge().formatToPrecisionString(),
-                        fontSize = 14.sp,
-                        color = primary500
-                    )
-
+                    CurrencyRow(currency = currency, amount = cartState.calculateGstCharge())
                 }
 
                 HorizontalDivider(
@@ -344,13 +325,7 @@ fun ReviewCartBottomSectionContent(
                         )
                     )
 
-                    CurrencyText(
-                        currency = currency,
-                        amount = "+" + cartState.calculateGrandTotal().formatToPrecisionString(),
-                        fontSize = 16.sp,
-                        color = primary500,
-                        fontWeight = FontWeight.Bold
-                    )
+                    CurrencyRow(currency = currency, amount = cartState.calculateGrandTotal())
                 }
             }
         }
@@ -365,6 +340,36 @@ fun ReviewCartBottomSectionContent(
                 .fillMaxWidth()
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .height(59.dp)
+        )
+    }
+}
+
+@Composable
+fun CurrencyRow(currency: String, amount: Float, width: Dp = 160.dp) {
+    Row(
+        modifier = Modifier.width(width),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+
+        CurrencyText(
+            currency = currency,
+            amount = "",
+            fontSize = 16.sp,
+            color = primary500,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
+        )
+
+        CurrencyText(
+            currency = "",
+            amount = "+" + amount.formatToPrecisionString(),
+            fontSize = 16.sp,
+            color = primary500,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
         )
     }
 }
