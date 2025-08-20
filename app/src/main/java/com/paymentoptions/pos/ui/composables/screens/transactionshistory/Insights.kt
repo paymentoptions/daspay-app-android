@@ -399,13 +399,12 @@ fun Insights(
 
             AssistChip(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                    .fillMaxWidth(),
                 onClick = { },
                 label = {
                     Text(
                         text = higherString,
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500,
                         lineHeight = 16.sp,

@@ -256,8 +256,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         .background(iconBackgroundColor)
                         .innerShadow(
                             color = innerShadow,
-                            blur = 10.dp,
-                            spread = 10.dp,
+                            blur = 8.dp,
+                            spread = 5.dp,
                             cornersRadius = 8.dp,
                             offsetX = 0.dp,
                             offsetY = 0.dp

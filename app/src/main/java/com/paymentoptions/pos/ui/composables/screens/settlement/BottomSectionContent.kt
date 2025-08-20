@@ -50,13 +50,6 @@ import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
 
-val keypad = listOf(
-    listOf("1", "2", "3"),
-    listOf("4", "5", "6"),
-    listOf("7", "8", "9"),
-    listOf("00", "0", "←"),
-)
-
 @Composable
 fun BottomSectionContent(
     navController: NavController,
@@ -99,8 +92,8 @@ fun BottomSectionContent(
                 .background(iconBackgroundColor)
                 .innerShadow(
                     color = innerShadow,
-                    blur = 10.dp,
-                    spread = 10.dp,
+                    blur = 8.dp,
+                    spread = 5.dp,
                     cornersRadius = 8.dp,
                     offsetX = 0.dp,
                     offsetY = 0.dp
@@ -547,13 +540,9 @@ fun BottomSectionContent(
         Spacer(modifier = Modifier.height(20.dp))
 
         FilledButton(
-            text = "Settle All",
-            disabled = !showCurrent,
-            isLoading = loader,
-            modifier = Modifier
+            text = "Settle All", disabled = !showCurrent, isLoading = loader, modifier = Modifier
 //                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .fillMaxWidth()
-                .height(59.dp),
-            onClick = {})
+                .height(59.dp), onClick = {})
     }
 }

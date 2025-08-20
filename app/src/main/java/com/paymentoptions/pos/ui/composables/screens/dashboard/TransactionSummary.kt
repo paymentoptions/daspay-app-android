@@ -55,7 +55,6 @@ import java.util.Date
 
 var TRANSACTION_TO_BE_REFUNDED: TransactionListDataRecord? = null
 
-
 //Swipe / Drag code
 
 //var pointerOffset by remember {
@@ -94,7 +93,6 @@ fun TransactionSummary(
     longClickedTransactionId: String = "",
     onLongClick: (String) -> Unit = {},
 ) {
-
     val successful = transaction.status == "SUCCESSFUL"
     val transactionAmount = transaction.amount.toFloat()
     val isTransactionAmountPositive = transactionAmount > 0

@@ -126,8 +126,6 @@ fun Item(
     maxLines: Int = 1,
     inMore: Boolean = false,
 ) {
-//    val isSelected = selected == item
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable {
             onSelected()
@@ -170,6 +168,8 @@ fun Item(
     }
 }
 
+var selectedBottomNavigationBarItem: BottomNavigationBarItem = home
+
 @Composable
 fun MyBottomNavigationBar(
     navController: NavController,
@@ -183,7 +183,7 @@ fun MyBottomNavigationBar(
     var showSignOutConfirmationDialog by remember { mutableStateOf(false) }
     var signOutLoader by remember { mutableStateOf(false) }
     var signOutResponse: SignOutResponse? = null
-    var selected by remember { mutableStateOf<BottomNavigationBarItem>(home) }
+//    var selected by remember { mutableStateOf<BottomNavigationBarItem>(home) }
 
     MyDialog(
         showDialog = showSignOutConfirmationDialog,
@@ -297,39 +297,56 @@ fun MyBottomNavigationBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
 
-            Item(home, selected, modifier = Modifier.weight(1f), onSelected = {
-//                if (selected != home) {
-                selected = home
-                navController.navigate(selected.route)
-//                }
-            })
+            Item(
+                home,
+                selectedBottomNavigationBarItem,
+                modifier = Modifier.weight(1f),
+                onSelected = {
+                    if (selectedBottomNavigationBarItem !== home) {
+                        selectedBottomNavigationBarItem = home
+                        navController.navigate(selectedBottomNavigationBarItem.route)
+                    }
+                })
 
-            Item(foodMenu, selected, modifier = Modifier.weight(1f), onSelected = {
-                if (selected != foodMenu) {
-                    selected = foodMenu
-                    navController.navigate(selected.route)
-                }
-            })
+            Item(
+                foodMenu,
+                selectedBottomNavigationBarItem,
+                modifier = Modifier.weight(1f),
+                onSelected = {
+                    if (selectedBottomNavigationBarItem !== foodMenu) {
+                        selectedBottomNavigationBarItem = foodMenu
+                        navController.navigate(selectedBottomNavigationBarItem.route)
+                    }
+                })
 
-            Item(receiveMoney, selected, modifier = Modifier.weight(1.5f), onSelected = {
-                if (selected != receiveMoney) {
-                    selected = receiveMoney
-                    navController.navigate(selected.route)
-                }
-            })
+            Item(
+                receiveMoney,
+                selectedBottomNavigationBarItem,
+                modifier = Modifier.weight(1.5f),
+                onSelected = {
+                    if (selectedBottomNavigationBarItem !== receiveMoney) {
+                        selectedBottomNavigationBarItem = receiveMoney
+                        navController.navigate(selectedBottomNavigationBarItem.route)
+                    }
+                })
 
-            Item(notifications, selected, modifier = Modifier.weight(1f), onSelected = {
-                if (selected != notifications) {
-                    selected = notifications
-                    navController.navigate(selected.route)
-                }
-            })
+            Item(
+                notifications,
+                selectedBottomNavigationBarItem,
+                modifier = Modifier.weight(1f),
+                onSelected = {
+                    selectedBottomNavigationBarItem = notifications
+                    navController.navigate(selectedBottomNavigationBarItem.route)
+                })
 
-            Item(more, selected, modifier = Modifier.weight(1f), onSelected = {
-                selected = more
-                onClickShowMoreItems()
-//            navController.navigate(selected.route)
-            })
+            Item(
+                more,
+                selectedBottomNavigationBarItem,
+                modifier = Modifier.weight(1f),
+                onSelected = {
+                    selectedBottomNavigationBarItem = more
+                    onClickShowMoreItems()
+                })
         }
     }
 }
