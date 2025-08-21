@@ -124,7 +124,7 @@ val helpAndSupport = BottomNavigationBarItem(
 
 val itemsInMore = listOf<BottomNavigationBarItem>(
     transactionHistory,
-    notifications,
+//    notifications,
     settlement,
     settings,
     helpAndSupport,
