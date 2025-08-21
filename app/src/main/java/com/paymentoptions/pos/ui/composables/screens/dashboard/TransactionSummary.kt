@@ -143,7 +143,7 @@ fun TransactionSummary(
             ),
             modifier = Modifier
                 .shadow(
-                    elevation = if (isLongClicked) 8.dp else 2.dp, shape = RoundedCornerShape(
+                    elevation = if (isLongClicked) 8.dp else 6.dp, shape = RoundedCornerShape(
                         topStart = if (isLongClicked) 0.dp else borderRadius,
                         topEnd = borderRadius,
                         bottomStart = if (isLongClicked) 0.dp else borderRadius,

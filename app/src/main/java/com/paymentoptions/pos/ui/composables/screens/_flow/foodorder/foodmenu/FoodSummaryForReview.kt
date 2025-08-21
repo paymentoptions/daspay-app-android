@@ -49,6 +49,7 @@ import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.ui.theme.shadowColor
 import com.paymentoptions.pos.utils.modifiers.conditional
 
 @Composable
@@ -133,12 +134,12 @@ fun FoodSummaryForReview(
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(
-                    elevation = if (isLongClicked) 8.dp else 2.dp, shape = RoundedCornerShape(
+                    elevation = if (isLongClicked) 8.dp else 6.dp, shape = RoundedCornerShape(
                         topStart = if (isLongClicked) 0.dp else borderRadius,
                         topEnd = borderRadius,
                         bottomStart = if (isLongClicked) 0.dp else borderRadius,
                         bottomEnd = borderRadius
-                    ), ambientColor = borderColor
+                    ), ambientColor = shadowColor, spotColor = shadowColor
                 )
                 .combinedClickable(onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)

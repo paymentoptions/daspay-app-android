@@ -212,7 +212,7 @@ fun FoodMenuBottomSectionContent(
 
                 FilledButton(
                     disabled = cartState.itemQuantity <= 0,
-                    text = "Review and Confirm",
+                    text = "Review and confirm",
                     onClick = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
                     modifier = Modifier
                         .fillMaxWidth()

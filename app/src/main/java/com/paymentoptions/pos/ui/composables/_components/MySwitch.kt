@@ -15,9 +15,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
+import com.paymentoptions.pos.utils.modifiers.conditional
 
 @Composable
 fun MySwitch(isEnabled: Boolean, onClick: (state: Boolean) -> Unit) {
@@ -26,7 +28,16 @@ fun MySwitch(isEnabled: Boolean, onClick: (state: Boolean) -> Unit) {
         modifier = Modifier
             .width(51.dp)
             .height(31.dp)
-            .background(brush = enabledFilledButtonGradientBrush, shape = RoundedCornerShape(50))
+            .conditional(isEnabled) {
+                background(
+                    brush = enabledFilledButtonGradientBrush, shape = RoundedCornerShape(50)
+                )
+            }
+            .conditional(!isEnabled) {
+                background(
+                    color = Color.LightGray, shape = RoundedCornerShape(50)
+                )
+            }
             .padding(all = 2.dp)
             .clickable {
                 onClick(isEnabled)
@@ -40,7 +51,7 @@ fun MySwitch(isEnabled: Boolean, onClick: (state: Boolean) -> Unit) {
                 .fillMaxHeight()
                 .width(29.dp)
                 .background(
-                    color = androidx.compose.ui.graphics.Color.White, shape = RoundedCornerShape(50)
+                    color = Color.White, shape = RoundedCornerShape(50)
                 )
         )
     }

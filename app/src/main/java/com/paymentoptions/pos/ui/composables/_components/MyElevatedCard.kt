@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.paymentoptions.pos.ui.theme.innerShadow
+import com.paymentoptions.pos.ui.theme.shadowColor2
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 
@@ -27,9 +27,9 @@ fun MyElevatedCard(
             .padding(1.dp)
             .conditional(isSelected) {
                 innerShadow(
-                    color = innerShadow,
+                    color = shadowColor2,
                     blur = 10.dp,
-                    spread = 3.dp,
+                    spread = 2.dp,
                     cornersRadius = 6.dp,
                     offsetX = 0.dp,
                     offsetY = 0.dp
@@ -37,9 +37,9 @@ fun MyElevatedCard(
             }
             .conditional(!isSelected) {
                 innerShadow(
-                    color = innerShadow,
-                    blur = 4.dp,
-                    spread = 0.dp,
+                    color = shadowColor2,
+                    blur = 1.dp,
+                    spread = 1.dp,
                     cornersRadius = 6.dp,
                     offsetX = 0.dp,
                     offsetY = 0.dp

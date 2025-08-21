@@ -25,5 +25,6 @@ val red500 = Color(0xFFE00000)
 
 val borderColor = Color(0xFFB9E2FC)
 val innerShadow = Color(0xFFC1E1F1)
-
+val shadowColor = Color(0xFFC2E3F7)
+val shadowColor2 = Color(0xFF85C9EE)
 

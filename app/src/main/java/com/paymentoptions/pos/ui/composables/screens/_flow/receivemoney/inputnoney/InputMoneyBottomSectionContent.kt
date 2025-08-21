@@ -190,8 +190,8 @@ fun InputMoneyBottomSectionContent(
 //                                .background(Color.White, RoundedCornerShape(8.dp))
                                 .innerShadow(
                                     color = innerShadow,
-                                    blur = if (lastClicked === key) 10.dp else 4.dp,
-                                    spread = if (lastClicked === key) 3.dp else 0.dp,
+                                    blur = if (lastClicked === key) 40.dp else 1.dp,
+                                    spread = if (lastClicked === key) 5.dp else 1.dp,
                                     cornersRadius = 8.dp,
                                     offsetX = 0.dp,
                                     offsetY = 0.dp

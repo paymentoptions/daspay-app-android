@@ -97,76 +97,38 @@ val more = BottomNavigationBarItem(
     title = "More", icon = Icons.Outlined.MoreHoriz, route = "More"
 )
 
-val itemsInMore = listOf<BottomNavigationBarItem>(
-    BottomNavigationBarItem(
-        title = "Transaction History",
-        icon = Icons.Outlined.CreditCard,
-        route = Screens.TransactionHistory.route
-    ), BottomNavigationBarItem(
-        title = "Refund",
-        icon = Icons.Outlined.MoneyOff,
-        svgIcon = R.drawable.refund,
-        route = Screens.Refund.route
-    ), BottomNavigationBarItem(
-        title = "Settlement", icon = Icons.Outlined.Handshake, route = Screens.Settlement.route
-    ), BottomNavigationBarItem(
-        title = "Settings", icon = Icons.Outlined.Settings, route = Screens.Settings.route
-    ), BottomNavigationBarItem(
-        title = "Help & Support", icon = Icons.Outlined.Info, route = Screens.HelpAndSupport.route
-    )
+val refund = BottomNavigationBarItem(
+    title = "Refund",
+    icon = Icons.Outlined.MoneyOff,
+    svgIcon = R.drawable.refund,
+    route = Screens.Refund.route
 )
 
-@Composable
-fun Item(
-    item: BottomNavigationBarItem,
-    selected: BottomNavigationBarItem,
-    onSelected: () -> Unit,
-    modifier: Modifier = Modifier,
-    minLines: Int = 1,
-    maxLines: Int = 1,
-    inMore: Boolean = false,
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable {
-            onSelected()
-        }, verticalArrangement = Arrangement.Bottom
-    ) {
+val transactionHistory = BottomNavigationBarItem(
+    title = "Transaction History",
+    icon = Icons.Outlined.CreditCard,
+    route = Screens.TransactionHistory.route
+)
 
-        Box(
-            modifier = Modifier
-                .size(if (inMore) 51.dp else 39.dp)
-                .clip(RoundedCornerShape(50))
-                .background(if (item.hideIcon || !inMore) Color.Transparent else iconBackgroundColor),
-            contentAlignment = Alignment.Center
-        ) {
-            if (!item.hideIcon) if (item.svgIcon != null) Icon(
-                painter = painterResource(R.drawable.refund),
-                contentDescription = item.title,
-                modifier = Modifier.size(24.dp),
-                tint = primary500
-            )
-            else Icon(
+val settlement = BottomNavigationBarItem(
+    title = "Settlement", icon = Icons.Outlined.Handshake, route = Screens.Settlement.route
+)
 
-                imageVector = item.icon,
-                contentDescription = item.title,
-                modifier = Modifier.size(24.dp),
-                tint = primary500
-            )
-        }
+val settings = BottomNavigationBarItem(
+    title = "Settings", icon = Icons.Outlined.Settings, route = Screens.Settings.route
+)
 
-        Spacer(modifier = Modifier.height(if (inMore) 8.dp else 4.dp))
+val helpAndSupport = BottomNavigationBarItem(
+    title = "Help & Support", icon = Icons.Outlined.Info, route = Screens.HelpAndSupport.route
+)
 
-        Text(
-            item.title,
-            textAlign = TextAlign.Center,
-            minLines = minLines,
-            maxLines = maxLines,
-            fontSize = if (inMore) 14.sp else 12.sp,
-            fontWeight = if (inMore) FontWeight.Normal else FontWeight.SemiBold,
-            color = if (item.hideIcon) primary100 else primary500,
-        )
-    }
-}
+val itemsInMore = listOf<BottomNavigationBarItem>(
+    transactionHistory,
+    notifications,
+    settlement,
+    settings,
+    helpAndSupport,
+)
 
 var selectedBottomNavigationBarItem: BottomNavigationBarItem = home
 
@@ -331,11 +293,11 @@ fun MyBottomNavigationBar(
                 })
 
             Item(
-                notifications,
+                refund,
                 selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
-                    selectedBottomNavigationBarItem = notifications
+                    selectedBottomNavigationBarItem = refund
                     navController.navigate(selectedBottomNavigationBarItem.route)
                 })
 
@@ -348,5 +310,56 @@ fun MyBottomNavigationBar(
                     onClickShowMoreItems()
                 })
         }
+    }
+}
+
+@Composable
+fun Item(
+    item: BottomNavigationBarItem,
+    selected: BottomNavigationBarItem,
+    onSelected: () -> Unit,
+    modifier: Modifier = Modifier,
+    minLines: Int = 1,
+    maxLines: Int = 1,
+    inMore: Boolean = false,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable {
+            onSelected()
+        }, verticalArrangement = Arrangement.Bottom
+    ) {
+
+        Box(
+            modifier = Modifier
+                .size(if (inMore) 51.dp else 39.dp)
+                .clip(RoundedCornerShape(50))
+                .background(if (item.hideIcon || !inMore) Color.Transparent else iconBackgroundColor),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!item.hideIcon) if (item.svgIcon != null) Icon(
+                painter = painterResource(R.drawable.refund),
+                contentDescription = item.title,
+                modifier = Modifier.size(24.dp),
+                tint = primary500
+            )
+            else Icon(
+                imageVector = item.icon,
+                contentDescription = item.title,
+                modifier = Modifier.size(24.dp),
+                tint = primary500
+            )
+        }
+
+        Spacer(modifier = Modifier.height(if (inMore) 8.dp else 4.dp))
+
+        Text(
+            item.title,
+            textAlign = TextAlign.Center,
+            minLines = minLines,
+            maxLines = maxLines,
+            fontSize = if (inMore) 14.sp else 12.sp,
+            fontWeight = if (inMore) FontWeight.Normal else FontWeight.SemiBold,
+            color = if (item.hideIcon) primary100 else primary500,
+        )
     }
 }
