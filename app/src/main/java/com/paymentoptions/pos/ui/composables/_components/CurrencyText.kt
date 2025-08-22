@@ -28,7 +28,7 @@ fun CurrencyText(
         text = buildAnnotatedString {
             if (currency.isNotEmpty()) withStyle(
                 SpanStyle(
-                    color.copy(alpha = 0.7f), fontWeight = FontWeight.Medium
+                    color.copy(alpha = 0.7f), fontWeight = FontWeight.Normal
                 )
             ) { append(currency + (if (addSpaceAfterCurrency) " " else "")) }
 

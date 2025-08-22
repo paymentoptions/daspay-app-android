@@ -81,7 +81,7 @@ fun BottomSectionContent(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            CurrencyText(currency = currency, amount = transaction?.amount.toString())
+            CurrencyText(currency = currency, amount = transaction?.amount.toString(), fontWeight = FontWeight(980))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -182,7 +182,8 @@ fun BottomSectionContent(
 
         NoteChip(
             text = "Refunded amount will be transferred to the original source of payment",
-            modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            fontWeight = FontWeight.W600
         )
 
         Spacer(modifier = Modifier.height(20.dp))

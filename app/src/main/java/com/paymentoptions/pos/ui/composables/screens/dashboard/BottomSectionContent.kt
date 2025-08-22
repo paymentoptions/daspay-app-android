@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -142,7 +143,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             CurrencyText(
                 currency = currency,
                 amount = receivalAmount.formatToPrecisionString(),
-                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                fontWeight = FontWeight(990)
             )
 
             Spacer(modifier = Modifier.height(16.dp))

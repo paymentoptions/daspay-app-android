@@ -355,7 +355,7 @@ fun CurrencyRow(currency: String, amount: Float, width: Dp = 160.dp) {
         CurrencyText(
             currency = currency,
             amount = "",
-            fontSize = 16.sp,
+            fontSize = 14.sp,
             color = primary500,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.End,
@@ -365,9 +365,9 @@ fun CurrencyRow(currency: String, amount: Float, width: Dp = 160.dp) {
         CurrencyText(
             currency = "",
             amount = "+" + amount.formatToPrecisionString(),
-            fontSize = 16.sp,
+            fontSize = 14.sp,
             color = primary500,
-            fontWeight = FontWeight.Bold,
+            fontWeight = FontWeight(980),
             textAlign = TextAlign.End,
             modifier = Modifier.weight(1f)
         )

@@ -82,7 +82,7 @@ fun FoodSummary(
 
             Handler().postDelayed({
                 setShowToast(false)
-            }, 1000)
+            }, 1500)
         }
     }
 

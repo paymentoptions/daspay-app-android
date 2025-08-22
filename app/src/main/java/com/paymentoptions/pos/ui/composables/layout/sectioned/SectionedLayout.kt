@@ -28,7 +28,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -47,6 +52,7 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
+
 
 val LOGO_TOP_PADDING_IN_DP = 45.dp
 val LOGO_HEIGHT_IN_DP = 50.dp
@@ -141,7 +147,7 @@ fun SectionedLayout(
                             .plus(LOGO_HEIGHT_IN_DP) else 0.dp
                     )
                     .height(IntrinsicSize.Min)
-                    .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
+                    .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp )
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(2f)
                     .clip(
@@ -150,13 +156,23 @@ fun SectionedLayout(
                         )
                     )
                     .background(color = Color.White)
+                    .drawBehind {
+                        // fade bottom 5.dp to transparent
+                        drawRect(
+                            color = Color.White,
+                            topLeft = Offset(0f, size.height - 25.dp.toPx()),
+                            size = Size(size.width, 25.dp.toPx()),
+                            blendMode = BlendMode.Darken // clears pixels, making them transparent
+                        )
+                    }
                     .innerShadow(
                         color = innerShadow,
                         blur = 20.dp,
                         spread = 10.dp,
                         cornersRadius = 0.dp,
                         offsetX = 0.dp,
-                        offsetY = 0.dp
+                        offsetY = 0.dp,
+                        showBottom = false
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {

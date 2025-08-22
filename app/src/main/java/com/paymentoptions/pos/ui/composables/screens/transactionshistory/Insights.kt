@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens.transactionshistory
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,14 +34,18 @@ import co.yml.charts.ui.barchart.models.BarData
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.borderColor
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.primary300
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.ui.theme.shadowColor2
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 import java.time.OffsetDateTime
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
@@ -255,6 +260,7 @@ fun Insights(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .border(width = 2.dp, color = borderColor, shape = RoundedCornerShape(20.dp))
                 .background(
                     brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(20.dp)
                 )

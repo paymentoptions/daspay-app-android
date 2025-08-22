@@ -24,14 +24,14 @@ fun ToggleBottomNavigationBarButton(
 ) {
     IconButton(
         onClick = onClick, modifier = modifier
-            .width(40.dp)
+            .width(45.dp)
             .height(28.dp)
             .background(
                 brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(
-                    topStartPercent = 50,
-                    topEndPercent = 50,
-                    bottomStartPercent = 0,
-                    bottomEndPercent = 0
+                    topStartPercent = 90,
+                    topEndPercent = 90,
+                    bottomStartPercent = 30,
+                    bottomEndPercent = 30
                 )
             )
 //            .innerShadow(

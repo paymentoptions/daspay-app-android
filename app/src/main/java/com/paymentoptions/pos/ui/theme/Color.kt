@@ -16,6 +16,7 @@ val linkColor = Color(0xFF0B317A)
 val bannerBgColor = Color(0xFF336EFF)
 val iconBackgroundColor = Color(0xFFE7F6FF)
 
+
 val green100 = Color(0xFFC4FFD8)
 val green200 = Color(0xFF44A101)
 val green500 = Color(0xFF03992B)

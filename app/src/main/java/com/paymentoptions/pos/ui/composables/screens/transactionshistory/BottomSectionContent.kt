@@ -53,6 +53,7 @@ import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.ui.theme.shadowColor2
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
@@ -313,7 +314,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                CurrencyText(currency = currency, amount = receivalAmount.formatToPrecisionString())
+                CurrencyText(currency = currency, amount = receivalAmount.formatToPrecisionString(), fontWeight = FontWeight(980))
 
                 Spacer(modifier = Modifier.height(16.dp))
 

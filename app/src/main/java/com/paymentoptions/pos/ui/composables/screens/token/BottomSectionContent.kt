@@ -27,8 +27,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -40,11 +43,17 @@ import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.linkColor
 import com.paymentoptions.pos.ui.theme.noBorder
+import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.primary300
 import com.paymentoptions.pos.ui.theme.primary50
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.ui.theme.primary75
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.ui.theme.shadowColor2
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 
 
 @Composable
@@ -95,14 +104,23 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             val emptyBoxCount = 6 - otp.value.length
 
             otp.value.toList().forEachIndexed { index, digit ->
-                MyElevatedCard(modifier = Modifier.weight(1f)) {
+                MyElevatedCard(modifier = Modifier.weight(1.0f)) {
                     OutlinedButton(
                         enabled = false,
                         onClick = {},
                         border = noBorder,
                         modifier = Modifier
                             .height(70.dp)
+                            .innerShadow(
+                                color = primary300,
+                                blur = 15.dp,
+                                spread = 5.dp,
+                                cornersRadius = 5.dp,
+                                offsetX = 0.dp,
+                                offsetY = 0.dp
+                            )
                             .background(primary50)
+
                     ) {
                         Text(
                             digit.toString(),
@@ -126,7 +144,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     ) {
                         Text(
                             "", color = primary500, fontSize = 30.sp, fontWeight = FontWeight.Normal
-                        )
+                            )
                     }
                 }
             }
@@ -177,6 +195,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 lastClicked = 1
                             }, border = noBorder, modifier = Modifier
                                 .fillMaxWidth()
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked == 1) 50.dp else 1.dp,
+                                    spread = if (lastClicked == 1) 10.dp else 1.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
+                                )
                                 .height(70.dp)
 
                         ) {
@@ -200,6 +226,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             border = noBorder,
                             modifier = Modifier
                                 .height(70.dp)
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked == 2) 50.dp else 1.dp,
+                                    spread = if (lastClicked == 2) 10.dp else 1.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
+                                )
                                 .fillMaxWidth()
                         ) {
                             Text(
@@ -222,6 +256,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             border = noBorder,
                             modifier = Modifier
                                 .height(70.dp)
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked == 3) 50.dp else 1.dp,
+                                    spread = if (lastClicked == 3) 10.dp else 1.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
+                                )
                                 .fillMaxWidth()
                         ) {
                             Text(
@@ -251,6 +293,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             border = noBorder,
                             modifier = Modifier
                                 .height(70.dp)
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked == 4) 50.dp else 1.dp,
+                                    spread = if (lastClicked == 4) 10.dp else 1.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
+                                )
                                 .fillMaxWidth()
                         ) {
                             Text(
@@ -273,6 +323,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             border = noBorder,
                             modifier = Modifier
                                 .height(70.dp)
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked == 5) 50.dp else 1.dp,
+                                    spread = if (lastClicked == 5) 10.dp else 1.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
+                                )
                                 .fillMaxWidth()
                         ) {
                             Text(
@@ -295,6 +353,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             border = noBorder,
                             modifier = Modifier
                                 .height(70.dp)
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked == 6) 50.dp else 1.dp,
+                                    spread = if (lastClicked == 6) 10.dp else 1.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
+                                )
                                 .fillMaxWidth()
                         ) {
                             Text(
@@ -324,6 +390,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             border = noBorder,
                             modifier = Modifier
                                 .height(70.dp)
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked == 7) 50.dp else 1.dp,
+                                    spread = if (lastClicked == 7) 10.dp else 1.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
+                                )
                                 .fillMaxWidth()
                         ) {
                             Text(
@@ -347,6 +421,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             border = noBorder,
                             modifier = Modifier
                                 .height(70.dp)
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked == 8) 50.dp else 1.dp,
+                                    spread = if (lastClicked == 8) 10.dp else 1.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
+                                )
                                 .fillMaxWidth()
                         ) {
                             Text(
@@ -369,6 +451,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             border = noBorder,
                             modifier = Modifier
                                 .height(70.dp)
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked == 9) 50.dp else 1.dp,
+                                    spread = if (lastClicked == 9) 10.dp else 1.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
+                                )
                                 .fillMaxWidth()
                         ) {
                             Text(
@@ -403,6 +493,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             border = noBorder,
                             modifier = Modifier
                                 .height(70.dp)
+                                .innerShadow(
+                                    color = innerShadow,
+                                    blur = if (lastClicked == 0) 50.dp else 1.dp,
+                                    spread = if (lastClicked == 0) 10.dp else 1.dp,
+                                    cornersRadius = 8.dp,
+                                    offsetX = 0.dp,
+                                    offsetY = 0.dp
+                                )
                                 .fillMaxWidth()
                         ) {
                             Text(

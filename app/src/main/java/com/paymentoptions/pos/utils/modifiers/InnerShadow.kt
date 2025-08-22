@@ -5,10 +5,13 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -20,6 +23,7 @@ fun Modifier.innerShadow(
     blur: Dp = 0.dp,
     offsetY: Dp = 0.dp,
     offsetX: Dp = 0.dp,
+    showBottom:Boolean = true
 ) = drawWithContent {
 
     drawContent()
@@ -66,12 +70,12 @@ fun Modifier.innerShadow(
             rect.bottom
         }
         paint.color = Color.Black
-
+        val shadowBottom = if (showBottom) bottom - spread.toPx() / 2 else bottom + spread.toPx() +50
         it.drawRoundRect(
             left = left + spread.toPx() / 2,
             top = top + spread.toPx() / 2,
             right = right - spread.toPx() / 2,
-            bottom = bottom - spread.toPx() / 2,
+            shadowBottom,
             cornersRadius.toPx(),
             cornersRadius.toPx(),
             paint
@@ -80,3 +84,10 @@ fun Modifier.innerShadow(
         frameworkPaint.maskFilter = null
     }
 }
+
+
+
+
+
+
+

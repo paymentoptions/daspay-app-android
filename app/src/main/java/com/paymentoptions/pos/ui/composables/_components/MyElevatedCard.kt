@@ -22,7 +22,7 @@ fun MyElevatedCard(
         colors = CardDefaults.elevatedCardColors(
             containerColor = Color.White,
         ), elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 4.dp
+            defaultElevation = 1.dp
         ), shape = RoundedCornerShape(6.dp), modifier = modifier
             .padding(1.dp)
             .conditional(isSelected) {
@@ -38,8 +38,8 @@ fun MyElevatedCard(
             .conditional(!isSelected) {
                 innerShadow(
                     color = shadowColor2,
-                    blur = 1.dp,
-                    spread = 1.dp,
+                    blur = 0.3.dp,
+                    spread = 0.3.dp,
                     cornersRadius = 6.dp,
                     offsetX = 0.dp,
                     offsetY = 0.dp

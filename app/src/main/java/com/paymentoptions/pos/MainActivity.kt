@@ -1,6 +1,8 @@
 package com.paymentoptions.pos
 
 import android.content.pm.ActivityInfo
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -14,14 +16,18 @@ import com.paymentoptions.pos.device.NetworkStatusComposable
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.theminesec.sdk.headless.HeadlessSetup
 import kotlinx.coroutines.launch
+import androidx.core.graphics.drawable.toDrawable
 
 class MainActivity : FragmentActivity() {
 
     private fun immersiveMode() {
         // Let app draw behind system bars
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
+       // window.setBackgroundDrawableResource(android.R.color.transparent)
         // Get controller to manage system bars
+        window.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
         val controller = WindowCompat.getInsetsController(window, window.decorView)
         controller.systemBarsBehavior =
             WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE

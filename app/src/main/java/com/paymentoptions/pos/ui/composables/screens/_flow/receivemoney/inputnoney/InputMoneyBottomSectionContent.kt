@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.inputnoney
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -41,12 +42,14 @@ import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInpu
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.ReceiveMoneyFlowStage
 import com.paymentoptions.pos.ui.composables.screens._flow.receivemoney.formatAmount
+import com.paymentoptions.pos.ui.theme.borderColor
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.ui.theme.shadowColor
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
@@ -97,6 +100,7 @@ fun InputMoneyBottomSectionContent(
                 .clip(RoundedCornerShape(8.dp))
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .padding(bottom = 0.dp)
+                .border(width = 2.dp, color = shadowColor, shape = RoundedCornerShape(5.dp))
                 .background(iconBackgroundColor),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -149,7 +153,7 @@ fun InputMoneyBottomSectionContent(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            CurrencyText(currency = currency, amount = formattedAmount)
+            CurrencyText(currency = currency, amount = formattedAmount, fontWeight = FontWeight(990))
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -236,6 +240,7 @@ fun InputMoneyBottomSectionContent(
                             currency = currency,
                             amount = "10",
                             fontSize = 16.sp,
+                            fontWeight = FontWeight(980),
                             addSpaceAfterCurrency = true
                         )
                     })
@@ -253,7 +258,8 @@ fun InputMoneyBottomSectionContent(
                             currency = currency,
                             amount = "${(it + 1) * 50}",
                             fontSize = 16.sp,
-                            addSpaceAfterCurrency = true
+                            addSpaceAfterCurrency = true,
+                            fontWeight = FontWeight(980)
                         )
                     })
             }

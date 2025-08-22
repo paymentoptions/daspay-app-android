@@ -6,7 +6,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,7 +40,10 @@ import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitle
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderThin
+import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.ui.theme.shadowColor2
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -92,69 +97,91 @@ fun MyDropdown(
         contentColor = primary500,
         dragHandle = {}) {
 
-        ScreenTitleWithCloseButton(
-            navController = navController,
-            title = "Transaction Period",
-            onClose = { expanded = false },
-            fontSize = 16.sp,
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
-                    vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+                .innerShadow(
+                    color = innerShadow,
+                    blur = 20.dp,
+                    spread = 10.dp,
+                    cornersRadius = 0.dp,
+                    offsetX = 0.dp,
+                    offsetY = 0.dp
                 )
-                .background(Color.White)
-        )
-
-        filters.entries.forEachIndexed { index, option ->
+                .fillMaxWidth()
+                .height(340.dp)
+        ) {
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White, RoundedCornerShape(20.dp))
+                    .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                verticalArrangement = Arrangement.Top
+            ){
+            ScreenTitleWithCloseButton(
+                navController = navController,
+                title = "Transaction Period",
+                onClose = { expanded = false },
+                fontSize = 16.sp,
+                modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Row(
+                    .padding(
+                        horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
+                        vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+                    )
+                    .background(Color.White)
+            )
+
+            filters.entries.forEachIndexed { index, option ->
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(
-                            start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
-                            end = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP.plus(10.dp)
-                        )
-                        .clickable {
-                            onFilterChange(option)
-//                            expanded = false
-                        },
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = option.value,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = primary500
-                    )
-
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .size(30.dp)
-                            .background(Color.White, shape = RoundedCornerShape(50))
-                            .border(borderThin, shape = RoundedCornerShape(50)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(
+                                start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
+                                end = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP.plus(10.dp)
+                            )
+                            .clickable {
+                                onFilterChange(option)
+//                            expanded = false
+                            },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        if (selectedFilter == option) Box(
-                            modifier = Modifier
-                                .size(18.dp)
-                                .background(primary500, shape = RoundedCornerShape(50))
+                        Text(
+                            text = option.value,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary500
                         )
-                    }
-                }
 
-                if (index != filters.entries.size - 1) HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth(),
-                    thickness = 2.dp,
-                    color = Color.LightGray.copy(alpha = 0.2f)
-                )
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .background(Color.White, shape = RoundedCornerShape(50))
+                                .border(borderThin, shape = RoundedCornerShape(50)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (selectedFilter == option) Box(
+                                modifier = Modifier
+                                    .size(18.dp)
+                                    .background(primary500, shape = RoundedCornerShape(50))
+                            )
+                        }
+                    }
+
+                    if (index != filters.entries.size - 1) HorizontalDivider(
+                        modifier = Modifier.fillMaxWidth(),
+                        thickness = 2.dp,
+                        color = Color.LightGray.copy(alpha = 0.2f)
+                    )
+                }
             }
         }
     }
+}
 }

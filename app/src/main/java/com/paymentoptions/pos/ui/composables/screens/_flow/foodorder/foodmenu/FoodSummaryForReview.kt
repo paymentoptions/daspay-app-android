@@ -46,6 +46,7 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.MAX_QUANTIT
 import com.paymentoptions.pos.ui.theme.borderColor
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
+import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.ui.theme.red500
@@ -111,7 +112,7 @@ fun FoodSummaryForReview(
 
         Handler().postDelayed({
             setShowToast(false)
-        }, 1000)
+        }, 2000)
     }
 
     Row(
@@ -139,7 +140,7 @@ fun FoodSummaryForReview(
                         topEnd = borderRadius,
                         bottomStart = if (isLongClicked) 0.dp else borderRadius,
                         bottomEnd = borderRadius
-                    ), ambientColor = shadowColor, spotColor = shadowColor
+                    ), ambientColor = borderColor, spotColor = borderColor, clip = false
                 )
                 .combinedClickable(onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)

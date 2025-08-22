@@ -202,9 +202,10 @@ fun FoodMenuBottomSectionContent(
                     CurrencyText(
                         currency = "HKD",
                         amount = cartState.itemTotal.formatToPrecisionString(),
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         color = primary500,
-                        addSpaceAfterCurrency = true
+                        addSpaceAfterCurrency = true,
+                        fontWeight = FontWeight(980)
                     )
                 }
 

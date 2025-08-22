@@ -45,15 +45,15 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
             Text(
                 foodItem.item.ProductName,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight(980),
                 color = primary500,
                 overflow = TextOverflow.Ellipsis
             )
 
             Text(
                 "+${foodItem.item.ProductPrice.formatToPrecisionString()}",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                fontWeight = FontWeight(980),
                 color = primary500
             )
         }
