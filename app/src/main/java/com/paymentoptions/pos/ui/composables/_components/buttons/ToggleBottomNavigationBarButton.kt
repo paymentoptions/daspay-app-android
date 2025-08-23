@@ -11,11 +11,25 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Outline
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.ui.theme.borderColor
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
+import com.paymentoptions.pos.ui.theme.containerToggleBottomButtonGradientBrush
+import com.paymentoptions.pos.ui.theme.innerShadow
+import com.paymentoptions.pos.ui.theme.shadowColor
+import com.paymentoptions.pos.ui.theme.shadowColor2
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 
 @Composable
 fun ToggleBottomNavigationBarButton(
@@ -24,15 +38,17 @@ fun ToggleBottomNavigationBarButton(
 ) {
     IconButton(
         onClick = onClick, modifier = modifier
-            .width(45.dp)
-            .height(28.dp)
+            .width(65.dp)
+            .height(38.dp)
+            .shadow(spotColor = borderColor, ambientColor = borderColor, elevation = 6.dp)
             .background(
-                brush = containerBackgroundGradientBrush, shape = RoundedCornerShape(
-                    topStartPercent = 90,
-                    topEndPercent = 90,
+                brush = containerToggleBottomButtonGradientBrush, shape = RoundedCornerShape(
+                    topStartPercent = 60,
+                    topEndPercent = 60,
                     bottomStartPercent = 30,
                     bottomEndPercent = 30
-                )
+                ),
+
             )
 //            .innerShadow(
 //                color = innerShadow,
@@ -48,9 +64,16 @@ fun ToggleBottomNavigationBarButton(
             contentDescription = "Back button",
             tint = Color(0xFFA2C9DF),
             modifier = Modifier
-                .size(20.dp)
+                .size(25.dp)
                 .rotate(180f)
                 .offset(y = (5).dp)
         )
     }
 }
+
+
+
+
+
+
+

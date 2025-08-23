@@ -17,4 +17,6 @@ val textHorizontalGradientBrush =
     Brush.horizontalGradient(colorStops = arrayOf(0.4f to primary300, 1f to primary100))
 val textVerticalGradientBrush =
     Brush.verticalGradient(colorStops = arrayOf(0.5f to Color.White, 1f to Color(0xFF436CFB)))
-
+val containerToggleBottomButtonGradientBrush =
+    Brush.verticalGradient(colors = listOf(shadowColor2.copy(alpha = 0.7F), Color.White ))
+//Color(0xFFE6F0FF)

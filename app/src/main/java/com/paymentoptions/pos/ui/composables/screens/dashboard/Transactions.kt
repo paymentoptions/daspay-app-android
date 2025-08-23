@@ -68,6 +68,16 @@ fun Transactions(
                             "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
                             Toast.LENGTH_SHORT
                         ).show()
+                    }, onSwipeLeft = {
+                        if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
+                            longClickedTransactionId = it
+                        } else Toast.makeText(
+                            context,
+                            "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }, onSwipeRight = {
+                        longClickedTransactionId = ""
                     })
             }
         }

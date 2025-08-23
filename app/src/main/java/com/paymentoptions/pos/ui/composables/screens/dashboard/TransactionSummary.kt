@@ -3,6 +3,7 @@ package com.paymentoptions.pos.ui.composables.screens.dashboard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,12 +19,17 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -92,6 +98,8 @@ fun TransactionSummary(
     transaction: TransactionListDataRecord,
     longClickedTransactionId: String = "",
     onLongClick: (String) -> Unit = {},
+    onSwipeLeft: (String) -> Unit = {},   // 👈 added
+    onSwipeRight: (String) -> Unit = {}
 ) {
     val successful = transaction.status == "SUCCESSFUL"
     val transactionAmount = transaction.amount.toFloat()
@@ -107,6 +115,7 @@ fun TransactionSummary(
     val hourPart = SimpleDateFormat("hh:mm:ss a").format(date)
     val borderRadius = 20.dp
     val haptics = LocalHapticFeedback.current
+    var offsetX by remember { mutableStateOf(0f) }
 
     val dateStr = buildAnnotatedString {
         withStyle(
@@ -150,6 +159,25 @@ fun TransactionSummary(
                         bottomEnd = borderRadius
                     ), ambientColor = borderColor
                 )
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            if (offsetX > 200f) {
+                                // Swiped
+
+                                onSwipeRight(transaction.TransactionID.toString())
+                            } else if (offsetX < -200f) {
+                                // Swiped Left
+
+                                onSwipeLeft(transaction.TransactionID.toString())
+                            }
+                            offsetX = 0f // reset position
+                        },
+                        onHorizontalDrag = { _, dragAmount ->
+                            offsetX += dragAmount
+                        }
+                    )
+                }
                 .combinedClickable(onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)
                 }, onLongClick = {
