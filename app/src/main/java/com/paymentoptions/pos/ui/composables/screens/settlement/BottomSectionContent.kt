@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paymentoptions.pos.ui.theme.shadowColor
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -85,7 +86,7 @@ fun BottomSectionContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
+        /**Row(
             Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
@@ -123,6 +124,66 @@ fun BottomSectionContent(
                 modifier = Modifier
                     .padding(6.dp)
                     .clip(RoundedCornerShape(4.dp))
+                    .background(if (!showCurrent) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                    .padding(10.dp)
+                    .weight(1f)
+                    .noRippleClickable(enabled = showCurrent) {
+                        showCurrent = false
+                    },
+                textAlign = TextAlign.Center,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = primary600
+            )
+        }**/
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .border(width = 2.dp, color = shadowColor, shape = RoundedCornerShape(5.dp))
+                .innerShadow(
+                    color = innerShadow,
+                    blur = 8.dp,
+                    spread = 5.dp,
+                    cornersRadius = 8.dp,
+                    offsetX = 0.dp,
+                    offsetY = 0.dp
+                )
+                .background(iconBackgroundColor),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Text(
+                text = "Current",
+                modifier = Modifier
+                    .padding(6.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .border(
+                        width = 1.dp,
+                        color = if (showCurrent) Color(0xFFDCEAFE) else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .background(if (showCurrent) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                    .padding(10.dp)
+                    .weight(1f)
+                    .noRippleClickable(enabled = !showCurrent) {
+                        showCurrent = true
+                    },
+                textAlign = TextAlign.Center,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = primary600
+            )
+            Text(
+                text = "Settled Batch",
+                modifier = Modifier
+                    .padding(6.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .border(
+                        width = 1.dp,
+                        color = if (!showCurrent) Color(0xFFDCEAFE) else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp)
+                    )
                     .background(if (!showCurrent) Color.White.copy(alpha = 0.9f) else Color.Transparent)
                     .padding(10.dp)
                     .weight(1f)

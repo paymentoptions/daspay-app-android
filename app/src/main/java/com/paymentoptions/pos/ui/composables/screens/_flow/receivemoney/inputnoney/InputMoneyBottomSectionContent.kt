@@ -101,6 +101,14 @@ fun InputMoneyBottomSectionContent(
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 .padding(bottom = 0.dp)
                 .border(width = 2.dp, color = shadowColor, shape = RoundedCornerShape(5.dp))
+                .innerShadow(
+                    color = innerShadow,
+                    blur = 8.dp,
+                    spread = 5.dp,
+                    cornersRadius = 8.dp,
+                    offsetX = 0.dp,
+                    offsetY = 0.dp
+                )
                 .background(iconBackgroundColor),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -110,6 +118,12 @@ fun InputMoneyBottomSectionContent(
                 modifier = Modifier
                     .padding(6.dp)
                     .clip(RoundedCornerShape(4.dp))
+                    .border(
+                        width = 1.5.dp,
+                        // Border only shows when this tab is selected
+                        color = if (showReceiveMoney) shadowColor else Color.Transparent,
+                        shape = RoundedCornerShape(4.dp)
+                    )
                     .background(if (showReceiveMoney) Color.White.copy(alpha = 0.9f) else Color.Transparent)
                     .padding(10.dp)
                     .weight(1f)
@@ -126,6 +140,11 @@ fun InputMoneyBottomSectionContent(
                 modifier = Modifier
                     .padding(6.dp)
                     .clip(RoundedCornerShape(4.dp))
+                    .border(
+                        width = 1.5.dp,
+                        color = if (!showReceiveMoney) shadowColor else Color.Transparent,
+                        shape = RoundedCornerShape(4.dp)
+                    )
                     .background(if (!showReceiveMoney) Color.White.copy(alpha = 0.9f) else Color.Transparent)
                     .padding(10.dp)
                     .weight(1f)

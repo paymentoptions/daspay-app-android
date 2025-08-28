@@ -280,7 +280,8 @@ fun ReceiveMoneyFlow(
                                     modifier = Modifier
                                         .padding(horizontal = 20.dp)
                                         .fillMaxWidth()
-                                        .height(240.dp)
+                                        //.height(240.dp)
+                                        .height(220.dp)
                                         .clip(
                                             shape = RoundedCornerShape(16.dp)
                                         )
@@ -474,7 +475,8 @@ fun ReceiveMoneyFlow(
                                                         Color.White,
                                                         shape = RoundedCornerShape(10.dp)
                                                     )
-                                                    .padding(horizontal = 10.dp, vertical = 20.dp)
+                                                    //.padding(horizontal = 10.dp, vertical = 20.dp)
+                                                    .padding(horizontal = 10.dp, vertical = 16.dp)
                                             )
 
                                             ShareButton(
@@ -490,7 +492,8 @@ fun ReceiveMoneyFlow(
                                                         Color.White,
                                                         shape = RoundedCornerShape(10.dp)
                                                     )
-                                                    .padding(horizontal = 10.dp, vertical = 20.dp)
+                                                    //.padding(horizontal = 10.dp, vertical = 20.dp)
+                                                    .padding(horizontal = 10.dp, vertical = 16.dp)
                                             )
 
                                             ScanButton(
@@ -506,7 +509,8 @@ fun ReceiveMoneyFlow(
                                                         Color.White,
                                                         shape = RoundedCornerShape(10.dp)
                                                     )
-                                                    .padding(horizontal = 10.dp, vertical = 20.dp)
+                                                    //.padding(horizontal = 10.dp, vertical = 20.dp)
+                                                    .padding(horizontal = 10.dp, vertical = 16.dp)
                                             )
                                         }
                                     }

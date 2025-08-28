@@ -45,7 +45,7 @@ fun FoodCategories(
         foodCategories.forEach {
             val isSelected = selectedFoodCategory == it
 
-            Box(
+            /**Box(
                 modifier = Modifier
                     .conditional(isSelected) {
                         shadow(
@@ -64,6 +64,28 @@ fun FoodCategories(
                 Text(
                     text = it.CategoryName,
                     color = if (isSelected) primary600 else purple50,
+                    fontSize = 14.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                )
+            }**/
+            Box(
+                modifier = Modifier
+                    .conditional(isSelected) {
+                        shadow(
+                            14.dp, spotColor = borderColor, shape = RoundedCornerShape(10.dp)
+                        ).border(borderThin, shape = RoundedCornerShape(10.dp))
+                    }
+                    .background(
+                        if (isSelected) Color.White else Color(0xFFDFF0FC),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                    .padding(10.dp)
+                    .noRippleClickable(enabled = !isSelected) { onClick(it) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = it.CategoryName,
+                    color = primary600,
                     fontSize = 14.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                 )

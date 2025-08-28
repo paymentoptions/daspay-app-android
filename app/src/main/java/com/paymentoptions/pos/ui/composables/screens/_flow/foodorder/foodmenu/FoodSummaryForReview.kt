@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
@@ -62,6 +64,7 @@ fun FoodSummaryForReview(
     updateCartSate: (Cart) -> Unit, createToast: (ToastData) -> Unit,
     setShowToast: (Boolean) -> Unit,
 ) {
+    var offsetX by remember { mutableStateOf(0f) }
     val context = LocalContext.current
 
     val borderRadius = 20.dp
@@ -134,6 +137,23 @@ fun FoodSummaryForReview(
             ),
             modifier = Modifier
                 .fillMaxWidth()
+                // to handle swipe
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            if (offsetX < -200f) {
+                                updateLongClickedFoodItem(foodItem)
+                            } else if (offsetX > 200f) {
+                                updateLongClickedFoodItem(null)
+                            }
+                            offsetX = 0f
+                        },
+                        onHorizontalDrag = { _, dragAmount ->
+                            offsetX += dragAmount
+                        }
+                    )
+                }
+
                 .shadow(
                     elevation = if (isLongClicked) 8.dp else 6.dp, shape = RoundedCornerShape(
                         topStart = if (isLongClicked) 0.dp else borderRadius,

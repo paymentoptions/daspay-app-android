@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -117,6 +118,12 @@ fun TransactionSummary(
     val haptics = LocalHapticFeedback.current
     var offsetX by remember { mutableStateOf(0f) }
 
+    val statusColor = when {
+        transaction.TransactionType.uppercase() == "REFUND" -> Color(0xFFF97316)  // Orange
+        transaction.status.uppercase() == "SUCCESSFUL" -> Color(0xFF22C55E)  // Green
+        else -> Color(0xFFEF4444)  // Red
+    }
+
     val dateStr = buildAnnotatedString {
         withStyle(
             SpanStyle(
@@ -141,7 +148,7 @@ fun TransactionSummary(
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        Card(
+        /**Card(
             colors = CardDefaults.cardColors().copy(containerColor = Color.White),
             border = if (successful) borderThin else borderThinError,
             shape = RoundedCornerShape(
@@ -158,6 +165,25 @@ fun TransactionSummary(
                         bottomStart = if (isLongClicked) 0.dp else borderRadius,
                         bottomEnd = borderRadius
                     ), ambientColor = borderColor
+                )
+                **/
+
+
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            border = BorderStroke(0.5.dp, Color.Black.copy(alpha = 0.1f)),
+            shape = RoundedCornerShape(
+                topStart = if (isLongClicked) 0.dp else borderRadius,
+                topEnd = borderRadius,
+                bottomStart = if (isLongClicked) 0.dp else borderRadius,
+                bottomEnd = borderRadius
+            ),
+            modifier = Modifier
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(borderRadius),
+                    ambientColor = Color.Black.copy(alpha = 0.2f),
+                    spotColor = Color.Black.copy(alpha = 0.2f)
                 )
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(
@@ -191,7 +217,7 @@ fun TransactionSummary(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                if (!isLongClicked) Box(
+                /**if (!isLongClicked) Box(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(8.dp))
@@ -201,6 +227,18 @@ fun TransactionSummary(
                         painter = painterResource(if (isCardTransaction) R.drawable.icon_card else R.drawable.icon_money),
                         contentDescription = "Icon",
                         tint = purple50
+                    )
+                }**/
+                if (!isLongClicked) Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(iconBackgroundColor), contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(if (isCardTransaction) R.drawable.icon_card else R.drawable.icon_money),
+                        contentDescription = "Icon",
+                        tint = statusColor
                     )
                 }
 
@@ -227,7 +265,7 @@ fun TransactionSummary(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.weight(3f)
                 ) {
-                    Text(
+                    /**Text(
                         transaction.CurrencyCode,
                         textAlign = TextAlign.End,
                         color = if (isTransactionAmountPositive) green200 else Color.Red,
@@ -238,6 +276,21 @@ fun TransactionSummary(
                     Text(
                         text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
                         color = if (isTransactionAmountPositive) green500 else Color.Red,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        maxLines = 1
+                    )**/
+                    Text(
+                        transaction.CurrencyCode,
+                        textAlign = TextAlign.End,
+                        color = statusColor,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
+
+                    Text(
+                        text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
+                        color = statusColor,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
                         maxLines = 1
