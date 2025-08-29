@@ -443,4 +443,71 @@ data class ProductListResponse(
     val success: Boolean,
     val data: ProductListResponseData,
 )
+//Data model for APIs call POST External Device Complete Registration and GET External Device Confirmation
+
+@Serializable
+data class CompleteDeviceRegistrationResponse(
+    val status: Int,
+    val message: String,
+    val messageCode: String,//added this field based on error response
+    val success: Boolean
+)
+@Serializable
+data class ExternalConfigurationResponse(
+    val statusCode: Int,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: ExternalConfigData
+)
+@Serializable
+data class ExternalConfigData(
+    val deviceInfo: DeviceInfo,
+    val paymentMethod: List<DevicePaymentMethod>
+)
+@Serializable
+data class DeviceInfo(
+    val DeviceID: String,
+    val DeviceNumber: String,
+    val DASMID: String,
+    val DeviceMetadata: DeviceMetadata,
+    val DeviceName: String,
+    val DeviceType: String,
+    val Status: String,
+    val LastUsedAt: String,
+    val CreatedAt: String,
+    val UpdatedAt: String,
+    val Location: String? = null
+)
+@Serializable
+data class DeviceMetadata(
+    val os: String,
+    val version: String,
+    val manufacturer: String
+)
+@Serializable
+data class DevicePaymentMethod(
+    val DASMID: String,
+    val hasVISA: Boolean,
+    val hasMastercard: Boolean,
+    val hasJCB: Boolean,
+    val hasAmex: Boolean,
+    val hasUnionPay: Boolean,
+    val hasAlipay: Boolean,
+    val hasWechatpay: Boolean,
+    val hasApplePay: Boolean,
+    val hasGooglePay: Boolean,
+    val hasDinersClub: Boolean,
+    val hasGCash: Boolean,
+    val hasPayPay: Boolean,
+    val hasKonbini: Boolean,
+    val hasPayEasy: Boolean
+)
+@Serializable
+data class CompleteDeviceRegistrationRequest(
+    val UniqueCode: String,
+    val DeviceNumber: String,
+    val DeviceMetadata: DeviceMetadata,
+    val DeviceType: String = "MOBILE"
+)
 // -------------------------------------------------------

@@ -31,7 +31,7 @@ import com.paymentoptions.pos.ui.theme.shadowColor
 import com.paymentoptions.pos.ui.theme.shadowColor2
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 
-@Composable
+/**@Composable
 fun ToggleBottomNavigationBarButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -69,9 +69,37 @@ fun ToggleBottomNavigationBarButton(
                 .offset(y = (5).dp)
         )
     }
+}**/
+@Composable
+fun ToggleBottomNavigationBarButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(
+        onClick = onClick, modifier = modifier
+            .width(65.dp)
+            .height(38.dp)
+            .shadow(spotColor = borderColor, ambientColor = borderColor, elevation = 6.dp)
+            .background(
+                brush = containerToggleBottomButtonGradientBrush, shape = RoundedCornerShape(
+                    topStartPercent = 60,
+                    topEndPercent = 60,
+                    bottomStartPercent = 30,
+                    bottomEndPercent = 30
+                ),
+            )
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.down_arrow),
+            contentDescription = "Toggle navigation",
+            tint = Color(0xFFA2C9DF),
+            modifier = Modifier
+                .size(25.dp)
+                .rotate(180f)
+                .offset(y = (-1).dp)
+        )
+    }
 }
-
-
 
 
 

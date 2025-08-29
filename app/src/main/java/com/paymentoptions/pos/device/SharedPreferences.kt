@@ -2,12 +2,13 @@ package com.paymentoptions.pos.device
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-
+import android.util.Log
 
 const val sharedPreferencesLabel: String = "my_prefs"
 
@@ -113,6 +114,17 @@ class SharedPreferences {
 
         fun clearSavedCart(context: Context) {
             saveKeyValue(context, "cart", "")
+        }
+
+        fun saveDeviceConfiguration(context: Context, config: ExternalConfigurationResponse) {
+            val configJsonString = Json.encodeToString(config)
+            saveKeyValue(context, "device_config", configJsonString)
+        }
+
+        fun getDeviceConfiguration(context: Context): ExternalConfigurationResponse? {
+            val sharedPreferences = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val configJsonString = sharedPreferences.getString("device_config", null)
+            return configJsonString?.let { Json.decodeFromString<ExternalConfigurationResponse>(it)}
         }
     }
 }

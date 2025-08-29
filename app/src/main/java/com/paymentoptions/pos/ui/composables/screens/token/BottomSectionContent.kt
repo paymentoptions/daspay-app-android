@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.token
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +55,17 @@ import com.paymentoptions.pos.ui.theme.primary75
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.shadowColor2
 import com.paymentoptions.pos.utils.modifiers.innerShadow
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import com.google.gson.Gson
+import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.services.apiService.endpoints.completeDeviceRegistration
+import com.paymentoptions.pos.services.apiService.endpoints.getExternalDeviceConfiguration
+import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 
 @Composable
@@ -63,6 +75,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val scrollstate = rememberScrollState()
     var openFingerprintScan by remember { mutableStateOf(false) }
     var lastClicked by remember { mutableStateOf<Int?>(null) }
+    var scope = rememberCoroutineScope()
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     if (openFingerprintScan) FingerprintScanScreen(navController = navController, onAuthSuccess = {
         navController.navigate(Screens.Dashboard.route) {
@@ -76,9 +91,27 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     })
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (isLoading) {
+            Spacer(modifier = Modifier.height(16.dp))
+            CircularProgressIndicator()
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (errorMessage != null) {
+            AlertDialog(
+                onDismissRequest = { errorMessage = null },
+                title = { Text("Error") },
+                text = { Text(errorMessage!!) },
+                confirmButton = {
+                    TextButton(onClick = { errorMessage = null }) {
+                        Text("OK")
+                    }
+                }
+            )
+        }
         Text(
             text = "Enter Token", style = AppTheme.typography.screenTitle
         )
@@ -538,10 +571,96 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            FilledButton(
+            /**FilledButton(
                 text = "Confirm",
                 onClick = { openFingerprintScan = true },
                 disabled = otp.value.length < 6,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(59.dp)
+            )**/
+            FilledButton(
+                text = "Confirm",
+                onClick = {
+                    // special version for debugging
+                    scope.launch {
+                        isLoading = true
+                        errorMessage = null
+                        android.util.Log.d("DEBUG_TOKEN", "Step 1: Button clicked. Starting process.")
+
+                        // --- First API Call ---
+                        completeDeviceRegistration(context, otp.value)
+                            .onSuccess { response ->
+                                android.util.Log.d("DEBUG_TOKEN", "Step 2: completeDeviceRegistration SUCCEEDED. Response: $response")
+                                if (response.success || response.message.contains("Device already registered")) {
+
+                                    // --- Second API Call ---
+                                    android.util.Log.d("DEBUG_TOKEN", "Step 3: Proceeding to get external device configuration.")
+                                    getExternalDeviceConfiguration(context, otp.value)
+                                        .onSuccess { configResponse ->
+                                            android.util.Log.d("DEBUG_TOKEN", "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse")
+                                            SharedPreferences.saveDeviceConfiguration(context, configResponse)
+                                            openFingerprintScan = true
+                                        }
+                                        .onFailure { exception ->
+                                            android.util.Log.e("DEBUG_TOKEN", "Step 4 FAILED: getExternalDeviceConfiguration.", exception)
+                                            errorMessage = exception.message ?: "Failed to fetch configuration"
+                                        }
+                                } else {
+                                    android.util.Log.w("DEBUG_TOKEN", "Step 2 WARNING: API reported not successful. Message: ${response.message}")
+                                    errorMessage = response.message
+                                }
+                            }
+                            .onFailure { exception ->
+
+
+                                //if (json)
+                                try {
+                                    val jsonPart = exception.message?.substringAfter(":")?.trim()
+                                    val jsonObject = JSONObject(jsonPart)
+                                    val exceptionMessage = jsonObject.getString("message")
+
+
+                                    Log.e(
+
+                                        "Step 2 FAILED: completeDeviceRegistration.",
+                                        exceptionMessage
+                                    )
+                                    if (exceptionMessage == "Device already registered") {
+                                        getExternalDeviceConfiguration(context, otp.value)
+                                            .onSuccess { configResponse ->
+                                                android.util.Log.d(
+                                                    "DEBUG_TOKEN",
+                                                    "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
+                                                )
+                                                SharedPreferences.saveDeviceConfiguration(
+                                                    context,
+                                                    configResponse
+                                                )
+                                                openFingerprintScan = true
+                                            }
+                                            .onFailure { exception ->
+                                                android.util.Log.e(
+                                                    "DEBUG_TOKEN",
+                                                    "Step 4 FAILED: getExternalDeviceConfiguration.",
+                                                    exception
+                                                )
+                                                errorMessage = exception.message
+                                                    ?: "Failed to fetch configuration"
+                                            }
+                                    } else {
+                                        errorMessage =
+                                            exceptionMessage ?: "An unknown error occurred"
+                                    }
+                                } catch (e: Exception) {
+                                    errorMessage = e.message.toString()
+                                }
+                            }
+                        isLoading = false
+                        android.util.Log.d("DEBUG_TOKEN", "Step 5: Process finished.")
+                    }
+                },
+                disabled = otp.value.length < 6 || isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(59.dp)
