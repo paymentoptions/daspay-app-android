@@ -76,7 +76,8 @@ fun SplashScreen(navController: NavController) {
                 contentDescription = "Loading Animation",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
-                    .size(150.dp) // Square size of 150dp x 150dp
+                    .fillMaxWidth(1f)
+                    .height(600.dp)
             )
         }
     }

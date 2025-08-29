@@ -180,12 +180,12 @@ fun TransactionSummary(
             ),
             modifier = Modifier
                 .shadow(
-                    elevation = 8.dp,
+                    elevation = 16.dp,
                     shape = RoundedCornerShape(borderRadius),
                     //ambientColor = Color.Black.copy(alpha = 0.2f),
                     //spotColor = Color.Black.copy(alpha = 0.2f)
-                    ambientColor = Color(0xFF3F51B5).copy(alpha = 0.5f),
-                    spotColor = Color(0xFF3F51B5).copy(alpha = 0.5f)
+                    ambientColor = Color(0xFF64B5F6).copy(alpha = 0.8f), // More opaque
+                    spotColor = Color(0xFF2196F3).copy(alpha = 0.6f)
                 )
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(
