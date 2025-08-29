@@ -119,9 +119,9 @@ fun TransactionSummary(
     var offsetX by remember { mutableStateOf(0f) }
 
     val statusColor = when {
-        transaction.TransactionType.uppercase() == "REFUND" -> Color(0xFFF97316)  // Orange
+        transaction.TransactionType.uppercase() == "REFUND" -> Color(0xFFFC8D3E)  // Orange
         transaction.status.uppercase() == "SUCCESSFUL" -> Color(0xFF22C55E)  // Green
-        else -> Color(0xFFEF4444)  // Red
+        else -> Color(0xFFD52121)  // Red
     }
 
     val dateStr = buildAnnotatedString {
@@ -182,8 +182,10 @@ fun TransactionSummary(
                 .shadow(
                     elevation = 8.dp,
                     shape = RoundedCornerShape(borderRadius),
-                    ambientColor = Color.Black.copy(alpha = 0.2f),
-                    spotColor = Color.Black.copy(alpha = 0.2f)
+                    //ambientColor = Color.Black.copy(alpha = 0.2f),
+                    //spotColor = Color.Black.copy(alpha = 0.2f)
+                    ambientColor = Color(0xFF3F51B5).copy(alpha = 0.5f),
+                    spotColor = Color(0xFF3F51B5).copy(alpha = 0.5f)
                 )
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(

@@ -35,6 +35,19 @@ interface ApiService {
         @Body request: RefreshTokenRequest,
     ): SignInResponse
 
+    @POST("entities/merchant/devices/complete-registration")
+    suspend fun completeDeviceRegistration(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: CompleteDeviceRegistrationRequest,
+    ): CompleteDeviceRegistrationResponse
+
+    @GET("entities/merchant/devices/external/configuration")
+    suspend fun getDeviceConfiguration(
+        @HeaderMap headers: Map<String, String>,
+        @Query("DeviceNumber") deviceNumber: String,
+        @Query("UniqueCode") uniqueCode: String,
+    ): ExternalConfigurationResponse
+
     @GET("transactions/list")
     suspend fun transactionList(
         @HeaderMap headers: Map<String, String>,
