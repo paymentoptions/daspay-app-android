@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.Address
@@ -127,9 +128,9 @@ fun ChargeMoneyBottomSectionContent(
             .verticalScroll(state = rememberScrollState(), enabled = enableScrolling),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        /*if(selectedPaymentMethod === qrCodePaymentMethod){
+        if(selectedPaymentMethod === qrCodePaymentMethod){
             Tap_ChargeMoney(navController, amountToCharge)
-        }*/
+        }
 
         Row(
             Modifier
@@ -361,7 +362,7 @@ fun Tap_ChargeMoney(navController: NavController, amountToCharge: String) {
                                     BigDecimal(amountToCharge),
                                     Currency.getInstance("HKD"),
                                 ),
-                                profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
+                                profileId = context.getString(R.string.minesec_profile_id),
                                 posReference = it.transaction_details.id
                             )
                         )
