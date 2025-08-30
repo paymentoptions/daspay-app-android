@@ -38,6 +38,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.runtime.DisposableEffect
 import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.device.DeveloperOptions
@@ -127,6 +131,26 @@ fun ReceiveMoneyFlow(
     var signatureDate by remember { mutableStateOf(Date()) }
     var signaturePath by remember { mutableStateOf(Path()) }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            //block runs when lifecycle event happens
+            if (event == Lifecycle.Event.ON_RESUME) {
+                //when app resumes check NFC status again
+                val currentNfcStatus = Nfc.getStatus(context)
+                if (currentNfcStatus.second) {
+                    showNFCNotEnabled = false //hide the dialog
+                }
+            }
+        }
+        //adding observer to the lifecycel
+        lifecycleOwner.lifecycle.addObserver(observer)
+        //removing the observer when the screen is closed
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
 
     if (!nfcStatusPair.first) {
         showNFCNotPresent = true
@@ -173,9 +197,14 @@ fun ReceiveMoneyFlow(
                         when (selectedPaymentMethod) {
                             tapPaymentMethod -> {
 
+                                val currentNfcStatus = Nfc.getStatus(context)
+
                                 if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
                                     true
-                                else if (!nfcStatusPair.second) showNFCNotEnabled = true
+                                //else if (!nfcStatusPair.second) showNFCNotEnabled = true
+                                else if (!currentNfcStatus.second) {//check the fresh status
+                                    showNFCNotEnabled = true
+                                }
 
                                 MyDialog(
                                     showDialog = showDeveloperOptionsEnabled,

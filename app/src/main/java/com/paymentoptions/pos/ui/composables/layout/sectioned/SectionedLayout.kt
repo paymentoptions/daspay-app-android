@@ -108,7 +108,7 @@ fun SectionedLayout(
             modifier = Modifier
                 .fillMaxSize()
                 .align(alignment = Alignment.TopCenter)
-                .padding(bottom = if (bottomBarContentState === BottomBarContent.NAVIGATION_BAR) BOTTOM_NAVIGATION_HEIGHT_IN_DP else 0.dp)
+                //.padding(bottom = if (bottomBarContentState === BottomBarContent.NAVIGATION_BAR) BOTTOM_NAVIGATION_HEIGHT_IN_DP else 0.dp)
                 .zIndex(2f)
                 .clickable(
                     enabled = !showMoreItems,
@@ -185,7 +185,8 @@ fun SectionedLayout(
                             top = bottomSectionPaddingInDp,
                             end = bottomSectionPaddingInDp,
                             bottom = when (bottomBarContentState) {
-                                BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp.plus(10.dp)
+                                //BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp.plus(10.dp)
+                                BottomBarContent.NAVIGATION_BAR -> BOTTOM_NAVIGATION_HEIGHT_IN_DP + 30.dp
                                 BottomBarContent.TOGGLE_BUTTON -> 20.dp
                                 BottomBarContent.NOTHING -> 20.dp
                             }
