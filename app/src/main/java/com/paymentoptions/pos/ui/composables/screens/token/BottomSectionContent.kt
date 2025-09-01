@@ -629,6 +629,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                     getExternalDeviceConfiguration(
                                         context, otp.value
                                     ).onSuccess { configResponse ->
+
+                                        SharedPreferences.saveTokenStatus(
+                                            context = context, isVerified = true
+                                        )
+
                                         Log.d(
                                             "DEBUG_TOKEN",
                                             "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"

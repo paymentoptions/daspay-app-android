@@ -52,7 +52,6 @@ import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 
-
 val LOGO_TOP_PADDING_IN_DP = 45.dp
 val LOGO_HEIGHT_IN_DP = 50.dp
 val RECEIVE_MONEY_BUTTON_HEIGHT_IN_DP = 60.dp
@@ -184,8 +183,7 @@ fun SectionedLayout(
                             top = bottomSectionPaddingInDp,
                             end = bottomSectionPaddingInDp,
                             bottom = when (bottomBarContentState) {
-                                BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp
-//                                BottomBarContent.NAVIGATION_BAR -> BOTTOM_NAVIGATION_HEIGHT_IN_DP + 30.dp
+                                BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp.plus(10.dp)
                                 BottomBarContent.TOGGLE_BUTTON -> 20.dp
                                 BottomBarContent.NOTHING -> 20.dp
                             }
