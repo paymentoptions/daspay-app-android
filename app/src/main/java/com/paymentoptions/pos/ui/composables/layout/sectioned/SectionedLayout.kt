@@ -33,7 +33,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -108,7 +107,7 @@ fun SectionedLayout(
             modifier = Modifier
                 .fillMaxSize()
                 .align(alignment = Alignment.TopCenter)
-                //.padding(bottom = if (bottomBarContentState === BottomBarContent.NAVIGATION_BAR) BOTTOM_NAVIGATION_HEIGHT_IN_DP else 0.dp)
+                .padding(bottom = if (bottomBarContentState === BottomBarContent.NAVIGATION_BAR) BOTTOM_NAVIGATION_HEIGHT_IN_DP else 0.dp)
                 .zIndex(2f)
                 .clickable(
                     enabled = !showMoreItems,
@@ -147,7 +146,7 @@ fun SectionedLayout(
                             .plus(LOGO_HEIGHT_IN_DP) else 0.dp
                     )
                     .height(IntrinsicSize.Min)
-                    .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp )
+                    .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(2f)
                     .clip(
@@ -185,8 +184,8 @@ fun SectionedLayout(
                             top = bottomSectionPaddingInDp,
                             end = bottomSectionPaddingInDp,
                             bottom = when (bottomBarContentState) {
-                                //BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp.plus(10.dp)
-                                BottomBarContent.NAVIGATION_BAR -> BOTTOM_NAVIGATION_HEIGHT_IN_DP + 30.dp
+                                BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp
+//                                BottomBarContent.NAVIGATION_BAR -> BOTTOM_NAVIGATION_HEIGHT_IN_DP + 30.dp
                                 BottomBarContent.TOGGLE_BUTTON -> 20.dp
                                 BottomBarContent.NOTHING -> 20.dp
                             }
