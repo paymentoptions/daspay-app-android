@@ -585,8 +585,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 )
 
                                 SharedPreferences.saveTokenStatus(
-                                    context = context,
-                                    isVerified = true
+                                    context = context, isVerified = true
                                 )
 
                                 getExternalDeviceConfiguration(
@@ -646,6 +645,18 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                         )
                                         errorMessage =
                                             exception.message ?: "Failed to fetch configuration"
+                                    }
+                                } else if (exceptionMessage.lowercase()
+                                        .contains("unauthorized")
+                                ) {
+                                    Toast.makeText(
+                                        context,
+                                        "Token expired. Please sign in again.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    navController.navigate(Screens.SignIn.route) {
+                                        popUpTo(Screens.SignIn.route) { inclusive = true }
                                     }
                                 } else {
                                     errorMessage = exceptionMessage ?: "An unknown error occurred"
