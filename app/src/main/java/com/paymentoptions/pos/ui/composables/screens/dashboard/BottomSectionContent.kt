@@ -27,13 +27,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.transactionList
+import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -79,7 +78,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            val transactionListFromAPI = transactionList(context, take, skip)
+            val transactionListFromAPI = transactionListV2(context, take, skip)
 
             if (transactionListFromAPI != null) {
                 maxPage =
@@ -103,7 +102,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 //
 //            )
         }
-
     }
 
     if (scrollingEndReached && !viewAll) LaunchedEffect(Unit) {
@@ -114,6 +112,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     fun updateReceivalAmount(newAmount: Float) {
         receivalAmount = newAmount
     }
+
+//    val deviceConfig = SharedPreferences.getDeviceConfiguration(context)
+//    println("deviceConfig: $deviceConfig")
 
     Column(
         modifier = Modifier

@@ -13,7 +13,7 @@ suspend fun transactionListV2(
     context: Context,
     take: Int = 10,
     skip: Int = 0,
-    filter: Array<TransactionListV2RequestFilter>,
+    filter: List<TransactionListV2RequestFilter> = listOf<TransactionListV2RequestFilter>(),
 ): TransactionListResponse? {
     try {
         var authDetails = SharedPreferences.getAuthDetails(context)

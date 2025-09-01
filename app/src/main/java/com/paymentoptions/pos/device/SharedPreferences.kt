@@ -8,7 +8,6 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import android.util.Log
 
 const val sharedPreferencesLabel: String = "my_prefs"
 
@@ -125,6 +124,22 @@ class SharedPreferences {
             val sharedPreferences = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             val configJsonString = sharedPreferences.getString("device_config", null)
             return configJsonString?.let { Json.decodeFromString<ExternalConfigurationResponse>(it)}
+        }
+
+        fun saveTokenStatus(context: Context, isVerified: Boolean) {
+            val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            with(sharedPref.edit()) {
+                putBoolean("token_verified", isVerified)
+                apply()
+            }
+        }
+
+        fun getTokenStatus(context: Context): Boolean {
+            val sharedPreferences =
+                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val isVerified = sharedPreferences.getBoolean("token_verified", false)
+
+            return isVerified
         }
     }
 }

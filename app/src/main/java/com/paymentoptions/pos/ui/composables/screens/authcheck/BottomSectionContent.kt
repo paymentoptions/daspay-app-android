@@ -33,12 +33,14 @@ fun BottomSectionContent(navController: NavController) {
     val activity = context as? Activity
     var isLoading by remember { mutableStateOf(true) }
     var authDetails by remember { mutableStateOf<SignInResponse?>(null) }
+    var isTokenVerified by remember { mutableStateOf(false) }
     var isAuthenticated by remember { mutableStateOf(false) }
     val biometricStatus = SharedPreferences.getBiometricsStatus(context)
 
     LaunchedEffect(Unit) {
         isLoading = true
         authDetails = SharedPreferences.getAuthDetails(context)
+        isTokenVerified = SharedPreferences.getTokenStatus(context = context)
         isAuthenticated = authDetails?.success == true
         isLoading = false
     }
@@ -62,20 +64,21 @@ fun BottomSectionContent(navController: NavController) {
                 modifier = Modifier.height(37.dp)
             )
         }
-    } else if (isAuthenticated) FingerprintScanScreen(
-        navController = navController,
-        onAuthSuccess = {
+    } else if (isAuthenticated) {
+
+        if (!isTokenVerified) navController.navigate(Screens.Token.route) {
+            popUpTo(Screens.SignIn.route) { inclusive = true }
+        }
+        else FingerprintScanScreen(
+            navController = navController, onAuthSuccess = {
             navController.navigate(Screens.Dashboard.route) {
                 popUpTo(Screens.SignIn.route) { inclusive = true }
             }
-        },
-        onAuthFailed = {
+            }, onAuthFailed = {
             Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
-        },
-        bypassBiometric = !biometricStatus
-    )
-    else {
-
+            }, bypassBiometric = !biometricStatus
+        )
+    } else {
         Toast.makeText(context, "You are signed out. Please sign in.", Toast.LENGTH_SHORT).show()
         navController.navigate(Screens.SignIn.route) {
             popUpTo(0) { inclusive = true }
