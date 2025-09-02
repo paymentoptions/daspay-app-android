@@ -264,10 +264,10 @@ fun MyBottomNavigationBar(
                 selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
-                    if (selectedBottomNavigationBarItem !== home) {
-                        selectedBottomNavigationBarItem = home
-                        navController.navigate(selectedBottomNavigationBarItem.route)
-                    }
+//                    if (selectedBottomNavigationBarItem !== home) {
+                    selectedBottomNavigationBarItem = home
+                    navController.navigate(selectedBottomNavigationBarItem.route)
+//                    }
                 })
 
             Item(
@@ -275,10 +275,10 @@ fun MyBottomNavigationBar(
                 selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
-                    if (selectedBottomNavigationBarItem !== foodMenu) {
-                        selectedBottomNavigationBarItem = foodMenu
-                        navController.navigate(selectedBottomNavigationBarItem.route)
-                    }
+//                    if (selectedBottomNavigationBarItem !== foodMenu) {
+                    selectedBottomNavigationBarItem = foodMenu
+                    navController.navigate(selectedBottomNavigationBarItem.route)
+//                    }
                 })
 
             Item(
@@ -286,10 +286,10 @@ fun MyBottomNavigationBar(
                 selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1.5f),
                 onSelected = {
-                    if (selectedBottomNavigationBarItem !== receiveMoney) {
-                        selectedBottomNavigationBarItem = receiveMoney
-                        navController.navigate(selectedBottomNavigationBarItem.route)
-                    }
+//                    if (selectedBottomNavigationBarItem !== receiveMoney) {
+                    selectedBottomNavigationBarItem = receiveMoney
+                    navController.navigate(selectedBottomNavigationBarItem.route)
+//                    }
                 })
 
             Item(

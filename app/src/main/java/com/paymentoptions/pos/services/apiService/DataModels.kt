@@ -429,21 +429,24 @@ data class CompleteDeviceRegistrationResponse(
     val status: Int,
     val message: String,
     val messageCode: String,//added this field based on error response
-    val success: Boolean
+    val success: Boolean,
 )
+
 @Serializable
 data class ExternalConfigurationResponse(
     val statusCode: Int,
     val message: String,
     val messageCode: String,
     val success: Boolean,
-    val data: ExternalConfigData
+    val data: ExternalConfigData,
 )
+
 @Serializable
 data class ExternalConfigData(
     val deviceInfo: DeviceInfo,
-    val paymentMethod: List<DevicePaymentMethod>
+    val paymentMethod: List<DevicePaymentMethod>,
 )
+
 @Serializable
 data class DeviceInfo(
     val DeviceID: String,
@@ -456,14 +459,16 @@ data class DeviceInfo(
     val LastUsedAt: String,
     val CreatedAt: String,
     val UpdatedAt: String,
-    val Location: String? = null
+    val Location: String? = null,
 )
+
 @Serializable
 data class DeviceMetadata(
     val os: String,
     val version: String,
-    val manufacturer: String
+    val manufacturer: String,
 )
+
 @Serializable
 data class DevicePaymentMethod(
     val DASMID: String,
@@ -481,6 +486,8 @@ data class DevicePaymentMethod(
     val hasPayPay: Boolean,
     val hasKonbini: Boolean,
     val hasPayEasy: Boolean,
+    val TransactionCCY: List<String>,
+    val SettlementCCY: String,
 )
 
 @Serializable
@@ -488,6 +495,6 @@ data class CompleteDeviceRegistrationRequest(
     val UniqueCode: String,
     val DeviceNumber: String,
     val DeviceMetadata: DeviceMetadata,
-    val DeviceType: String = "MOBILE"
+    val DeviceType: String = "MOBILE",
 )
 // -------------------------------------------------------

@@ -1,0 +1,28 @@
+package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow
+
+import com.paymentoptions.pos.services.apiService.ProductListDataRecord
+import kotlinx.serialization.Serializable
+
+@Serializable
+
+class FoodItem(
+    val item: ProductListDataRecord,
+    val isVegetarian: Boolean = true,
+    var cartQuantity: Int = 0,
+) {
+    fun decreaseQuantity() {
+        this.cartQuantity--
+    }
+
+    fun increaseQuantity() {
+        this.cartQuantity++
+    }
+
+    fun copyCartQuantity(f: FoodItem) {
+        this.cartQuantity = f.cartQuantity
+    }
+
+    override fun toString(): String {
+        return this.item.ProductName + ": " + this.cartQuantity
+    }
+}

@@ -1,19 +1,11 @@
 package com.paymentoptions.pos.ui.composables._components.dialogs
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
+import com.paymentoptions.pos.ui.composables._components.images.ErrorImage
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.innerShadow
@@ -50,12 +43,6 @@ fun MyAlertDialog(
         AlertDialogType.WARNING -> Color.Magenta
     }
 
-    val icon = when (type) {
-        AlertDialogType.ERROR -> Icons.Default.ErrorOutline
-        AlertDialogType.SUCCESS -> Icons.Default.Check
-        AlertDialogType.WARNING -> Icons.Default.WarningAmber
-    }
-
     if (showDialog) {
         AlertDialog(
             modifier = Modifier.innerShadow(
@@ -79,18 +66,30 @@ fun MyAlertDialog(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
 
-                            .border(width = 1.dp, color = color, shape = RoundedCornerShape(50)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            icon,
-                            contentDescription = type.toString(),
-                            tint = color,
-                            modifier = Modifier.size(30.dp)
+                    when (type) {
+                        AlertDialogType.ERROR -> ErrorImage(
+                            modifier = Modifier
+
+                                .fillMaxWidth()
+                                .height(100.dp)
+
+                        )
+
+                        AlertDialogType.SUCCESS -> ErrorImage(
+                            modifier = Modifier
+
+                                .fillMaxWidth()
+                                .height(100.dp)
+
+                        )
+
+                        AlertDialogType.WARNING -> ErrorImage(
+                            modifier = Modifier
+
+                                .fillMaxWidth()
+                                .height(100.dp)
+
                         )
                     }
 

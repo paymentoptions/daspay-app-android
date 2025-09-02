@@ -30,14 +30,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.ui.theme.shadowColor
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.device.getSettlementCurrency
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -47,6 +48,7 @@ import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.ui.theme.shadowColor
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
@@ -61,7 +63,8 @@ fun BottomSectionContent(
     var showDetails by remember { mutableStateOf(false) }
     var loader by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
-    val currency = "HKD"
+    val context = LocalContext.current
+    val currency = getSettlementCurrency(context)
 
     LaunchedEffect(showDetails) {
         scrollState.scrollTo(if (showDetails) scrollState.maxValue else 0)

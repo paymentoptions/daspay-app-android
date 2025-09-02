@@ -64,7 +64,7 @@ import org.json.JSONObject
 fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
     val otp = remember { mutableStateOf("") }
-    val scrollstate = rememberScrollState()
+    val scrollState = rememberScrollState()
     var openFingerprintScan by remember { mutableStateOf(false) }
     var lastClicked by remember { mutableStateOf<Int?>(null) }
     var scope = rememberCoroutineScope()
@@ -96,7 +96,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             text = errorMessage.toString(),
             actionButtonText = "Try Again",
             type = AlertDialogType.ERROR,
-            onActionFn = { errorMessage = null })
+            onActionFn = {
+                errorMessage = null
+                otp.value = ""
+                lastClicked = null
+            })
 
         Text(
             text = "Enter Token", style = AppTheme.typography.screenTitle
@@ -195,7 +199,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollstate)
+                .verticalScroll(scrollState)
         ) {
             //Keypad
             Column(
@@ -651,9 +655,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                         errorMessage =
                                             exception.message ?: "Failed to fetch configuration"
                                     }
-                                } else if (exceptionMessage.lowercase()
-                                        .contains("unauthorized")
-                                ) {
+                                } else if (exceptionMessage.lowercase().contains("unauthorized")) {
                                     Toast.makeText(
                                         context,
                                         "Token expired. Please sign in again.",

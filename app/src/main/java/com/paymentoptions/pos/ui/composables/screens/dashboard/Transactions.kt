@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,7 +23,7 @@ fun Transactions(
     transactions: List<TransactionListDataRecord>,
     updateReceivalAmount: (Float) -> Unit,
 ) {
-    val context = LocalContext.current
+    LocalContext.current
     var selectedFilterKey by remember { mutableStateOf("ALL") }
 //    var transactionsWithTrackId = mutableMapOf<String, Boolean>()
     var longClickedTransactionId by remember { mutableStateOf("") }
@@ -63,19 +62,23 @@ fun Transactions(
                         if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
                             longClickedTransactionId = if (longClickedTransactionId.isEmpty()) it
                             else if (longClickedTransactionId == it) "" else it
-                        } else Toast.makeText(
-                            context,
-                            "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        } else {
+//                            Toast.makeText(
+//                                context,
+//                                "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
+//                                Toast.LENGTH_SHORT
+//                            ).show()
+                        }
                     }, onSwipeLeft = {
                         if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
                             longClickedTransactionId = it
-                        } else Toast.makeText(
-                            context,
-                            "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        } else {
+//                            Toast.makeText(
+//                                context,
+//                                "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
+//                                Toast.LENGTH_SHORT
+//                            ).show()
+                        }
                     }, onSwipeRight = {
                         longClickedTransactionId = ""
                     })
