@@ -39,6 +39,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
@@ -186,6 +193,42 @@ fun ReceiveMoneyFlow(
                 bottomSectionPaddingInDp = 0.dp,
                 enableScrollingOfBottomSectionContent = false,
                 imageBelowLogo = {
+                    val paymentMethodIndices = paymentMethods.map { it.text }
+                    AnimatedContent(
+                        targetState = selectedPaymentMethod,
+                        label = "payment_method_animation",
+                        transitionSpec = {
+                            // Compare the indexes of the old and new states
+                            val initialIndex = paymentMethodIndices.indexOf(initialState.text)
+                            val targetIndex = paymentMethodIndices.indexOf(targetState.text)
+                            val animationDuration = 750
+
+                            // If the new item is to the right of the old one slide left.
+                            if (targetIndex > initialIndex) {
+                                (slideInHorizontally(
+                                    animationSpec = tween(animationDuration),
+                                    initialOffsetX = { fullWidth -> fullWidth }
+                                ) + fadeIn(animationSpec = tween(animationDuration)))
+                                    .togetherWith(
+                                        slideOutHorizontally(
+                                            animationSpec = tween(animationDuration),
+                                            targetOffsetX = { fullWidth -> -fullWidth }
+                                        ) + fadeOut(animationSpec = tween(animationDuration))
+                                    )
+                            } else {
+                                (slideInHorizontally(
+                                    animationSpec = tween(animationDuration),
+                                    initialOffsetX = { fullWidth -> -fullWidth }
+                                ) + fadeIn(animationSpec = tween(animationDuration)))
+                                    .togetherWith(
+                                        slideOutHorizontally(
+                                            animationSpec = tween(animationDuration),
+                                            targetOffsetX = { fullWidth -> fullWidth }
+                                        ) + fadeOut(animationSpec = tween(animationDuration))
+                                    )
+                            }
+                        }
+                    ) { paymentMethod ->
                     Column(
                         modifier = Modifier
                             .height(screenRatioToDp(0.5f))
@@ -194,7 +237,8 @@ fun ReceiveMoneyFlow(
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        when (selectedPaymentMethod) {
+                        //when (selectedPaymentMethod) {
+                        when (paymentMethod) {
                             tapPaymentMethod -> {
 
                                 val currentNfcStatus = Nfc.getStatus(context)
@@ -556,6 +600,7 @@ fun ReceiveMoneyFlow(
                                 }
                             }
                         }
+                    }
                     }
                 }) {
                 ChargeMoneyBottomSectionContent(
