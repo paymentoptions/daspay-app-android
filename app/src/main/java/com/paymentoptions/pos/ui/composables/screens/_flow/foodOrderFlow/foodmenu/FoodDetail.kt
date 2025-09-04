@@ -25,7 +25,8 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                foodItem.item.ProductCode.uppercase(),
+//                foodItem.item.ProductCode.uppercase(),
+                foodItem.item.ProductSize.lowercase().capitalize(),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
                 color = primary500

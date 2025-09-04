@@ -400,6 +400,8 @@ data class ProductListDataRecord(
     val ProductID: String,
     val ProductImage: String,
     val ProductCode: String,
+    val ProductFoodType: String,
+    val ProductSize: String,
     val CreatedAt: String?,
     val UpdatedAt: String?,
     val ProductStock: Int,

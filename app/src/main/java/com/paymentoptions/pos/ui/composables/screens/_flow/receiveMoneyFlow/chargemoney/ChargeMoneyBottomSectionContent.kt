@@ -62,6 +62,7 @@ import com.paymentoptions.pos.utils.getKeyFromToken
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
 import com.paymentoptions.pos.utils.paymentMethods
+import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
@@ -127,9 +128,9 @@ fun ChargeMoneyBottomSectionContent(
             .verticalScroll(state = rememberScrollState(), enabled = enableScrolling),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        /*if(selectedPaymentMethod === qrCodePaymentMethod){
+        if (selectedPaymentMethod === qrCodePaymentMethod) {
             Tap_ChargeMoney(navController, amountToCharge)
-        }*/
+        }
 
         Row(
             Modifier
@@ -191,6 +192,8 @@ fun ChargeMoneyBottomSectionContent(
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun Tap_ChargeMoney(navController: NavController, amountToCharge: String) {
+
+    println("amountToCharge: $amountToCharge")
     val context = LocalContext.current
     context as? Activity
     val scope = rememberCoroutineScope()
@@ -345,7 +348,7 @@ fun Tap_ChargeMoney(navController: NavController, amountToCharge: String) {
             }
 
             paymentResponse?.let {
-                if (it.success) {
+//                if (it.success) {
                     launcher.launch(
                         PoiRequest.ActionNew(
                             tranType = TranType.SALE,
@@ -353,11 +356,12 @@ fun Tap_ChargeMoney(navController: NavController, amountToCharge: String) {
                                 BigDecimal(amountToCharge),
                                 Currency.getInstance(currency),
                             ),
-                            profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
+//                            profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
+                            profileId = "prof_01K36002RM7DMMPHG0QEX3E9BR",
                             posReference = it.transaction_details.id
                         )
                     )
-                }
+//                }
             }
         } catch (e: Exception) {
             SharedPreferences.clearSharedPreferences(context)

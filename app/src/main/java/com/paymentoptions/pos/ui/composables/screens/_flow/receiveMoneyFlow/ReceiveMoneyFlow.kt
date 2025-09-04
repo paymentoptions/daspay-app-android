@@ -5,6 +5,13 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -39,13 +46,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.core.tween
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
@@ -240,7 +240,6 @@ fun ReceiveMoneyFlow(
                         //when (selectedPaymentMethod) {
                         when (paymentMethod) {
                             tapPaymentMethod -> {
-
                                 val currentNfcStatus = Nfc.getStatus(context)
 
                                 if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
@@ -251,7 +250,7 @@ fun ReceiveMoneyFlow(
                                 }
 
                                 MyDialog(
-                                    showDialog = showDeveloperOptionsEnabled,
+                                    showDialog = false, //showDeveloperOptionsEnabled,
                                     title = "Caution",
                                     text = "You need to disable developer options to proceed further.",
                                     acceptButtonText = "Developer Options",
@@ -293,6 +292,9 @@ fun ReceiveMoneyFlow(
                                         .clip(
                                             shape = RoundedCornerShape(16.dp)
                                         )
+//                                        .clickable{
+//                                            Tap_ChargeMoney(navController=navController, amountToCharge = formatAmount(amountToChargeState))
+//                                        }
                                 )
 
                                 Text(

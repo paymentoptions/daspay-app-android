@@ -94,8 +94,8 @@ fun FoodSummary(
 
         FoodImage(
             foodItem.item.ProductName,
-            foodItem.item.ProductImage,
-            foodItem.isVegetarian,
+            imageUrl = foodItem.imageUrl(),
+            isVegetarian = !foodItem.isNonVeg(),
             modifier = Modifier.size(44.dp)
         )
 

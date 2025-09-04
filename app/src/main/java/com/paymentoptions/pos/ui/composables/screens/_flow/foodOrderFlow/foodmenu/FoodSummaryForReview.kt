@@ -183,7 +183,7 @@ fun FoodSummaryForReview(
                 if (!isLongClicked) FoodImage(
                     foodItem.item.ProductName,
                     foodItem.item.ProductImage,
-                    foodItem.isVegetarian,
+                    isVegetarian = !foodItem.isNonVeg(),
                     modifier = Modifier.size(44.dp),
                 )
 
