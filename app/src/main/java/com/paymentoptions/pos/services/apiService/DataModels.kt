@@ -398,7 +398,7 @@ data class ProductListDataRecord(
     val ProductStatus: Boolean,
     val ProductPrice: Float,
     val ProductID: String,
-    val ProductImage: String,
+    val ProductImage: String?,
     val ProductCode: String,
     val ProductFoodType: String,
     val ProductSize: String,

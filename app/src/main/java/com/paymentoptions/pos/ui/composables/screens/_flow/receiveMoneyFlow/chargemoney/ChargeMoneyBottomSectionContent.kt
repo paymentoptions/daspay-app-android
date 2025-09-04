@@ -348,7 +348,7 @@ fun Tap_ChargeMoney(navController: NavController, amountToCharge: String) {
             }
 
             paymentResponse?.let {
-//                if (it.success) {
+                if (it.success) {
                     launcher.launch(
                         PoiRequest.ActionNew(
                             tranType = TranType.SALE,
@@ -356,12 +356,11 @@ fun Tap_ChargeMoney(navController: NavController, amountToCharge: String) {
                                 BigDecimal(amountToCharge),
                                 Currency.getInstance(currency),
                             ),
-//                            profileId = "prof_01HYYPGVE7VB901M40SVPHTQ0V",
                             profileId = "prof_01K36002RM7DMMPHG0QEX3E9BR",
                             posReference = it.transaction_details.id
                         )
                     )
-//                }
+                }
             }
         } catch (e: Exception) {
             SharedPreferences.clearSharedPreferences(context)

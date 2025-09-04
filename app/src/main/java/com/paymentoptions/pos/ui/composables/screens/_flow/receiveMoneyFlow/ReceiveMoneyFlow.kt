@@ -207,402 +207,414 @@ fun ReceiveMoneyFlow(
                             if (targetIndex > initialIndex) {
                                 (slideInHorizontally(
                                     animationSpec = tween(animationDuration),
-                                    initialOffsetX = { fullWidth -> fullWidth }
-                                ) + fadeIn(animationSpec = tween(animationDuration)))
-                                    .togetherWith(
+                                    initialOffsetX = { fullWidth -> fullWidth }) + fadeIn(
+                                    animationSpec = tween(animationDuration)
+                                )).togetherWith(
                                         slideOutHorizontally(
                                             animationSpec = tween(animationDuration),
-                                            targetOffsetX = { fullWidth -> -fullWidth }
-                                        ) + fadeOut(animationSpec = tween(animationDuration))
-                                    )
+                                            targetOffsetX = { fullWidth -> -fullWidth }) + fadeOut(
+                                            animationSpec = tween(animationDuration)
+                                        )
+                                )
                             } else {
                                 (slideInHorizontally(
                                     animationSpec = tween(animationDuration),
-                                    initialOffsetX = { fullWidth -> -fullWidth }
-                                ) + fadeIn(animationSpec = tween(animationDuration)))
-                                    .togetherWith(
+                                    initialOffsetX = { fullWidth -> -fullWidth }) + fadeIn(
+                                    animationSpec = tween(animationDuration)
+                                )).togetherWith(
                                         slideOutHorizontally(
                                             animationSpec = tween(animationDuration),
-                                            targetOffsetX = { fullWidth -> fullWidth }
-                                        ) + fadeOut(animationSpec = tween(animationDuration))
-                                    )
-                            }
-                        }
-                    ) { paymentMethod ->
-                    Column(
-                        modifier = Modifier
-                            .height(screenRatioToDp(0.5f))
-                            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                            .verticalScroll(scrollState),
-                        verticalArrangement = Arrangement.spacedBy(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        //when (selectedPaymentMethod) {
-                        when (paymentMethod) {
-                            tapPaymentMethod -> {
-                                val currentNfcStatus = Nfc.getStatus(context)
-
-                                if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
-                                    true
-                                //else if (!nfcStatusPair.second) showNFCNotEnabled = true
-                                else if (!currentNfcStatus.second) {//check the fresh status
-                                    showNFCNotEnabled = true
-                                }
-
-                                MyDialog(
-                                    showDialog = false, //showDeveloperOptionsEnabled,
-                                    title = "Caution",
-                                    text = "You need to disable developer options to proceed further.",
-                                    acceptButtonText = "Developer Options",
-                                    cancelButtonText = "Cancel",
-                                    onAcceptFn = {
-                                        showDeveloperOptionsEnabled = false
-                                        val intent =
-                                            Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
-                                        context.startActivity(intent)
-                                    },
-                                    onDismissFn = {
-                                        showDeveloperOptionsEnabled = false
-                                        selectedPaymentMethod = qrCodePaymentMethod
-                                    },
-                                )
-
-                                MyDialog(
-                                    showDialog = showNFCNotEnabled,
-                                    title = "NFC Required",
-                                    text = "This feature needs NFC. Please enable it in your device settings.",
-                                    acceptButtonText = "Go to Settings",
-                                    cancelButtonText = "Cancel",
-                                    onAcceptFn = {
-                                        showNFCNotEnabled = false
-                                        val intent = Intent(Settings.ACTION_NFC_SETTINGS)
-                                        context.startActivity(intent)
-                                    },
-                                    onDismissFn = {
-                                        showNFCNotEnabled = false
-                                        selectedPaymentMethod = qrCodePaymentMethod
-                                    },
-                                )
-
-                                PaymentTapToPayImage(
-                                    modifier = Modifier
-                                        .padding(horizontal = 20.dp)
-                                        .fillMaxWidth()
-                                        .height(230.dp)
-                                        .clip(
-                                            shape = RoundedCornerShape(16.dp)
+                                            targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(
+                                            animationSpec = tween(animationDuration)
                                         )
+                                )
+                            }
+                        }) { paymentMethod ->
+                        Column(
+                            modifier = Modifier
+                                .height(screenRatioToDp(0.5f))
+                                .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                .verticalScroll(scrollState),
+                            verticalArrangement = Arrangement.spacedBy(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            //when (selectedPaymentMethod) {
+                            when (paymentMethod) {
+                                tapPaymentMethod -> {
+                                    val currentNfcStatus = Nfc.getStatus(context)
+
+                                    if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
+                                        true
+                                    else if (!nfcStatusPair.second) showNFCNotEnabled = true
+                                    else if (!currentNfcStatus.second) {//check the fresh status
+                                        showNFCNotEnabled = true
+                                    }
+
+                                    MyDialog(
+                                        showDialog = false,
+//                                    showDialog = showDeveloperOptionsEnabled,
+                                        title = "Caution",
+                                        text = "You need to disable developer options to proceed further.",
+                                        acceptButtonText = "Developer Options",
+                                        cancelButtonText = "Cancel",
+                                        onAcceptFn = {
+                                            showDeveloperOptionsEnabled = false
+                                            val intent =
+                                                Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+                                            context.startActivity(intent)
+                                        },
+                                        onDismissFn = {
+                                            showDeveloperOptionsEnabled = false
+                                            selectedPaymentMethod = qrCodePaymentMethod
+                                        },
+                                    )
+
+                                    MyDialog(
+                                        showDialog = showNFCNotEnabled,
+                                        title = "NFC Required",
+                                        text = "This feature needs NFC. Please enable it in your device settings.",
+                                        acceptButtonText = "Go to Settings",
+                                        cancelButtonText = "Cancel",
+                                        onAcceptFn = {
+                                            showNFCNotEnabled = false
+                                            val intent = Intent(Settings.ACTION_NFC_SETTINGS)
+                                            context.startActivity(intent)
+                                        },
+                                        onDismissFn = {
+                                            showNFCNotEnabled = false
+                                            selectedPaymentMethod = qrCodePaymentMethod
+                                        },
+                                    )
+
+                                    PaymentTapToPayImage(
+                                        modifier = Modifier
+                                            .padding(horizontal = 20.dp)
+                                            .fillMaxWidth()
+                                            .height(230.dp)
+                                            .clip(
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
 //                                        .clickable{
 //                                            Tap_ChargeMoney(navController=navController, amountToCharge = formatAmount(amountToChargeState))
 //                                        }
-                                )
-
-                                Text(
-                                    text = "Tap To Pay",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 18.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.height(60.dp)
-                                ) {
-                                    VisaImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(8.dp))
-                                            .weight(1f)
                                     )
 
-                                    MastercardImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(8.dp))
-                                            .weight(1f)
-                                    )
-
-                                    AmexImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(8.dp))
-                                            .weight(1f)
-                                    )
-
-                                    JcbImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(8.dp))
-                                            .weight(1f)
-                                    )
-                                }
-                            }
-
-                            qrCodePaymentMethod -> {
-
-                                Text(
-                                    text = "Scan QR Code",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 18.sp,
-                                    textAlign = TextAlign.Center,
-                                )
-
-                                PaymentQrCodeImage(
-                                    modifier = Modifier
-                                        .padding(horizontal = 20.dp)
-                                        .fillMaxWidth()
-                                        //.height(240.dp)
-                                        .height(220.dp)
-                                        .clip(
-                                            shape = RoundedCornerShape(16.dp)
-                                        )
-                                )
-
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.height(50.dp)
-                                ) {
-                                    GrabPayImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-
-                                    QrPayment2(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-
-                                    QrPayment3(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-
-                                    QrPayment4(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-
-                                    ApplePayImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-
-                                    QrPayment6(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-                                }
-
-                                NoteChip(
-                                    text = "Ask customer to scan with GrabPay",
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                                )
-                            }
-
-                            cashPaymentMethod -> {
-                                Text(
-                                    text = "Please pay cash",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 18.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-
-                            viaLinkPaymentMethod -> {
-
-                                var payByLinkRequest = PayByLinkRequest(
-                                    PBLLinkName = "PayByLink Test",
-                                    ExpiryDate = SimpleDateFormat("YYYY-dd MMMM, YYYY HH:mm:ss").format(
-                                        Date()
-                                    ), //Date().toString(),
-                                    Product = listOf<PayByLinkRequestProduct>(
-                                        PayByLinkRequestProduct(
-                                            Currency = currency,
-                                            Name = "No Name",
-                                            Quantity = 1,
-                                            Price = 100f,
-                                            TotalPrice = "100"
-                                        )
-                                    )
-                                )
-                                var payByLinkResponse by remember {
-                                    mutableStateOf<PayByLinkResponse?>(
-                                        null
-                                    )
-                                }
-                                var payByLinkApiResponseLoading by remember { mutableStateOf(false) }
-
-                                LaunchedEffect(Unit) {
-                                    try {
-                                        payByLinkApiResponseLoading = true
-                                        payByLinkResponse = payByLink(context, payByLinkRequest)
-
-                                        println("payByLinkResponse: $payByLinkResponse")
-
-                                    } catch (e: Exception) {
-                                        Toast.makeText(
-                                            context,
-                                            "Error generating payment link...",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    } finally {
-                                        payByLinkApiResponseLoading = false
-                                    }
-                                }
-
-                                if (payByLinkApiResponseLoading) MyCircularProgressIndicator()
-                                else if (payByLinkResponse.isNotNull()) {
-
-                                    Column(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-                                        horizontalAlignment = Alignment.CenterHorizontally,
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text(
-                                            text = "Pay Via Link",
-                                            color = Color.White,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 18.sp,
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-
-                                        Spacer(modifier = Modifier.height(10.dp))
-
-                                        PayByLinkImage(
-                                            modifier = Modifier
-                                                .padding(horizontal = 20.dp)
-                                                .fillMaxWidth()
-                                                .height(100.dp)
-                                                .clip(
-                                                    shape = RoundedCornerShape(16.dp)
-                                                )
-                                        )
-
-                                        Spacer(modifier = Modifier.height(10.dp))
-
-
-                                        SelectionContainer(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .background(
-                                                    color = Color(0xFFDCEAFE),
-                                                    shape = RoundedCornerShape(11.dp)
-                                                )
-                                                .padding(vertical = 16.dp, horizontal = 12.dp),
-                                        ) {
-                                            Text(
-                                                text = "https://daspay/" + payByLinkResponse!!.data.ID,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 16.sp,
-                                                color = primary900,
-                                                maxLines = 1,
-                                                textAlign = TextAlign.Center,
-                                                modifier = Modifier.horizontalScroll(state = rememberScrollState())
-                                            )
-                                        }
-
-
-                                        NoteChip(
-                                            text = "Share this link with the customer",
-                                            color = Color.White
-                                        )
-
-                                        Spacer(modifier = Modifier.height(10.dp))
-
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                        ) {
-                                            EmailButton(
-                                                text = "Email",
-                                                email = Email(),
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .border(
-                                                        2.dp,
-                                                        color = primary100.copy(alpha = 0.2f),
-                                                        shape = RoundedCornerShape(10.dp)
-                                                    )
-                                                    .background(
-                                                        Color.White,
-                                                        shape = RoundedCornerShape(10.dp)
-                                                    )
-                                                    //.padding(horizontal = 10.dp, vertical = 20.dp)
-                                                    .padding(horizontal = 10.dp, vertical = 16.dp)
-                                            )
-
-                                            ShareButton(
-                                                text = "Share",
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .border(
-                                                        2.dp,
-                                                        color = primary100.copy(alpha = 0.2f),
-                                                        shape = RoundedCornerShape(10.dp)
-                                                    )
-                                                    .background(
-                                                        Color.White,
-                                                        shape = RoundedCornerShape(10.dp)
-                                                    )
-                                                    //.padding(horizontal = 10.dp, vertical = 20.dp)
-                                                    .padding(horizontal = 10.dp, vertical = 16.dp)
-                                            )
-
-                                            ScanButton(
-                                                text = "Scan",
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .border(
-                                                        2.dp,
-                                                        color = primary100.copy(alpha = 0.2f),
-                                                        shape = RoundedCornerShape(10.dp)
-                                                    )
-                                                    .background(
-                                                        Color.White,
-                                                        shape = RoundedCornerShape(10.dp)
-                                                    )
-                                                    //.padding(horizontal = 10.dp, vertical = 20.dp)
-                                                    .padding(horizontal = 10.dp, vertical = 16.dp)
-                                            )
-                                        }
-                                    }
-                                } else {
                                     Text(
-                                        text = "Error generating payment link. Try again after some time...",
-                                        color = red300,
+                                        text = "Tap To Pay",
+                                        color = Color.White,
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 18.sp,
                                         textAlign = TextAlign.Center,
                                         modifier = Modifier.fillMaxWidth()
                                     )
 
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.height(60.dp)
+                                    ) {
+                                        VisaImage(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .clip(shape = RoundedCornerShape(8.dp))
+                                                .weight(1f)
+                                        )
+
+                                        MastercardImage(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .clip(shape = RoundedCornerShape(8.dp))
+                                                .weight(1f)
+                                        )
+
+                                        AmexImage(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .clip(shape = RoundedCornerShape(8.dp))
+                                                .weight(1f)
+                                        )
+
+                                        JcbImage(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .clip(shape = RoundedCornerShape(8.dp))
+                                                .weight(1f)
+                                        )
+                                    }
+                                }
+
+                                qrCodePaymentMethod -> {
+
+                                    Text(
+                                        text = "Scan QR Code",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 18.sp,
+                                        textAlign = TextAlign.Center,
+                                    )
+
+                                    PaymentQrCodeImage(
+                                        modifier = Modifier
+                                            .padding(horizontal = 20.dp)
+                                            .fillMaxWidth()
+                                            //.height(240.dp)
+                                            .height(220.dp)
+                                            .clip(
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
+                                    )
+
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.height(50.dp)
+                                    ) {
+                                        GrabPayImage(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .clip(shape = RoundedCornerShape(16.dp))
+                                                .weight(1f)
+                                        )
+
+                                        QrPayment2(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .clip(shape = RoundedCornerShape(16.dp))
+                                                .weight(1f)
+                                        )
+
+                                        QrPayment3(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .clip(shape = RoundedCornerShape(16.dp))
+                                                .weight(1f)
+                                        )
+
+                                        QrPayment4(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .clip(shape = RoundedCornerShape(16.dp))
+                                                .weight(1f)
+                                        )
+
+                                        ApplePayImage(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .clip(shape = RoundedCornerShape(16.dp))
+                                                .weight(1f)
+                                        )
+
+                                        QrPayment6(
+                                            modifier = Modifier
+                                                .fillMaxHeight()
+                                                .clip(shape = RoundedCornerShape(16.dp))
+                                                .weight(1f)
+                                        )
+                                    }
+
+                                    NoteChip(
+                                        text = "Ask customer to scan with GrabPay",
+                                        color = Color.White,
+                                        modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                    )
+                                }
+
+                                cashPaymentMethod -> {
+                                    Text(
+                                        text = "Please pay cash",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 18.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+
+                                viaLinkPaymentMethod -> {
+
+                                    var payByLinkRequest = PayByLinkRequest(
+                                        PBLLinkName = "PayByLink Test",
+                                        ExpiryDate = SimpleDateFormat("YYYY-dd MMMM, YYYY HH:mm:ss").format(
+                                            Date()
+                                        ), //Date().toString(),
+                                        Product = listOf<PayByLinkRequestProduct>(
+                                            PayByLinkRequestProduct(
+                                                Currency = currency,
+                                                Name = "No Name",
+                                                Quantity = 1,
+                                                Price = 100f,
+                                                TotalPrice = "100"
+                                            )
+                                        )
+                                    )
+                                    var payByLinkResponse by remember {
+                                        mutableStateOf<PayByLinkResponse?>(
+                                            null
+                                        )
+                                    }
+                                    var payByLinkApiResponseLoading by remember {
+                                        mutableStateOf(
+                                            false
+                                        )
+                                    }
+
+                                    LaunchedEffect(Unit) {
+                                        try {
+                                            payByLinkApiResponseLoading = true
+                                            payByLinkResponse = payByLink(context, payByLinkRequest)
+
+                                            println("payByLinkResponse: $payByLinkResponse")
+
+                                        } catch (e: Exception) {
+                                            Toast.makeText(
+                                                context,
+                                                "Error generating payment link...",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        } finally {
+                                            payByLinkApiResponseLoading = false
+                                        }
+                                    }
+
+                                    if (payByLinkApiResponseLoading) MyCircularProgressIndicator()
+                                    else if (payByLinkResponse.isNotNull()) {
+
+                                        Column(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                                        ) {
+                                            Text(
+                                                text = "Pay Via Link",
+                                                color = Color.White,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 18.sp,
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+
+                                            Spacer(modifier = Modifier.height(10.dp))
+
+                                            PayByLinkImage(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 20.dp)
+                                                    .fillMaxWidth()
+                                                    .height(100.dp)
+                                                    .clip(
+                                                        shape = RoundedCornerShape(16.dp)
+                                                    )
+                                            )
+
+                                            Spacer(modifier = Modifier.height(10.dp))
+
+
+                                            SelectionContainer(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .background(
+                                                        color = Color(0xFFDCEAFE),
+                                                        shape = RoundedCornerShape(11.dp)
+                                                    )
+                                                    .padding(vertical = 16.dp, horizontal = 12.dp),
+                                            ) {
+                                                Text(
+                                                    text = "https://daspay/" + payByLinkResponse!!.data.ID,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 16.sp,
+                                                    color = primary900,
+                                                    maxLines = 1,
+                                                    textAlign = TextAlign.Center,
+                                                    modifier = Modifier.horizontalScroll(state = rememberScrollState())
+                                                )
+                                            }
+
+
+                                            NoteChip(
+                                                text = "Share this link with the customer",
+                                                color = Color.White
+                                            )
+
+                                            Spacer(modifier = Modifier.height(10.dp))
+
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                            ) {
+                                                EmailButton(
+                                                    text = "Email",
+                                                    email = Email(),
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .border(
+                                                            2.dp,
+                                                            color = primary100.copy(alpha = 0.2f),
+                                                            shape = RoundedCornerShape(10.dp)
+                                                        )
+                                                        .background(
+                                                            Color.White,
+                                                            shape = RoundedCornerShape(10.dp)
+                                                        )
+                                                        //.padding(horizontal = 10.dp, vertical = 20.dp)
+                                                        .padding(
+                                                            horizontal = 10.dp, vertical = 16.dp
+                                                        )
+                                                )
+
+                                                ShareButton(
+                                                    text = "Share",
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .border(
+                                                            2.dp,
+                                                            color = primary100.copy(alpha = 0.2f),
+                                                            shape = RoundedCornerShape(10.dp)
+                                                        )
+                                                        .background(
+                                                            Color.White,
+                                                            shape = RoundedCornerShape(10.dp)
+                                                        )
+                                                        //.padding(horizontal = 10.dp, vertical = 20.dp)
+                                                        .padding(
+                                                            horizontal = 10.dp, vertical = 16.dp
+                                                        )
+                                                )
+
+                                                ScanButton(
+                                                    text = "Scan",
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .border(
+                                                            2.dp,
+                                                            color = primary100.copy(alpha = 0.2f),
+                                                            shape = RoundedCornerShape(10.dp)
+                                                        )
+                                                        .background(
+                                                            Color.White,
+                                                            shape = RoundedCornerShape(10.dp)
+                                                        )
+                                                        //.padding(horizontal = 10.dp, vertical = 20.dp)
+                                                        .padding(
+                                                            horizontal = 10.dp, vertical = 16.dp
+                                                        )
+                                                )
+                                            }
+                                        }
+                                    } else {
+                                        Text(
+                                            text = "Error generating payment link. Try again after some time...",
+                                            color = red300,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 18.sp,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+
+                                    }
                                 }
                             }
                         }
-                    }
                     }
                 }) {
                 ChargeMoneyBottomSectionContent(

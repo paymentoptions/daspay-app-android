@@ -5,7 +5,6 @@ import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import kotlinx.serialization.Serializable
 
 @Serializable
-
 class FoodItem(
     val item: ProductListDataRecord,
     var cartQuantity: Int = 0,
@@ -27,7 +26,7 @@ class FoodItem(
     }
 
     fun imageUrl(): String {
-        return if (this.item.ProductImage.isNotNull()) this.item.ProductImage else ""
+        return if (this.item.ProductImage.isNotNull()) this.item.ProductImage!! else ""
     }
 
     override fun toString(): String {

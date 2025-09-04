@@ -63,8 +63,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var isLoading by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-    val credentialModel = CredentialModel.Empty
-//    val credentialModel = CredentialModel.Robowah
+//    val credentialModel = CredentialModel.Empty
+    val credentialModel = CredentialModel.Robowah
 
     val emailState = rememberTextFieldState(initialText = credentialModel.email)
     var emailError by remember { mutableStateOf(false) }

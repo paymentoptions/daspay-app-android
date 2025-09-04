@@ -31,7 +31,7 @@ fun FoodImage(
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         AsyncImage(
             model = imageUrl,
-            contentDescription = null,
+            contentDescription = name,
             modifier = Modifier
                 .fillMaxSize()
                 .clip(RoundedCornerShape(50))
