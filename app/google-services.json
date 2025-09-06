@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "318516968088",
+    "project_id": "daspay-1c600",
+    "storage_bucket": "daspay-1c600.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:318516968088:android:10b331687b274d46efaeed",
+        "android_client_info": {
+          "package_name": "com.paymentoptions.pos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZN17ZVkQeIbUuQ9_Xbj44fBK5Kc2c-fA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
