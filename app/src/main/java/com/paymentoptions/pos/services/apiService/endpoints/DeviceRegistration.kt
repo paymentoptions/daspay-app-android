@@ -39,8 +39,6 @@ suspend fun completeDeviceRegistration(
             DeviceMetadata = deviceMetadata
         )
 
-
-
         val response = RetrofitClient.api.completeDeviceRegistration(requestHeaders, requestBody)
 
         Result.success(response)
@@ -76,6 +74,8 @@ suspend fun getExternalDeviceConfiguration(
 
         val idToken = authDetails?.data?.token?.idToken ?: ""
         val requestHeaders = generateRequestHeaders(idToken)
+
+        //Log.d("Request Headers-->", "$requestHeaders->$deviceNumber->$uniqueCode")
 
         // The function name here is now corrected
         val response = RetrofitClient.api.getDeviceConfiguration(requestHeaders, deviceNumber, uniqueCode)
