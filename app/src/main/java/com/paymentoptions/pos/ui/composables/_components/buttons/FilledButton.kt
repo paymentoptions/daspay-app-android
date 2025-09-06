@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables._components.images.loaders.LoaderWhiteImage
 import com.paymentoptions.pos.ui.theme.disabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 
@@ -43,7 +43,7 @@ fun FilledButton(
         shape = RoundedCornerShape(6.dp),
 //        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 0.dp)
     ) {
-        if (isLoading) MyCircularProgressIndicator(color = Color.White)
+        if (isLoading) LoaderWhiteImage()
         else Text(text = text, fontSize = fontSize, fontWeight = fontWeight, lineHeight = 1.em)
     }
 }

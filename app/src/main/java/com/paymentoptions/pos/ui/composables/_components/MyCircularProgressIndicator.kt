@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.paymentoptions.pos.ui.composables._components.images.LoaderImage
+import com.paymentoptions.pos.ui.composables._components.images.loaders.LoaderImage
 import com.paymentoptions.pos.ui.theme.primary100
 
 @Composable

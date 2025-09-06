@@ -12,11 +12,9 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
-
 const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/api/v1/"
 
 interface ApiService {
-    //Auth
     @POST("auth/signIn/")
     suspend fun signIn(
         @HeaderMap headers: Map<String, String>,
@@ -61,7 +59,6 @@ interface ApiService {
         @Body request: TransactionListV2Request,
     ): TransactionListResponse
 
-
     @POST("paybylink/add/DASMID/{dasmid}")
     suspend fun payByLink(
         @HeaderMap headers: Map<String, String>,
@@ -81,6 +78,12 @@ interface ApiService {
         @Body request: PaymentRequest,
     ): PaymentResponse
 
+    @POST("notification/payments/webhook/notify/minesec")
+    suspend fun paymentStatus(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: PaymentStatusRequest,
+    ): PaymentResponse
+
     @GET("entities/merchant/catalog/all-categories/{merchantId}")
     suspend fun categoryList(
         @HeaderMap headers: Map<String, String>,
@@ -92,6 +95,17 @@ interface ApiService {
         @HeaderMap headers: Map<String, String>,
         @Path("categoryId") categoryId: String,
     ): ProductListResponse
+
+    @GET("daspay/transactions/list")
+    suspend fun insights(
+        @HeaderMap headers: Map<String, String>,
+        @Query("deviceNumber") deviceNumber: String = "12345678kg1",
+        @Query("uniqueCode") uniqueCode: String = "213fsdHJ51MOBILEKG1",
+        @Query("TimeZone") timeZone: String = "undefined",
+        @Query("startDate") startDate: String = "undefined",
+        @Query("endDate") endDate: String = "undefined",
+        @Query("take") take: Int,
+    ): InsightsResponse
 }
 
 var okHttpClient = OkHttpClient.Builder()

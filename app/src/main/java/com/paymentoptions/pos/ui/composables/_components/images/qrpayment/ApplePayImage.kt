@@ -10,7 +10,7 @@ import com.paymentoptions.pos.R
 @Composable
 fun ApplePayImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.qr_payment_5),
+        painter = painterResource(id = R.drawable.apple_pay),
         contentDescription = "Qr code payment method",
         contentScale = ContentScale.Fit,
         modifier = modifier

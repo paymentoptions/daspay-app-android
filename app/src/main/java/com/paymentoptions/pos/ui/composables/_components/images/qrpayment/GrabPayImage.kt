@@ -10,7 +10,7 @@ import com.paymentoptions.pos.R
 @Composable
 fun GrabPayImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.qr_payment_1),
+        painter = painterResource(id = R.drawable.grab_pay),
         contentDescription = "Qr code payment method",
         contentScale = ContentScale.Fit,
         modifier = modifier

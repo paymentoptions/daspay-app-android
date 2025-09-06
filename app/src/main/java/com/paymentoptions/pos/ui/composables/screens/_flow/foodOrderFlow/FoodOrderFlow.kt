@@ -72,12 +72,12 @@ import com.paymentoptions.pos.ui.composables._components.images.cardpayment.Amex
 import com.paymentoptions.pos.ui.composables._components.images.cardpayment.JcbImage
 import com.paymentoptions.pos.ui.composables._components.images.cardpayment.MastercardImage
 import com.paymentoptions.pos.ui.composables._components.images.cardpayment.VisaImage
+import com.paymentoptions.pos.ui.composables._components.images.qrpayment.AliPayImage
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.ApplePayImage
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.GrabPayImage
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment2
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment3
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment4
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment6
+import com.paymentoptions.pos.ui.composables._components.images.qrpayment.WechatPayImage
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
@@ -507,7 +507,7 @@ fun FoodOrderFlow(
                                             .weight(1f)
                                     )
 
-                                    QrPayment4(
+                                    AliPayImage(
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .clip(shape = RoundedCornerShape(16.dp))
@@ -521,7 +521,7 @@ fun FoodOrderFlow(
                                             .weight(1f)
                                     )
 
-                                    QrPayment6(
+                                    WechatPayImage(
                                         modifier = Modifier
                                             .fillMaxHeight()
                                             .clip(shape = RoundedCornerShape(16.dp))
