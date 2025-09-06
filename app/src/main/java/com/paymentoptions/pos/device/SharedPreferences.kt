@@ -2,6 +2,8 @@ package com.paymentoptions.pos.device
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Apms
+import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Schemes
 import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
@@ -175,4 +177,24 @@ fun getDasmid(context: Context): String {
         dasmid = it.data.paymentMethod.firstOrNull()?.DASMID ?: ""
     }
     return dasmid
+}
+
+fun getSchemes(context: Context): DevicePaymentMethod_Schemes {
+    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
+    var schemes = DevicePaymentMethod_Schemes()
+
+    externalDeviceConfiguration?.let {
+        schemes = it.data.paymentMethod.firstOrNull()?.schemes ?: DevicePaymentMethod_Schemes()
+    }
+    return schemes
+}
+
+fun getApms(context: Context): DevicePaymentMethod_Apms {
+    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
+    var apms = DevicePaymentMethod_Apms()
+
+    externalDeviceConfiguration?.let {
+        apms = it.data.paymentMethod.firstOrNull()?.apms ?: DevicePaymentMethod_Apms()
+    }
+    return apms
 }

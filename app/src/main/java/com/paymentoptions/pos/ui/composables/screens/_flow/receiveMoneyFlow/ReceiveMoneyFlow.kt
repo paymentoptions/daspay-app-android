@@ -14,6 +14,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,8 @@ import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
+import com.paymentoptions.pos.device.getApms
+import com.paymentoptions.pos.device.getSchemes
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
@@ -73,12 +76,12 @@ import com.paymentoptions.pos.ui.composables._components.images.cardpayment.Amex
 import com.paymentoptions.pos.ui.composables._components.images.cardpayment.JcbImage
 import com.paymentoptions.pos.ui.composables._components.images.cardpayment.MastercardImage
 import com.paymentoptions.pos.ui.composables._components.images.cardpayment.VisaImage
+import com.paymentoptions.pos.ui.composables._components.images.qrpayment.AliPayImage
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.ApplePayImage
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.GrabPayImage
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment2
 import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment3
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment4
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment6
+import com.paymentoptions.pos.ui.composables._components.images.qrpayment.WechatPayImage
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
@@ -210,11 +213,11 @@ fun ReceiveMoneyFlow(
                                     initialOffsetX = { fullWidth -> fullWidth }) + fadeIn(
                                     animationSpec = tween(animationDuration)
                                 )).togetherWith(
-                                        slideOutHorizontally(
-                                            animationSpec = tween(animationDuration),
-                                            targetOffsetX = { fullWidth -> -fullWidth }) + fadeOut(
-                                            animationSpec = tween(animationDuration)
-                                        )
+                                    slideOutHorizontally(
+                                        animationSpec = tween(animationDuration),
+                                        targetOffsetX = { fullWidth -> -fullWidth }) + fadeOut(
+                                        animationSpec = tween(animationDuration)
+                                    )
                                 )
                             } else {
                                 (slideInHorizontally(
@@ -222,11 +225,11 @@ fun ReceiveMoneyFlow(
                                     initialOffsetX = { fullWidth -> -fullWidth }) + fadeIn(
                                     animationSpec = tween(animationDuration)
                                 )).togetherWith(
-                                        slideOutHorizontally(
-                                            animationSpec = tween(animationDuration),
-                                            targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(
-                                            animationSpec = tween(animationDuration)
-                                        )
+                                    slideOutHorizontally(
+                                        animationSpec = tween(animationDuration),
+                                        targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(
+                                        animationSpec = tween(animationDuration)
+                                    )
                                 )
                             }
                         }) { paymentMethod ->
@@ -308,38 +311,53 @@ fun ReceiveMoneyFlow(
                                         modifier = Modifier.fillMaxWidth()
                                     )
 
+                                    var schemes by remember { mutableStateOf(getSchemes(context)) }
+
                                     Row(
                                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.height(60.dp)
                                     ) {
-                                        VisaImage(
+                                        if (schemes.hasVISA) VisaImage(
                                             modifier = Modifier
                                                 .fillMaxHeight()
                                                 .clip(shape = RoundedCornerShape(8.dp))
                                                 .weight(1f)
-                                        )
+                                                .clickable {
+                                                    TODO()
+                                                })
 
-                                        MastercardImage(
+                                        if (schemes.hasMastercard) MastercardImage(
                                             modifier = Modifier
                                                 .fillMaxHeight()
                                                 .clip(shape = RoundedCornerShape(8.dp))
                                                 .weight(1f)
-                                        )
+                                                .clickable {
+                                                    TODO()
+                                                })
 
-                                        AmexImage(
+                                        if (schemes.hasAmex) AmexImage(
                                             modifier = Modifier
                                                 .fillMaxHeight()
                                                 .clip(shape = RoundedCornerShape(8.dp))
                                                 .weight(1f)
-                                        )
+                                                .clickable {
+                                                    TODO()
+                                                })
 
-                                        JcbImage(
+                                        if (schemes.hasJCB) JcbImage(
                                             modifier = Modifier
                                                 .fillMaxHeight()
                                                 .clip(shape = RoundedCornerShape(8.dp))
                                                 .weight(1f)
-                                        )
+                                                .clickable {
+                                                    TODO()
+                                                })
+
+                                        if (schemes.hasUnionPay) {
+                                            //Union pay image not provided
+                                            TODO()
+                                        }
                                     }
                                 }
 
@@ -369,6 +387,8 @@ fun ReceiveMoneyFlow(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier.height(50.dp)
                                     ) {
+                                        var apms by remember { mutableStateOf(getApms(context)) }
+
                                         GrabPayImage(
                                             modifier = Modifier
                                                 .fillMaxHeight()
@@ -390,21 +410,21 @@ fun ReceiveMoneyFlow(
                                                 .weight(1f)
                                         )
 
-                                        QrPayment4(
+                                        if (apms.hasAlipay) AliPayImage(
                                             modifier = Modifier
                                                 .fillMaxHeight()
                                                 .clip(shape = RoundedCornerShape(16.dp))
                                                 .weight(1f)
                                         )
 
-                                        ApplePayImage(
+                                        if (apms.hasApplePay) ApplePayImage(
                                             modifier = Modifier
                                                 .fillMaxHeight()
                                                 .clip(shape = RoundedCornerShape(16.dp))
                                                 .weight(1f)
                                         )
 
-                                        QrPayment6(
+                                        if (apms.hasWechatpay) WechatPayImage(
                                             modifier = Modifier
                                                 .fillMaxHeight()
                                                 .clip(shape = RoundedCornerShape(16.dp))

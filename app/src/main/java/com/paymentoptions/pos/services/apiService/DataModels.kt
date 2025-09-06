@@ -311,6 +311,58 @@ data class PaymentResponse(
 )
 // -------------------------------------------------------
 
+// Payment status related ----------------------------------
+
+data class PaymentStatusAmount(
+    val currency: String,
+    val value: Float,
+)
+
+data class PaymentStatusRequest(
+    val tranId: String,
+    val cvmPerformed: String = "NO_CVM",
+    val tsi: String = "0000",
+    val mcc: String = "",
+    val merchantName: String = "2C2P",
+    val tranStatus: String = "APPROVED",
+    val tranType: String = "SALE",
+    val atc: String = "01B4",
+    val createdAt: String = "1719878285879",
+    val trace: String = "491586",
+    val acqMid: String = "065240116000002",
+    val callbackUrl: String = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454",
+    val entryMode: String = "NFC",
+    val updatedAt: String = "1719878291684",
+    val amount: PaymentStatusAmount,
+    val batchNo: String = "101318",
+    val appName: String = "5649534120435245444954",
+    val linkedTranId: String = "33961491-58f2-42e5-902e-f955d68d2a01",
+    val acqTid: String = "90004300",
+    val merchantAddr: String = "",
+    val rrn: String = "407020000174",
+    val tc: String = "437484CAB4A9557A",
+    val tvr: String = "0000000000",
+    val accountMasked: String = "**** **** **** 2377",
+    val sdkId: String = "515cd36f3f09bfc2",
+    val paymentMethod: String = "VISA",
+    val hostMessageFormat: String = "MS_ENABLER",
+    val notifyId: Int = 1433,
+    val aid: String = "A0000000031010",
+)
+
+data class PaymentStatusResponseData(
+    val foo: String,
+)
+
+data class PaymentStatusResponse(
+    val statusCode: Int,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: PaymentStatusResponseData,
+)
+// -------------------------------------------------------
+
 // PayByLink related ----------------------------------
 data class PayByLinkRequestProduct(
     val Currency: String,
@@ -360,7 +412,6 @@ data class PayByLinkResponse(
     val data: PayByLinkResponseData,
 )
 // -------------------------------------------------------
-
 
 // Product categories related ----------------------------------
 data class CategoryListDataRecord(
@@ -423,7 +474,7 @@ data class ProductListResponse(
     val success: Boolean,
     val data: ProductListResponseData,
 )
-
+// -------------------------------------------------------
 
 //Data model for APIs call POST External Device Complete Registration and GET External Device Confirmation
 @Serializable
@@ -472,24 +523,34 @@ data class DeviceMetadata(
 )
 
 @Serializable
+data class DevicePaymentMethod_Schemes(
+    val hasVISA: Boolean = false,
+    val hasMastercard: Boolean = false,
+    val hasJCB: Boolean = false,
+    val hasAmex: Boolean = false,
+    val hasUnionPay: Boolean = false,
+)
+
+@Serializable
+data class DevicePaymentMethod_Apms(
+    val hasAlipay: Boolean = false,
+    val hasWechatpay: Boolean = false,
+    val hasApplePay: Boolean = false,
+    val hasGooglePay: Boolean = false,
+    val hasDinersClub: Boolean = false,
+    val hasGCash: Boolean = false,
+    val hasPayPay: Boolean = false,
+    val hasKonbini: Boolean = false,
+    val hasPayEasy: Boolean = false,
+)
+
+@Serializable
 data class DevicePaymentMethod(
     val DASMID: String,
-    val hasVISA: Boolean,
-    val hasMastercard: Boolean,
-    val hasJCB: Boolean,
-    val hasAmex: Boolean,
-    val hasUnionPay: Boolean,
-    val hasAlipay: Boolean,
-    val hasWechatpay: Boolean,
-    val hasApplePay: Boolean,
-    val hasGooglePay: Boolean,
-    val hasDinersClub: Boolean,
-    val hasGCash: Boolean,
-    val hasPayPay: Boolean,
-    val hasKonbini: Boolean,
-    val hasPayEasy: Boolean,
     val TransactionCCY: List<String>,
     val SettlementCCY: String,
+    val schemes: DevicePaymentMethod_Schemes,
+    val apms: DevicePaymentMethod_Apms,
 )
 
 @Serializable
@@ -498,5 +559,16 @@ data class CompleteDeviceRegistrationRequest(
     val DeviceNumber: String,
     val DeviceMetadata: DeviceMetadata,
     val DeviceType: String = "MOBILE",
+)
+// -------------------------------------------------------
+
+
+// Insights related ---------------------------------------
+data class InsightsResponse(
+    val statusCode: Int,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+//    val data: ExternalConfigData,
 )
 // -------------------------------------------------------

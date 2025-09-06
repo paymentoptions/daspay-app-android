@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.ui.composables._components.images
+package com.paymentoptions.pos.ui.composables._components.images.loaders
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,9 +11,9 @@ import coil3.compose.AsyncImage
 import com.paymentoptions.pos.R
 
 @Composable
-fun LoaderImage(modifier: Modifier = Modifier) {
+fun LoaderWhiteImage(modifier: Modifier = Modifier) {
     AsyncImage(
-        model = R.drawable.loader,
+        model = R.drawable.loader_white,
         contentDescription = "Loading Animation",
         contentScale = ContentScale.Fit,
         modifier = modifier
@@ -22,8 +22,8 @@ fun LoaderImage(modifier: Modifier = Modifier) {
 
 @Preview
 @Composable
-fun LoaderImagePreview() {
-    LoaderImage(
+fun LoaderWhiteImagePreview() {
+    LoaderWhiteImage(
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)

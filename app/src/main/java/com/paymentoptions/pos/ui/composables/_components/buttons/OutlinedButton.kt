@@ -12,7 +12,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables._components.images.loaders.LoaderBlueImage
 import com.paymentoptions.pos.ui.theme.primary900
 
 @Composable
@@ -34,7 +34,7 @@ fun OutlinedButton(
         ),
 //        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        if (isLoading) MyCircularProgressIndicator(color = Color.White)
+        if (isLoading) LoaderBlueImage()
         else Text(text = text, fontSize = fontSize, fontWeight = fontWeight)
     }
 }
