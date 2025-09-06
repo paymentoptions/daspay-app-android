@@ -16,8 +16,8 @@ fun DashboardScreen(navController: NavController) {
     SectionedLayout(
         navController = navController,
         bottomBarContent = BottomBarContent.NAVIGATION_BAR,
-        bottomSectionMinHeightRatio = 0.8f,
-        bottomSectionMaxHeightRatio = 0.8f,
+        bottomSectionMinHeightRatio = 0.9f,
+        bottomSectionMaxHeightRatio = 0.9f,
         bottomSectionPaddingInDp = 0.dp,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
     ) {

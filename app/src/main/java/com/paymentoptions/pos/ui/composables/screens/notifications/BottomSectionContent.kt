@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.transactionList
+import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
@@ -118,7 +118,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            val transactionListFromAPI = transactionList(context, take, skip)
+            val transactionListFromAPI = transactionListV2(context, take, skip)
 
             if (transactionListFromAPI != null) {
                 maxPage =
@@ -146,10 +146,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         } catch (e: Exception) {
             Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
 
-            if (e.toString().contains("HTTP 401"))
-                navController.navigate(Screens.SignIn.route) {
-                    popUpTo(0) { inclusive = true }
-                }
+            if (e.toString().contains("HTTP 401")) navController.navigate(Screens.SignIn.route) {
+                popUpTo(0) { inclusive = true }
+            }
         } finally {
             apiResponseAvailable = true
         }

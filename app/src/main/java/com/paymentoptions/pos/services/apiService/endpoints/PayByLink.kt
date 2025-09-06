@@ -2,13 +2,12 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.getDasmid
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.generateRequestHeaders
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
-import com.paymentoptions.pos.utils.decodeJwtPayload
-import com.paymentoptions.pos.utils.getDasmidFromToken
 
 suspend fun payByLink(
     context: Context,
@@ -25,8 +24,7 @@ suspend fun payByLink(
         val idToken = authDetails?.data?.token?.idToken
         val requestHeaders = generateRequestHeaders(idToken ?: "")
 
-        val decodedJwtPayloadJson = decodeJwtPayload(idToken ?: "")
-        val dasmid = getDasmidFromToken(decodedJwtPayloadJson)
+        val dasmid = getDasmid(context)
 
         println("payByLink: $payByLinkRequest")
         var response: PayByLinkResponse = RetrofitClient.api.payByLink(

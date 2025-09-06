@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,11 +45,6 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.theme.borderColor
-import com.paymentoptions.pos.ui.theme.borderThin
-import com.paymentoptions.pos.ui.theme.borderThinError
-import com.paymentoptions.pos.ui.theme.green200
-import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
@@ -99,10 +94,10 @@ fun TransactionSummary(
     transaction: TransactionListDataRecord,
     longClickedTransactionId: String = "",
     onLongClick: (String) -> Unit = {},
-    onSwipeLeft: (String) -> Unit = {},   // 👈 added
-    onSwipeRight: (String) -> Unit = {}
+    onSwipeLeft: (String) -> Unit = {},
+    onSwipeRight: (String) -> Unit = {},
 ) {
-    val successful = transaction.status == "SUCCESSFUL"
+    transaction.status == "SUCCESSFUL"
     val transactionAmount = transaction.amount.toFloat()
     val isTransactionAmountPositive = transactionAmount > 0
     val isCardTransaction = transaction.PaymentType == "CARDPAYMENT"
@@ -180,12 +175,12 @@ fun TransactionSummary(
             ),
             modifier = Modifier
                 .shadow(
-                    elevation = 8.dp,
+                    elevation = 16.dp,
                     shape = RoundedCornerShape(borderRadius),
                     //ambientColor = Color.Black.copy(alpha = 0.2f),
                     //spotColor = Color.Black.copy(alpha = 0.2f)
-                    ambientColor = Color(0xFF3F51B5).copy(alpha = 0.5f),
-                    spotColor = Color(0xFF3F51B5).copy(alpha = 0.5f)
+                    ambientColor = Color(0xFF64B5F6).copy(alpha = 0.8f), // More opaque
+                    spotColor = Color(0xFF2196F3).copy(alpha = 0.6f)
                 )
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(

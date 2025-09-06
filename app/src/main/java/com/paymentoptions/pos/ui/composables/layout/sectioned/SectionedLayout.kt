@@ -33,7 +33,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -52,7 +51,6 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
-
 
 val LOGO_TOP_PADDING_IN_DP = 45.dp
 val LOGO_HEIGHT_IN_DP = 50.dp
@@ -147,7 +145,7 @@ fun SectionedLayout(
                             .plus(LOGO_HEIGHT_IN_DP) else 0.dp
                     )
                     .height(IntrinsicSize.Min)
-                    .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp )
+                    .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(2f)
                     .clip(

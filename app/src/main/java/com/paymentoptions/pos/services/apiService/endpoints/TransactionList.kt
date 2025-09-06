@@ -7,6 +7,8 @@ import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.generateRequestHeaders
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
+// Deprecated in favor of TransactionListV2 -----------------------------------
+
 suspend fun transactionList(
     context: Context,
     take: Int = 10,

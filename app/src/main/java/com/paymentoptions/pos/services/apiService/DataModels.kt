@@ -71,30 +71,8 @@ data class TransactionListV2Request(
     val take: Int,
     val skip: Int,
     val TimeZone: String = "Indian/Mahe",
-    val filter: Array<TransactionListV2RequestFilter>,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as TransactionListV2Request
-
-        if (take != other.take) return false
-        if (skip != other.skip) return false
-        if (TimeZone != other.TimeZone) return false
-        if (!filter.contentEquals(other.filter)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = take
-        result = 31 * result + skip
-        result = 31 * result + TimeZone.hashCode()
-        result = 31 * result + filter.contentHashCode()
-        return result
-    }
-}
+    val filter: List<TransactionListV2RequestFilter>,
+)
 
 data class TransactionListDataRecord(
     val uuid: String,
@@ -420,8 +398,10 @@ data class ProductListDataRecord(
     val ProductStatus: Boolean,
     val ProductPrice: Float,
     val ProductID: String,
-    val ProductImage: String,
+    val ProductImage: String?,
     val ProductCode: String,
+    val ProductFoodType: String,
+    val ProductSize: String,
     val CreatedAt: String?,
     val UpdatedAt: String?,
     val ProductStock: Int,
@@ -443,28 +423,32 @@ data class ProductListResponse(
     val success: Boolean,
     val data: ProductListResponseData,
 )
-//Data model for APIs call POST External Device Complete Registration and GET External Device Confirmation
 
+
+//Data model for APIs call POST External Device Complete Registration and GET External Device Confirmation
 @Serializable
 data class CompleteDeviceRegistrationResponse(
     val status: Int,
     val message: String,
     val messageCode: String,//added this field based on error response
-    val success: Boolean
+    val success: Boolean,
 )
+
 @Serializable
 data class ExternalConfigurationResponse(
     val statusCode: Int,
     val message: String,
     val messageCode: String,
     val success: Boolean,
-    val data: ExternalConfigData
+    val data: ExternalConfigData,
 )
+
 @Serializable
 data class ExternalConfigData(
     val deviceInfo: DeviceInfo,
-    val paymentMethod: List<DevicePaymentMethod>
+    val paymentMethod: List<DevicePaymentMethod>,
 )
+
 @Serializable
 data class DeviceInfo(
     val DeviceID: String,
@@ -477,14 +461,16 @@ data class DeviceInfo(
     val LastUsedAt: String,
     val CreatedAt: String,
     val UpdatedAt: String,
-    val Location: String? = null
+    val Location: String? = null,
 )
+
 @Serializable
 data class DeviceMetadata(
     val os: String,
     val version: String,
-    val manufacturer: String
+    val manufacturer: String,
 )
+
 @Serializable
 data class DevicePaymentMethod(
     val DASMID: String,
@@ -501,13 +487,16 @@ data class DevicePaymentMethod(
     val hasGCash: Boolean,
     val hasPayPay: Boolean,
     val hasKonbini: Boolean,
-    val hasPayEasy: Boolean
+    val hasPayEasy: Boolean,
+    val TransactionCCY: List<String>,
+    val SettlementCCY: String,
 )
+
 @Serializable
 data class CompleteDeviceRegistrationRequest(
     val UniqueCode: String,
     val DeviceNumber: String,
     val DeviceMetadata: DeviceMetadata,
-    val DeviceType: String = "MOBILE"
+    val DeviceType: String = "MOBILE",
 )
 // -------------------------------------------------------

@@ -4,11 +4,10 @@ import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
 import com.paymentoptions.pos.services.apiService.SignInResponse
-import com.paymentoptions.pos.ui.composables.screens._flow.foodorder.Cart
+import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import android.util.Log
 
 const val sharedPreferencesLabel: String = "my_prefs"
 
@@ -101,8 +100,7 @@ class SharedPreferences {
 
             val cartJsonString = sharedPreferences.getString("cart", null)
 
-            val cart =
-                cartJsonString?.let { Json.decodeFromString<Cart>(it) }
+            val cart = cartJsonString?.let { Json.decodeFromString<Cart>(it) }
 
             return cart
         }
@@ -122,9 +120,59 @@ class SharedPreferences {
         }
 
         fun getDeviceConfiguration(context: Context): ExternalConfigurationResponse? {
-            val sharedPreferences = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences =
+                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             val configJsonString = sharedPreferences.getString("device_config", null)
-            return configJsonString?.let { Json.decodeFromString<ExternalConfigurationResponse>(it)}
+            return configJsonString?.let { Json.decodeFromString<ExternalConfigurationResponse>(it) }
+        }
+
+        fun saveTokenStatus(context: Context, isVerified: Boolean) {
+            val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            with(sharedPref.edit()) {
+                putBoolean("token_verified", isVerified)
+                apply()
+            }
+        }
+
+        fun getTokenStatus(context: Context): Boolean {
+            val sharedPreferences =
+                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val isVerified = sharedPreferences.getBoolean("token_verified", false)
+
+            return isVerified
         }
     }
+}
+
+fun getTransactionCurrency(context: Context): String {
+    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
+    var transactionCurrency = ""
+
+    externalDeviceConfiguration?.let {
+        transactionCurrency =
+            it.data.paymentMethod.firstOrNull()?.TransactionCCY?.firstOrNull() ?: ""
+
+    }
+
+    return transactionCurrency
+}
+
+fun getSettlementCurrency(context: Context): String {
+    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
+    var settlementCurrency = ""
+
+    externalDeviceConfiguration?.let {
+        settlementCurrency = it.data.paymentMethod.firstOrNull()?.SettlementCCY ?: ""
+    }
+    return settlementCurrency
+}
+
+fun getDasmid(context: Context): String {
+    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
+    var dasmid = ""
+
+    externalDeviceConfiguration?.let {
+        dasmid = it.data.paymentMethod.firstOrNull()?.DASMID ?: ""
+    }
+    return dasmid
 }

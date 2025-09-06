@@ -1,10 +1,14 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
-import android.util.Log
-import com.google.gson.Gson
 import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.services.apiService.*
+import com.paymentoptions.pos.services.apiService.CompleteDeviceRegistrationRequest
+import com.paymentoptions.pos.services.apiService.CompleteDeviceRegistrationResponse
+import com.paymentoptions.pos.services.apiService.DeviceMetadata
+import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
+import com.paymentoptions.pos.services.apiService.RetrofitClient
+import com.paymentoptions.pos.services.apiService.generateRequestHeaders
+import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 import com.paymentoptions.pos.utils.getDeviceIdentifier
 
 
@@ -23,7 +27,6 @@ suspend fun completeDeviceRegistration(
 
         val idToken = authDetails?.data?.token?.idToken ?: ""
         val requestHeaders = generateRequestHeaders(idToken)
-
 
         val deviceNumber = getDeviceIdentifier(context)
         val uniqueCode = otp // The static unique code
