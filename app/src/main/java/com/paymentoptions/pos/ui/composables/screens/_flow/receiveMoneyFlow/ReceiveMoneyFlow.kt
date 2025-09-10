@@ -17,17 +17,26 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,8 +62,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
+import com.paymentoptions.pos.device.getApms
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
@@ -76,6 +88,7 @@ import com.paymentoptions.pos.ui.composables._components.paymentimagerow.Payment
 import com.paymentoptions.pos.ui.composables._components.paymentimagerow.PaymentSchemesRow
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.chargemoney.ChargeMoneyBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.inputnoney.InputMoneyBottomSectionContent
@@ -83,6 +96,7 @@ import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.rece
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionfailed.TransactionFailedBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionsuccessful.TransactionSuccessfulBottomSectionContent
 import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.utils.PaymentMethod
@@ -102,6 +116,7 @@ fun formatAmount(input: String): String {
     return "$dollars.$centPortion"
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiveMoneyFlow(
     navController: NavController,
@@ -132,7 +147,7 @@ fun ReceiveMoneyFlow(
     var signatureBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var signatureDate by remember { mutableStateOf(Date()) }
     var signaturePath by remember { mutableStateOf(Path()) }
-
+    var apms by remember { mutableStateOf(getApms(context)) }
     var startTapAndPay by remember { mutableStateOf(false) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -147,7 +162,7 @@ fun ReceiveMoneyFlow(
                 }
             }
         }
-        //adding observer to the lifecycel
+        //adding observer to the lifecycle
         lifecycleOwner.lifecycle.addObserver(observer)
         //removing the observer when the screen is closed
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -156,6 +171,11 @@ fun ReceiveMoneyFlow(
     if (!nfcStatusPair.first) {
         tapPaymentMethod.setIsEnabled(false)
         Toast.makeText(context, "Your device does not support NFC", Toast.LENGTH_SHORT).show()
+    }
+
+    if (!apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
+        qrCodePaymentMethod.setIsEnabled(false)
+        Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
     }
 
     fun updateFlowStage(newFoodOrderFlowStage: ReceiveMoneyFlowStage) {
@@ -295,7 +315,7 @@ fun ReceiveMoneyFlow(
                                             .scale(0.8f)
                                     )
 
-                                    PaymentSchemesRow(modifier = Modifier.height(60.dp))
+                                    PaymentSchemesRow(modifier = Modifier.height(20.dp))
                                 }
 
                                 qrCodePaymentMethod -> {
@@ -356,15 +376,13 @@ fun ReceiveMoneyFlow(
                                         )
                                     )
                                     var payByLinkResponse by remember {
-                                        mutableStateOf<PayByLinkResponse?>(
-                                            null
-                                        )
+                                        mutableStateOf<PayByLinkResponse?>(null)
                                     }
                                     var payByLinkApiResponseLoading by remember {
-                                        mutableStateOf(
-                                            false
-                                        )
+                                        mutableStateOf(false)
                                     }
+                                    var expanded by remember { mutableStateOf(true) }
+                                    val sheetState = rememberModalBottomSheetState()
 
                                     LaunchedEffect(Unit) {
                                         try {
@@ -386,6 +404,64 @@ fun ReceiveMoneyFlow(
 
                                     if (payByLinkApiResponseLoading) MyCircularProgressIndicator()
                                     else if (payByLinkResponse.isNotNull()) {
+
+                                        if (expanded) ModalBottomSheet(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            onDismissRequest = { expanded = false },
+                                            sheetState = sheetState,
+                                            containerColor = Color.White,
+                                            contentColor = primary500,
+                                            dragHandle = {}) {
+
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 20.dp)
+                                            ) {
+
+                                                Icon(
+                                                    painter = painterResource(R.drawable.logo),
+                                                    contentDescription = "logo",
+                                                    tint = primary500,
+                                                    modifier = Modifier
+                                                        .height(
+                                                            LOGO_HEIGHT_IN_DP.div(1.5f)
+                                                        )
+                                                        .align(Alignment.Center)
+                                                )
+
+                                                IconButton(
+                                                    modifier = Modifier.align(alignment = Alignment.CenterEnd),
+                                                    onClick = { expanded = false }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Close,
+                                                        contentDescription = "Close",
+                                                        modifier = Modifier.size(28.dp)
+                                                    )
+                                                }
+                                            }
+
+                                            Column(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+
+                                                PaymentQrCodeImage(
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 20.dp)
+                                                        .fillMaxWidth()
+                                                        .height(220.dp)
+                                                        .clip(shape = RoundedCornerShape(16.dp))
+                                                )
+
+                                                Spacer(modifier = Modifier.height(10.dp))
+
+                                                NoteChip(
+                                                    text = "Scan with your device",
+                                                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                                )
+                                            }
+                                        }
 
                                         Column(
                                             modifier = Modifier
@@ -416,7 +492,6 @@ fun ReceiveMoneyFlow(
                                             )
 
                                             Spacer(modifier = Modifier.height(10.dp))
-
 
                                             SelectionContainer(
                                                 modifier = Modifier

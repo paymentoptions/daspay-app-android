@@ -37,9 +37,9 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart

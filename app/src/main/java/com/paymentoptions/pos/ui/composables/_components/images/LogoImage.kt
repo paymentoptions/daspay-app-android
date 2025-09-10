@@ -9,8 +9,8 @@ import com.paymentoptions.pos.R
 @Composable
 fun LogoImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.logo), 
+        painter = painterResource(id = R.drawable.logo),
         contentDescription = "DASPay Logo",
-        modifier = modifier
+        modifier = modifier,
     )
 }

@@ -234,9 +234,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     .fillMaxWidth()
                     .height(46.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-
-                ) {
+                verticalAlignment = Alignment.CenterVertically
+            ) {
 
                 MyDropdown(
                     navController,

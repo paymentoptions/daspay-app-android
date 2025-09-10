@@ -1,8 +1,10 @@
 package com.paymentoptions.pos.ui.composables._components.paymentimagerow
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,20 +31,18 @@ fun PaymentSchemesRow(modifier: Modifier = Modifier) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
+        modifier = modifier.horizontalScroll(state = rememberScrollState())
     ) {
         if (schemes.hasVISA) VisaImage(
             modifier = Modifier
                 .fillMaxHeight()
                 .clip(shape = RoundedCornerShape(8.dp))
-                .weight(1f)
         )
 
         if (schemes.hasMastercard) MastercardImage(
             modifier = Modifier
                 .fillMaxHeight()
                 .clip(shape = RoundedCornerShape(8.dp))
-                .weight(1f)
         )
 
         if (schemes.hasAmex) AmexImage(
@@ -55,7 +55,6 @@ fun PaymentSchemesRow(modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxHeight()
                 .clip(shape = RoundedCornerShape(8.dp))
-                .weight(1f)
         )
 
         if (schemes.hasUnionPay) {
@@ -63,7 +62,6 @@ fun PaymentSchemesRow(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .fillMaxHeight()
                     .clip(shape = RoundedCornerShape(8.dp))
-                    .weight(1f)
             )
         }
     }

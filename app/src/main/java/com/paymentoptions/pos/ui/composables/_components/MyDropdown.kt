@@ -36,13 +36,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary500
-import com.paymentoptions.pos.ui.theme.shadowColor2
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 
 @OptIn(ExperimentalMaterial3Api::class)
