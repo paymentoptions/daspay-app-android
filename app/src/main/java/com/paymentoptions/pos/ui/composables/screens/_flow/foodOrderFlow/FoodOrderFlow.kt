@@ -551,7 +551,7 @@ fun FoodOrderFlow(
                                         ) {
                                             Icon(
                                                 painter = painterResource(R.drawable.logo),
-                                                contentDescription = "logo",
+                                                contentDescription = "DASPay Logo",
                                                 tint = primary500,
                                                 modifier = Modifier
                                                     .height(
