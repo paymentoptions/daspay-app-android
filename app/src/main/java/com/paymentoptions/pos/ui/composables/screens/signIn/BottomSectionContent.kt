@@ -38,6 +38,7 @@ import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.inProduction
 import com.paymentoptions.pos.utils.validation.validateEmail
 import com.paymentoptions.pos.utils.validation.validateOtp
 import com.paymentoptions.pos.utils.validation.validatePassword
@@ -63,8 +64,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var isLoading by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-//    val credentialModel = CredentialModel.Empty
-    val credentialModel = CredentialModel.Robowah
+    val credentialModel = if (inProduction) CredentialModel.Empty else CredentialModel.Robowah
 
     val emailState = rememberTextFieldState(initialText = credentialModel.email)
     var emailError by remember { mutableStateOf(false) }
