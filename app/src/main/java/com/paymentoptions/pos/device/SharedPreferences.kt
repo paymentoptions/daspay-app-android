@@ -198,3 +198,13 @@ fun getApms(context: Context): DevicePaymentMethod_Apms {
     }
     return apms
 }
+
+fun getDeviceId(context: Context): String? {
+    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
+    var deviceId: String? = null
+
+    externalDeviceConfiguration?.let {
+        deviceId = it.data.deviceInfo.DeviceID
+    }
+    return deviceId
+}

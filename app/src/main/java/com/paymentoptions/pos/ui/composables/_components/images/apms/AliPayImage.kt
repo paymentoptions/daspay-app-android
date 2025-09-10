@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.ui.composables._components.images.qrpayment
+package com.paymentoptions.pos.ui.composables._components.images.apms
 
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
@@ -8,9 +8,9 @@ import androidx.compose.ui.res.painterResource
 import com.paymentoptions.pos.R
 
 @Composable
-fun QrPayment2(modifier: Modifier = Modifier) {
+fun AliPayImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.qr_payment_2),
+        painter = painterResource(id = R.drawable.alipay_apms),
         contentDescription = "Qr code payment method",
         contentScale = ContentScale.Fit,
         modifier = modifier

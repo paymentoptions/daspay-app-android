@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.additionalcharge
 
-import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,11 +88,7 @@ fun AdditionalChargeBottomSectionContent(
         listOf("00", "0", "←"),
     )
     val context = LocalContext.current
-    context as? Activity
-    rememberCoroutineScope()
-
     val authDetails = SharedPreferences.getAuthDetails(context)
-
     val noteState = rememberTextFieldState()
 
     if (authDetails == null) {

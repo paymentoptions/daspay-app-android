@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.ui.composables._components.images.qrpayment
+package com.paymentoptions.pos.ui.composables._components.images.schemes
 
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
@@ -8,9 +8,9 @@ import androidx.compose.ui.res.painterResource
 import com.paymentoptions.pos.R
 
 @Composable
-fun WechatPayImage(modifier: Modifier = Modifier) {
+fun VisaImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.wechat_pay),
+        painter = painterResource(id = R.drawable.visa),
         contentDescription = "Qr code payment method",
         contentScale = ContentScale.Fit,
         modifier = modifier

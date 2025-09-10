@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -35,10 +34,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
@@ -53,8 +54,6 @@ import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
-import com.paymentoptions.pos.device.getApms
-import com.paymentoptions.pos.device.getSchemes
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
@@ -66,22 +65,15 @@ import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndic
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
+import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
 import com.paymentoptions.pos.ui.composables._components.images.CreditCardImage
 import com.paymentoptions.pos.ui.composables._components.images.PayByLinkImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentTapToPayImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.AmexImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.JcbImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.MastercardImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.VisaImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.AliPayImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.ApplePayImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.GrabPayImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment2
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment3
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.WechatPayImage
+import com.paymentoptions.pos.ui.composables._components.paymentimagerow.PaymentApmsRow
+import com.paymentoptions.pos.ui.composables._components.paymentimagerow.PaymentSchemesRow
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
@@ -116,6 +108,7 @@ fun ReceiveMoneyFlow(
     initialReceiveMoneyFlowStage: ReceiveMoneyFlowStage = ReceiveMoneyFlowStage.INPUT_MONEY,
 ) {
     val context = LocalContext.current
+    rememberCoroutineScope()
     val currency = getTransactionCurrency(context)
 
     val enableScrollingInsideBottomSectionContent = false
@@ -133,13 +126,14 @@ fun ReceiveMoneyFlow(
     var nfcStatusPair by remember { mutableStateOf(Nfc.getStatus(context)) }
 
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
-    var showNFCNotPresent by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
 
     var transaction: TransactionListDataRecord? = null
     var signatureBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var signatureDate by remember { mutableStateOf(Date()) }
     var signaturePath by remember { mutableStateOf(Path()) }
+
+    var startTapAndPay by remember { mutableStateOf(false) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -156,15 +150,12 @@ fun ReceiveMoneyFlow(
         //adding observer to the lifecycel
         lifecycleOwner.lifecycle.addObserver(observer)
         //removing the observer when the screen is closed
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-
     if (!nfcStatusPair.first) {
-        showNFCNotPresent = true
         tapPaymentMethod.setIsEnabled(false)
+        Toast.makeText(context, "Your device does not support NFC", Toast.LENGTH_SHORT).show()
     }
 
     fun updateFlowStage(newFoodOrderFlowStage: ReceiveMoneyFlowStage) {
@@ -244,14 +235,12 @@ fun ReceiveMoneyFlow(
                             //when (selectedPaymentMethod) {
                             when (paymentMethod) {
                                 tapPaymentMethod -> {
-                                    val currentNfcStatus = Nfc.getStatus(context)
+                                    val currentNfcStatusPair = Nfc.getStatus(context)
 
                                     if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
                                         true
                                     else if (!nfcStatusPair.second) showNFCNotEnabled = true
-                                    else if (!currentNfcStatus.second) {//check the fresh status
-                                        showNFCNotEnabled = true
-                                    }
+                                    else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
 
                                     MyDialog(
                                         showDialog = false,
@@ -274,7 +263,7 @@ fun ReceiveMoneyFlow(
 
                                     MyDialog(
                                         showDialog = showNFCNotEnabled,
-                                        title = "NFC Required",
+                                        title = "NFC Disabled",
                                         text = "This feature needs NFC. Please enable it in your device settings.",
                                         acceptButtonText = "Go to Settings",
                                         cancelButtonText = "Cancel",
@@ -294,71 +283,19 @@ fun ReceiveMoneyFlow(
                                             .padding(horizontal = 20.dp)
                                             .fillMaxWidth()
                                             .height(230.dp)
-                                            .clip(
-                                                shape = RoundedCornerShape(16.dp)
-                                            )
-//                                        .clickable{
-//                                            Tap_ChargeMoney(navController=navController, amountToCharge = formatAmount(amountToChargeState))
-//                                        }
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .clickable { startTapAndPay = true })
+
+                                    FilledButton(
+                                        text = "Tap here to start Tap To Pay",
+                                        onClick = { startTapAndPay = true },
+                                        modifier = Modifier
+                                            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                            .height(59.dp)
+                                            .scale(0.8f)
                                     )
 
-                                    Text(
-                                        text = "Tap To Pay",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 18.sp,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-
-                                    var schemes by remember { mutableStateOf(getSchemes(context)) }
-
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.height(60.dp)
-                                    ) {
-                                        if (schemes.hasVISA) VisaImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(8.dp))
-                                                .weight(1f)
-                                                .clickable {
-                                                    TODO()
-                                                })
-
-                                        if (schemes.hasMastercard) MastercardImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(8.dp))
-                                                .weight(1f)
-                                                .clickable {
-                                                    TODO()
-                                                })
-
-                                        if (schemes.hasAmex) AmexImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(8.dp))
-                                                .weight(1f)
-                                                .clickable {
-                                                    TODO()
-                                                })
-
-                                        if (schemes.hasJCB) JcbImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(8.dp))
-                                                .weight(1f)
-                                                .clickable {
-                                                    TODO()
-                                                })
-
-                                        if (schemes.hasUnionPay) {
-                                            //Union pay image not provided
-                                            TODO()
-                                        }
-                                    }
+                                    PaymentSchemesRow(modifier = Modifier.height(60.dp))
                                 }
 
                                 qrCodePaymentMethod -> {
@@ -375,62 +312,13 @@ fun ReceiveMoneyFlow(
                                         modifier = Modifier
                                             .padding(horizontal = 20.dp)
                                             .fillMaxWidth()
-                                            //.height(240.dp)
                                             .height(220.dp)
                                             .clip(
                                                 shape = RoundedCornerShape(16.dp)
                                             )
                                     )
 
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.height(50.dp)
-                                    ) {
-                                        var apms by remember { mutableStateOf(getApms(context)) }
-
-                                        GrabPayImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
-                                        )
-
-                                        QrPayment2(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
-                                        )
-
-                                        QrPayment3(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
-                                        )
-
-                                        if (apms.hasAlipay) AliPayImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
-                                        )
-
-                                        if (apms.hasApplePay) ApplePayImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
-                                        )
-
-                                        if (apms.hasWechatpay) WechatPayImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
-                                        )
-                                    }
+                                    PaymentApmsRow(modifier = Modifier.height(50.dp))
 
                                     NoteChip(
                                         text = "Ask customer to scan with GrabPay",
@@ -576,7 +464,6 @@ fun ReceiveMoneyFlow(
                                                             Color.White,
                                                             shape = RoundedCornerShape(10.dp)
                                                         )
-                                                        //.padding(horizontal = 10.dp, vertical = 20.dp)
                                                         .padding(
                                                             horizontal = 10.dp, vertical = 16.dp
                                                         )
@@ -595,7 +482,6 @@ fun ReceiveMoneyFlow(
                                                             Color.White,
                                                             shape = RoundedCornerShape(10.dp)
                                                         )
-                                                        //.padding(horizontal = 10.dp, vertical = 20.dp)
                                                         .padding(
                                                             horizontal = 10.dp, vertical = 16.dp
                                                         )
@@ -614,7 +500,6 @@ fun ReceiveMoneyFlow(
                                                             Color.White,
                                                             shape = RoundedCornerShape(10.dp)
                                                         )
-                                                        //.padding(horizontal = 10.dp, vertical = 20.dp)
                                                         .padding(
                                                             horizontal = 10.dp, vertical = 16.dp
                                                         )
@@ -644,7 +529,9 @@ fun ReceiveMoneyFlow(
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
                     updateFlowStage = { updateFlowStage(it as ReceiveMoneyFlowStage) },
-                    onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) })
+                    onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) },
+                    startTapAndPay = startTapAndPay,
+                    turnoffStartTapToPay = { startTapAndPay = false })
 
             }
         }
@@ -751,3 +638,6 @@ fun ReceiveMoneyFlow(
         }
     }
 }
+
+
+

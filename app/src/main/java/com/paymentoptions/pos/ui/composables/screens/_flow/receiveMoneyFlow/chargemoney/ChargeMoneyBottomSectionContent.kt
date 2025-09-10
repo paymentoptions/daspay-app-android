@@ -2,7 +2,6 @@ package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.cha
 
 import MyDialog
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -37,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
-import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getDasmid
 import com.paymentoptions.pos.device.getTransactionCurrency
@@ -62,7 +60,7 @@ import com.paymentoptions.pos.utils.getKeyFromToken
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
 import com.paymentoptions.pos.utils.paymentMethods
-import com.paymentoptions.pos.utils.qrCodePaymentMethod
+import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
@@ -118,9 +116,19 @@ fun ChargeMoneyBottomSectionContent(
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
     updateFlowStage: (Any) -> Unit = {},
     onChangeAmount: () -> Unit,
+    startTapAndPay: Boolean = false,
+    turnoffStartTapToPay: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
+
+    if (startTapAndPay && selectedPaymentMethod === tapPaymentMethod) Tap_ChargeMoney(
+        navController = navController,
+        amountToCharge = amountToCharge,
+        turnoffStartTapToPay = turnoffStartTapToPay
+    )
+
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -128,10 +136,6 @@ fun ChargeMoneyBottomSectionContent(
             .verticalScroll(state = rememberScrollState(), enabled = enableScrolling),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        if (selectedPaymentMethod === qrCodePaymentMethod) {
-            Tap_ChargeMoney(navController, amountToCharge)
-        }
-
         Row(
             Modifier
                 .fillMaxWidth()
@@ -191,17 +195,19 @@ fun ChargeMoneyBottomSectionContent(
 
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
-fun Tap_ChargeMoney(navController: NavController, amountToCharge: String) {
+fun Tap_ChargeMoney(
+    navController: NavController,
+    amountToCharge: String,
+    turnoffStartTapToPay: () -> Unit = {},
+) {
 
     println("amountToCharge: $amountToCharge")
     val context = LocalContext.current
-    context as? Activity
     val scope = rememberCoroutineScope()
     var rawInput = ""
     var paymentLoader = false
     var transactionDetailsText by remember { mutableStateOf("") }
     var showTransactionStatus by remember { mutableStateOf(false) }
-
 
     val authDetails = SharedPreferences.getAuthDetails(context)
 
@@ -278,13 +284,7 @@ fun Tap_ChargeMoney(navController: NavController, amountToCharge: String) {
         }
     }
 
-    Nfc.getStatus(context)
 
-    /*if (!nfcStatusPair.first) {
-        showNFCNotPresent = true
-    } else if (!nfcStatusPair.second) {
-        showNFCNotEnabled = true
-    } else {*/
     val uuid: UUID = UUID.randomUUID()
     uuid.toString()
 
@@ -371,7 +371,7 @@ fun Tap_ChargeMoney(navController: NavController, amountToCharge: String) {
             println("Error: ${e.toString()}")
         } finally {
             paymentLoader = false
+            turnoffStartTapToPay()
         }
-        // }
     }
 }
