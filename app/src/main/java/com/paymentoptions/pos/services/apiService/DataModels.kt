@@ -572,3 +572,14 @@ data class InsightsResponse(
 //    val data: ExternalConfigData,
 )
 // -------------------------------------------------------
+
+// Stats v2 related ---------------------------------------
+data class StatsV2Request(
+    val TimeZone: String,
+    val Currency: String,
+)
+
+data class StatsV2Response(
+    val dummy: String,
+)
+// -------------------------------------------------------

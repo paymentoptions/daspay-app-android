@@ -106,6 +106,12 @@ interface ApiService {
         @Query("endDate") endDate: String = "undefined",
         @Query("take") take: Int,
     ): InsightsResponse
+
+    @POST("transactions/stats")
+    suspend fun statsV2(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: StatsV2Request,
+    ): StatsV2Response
 }
 
 var okHttpClient = OkHttpClient.Builder()
