@@ -315,7 +315,7 @@ fun ReceiveMoneyFlow(
                                             .scale(0.8f)
                                     )
 
-                                    PaymentSchemesRow(modifier = Modifier.height(20.dp))
+                                    PaymentSchemesRow(modifier = Modifier.height(50.dp))
                                 }
 
                                 qrCodePaymentMethod -> {
@@ -364,7 +364,7 @@ fun ReceiveMoneyFlow(
                                         PBLLinkName = "PayByLink Test",
                                         ExpiryDate = SimpleDateFormat("YYYY-dd MMMM, YYYY HH:mm:ss").format(
                                             Date()
-                                        ), //Date().toString(),
+                                        ),
                                         Product = listOf<PayByLinkRequestProduct>(
                                             PayByLinkRequestProduct(
                                                 Currency = currency,
@@ -381,7 +381,11 @@ fun ReceiveMoneyFlow(
                                     var payByLinkApiResponseLoading by remember {
                                         mutableStateOf(false)
                                     }
-                                    var expanded by remember { mutableStateOf(true) }
+                                    var payByLinkScanCodeBottomSheetExpanded by remember {
+                                        mutableStateOf(
+                                            true
+                                        )
+                                    }
                                     val sheetState = rememberModalBottomSheetState()
 
                                     LaunchedEffect(Unit) {
@@ -405,9 +409,11 @@ fun ReceiveMoneyFlow(
                                     if (payByLinkApiResponseLoading) MyCircularProgressIndicator()
                                     else if (payByLinkResponse.isNotNull()) {
 
-                                        if (expanded) ModalBottomSheet(
+                                        if (payByLinkScanCodeBottomSheetExpanded) ModalBottomSheet(
                                             modifier = Modifier.fillMaxWidth(),
-                                            onDismissRequest = { expanded = false },
+                                            onDismissRequest = {
+                                                payByLinkScanCodeBottomSheetExpanded = false
+                                            },
                                             sheetState = sheetState,
                                             containerColor = Color.White,
                                             contentColor = primary500,
@@ -432,7 +438,9 @@ fun ReceiveMoneyFlow(
 
                                                 IconButton(
                                                     modifier = Modifier.align(alignment = Alignment.CenterEnd),
-                                                    onClick = { expanded = false }) {
+                                                    onClick = {
+                                                        payByLinkScanCodeBottomSheetExpanded = false
+                                                    }) {
                                                     Icon(
                                                         imageVector = Icons.Default.Close,
                                                         contentDescription = "Close",
@@ -578,7 +586,10 @@ fun ReceiveMoneyFlow(
                                                         .padding(
                                                             horizontal = 10.dp, vertical = 16.dp
                                                         )
-                                                )
+                                                        .clickable {
+                                                            payByLinkScanCodeBottomSheetExpanded =
+                                                                true
+                                                        })
                                             }
                                         }
                                     } else {

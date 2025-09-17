@@ -10,7 +10,7 @@ import com.paymentoptions.pos.R
 @Composable
 fun AmexImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.amex),
+        painter = painterResource(id = R.drawable.amex_scheme),
         contentDescription = "Qr code payment method",
         contentScale = ContentScale.Fit,
         modifier = modifier

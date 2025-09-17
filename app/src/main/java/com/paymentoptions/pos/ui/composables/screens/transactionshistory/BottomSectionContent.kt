@@ -1,7 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.transactionshistory
 
 import MyDropdown
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,14 +39,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.transactionList
+import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
+import com.paymentoptions.pos.services.apiService.endpoints.insights
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
@@ -58,23 +55,19 @@ import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
-import kotlin.math.ceil
 
 
 @Composable
 fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
-    var currency by remember { mutableStateOf("") }
+    var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
-    var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
+    var transactions by remember { mutableStateOf<List<InsightsResponseDataRecord>>(listOf()) }
     val scrollState = rememberScrollState()
-
-    var take: Int by remember { mutableIntStateOf(Int.MAX_VALUE) }
-    var currentPage: Int by remember { mutableIntStateOf(1) }
-    var maxPage: Int by remember { mutableIntStateOf(1) }
 
     var showInsights by remember { mutableStateOf(true) }
     var fromDateCustomFilter by remember { mutableStateOf<Long?>(null) }
@@ -115,35 +108,19 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         receivalAmount = newAmount
     }
 
-    LaunchedEffect(currentPage) {
-        apiResponseAvailable = false
-        try {
-            val skip = (currentPage - 1) * take
-            val transactionListFromAPI = transactionList(context, take, skip)
-
-            if (transactionListFromAPI != null) {
-                maxPage =
-                    ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
-
-                transactions = transactions.plus(transactionListFromAPI.data.records)
-            }
-        } catch (e: Exception) {
-            Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
-
-            if (e.toString().contains("HTTP 401")) navController.navigate(Screens.SignIn.route) {
-                popUpTo(0) { inclusive = true }
-            }
-        } finally {
-            apiResponseAvailable = true
-        }
-    }
-
     LaunchedEffect(selectedFilter, fromDateCustomFilter, toDateCustomFilter) {
+        var startDate = OffsetDateTime.now()
+        var endDate = OffsetDateTime.now()
+
         when (selectedFilter.key) {
             "Today" -> {
+                apiResponseAvailable = false
+
                 receivalForText = "Receival for the day"
                 receivalForTimePeriodText = SimpleDateFormat("dd MMMM, YYYY").format(Date())
                 receivalAmount = 0.0f
+
+                startDate = endDate
             }
 
             "Week" -> {
@@ -159,6 +136,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         .replaceFirstChar { it.titlecase(Locale.ROOT) }
                 }, ${today.year}"
                 receivalAmount = 0.0f
+
+                startDate = endDate.minusDays(7)
             }
 
             "Month" -> {
@@ -177,6 +156,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     }, ${today.year}"
                 }
                 receivalAmount = 0.0f
+
+                startDate = endDate.minusDays(30)
             }
 
             "Custom" -> {
@@ -192,7 +173,28 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             simpleDateFormat.format(toDateCustomFilter)
                         }"
                 } else receivalForTimePeriodText = ""
+
+                startDate = endDate.minusDays(30)
+
+//                endDate = OffsetDateTime.ofInstant(toDateCustomFilter)
+//                startDate = fromDateCustomFilter
             }
+        }
+
+        try {
+            val insightsResponse = insights(
+                context,
+                startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                endDate = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+            )
+
+            if (insightsResponse != null) transactions = insightsResponse.data.records
+
+            println("insights Response -->: $insightsResponse")
+        } catch (e: Exception) {
+            println("insights Error -->: $e")
+        } finally {
+            apiResponseAvailable = true
         }
     }
 
@@ -207,8 +209,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             MyCircularProgressIndicator()
         }
     } else {
-        currency = transactions.firstOrNull()?.CurrencyCode ?: ""
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -219,7 +219,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Transaction History",
+                text = "Transaction History 1",
                 modifier = Modifier
                     .align(alignment = Alignment.Start)
                     .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
@@ -320,38 +320,16 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                var filteredTransactions = transactions.filter {
-
-                    var filterIn = when (selectedFilter.key) {
-                        "Today" -> todayFilterFn(it)
-                        "Week" -> last7DaysFilterFn(it)
-                        "Month" -> last30DaysFilterFn(it)
-                        "Custom" -> {
-                            if (fromDateCustomFilter != null && toDateCustomFilter != null) customFilterFn(
-                                it,
-                                startDate = fromDateCustomFilter!!,
-                                endDate = toDateCustomFilter!!
-                            )
-                            else false
-                        }
-
-                        else -> false
-                    }
-                    filterIn
-                }
-
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .conditional(enableScrolling) { verticalScroll(scrollState) }) {
 
                     if (showInsights) Insights(
-                        transactions = filteredTransactions,
-                        currency = currency,
-                        updateReceivalAmount = {
+                        transactions = transactions, currency = currency, updateReceivalAmount = {
                             updateReceivalAmount(it)
                         }) else Transactions(
-                        navController, transactions = filteredTransactions, updateReceivalAmount = {
+                        navController, transactions = transactions, updateReceivalAmount = {
                             updateReceivalAmount(it)
                         })
                 }
@@ -359,42 +337,4 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
         }
     }
-}
-
-fun todayFilterFn(transaction: TransactionListDataRecord): Boolean {
-    val today = OffsetDateTime.now().toLocalDateTime()
-    val transactionDate = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
-
-    return today.dayOfMonth == transactionDate.dayOfMonth && today.month == transactionDate.month && today.year == transactionDate.year
-}
-
-//fun thisMonthFilterFn(transaction: TransactionListDataRecord): Boolean {
-//    val today = OffsetDateTime.now().toLocalDateTime()
-//    val transactionDate = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
-//
-//    return today.month == transactionDate.month && today.year == transactionDate.year
-//}
-
-fun dayFilterFn(transaction: TransactionListDataRecord, dayDifference: Long = 1): Boolean {
-    val today = OffsetDateTime.now().toLocalDateTime()
-    val transactionDate = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
-
-    return transactionDate > today.minusDays(dayDifference)
-}
-
-fun last7DaysFilterFn(transaction: TransactionListDataRecord): Boolean {
-    return dayFilterFn(transaction, 7)
-}
-
-fun last30DaysFilterFn(transaction: TransactionListDataRecord): Boolean {
-    return dayFilterFn(transaction, 30)
-}
-
-fun customFilterFn(
-    transaction: TransactionListDataRecord,
-    startDate: Long,
-    endDate: Long,
-): Boolean {
-    val transactionDate = OffsetDateTime.parse(transaction.Date).toInstant().epochSecond * 1000
-    return transactionDate >= startDate && transactionDate <= endDate
 }

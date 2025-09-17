@@ -1,8 +1,7 @@
-package com.paymentoptions.pos.ui.composables.screens.dashboard
+package com.paymentoptions.pos.ui.composables.screens.transactionshistory
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -29,9 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -42,9 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
@@ -55,31 +51,27 @@ import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
 
-var TRANSACTION_TO_BE_REFUNDED: TransactionListDataRecord? = null
-
 @Composable
 fun TransactionSummary(
     navController: NavController,
-    transaction: TransactionListDataRecord,
+    transaction: InsightsResponseDataRecord,
     longClickedTransactionId: String = "",
     onLongClick: (String) -> Unit = {},
     onSwipeLeft: (String) -> Unit = {},
     onSwipeRight: (String) -> Unit = {},
 ) {
-    transaction.status == "SUCCESSFUL"
     val transactionAmount = transaction.amount.toFloat()
     val isTransactionAmountPositive = transactionAmount > 0
-    val isCardTransaction = transaction.PaymentType == "CARDPAYMENT"
-    val dateString = transaction.Date   //"2025-04-23T03:38:57.349+00:00"
+    val isCardTransaction = transaction.paymentMethod == "CARDPAYMENT"
+    val dateString = transaction.TransactionDate   //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted = SimpleDateFormat("dd MMMM, YYYY").format(date)
     val timeAgoString = dateTime.toInstant().toEpochMilli().timeAgo()
-    var isLongClicked = longClickedTransactionId == transaction.TransactionID.toString()
+    var isLongClicked = longClickedTransactionId == transaction.uuid.toString()
 
     val hourPart = SimpleDateFormat("hh:mm:ss a").format(date)
     val borderRadius = 20.dp
-    val haptics = LocalHapticFeedback.current
     var offsetX by remember { mutableStateOf(0f) }
 
     val statusColor = when {
@@ -111,6 +103,7 @@ fun TransactionSummary(
         horizontalArrangement = Arrangement.Absolute.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+
         Card(
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(0.5.dp, Color.Black.copy(alpha = 0.1f)),
@@ -128,29 +121,21 @@ fun TransactionSummary(
                     spotColor = Color(0xFF2196F3).copy(alpha = 0.6f)
                 )
                 .pointerInput(Unit) {
-                    detectHorizontalDragGestures(
-                        onDragEnd = {
-                            if (offsetX > 200f) {
-                                // Swiped
-
-                                onSwipeRight(transaction.TransactionID.toString())
-                            } else if (offsetX < -200f) {
-                                // Swiped Left
-
-                                onSwipeLeft(transaction.TransactionID.toString())
-                            }
-                            offsetX = 0f // reset position
-                        },
-                        onHorizontalDrag = { _, dragAmount ->
-                            offsetX += dragAmount
+                    detectHorizontalDragGestures(onDragEnd = {
+                        if (offsetX > 200f) {
+                            // Swiped
+                            onSwipeRight(transaction.uuid.toString())
+                        } else if (offsetX < -200f) {
+                            // Swiped Left
+                            onSwipeLeft(transaction.uuid.toString())
                         }
-                    )
+                        offsetX = 0f // reset position
+                    }, onHorizontalDrag = { _, dragAmount ->
+                        offsetX += dragAmount
+                    })
                 }
-                .combinedClickable(onClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)
-                }, onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLongClick(transaction.TransactionID.toString())
+                .combinedClickable(onClick = {}, onLongClick = {
+//                    onLongClick(transaction.uuid.toString())
                 })
                 .weight(if (isLongClicked) 8f else 1f)
         ) {
@@ -159,18 +144,6 @@ fun TransactionSummary(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                /**if (!isLongClicked) Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(iconBackgroundColor), contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(if (isCardTransaction) R.drawable.icon_card else R.drawable.icon_money),
-                        contentDescription = "Icon",
-                        tint = purple50
-                    )
-                }**/
                 if (!isLongClicked) Box(
                     modifier = Modifier
                         .size(44.dp)
@@ -193,7 +166,7 @@ fun TransactionSummary(
                         dateStr, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = purple50
                     )
                     Text(
-                        text = (if (isCardTransaction) "Txn ID - " else "Cash Id - ") + transaction.TransactionID.toString(),
+                        text = (if (isCardTransaction) "Txn ID - " else "Cash Id - ") + transaction.uuid.toString(),
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = primary500
@@ -207,21 +180,6 @@ fun TransactionSummary(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.weight(3f)
                 ) {
-                    /**Text(
-                        transaction.CurrencyCode,
-                        textAlign = TextAlign.End,
-                        color = if (isTransactionAmountPositive) green200 else Color.Red,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                    )
-
-                    Text(
-                        text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
-                        color = if (isTransactionAmountPositive) green500 else Color.Red,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        maxLines = 1
-                    )**/
                     Text(
                         transaction.CurrencyCode,
                         textAlign = TextAlign.End,
@@ -231,7 +189,7 @@ fun TransactionSummary(
                     )
 
                     Text(
-                        text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
+                        text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount.toString(),
                         color = statusColor,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
@@ -249,11 +207,7 @@ fun TransactionSummary(
                     red300.copy(alpha = 0.2f), shape = RoundedCornerShape(8.dp)
                 )
                 .padding(6.dp)
-                .weight(2f)
-                .clickable {
-                    navController.navigate(Screens.RefundTransaction.route)
-                    TRANSACTION_TO_BE_REFUNDED = transaction
-                },
+                .weight(2f),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {

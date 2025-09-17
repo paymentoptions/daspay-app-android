@@ -1,6 +1,6 @@
 package com.paymentoptions.pos.services.apiService
 
-fun generateRequestHeaders(authToken: String = ""): Map<String, String> {
+fun generateRequestHeader(authToken: String = ""): Map<String, String> {
     val headers = mapOf<String, String>(
         "accept" to "*/*",
         "accept-language" to "en-US,en;q=0.9",
@@ -27,8 +27,7 @@ fun generateRequestHeaders(authToken: String = ""): Map<String, String> {
     return headers
 }
 
-
-fun generateRefundRequestHeaders(authToken: String = ""): Map<String, String> {
+fun generateRefundRequestHeader(authToken: String = ""): Map<String, String> {
     val headers = mapOf<String, String>(
         "accept" to "*/*",
         "accept-language" to "en-US,en;q=0.9",
@@ -56,7 +55,7 @@ fun generateRefundRequestHeaders(authToken: String = ""): Map<String, String> {
     return headers
 }
 
-fun generatePaymentRequestHeaders(authToken: String = ""): Map<String, String> {
+fun generatePaymentRequestHeader(authToken: String = ""): Map<String, String> {
     val headers = mapOf<String, String>(
         "x-secret-key" to "We@ve",
         "x-api-key" to "bLm8c1C0fL3FtPzrjSr0",
@@ -66,5 +65,16 @@ fun generatePaymentRequestHeaders(authToken: String = ""): Map<String, String> {
     )
 
     println("generatePaymentRequestHeaders: $headers")
+    return headers
+}
+
+
+fun generatePaymentStatusHeader(): Map<String, String> {
+    val headers = mapOf<String, String>(
+        "content-type" to "application/json",
+        "Cookie" to "reqid=undefined; reqid=undefined; reqid=undefined",
+    )
+
+    println("generatePaymentStatusHeader: $headers")
     return headers
 }

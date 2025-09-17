@@ -446,7 +446,7 @@ fun FoodOrderFlow(
                                         .scale(0.8f)
                                 )
 
-                                PaymentSchemesRow(modifier = Modifier.height(60.dp))
+                                PaymentSchemesRow(modifier = Modifier.height(50.dp))
                             }
 
                             qrCodePaymentMethod -> {
@@ -512,7 +512,11 @@ fun FoodOrderFlow(
                                     )
                                 }
                                 var payByLinkApiResponseLoading by remember { mutableStateOf(false) }
-                                var expanded by remember { mutableStateOf(true) }
+                                var payByLinkScanCodeBottomSheetExpanded by remember {
+                                    mutableStateOf(
+                                        true
+                                    )
+                                }
                                 val sheetState = rememberModalBottomSheetState()
 
                                 LaunchedEffect(Unit) {
@@ -536,9 +540,11 @@ fun FoodOrderFlow(
                                 if (payByLinkApiResponseLoading) MyCircularProgressIndicator()
                                 else if (payByLinkResponse.isNotNull()) {
 
-                                    if (expanded) ModalBottomSheet(
+                                    if (payByLinkScanCodeBottomSheetExpanded) ModalBottomSheet(
                                         modifier = Modifier.fillMaxWidth(),
-                                        onDismissRequest = { expanded = false },
+                                        onDismissRequest = {
+                                            payByLinkScanCodeBottomSheetExpanded = false
+                                        },
                                         sheetState = sheetState,
                                         containerColor = Color.White,
                                         contentColor = primary500,
@@ -562,7 +568,9 @@ fun FoodOrderFlow(
 
                                             IconButton(
                                                 modifier = Modifier.align(alignment = Alignment.CenterEnd),
-                                                onClick = { expanded = false }) {
+                                                onClick = {
+                                                    payByLinkScanCodeBottomSheetExpanded = false
+                                                }) {
                                                 Icon(
                                                     imageVector = Icons.Default.Close,
                                                     contentDescription = "Close",
@@ -708,7 +716,9 @@ fun FoodOrderFlow(
                                                         shape = RoundedCornerShape(10.dp)
                                                     )
                                                     .padding(horizontal = 10.dp, vertical = 20.dp)
-                                            )
+                                                    .clickable {
+                                                        payByLinkScanCodeBottomSheetExpanded = true
+                                                    })
                                         }
                                     }
                                 } else {

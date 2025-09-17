@@ -2,7 +2,6 @@ package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.cha
 
 import MyDialog
 import android.annotation.SuppressLint
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
@@ -43,7 +42,9 @@ import com.paymentoptions.pos.services.apiService.Address
 import com.paymentoptions.pos.services.apiService.PaymentRequest
 import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.PaymentReturnUrl
+import com.paymentoptions.pos.services.apiService.PaymentStatusRequest
 import com.paymentoptions.pos.services.apiService.endpoints.payment
+import com.paymentoptions.pos.services.apiService.endpoints.paymentStatus
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -128,7 +129,6 @@ fun ChargeMoneyBottomSectionContent(
         turnoffStartTapToPay = turnoffStartTapToPay
     )
 
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -200,7 +200,6 @@ fun Tap_ChargeMoney(
     amountToCharge: String,
     turnoffStartTapToPay: () -> Unit = {},
 ) {
-
     println("amountToCharge: $amountToCharge")
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -234,10 +233,15 @@ fun Tap_ChargeMoney(
         text = transactionDetailsText,
         acceptButtonText = "Ok",
         showCancelButton = false,
-        onAcceptFn = { showTransactionStatus = false },
-        onDismissFn = { showTransactionStatus = false },
+        onAcceptFn = {
+            showTransactionStatus = false
+            turnoffStartTapToPay()
+        },
+        onDismissFn = {
+            showTransactionStatus = false
+            turnoffStartTapToPay()
+        },
     )
-
 
     val launcher = rememberLauncherForActivityResult(
         HeadlessActivity.contract(ClientHeadlessImpl::class.java)
@@ -247,36 +251,80 @@ fun Tap_ChargeMoney(
         var completedSalePosReference: String? = ""
         var completedSaleRequestId: String? = ""
 
-
 //            viewModel.resetRandomPosReference()
 //            viewModel.writeMessage("ActivityResult: $it")
         when (it) {
             is WrappedResult.Success -> {
                 if (it.value.tranType == TranType.SALE) {
-
                     completedSaleTranId = it.value.tranId
                     completedSalePosReference = it.value.posReference
                     completedSaleRequestId = it.value.actions.firstOrNull()?.requestId
                 }
 
+                println("inThis Launcher success ---->")
                 transactionDetailsText =
                     "Transaction of $$amountToCharge was successful. POS Reference Transaction ID returned by MineSec is: $completedSalePosReference."
                 showTransactionStatus = true
-                Log.d(
-                    "Success ->",
+                println(
                     "completedSaleTranId: $completedSaleTranId | completedSalePosReference: $completedSalePosReference | completedSaleRequestId: $completedSaleRequestId | it: ${it.value}"
                 )
 
                 rawInput = ""
-
 //                    if (it.value.tranType == TranType.REFUND) {
 //                        completedRefundTranId = it.value.tranId
 //                    }
+
+                val paymentStatusRequest = PaymentStatusRequest(
+                    tranId = it.value.posReference.toString(), //it.value.tranId,
+                    cvmPerformed = it.value.cvmPerformed.toString(),
+                    tsi = it.value.tsi.toString(),
+                    mcc = it.value.mcc.toString(),
+                    merchantName = it.value.merchantName.toString(),
+                    tranStatus = it.value.tranStatus.toString(),
+                    tranType = it.value.tranType.toString(),
+                    atc = it.value.atc.toString(),
+                    createdAt = it.value.createdAt.toEpochMilliseconds().toString(),
+                    updatedAt = it.value.updatedAt?.toEpochMilliseconds().toString(),
+                    trace = it.value.trace.toString(),
+                    callbackUrl = it.value.callbackUrl.toString(),
+                    entryMode = it.value.entryMode.toString(),
+                    amount = "{\"currency\":\"JPY\",\"value\":1500}",
+//                            Json.encodeToString(
+//                        PaymentStatusAmount(
+//                            currency = it.value.amount.currency.toString(),
+//                            value = it.value.amount.value.toFloat()
+//                        )
+//                    ),
+                    batchNo = it.value.batchNo.toString(),
+                    appName = it.value.appName.toString(),
+                    linkedTranId = it.value.posReference.toString(),
+                    merchantAddr = it.value.merchantAddr.toString(),
+                    rrn = it.value.rrn.toString(),
+                    tc = it.value.tc.toString(),
+                    tvr = it.value.tvr.toString(),
+                    accountMasked = it.value.accountMasked.toString(),
+                    sdkId = it.value.sdkId.toString(),
+                    paymentMethod = it.value.paymentMethod.toString(),
+                    hostMessageFormat = it.value.hostMessageFormat.toString(),
+                    aid = it.value.aid.toString(),
+//                    acqMid = it.value,
+//                    acqTid = it.value,
+//                    notifyId = it.value,
+//                    acquirerResponse = Json.encodeToString(it.value)
+                )
+
+                scope.launch {
+                    try {
+                        paymentStatus(context = context, request = paymentStatusRequest)
+                    } catch (e: Exception) {
+                        println("inThis paymentStatus error: ${e.toString()}")
+                    }
+                }
             }
 
             is WrappedResult.Failure -> {
 //                    viewModel.writeMessage("Failed")
-                Log.d("Failed ->", "Payment Failed")
+                println("inThis Launcher failure ---->")
                 Toast.makeText(
                     context, "Transaction of $$amountToCharge was failed", Toast.LENGTH_LONG
                 ).show()
@@ -349,6 +397,8 @@ fun Tap_ChargeMoney(
 
             paymentResponse?.let {
                 if (it.success) {
+                    println("inThis PaymentResponse ---->")
+
                     launcher.launch(
                         PoiRequest.ActionNew(
                             tranType = TranType.SALE,
@@ -371,7 +421,6 @@ fun Tap_ChargeMoney(
             println("Error: ${e.toString()}")
         } finally {
             paymentLoader = false
-            turnoffStartTapToPay()
         }
     }
 }

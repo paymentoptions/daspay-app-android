@@ -10,7 +10,7 @@ import com.paymentoptions.pos.R
 @Composable
 fun VisaImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.visa),
+        painter = painterResource(id = R.drawable.visa_scheme),
         contentDescription = "Qr code payment method",
         contentScale = ContentScale.Fit,
         modifier = modifier

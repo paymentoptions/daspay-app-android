@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.services.apiService
 
+import com.google.gson.GsonBuilder
 import com.paymentoptions.pos.utils.retrofitTimeout
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -114,6 +115,10 @@ interface ApiService {
     ): StatsV2Response
 }
 
+var gson = GsonBuilder()
+    .setLenient()
+    .create()
+
 var okHttpClient = OkHttpClient.Builder()
     .connectTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to establish the connection
     .readTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to wait for the server to send data
@@ -123,7 +128,7 @@ var okHttpClient = OkHttpClient.Builder()
 object RetrofitClient {
     val api: ApiService by lazy {
         Retrofit.Builder().baseUrl(baseUrl).client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create()).build()
+            .addConverterFactory(GsonConverterFactory.create(gson)).build()
             .create(ApiService::class.java)
     }
 }

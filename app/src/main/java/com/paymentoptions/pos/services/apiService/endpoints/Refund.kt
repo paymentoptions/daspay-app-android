@@ -5,7 +5,7 @@ import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.RefundRequest
 import com.paymentoptions.pos.services.apiService.RefundResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
-import com.paymentoptions.pos.services.apiService.generateRefundRequestHeaders
+import com.paymentoptions.pos.services.apiService.generateRefundRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun refund(
@@ -22,16 +22,16 @@ suspend fun refund(
         if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
         val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generateRefundRequestHeaders(idToken ?: "")
+        val requestHeaders = generateRefundRequestHeader(idToken ?: "")
 
-        println("refundRequest: $refundRequest | $authDetails")
+        println("refund request: $refundRequest | $authDetails")
         val refundResponse: RefundResponse =
             RetrofitClient.api.refund(headers = requestHeaders, request = refundRequest)
 
-        println("refundResponse: $refundResponse")
+        println("refund response: $refundResponse")
         return refundResponse
     } catch (e: Exception) {
-        println("RefundError: $e")
+        println("refund error: $e")
         throw e
     }
 }

@@ -10,7 +10,7 @@ import com.paymentoptions.pos.R
 @Composable
 fun JcbImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.jcb),
+        painter = painterResource(id = R.drawable.jcb_scheme),
         contentDescription = "Qr code payment method",
         contentScale = ContentScale.Fit,
         modifier = modifier

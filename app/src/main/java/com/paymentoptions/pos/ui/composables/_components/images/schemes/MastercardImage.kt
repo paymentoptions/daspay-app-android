@@ -10,7 +10,7 @@ import com.paymentoptions.pos.R
 @Composable
 fun MastercardImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.mastercard),
+        painter = painterResource(id = R.drawable.mastercard_scheme),
         contentDescription = "Qr code payment method",
         contentScale = ContentScale.Fit,
         modifier = modifier

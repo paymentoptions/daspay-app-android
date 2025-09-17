@@ -5,7 +5,7 @@ import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.StatsV2Request
 import com.paymentoptions.pos.services.apiService.StatsV2Response
-import com.paymentoptions.pos.services.apiService.generateRefundRequestHeaders
+import com.paymentoptions.pos.services.apiService.generateRefundRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun statsV2(
@@ -22,7 +22,7 @@ suspend fun statsV2(
         if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
         val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generateRefundRequestHeaders(idToken ?: "")
+        val requestHeaders = generateRefundRequestHeader(idToken ?: "")
 
         val response: StatsV2Response =
             RetrofitClient.api.statsV2(headers = requestHeaders, request = request)
