@@ -13,7 +13,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
-const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/api/v1/"
+const val baseUrl: String = "https://api-dev.paymentoptions.com/"
 
 interface ApiService {
     @POST("auth/signIn/")
