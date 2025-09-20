@@ -4,7 +4,7 @@ import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
-import com.paymentoptions.pos.services.apiService.generateRequestHeaders
+import com.paymentoptions.pos.services.apiService.generateRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 // Deprecated in favor of TransactionListV2 -----------------------------------
@@ -23,7 +23,7 @@ suspend fun transactionList(
         if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
         val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generateRequestHeaders(idToken ?: "")
+        val requestHeaders = generateRequestHeader(idToken ?: "")
 
         val transactionListResponse = RetrofitClient.api.transactionList(requestHeaders, take, skip)
 

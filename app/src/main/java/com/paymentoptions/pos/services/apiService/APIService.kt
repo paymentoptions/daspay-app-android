@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.services.apiService
 
+import com.google.gson.GsonBuilder
 import com.paymentoptions.pos.utils.retrofitTimeout
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -12,7 +13,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
-const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/api/v1/"
+const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/"
 
 interface ApiService {
     @POST("auth/signIn/")
@@ -106,7 +107,17 @@ interface ApiService {
         @Query("endDate") endDate: String = "undefined",
         @Query("take") take: Int,
     ): InsightsResponse
+
+    @POST("transactions/stats")
+    suspend fun statsV2(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: StatsV2Request,
+    ): StatsV2Response
 }
+
+var gson = GsonBuilder()
+    .setLenient()
+    .create()
 
 var okHttpClient = OkHttpClient.Builder()
     .connectTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to establish the connection
@@ -117,7 +128,7 @@ var okHttpClient = OkHttpClient.Builder()
 object RetrofitClient {
     val api: ApiService by lazy {
         Retrofit.Builder().baseUrl(baseUrl).client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create()).build()
+            .addConverterFactory(GsonConverterFactory.create(gson)).build()
             .create(ApiService::class.java)
     }
 }

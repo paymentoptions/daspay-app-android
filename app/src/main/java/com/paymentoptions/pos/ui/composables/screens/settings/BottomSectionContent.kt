@@ -32,8 +32,8 @@ import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
 import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
 import com.paymentoptions.pos.ui.composables._components.MySwitch
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.theme.primary500

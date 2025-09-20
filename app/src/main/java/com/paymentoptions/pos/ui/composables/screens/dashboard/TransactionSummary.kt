@@ -57,37 +57,6 @@ import java.util.Date
 
 var TRANSACTION_TO_BE_REFUNDED: TransactionListDataRecord? = null
 
-//Swipe / Drag code
-
-//var pointerOffset by remember {
-//    mutableStateOf(Offset(0f, 0f))
-//}
-//Column(
-//modifier = Modifier
-//.fillMaxSize()
-//.pointerInput("dragging") {
-//    detectDragGestures { change, dragAmount ->
-//        pointerOffset += dragAmount
-//    }
-//}
-//.onSizeChanged {
-//    pointerOffset = Offset(it.width / 2f, it.height / 2f)
-//}
-//.drawWithContent {
-//    drawContent()
-//    // draws a fully black area with a small keyhole at pointerOffset that’ll show part of the UI.
-//    drawRect(
-//        Brush.radialGradient(
-//            listOf(Color.Transparent, Color.Black),
-//            center = pointerOffset,
-//            radius = 100.dp.toPx(),
-//        )
-//    )
-//}
-//) {
-//    // Your composables here
-//}
-
 @Composable
 fun TransactionSummary(
     navController: NavController,
@@ -142,28 +111,6 @@ fun TransactionSummary(
         horizontalArrangement = Arrangement.Absolute.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
-        /**Card(
-            colors = CardDefaults.cardColors().copy(containerColor = Color.White),
-            border = if (successful) borderThin else borderThinError,
-            shape = RoundedCornerShape(
-                topStart = if (isLongClicked) 0.dp else borderRadius,
-                topEnd = borderRadius,
-                bottomStart = if (isLongClicked) 0.dp else borderRadius,
-                bottomEnd = borderRadius
-            ),
-            modifier = Modifier
-                .shadow(
-                    elevation = if (isLongClicked) 2.dp else 1.dp, shape = RoundedCornerShape(
-                        topStart = if (isLongClicked) 0.dp else borderRadius,
-                        topEnd = borderRadius,
-                        bottomStart = if (isLongClicked) 0.dp else borderRadius,
-                        bottomEnd = borderRadius
-                    ), ambientColor = borderColor
-                )
-                **/
-
-
         Card(
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(0.5.dp, Color.Black.copy(alpha = 0.1f)),
@@ -177,9 +124,7 @@ fun TransactionSummary(
                 .shadow(
                     elevation = 16.dp,
                     shape = RoundedCornerShape(borderRadius),
-                    //ambientColor = Color.Black.copy(alpha = 0.2f),
-                    //spotColor = Color.Black.copy(alpha = 0.2f)
-                    ambientColor = Color(0xFF64B5F6).copy(alpha = 0.8f), // More opaque
+                    ambientColor = Color(0xFF64B5F6).copy(alpha = 0.8f),
                     spotColor = Color(0xFF2196F3).copy(alpha = 0.6f)
                 )
                 .pointerInput(Unit) {

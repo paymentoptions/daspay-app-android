@@ -128,20 +128,23 @@ class SharedPreferences {
             return configJsonString?.let { Json.decodeFromString<ExternalConfigurationResponse>(it) }
         }
 
-        fun saveTokenStatus(context: Context, isVerified: Boolean) {
+        fun saveTokenStatus(context: Context, tokenCode: String, isVerified: Boolean) {
             val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+
             with(sharedPref.edit()) {
                 putBoolean("token_verified", isVerified)
+                putString("token_code", tokenCode)
                 apply()
             }
         }
 
-        fun getTokenStatus(context: Context): Boolean {
+        fun getTokenStatus(context: Context): Pair<Boolean, String> {
             val sharedPreferences =
                 context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             val isVerified = sharedPreferences.getBoolean("token_verified", false)
+            val tokenCode = sharedPreferences.getString("token_code", null)
 
-            return isVerified
+            return Pair<Boolean, String>(isVerified, tokenCode ?: "")
         }
     }
 }
@@ -197,4 +200,14 @@ fun getApms(context: Context): DevicePaymentMethod_Apms {
         apms = it.data.paymentMethod.firstOrNull()?.apms ?: DevicePaymentMethod_Apms()
     }
     return apms
+}
+
+fun getDeviceId(context: Context): String? {
+    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
+    var deviceId: String? = null
+
+    externalDeviceConfiguration?.let {
+        deviceId = it.data.deviceInfo.DeviceID
+    }
+    return deviceId
 }

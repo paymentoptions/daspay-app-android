@@ -143,7 +143,7 @@ data class TransactionListResponse(
 data class RefundRequest(
     val id: String,
     val merchant_id: String,
-    val refundAmount: Float,
+    val refundAmount: Int,
 )
 
 data class GatewayResponse(
@@ -313,41 +313,43 @@ data class PaymentResponse(
 
 // Payment status related ----------------------------------
 
+@Serializable
 data class PaymentStatusAmount(
     val currency: String,
     val value: Float,
 )
 
 data class PaymentStatusRequest(
-    val tranId: String,
-    val cvmPerformed: String = "NO_CVM",
-    val tsi: String = "0000",
-    val mcc: String = "",
-    val merchantName: String = "2C2P",
-    val tranStatus: String = "APPROVED",
-    val tranType: String = "SALE",
-    val atc: String = "01B4",
-    val createdAt: String = "1719878285879",
-    val trace: String = "491586",
-    val acqMid: String = "065240116000002",
-    val callbackUrl: String = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454",
-    val entryMode: String = "NFC",
-    val updatedAt: String = "1719878291684",
-    val amount: PaymentStatusAmount,
-    val batchNo: String = "101318",
-    val appName: String = "5649534120435245444954",
-    val linkedTranId: String = "33961491-58f2-42e5-902e-f955d68d2a01",
-    val acqTid: String = "90004300",
-    val merchantAddr: String = "",
-    val rrn: String = "407020000174",
-    val tc: String = "437484CAB4A9557A",
-    val tvr: String = "0000000000",
-    val accountMasked: String = "**** **** **** 2377",
-    val sdkId: String = "515cd36f3f09bfc2",
-    val paymentMethod: String = "VISA",
-    val hostMessageFormat: String = "MS_ENABLER",
-    val notifyId: Int = 1433,
-    val aid: String = "A0000000031010",
+    val tranId: String?,
+    val cvmPerformed: String,
+    val tsi: String?,
+    val mcc: String,
+    val merchantName: String,
+    val tranStatus: String,
+    val tranType: String,
+    val atc: String?,
+    val createdAt: String,
+    val updatedAt: String,
+    val trace: String,
+    val callbackUrl: String?,
+    val entryMode: String,
+    val amount: String,
+    val batchNo: String,
+    val appName: String?,
+    val linkedTranId: String?,
+    val merchantAddr: String,
+    val rrn: String?,
+    val tc: String?,
+    val tvr: String?,
+    val accountMasked: String?,
+    val sdkId: String?,
+    val paymentMethod: String,
+    val hostMessageFormat: String,
+    val aid: String?,
+    val acqMid: String = "null",
+    val acqTid: String = "null",
+    val notifyId: Int = 0,
+//    val acquirerResponse: String = "",
 )
 
 data class PaymentStatusResponseData(
@@ -569,6 +571,36 @@ data class InsightsResponse(
     val message: String,
     val messageCode: String,
     val success: Boolean,
-//    val data: ExternalConfigData,
+    val data: InsightsResponseData,
+)
+
+data class InsightsResponseData(
+    val total: Int,
+    val skip: Int,
+    val take: Int,
+    val records: List<InsightsResponseDataRecord>,
+)
+
+data class InsightsResponseDataRecord(
+    val uuid: String,
+    val status: String, //"NOTSUCCESSFUL"
+    val TerminalID: String,
+    val amount: Float,
+    val CurrencyCode: String,
+    val TransactionDate: String,
+    val paymentMethod: String,
+    val event: String,
+    val TransactionType: String,
+)
+// -------------------------------------------------------
+
+// Stats v2 related ---------------------------------------
+data class StatsV2Request(
+    val TimeZone: String,
+    val Currency: String,
+)
+
+data class StatsV2Response(
+    val dummy: String,
 )
 // -------------------------------------------------------

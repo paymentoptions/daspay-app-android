@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
@@ -49,7 +50,7 @@ import kotlin.math.ceil
 fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
-    var currency by remember { mutableStateOf("") }
+    var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var viewAll by remember { mutableStateOf(false) }
     var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
@@ -122,9 +123,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        currency = transactions.firstOrNull()?.CurrencyCode ?: ""
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()

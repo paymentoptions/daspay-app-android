@@ -6,7 +6,7 @@ import com.paymentoptions.pos.device.getDasmid
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
-import com.paymentoptions.pos.services.apiService.generateRequestHeaders
+import com.paymentoptions.pos.services.apiService.generateRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun payByLink(
@@ -22,7 +22,7 @@ suspend fun payByLink(
         if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
         val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generateRequestHeaders(idToken ?: "")
+        val requestHeaders = generateRequestHeader(idToken ?: "")
 
         val dasmid = getDasmid(context)
 

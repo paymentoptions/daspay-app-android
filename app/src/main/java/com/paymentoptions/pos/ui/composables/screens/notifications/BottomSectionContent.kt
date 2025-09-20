@@ -38,7 +38,7 @@ import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoData
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.bannerBgColor
 import com.paymentoptions.pos.ui.theme.primary100
