@@ -111,4 +111,7 @@ dependencies {
     implementation(libs.coil.gif)
 
     implementation(libs.kotlinx.datetime)
+
+    // QR Code Generation (ZXing)
+    implementation("com.google.zxing:core:3.5.3")
 }

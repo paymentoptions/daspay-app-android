@@ -71,15 +71,23 @@ class SharedPreferences {
             return authDetailsJson
         }
 
-        fun clearSharedPreferences(context: Context) = runBlocking {
+        /**fun clearSharedPreferences(context: Context) = runBlocking {
             val sharedPreferences =
                 context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
 
             with(sharedPreferences.edit()) {
                 clear().apply()
             }
-        }
+        }**/
+        fun clearSharedPreferences(context: Context) = runBlocking {
+            val sharedPreferences =
+                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
 
+            with(sharedPreferences.edit()) {
+                remove("auth_details")
+                apply()
+            }
+        }
         fun saveFcmToken(context: Context, token: String) {
             val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             with(sharedPref.edit()) {
@@ -146,6 +154,22 @@ class SharedPreferences {
 
             return Pair<Boolean, String>(isVerified, tokenCode ?: "")
         }
+
+        fun saveCredentials(context: Context, email: String, password: String) {
+            val sharedPreferences = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            with(sharedPreferences.edit()) {
+                putString("saved_email", email)
+                putString("saved_password", password) // Saving plain text password as requested
+                apply()
+            }
+        }
+
+        fun getSavedCredentials(context: Context): Pair<String?, String?> {
+            val sharedPreferences = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val email = sharedPreferences.getString("saved_email", null)
+            val password = sharedPreferences.getString("saved_password", null)
+            return Pair(email, password)
+        }
     }
 }
 
@@ -171,33 +195,80 @@ fun getSettlementCurrency(context: Context): String {
     }
     return settlementCurrency
 }
-
-fun getDasmid(context: Context): String {
+//SOFTPOS DASMID
+fun getTapPayDasmid(context: Context): String {
     val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
     var dasmid = ""
 
     externalDeviceConfiguration?.let {
-        dasmid = it.data.paymentMethod.firstOrNull()?.DASMID ?: ""
+        for (paymentMethod in it.data.paymentMethod) {
+            if (paymentMethod.Type == "SOFTPOS") {
+                dasmid = paymentMethod.DASMID
+                break
+            }
+        }
+    }
+    return dasmid
+}
+//QP DASMID
+fun getQRDasmid(context: Context): String {
+    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
+    var dasmid = ""
+
+    externalDeviceConfiguration?.let {
+        for (paymentMethod in it.data.paymentMethod) {
+            if (paymentMethod.Type == "QR") {
+                dasmid = paymentMethod.DASMID
+                break
+            }
+        }
+    }
+    return dasmid
+}
+//PBl DASMID
+fun getPayByLinkDasmid(context: Context): String {
+    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
+    var dasmid = ""
+
+    externalDeviceConfiguration?.let {
+        for (paymentMethod in it.data.paymentMethod) {
+            if (paymentMethod.Type == "PBL") {
+                dasmid = paymentMethod.DASMID
+                break
+            }
+        }
     }
     return dasmid
 }
 
+//this function will extract schemes from the external device configuration in which the payment method type is SOFTPOS
 fun getSchemes(context: Context): DevicePaymentMethod_Schemes {
     val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
     var schemes = DevicePaymentMethod_Schemes()
 
     externalDeviceConfiguration?.let {
-        schemes = it.data.paymentMethod.firstOrNull()?.schemes ?: DevicePaymentMethod_Schemes()
+        for (paymentMethod in it.data.paymentMethod) {
+            if (paymentMethod.Type == "SOFTPOS") {
+                schemes = paymentMethod.schemes
+                break
+            }
+        }
     }
     return schemes
 }
-
+//this function will extract apms from the external device configuration in which the payment method type is QR
 fun getApms(context: Context): DevicePaymentMethod_Apms {
     val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
     var apms = DevicePaymentMethod_Apms()
 
     externalDeviceConfiguration?.let {
-        apms = it.data.paymentMethod.firstOrNull()?.apms ?: DevicePaymentMethod_Apms()
+        for (paymentMethod in it.data.paymentMethod) {
+            if (paymentMethod.Type == "QR") {
+                apms = paymentMethod.apms
+                break
+            }
+        }
+        //apms = it.data.paymentMethod.firstOrNull()?.apms ?: DevicePaymentMethod_Apms()
     }
     return apms
 }
