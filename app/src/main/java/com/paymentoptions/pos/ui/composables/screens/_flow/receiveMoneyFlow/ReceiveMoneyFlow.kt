@@ -160,6 +160,7 @@ fun ReceiveMoneyFlow(
                 if (currentNfcStatus.second) {
                     showNFCNotEnabled = false //hide the dialog
                 }
+                startTapAndPay=false
             }
         }
         //adding observer to the lifecycle
@@ -383,7 +384,7 @@ fun ReceiveMoneyFlow(
                                     }
                                     var payByLinkScanCodeBottomSheetExpanded by remember {
                                         mutableStateOf(
-                                            true
+                                            false
                                         )
                                     }
                                     val sheetState = rememberModalBottomSheetState()

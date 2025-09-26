@@ -218,6 +218,7 @@ fun Tap_ChargeMoney(
         return
     }
 
+    
     val merchant: MutableMap<String, String> = mutableMapOf<String, String>()
     val decodedJwtPayloadJson = decodeJwtPayload(authDetails.data.token.idToken)
     val currency = getTransactionCurrency(context)
