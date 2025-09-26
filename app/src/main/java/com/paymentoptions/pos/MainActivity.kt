@@ -40,7 +40,7 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         immersiveMode()
-        setup()
+//        setup()
 
         setContent {
 //            SystemUiController()
@@ -57,9 +57,10 @@ class MainActivity : FragmentActivity() {
     }
 
     fun setup() = lifecycleScope.launch {
-        HeadlessSetup.initialSetup(this@MainActivity) {
+        /**HeadlessSetup.initialSetup(this@MainActivity) {
             withTestCapk = true
-        }
+        }**/
+        var res = HeadlessSetup.initialSetup(this@MainActivity)
 
         HeadlessSetup.getEmvParams()
         HeadlessSetup.getCapks()

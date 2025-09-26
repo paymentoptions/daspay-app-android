@@ -219,7 +219,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "Transaction History 1",
+                text = "Transaction History",
                 modifier = Modifier
                     .align(alignment = Alignment.Start)
                     .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),

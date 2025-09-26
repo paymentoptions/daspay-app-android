@@ -153,6 +153,7 @@ fun ReceiveMoneyFlow(
     var signaturePath by remember { mutableStateOf(Path()) }
     var apms by remember { mutableStateOf(getApms(context)) }
     var startTapAndPay by remember { mutableStateOf(false) }
+    var paymentUrl by remember { mutableStateOf("") }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -386,7 +387,8 @@ fun ReceiveMoneyFlow(
 
                                             val response = payByQr(context, request)
                                             if (response != null && response.success) {
-                                                val paymentUrl = "https://daspay/" + response.data.ID
+//                                                val paymentUrl = "https://daspay/" + response.data.ID
+                                                val paymentUrl = "https://api-dev.paymentoptions.com/paybylink/" + response.data.ProductID
                                                 qrCodeBitmap = generateQrCode(paymentUrl)
                                             } else {
                                                 qrCodeError = "Failed to generate QR code."
@@ -409,7 +411,7 @@ fun ReceiveMoneyFlow(
 
                                     // This block handles showing the Loader, Error, or QR Code
                                     if (qrCodeLoading) {
-                                        MyCircularProgressIndicator()
+                                        MyCircularProgressIndicator(useWhiteLoader = true)
                                     } else if (qrCodeError != null) {
                                         Text(
                                             text = qrCodeError!!,
@@ -475,7 +477,6 @@ fun ReceiveMoneyFlow(
                                     }
                                     var payByLinkScanCodeBottomSheetExpanded by remember {
                                         mutableStateOf(
-                                            //true
                                             false
                                         )
                                     }
@@ -488,9 +489,10 @@ fun ReceiveMoneyFlow(
                                             payByLinkApiResponseLoading = true
                                             val dasmid = com.paymentoptions.pos.device.getPayByLinkDasmid(context)
                                             payByLinkResponse = payByLink(context, payByLinkRequest, dasmid)
-                                            //payByLinkResponse = payByLink(context, payByLinkRequest)
+//                                          payByLinkResponse = payByLink(context, payByLinkRequest)
                                             if (payByLinkResponse != null && payByLinkResponse!!.success) {
-                                                val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
+//                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
+                                                paymentUrl = "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID
                                                 viaLinkQrBitmap = generateQrCode(paymentUrl)
                                             }
 
@@ -507,7 +509,7 @@ fun ReceiveMoneyFlow(
                                         }
                                     }
 
-                                    if (payByLinkApiResponseLoading) MyCircularProgressIndicator()
+                                    if (payByLinkApiResponseLoading) MyCircularProgressIndicator(useWhiteLoader = true)
                                     else if (payByLinkResponse.isNotNull()) {
 
                                         if (payByLinkScanCodeBottomSheetExpanded) ModalBottomSheet(
@@ -613,7 +615,8 @@ fun ReceiveMoneyFlow(
                                                     .padding(vertical = 16.dp, horizontal = 12.dp),
                                             ) {
                                                 Text(
-                                                    text = "https://daspay/" + payByLinkResponse!!.data.ID,
+//                                                  text = "https://daspay/" + payByLinkResponse!!.data.ID,
+                                                    text = "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID,
                                                     fontWeight = FontWeight.SemiBold,
                                                     fontSize = 16.sp,
                                                     color = primary900,
@@ -637,7 +640,10 @@ fun ReceiveMoneyFlow(
                                             ) {
                                                 EmailButton(
                                                     text = "Email",
-                                                    email = Email(),
+                                                    email = Email(
+                                                        subject = "DASPay payment link",
+                                                        text = paymentUrl
+                                                    ),
                                                     modifier = Modifier
                                                         .weight(1f)
                                                         .border(
@@ -656,6 +662,7 @@ fun ReceiveMoneyFlow(
 
                                                 ShareButton(
                                                     text = "Share",
+                                                    shareContent = paymentUrl,
                                                     modifier = Modifier
                                                         .weight(1f)
                                                         .border(

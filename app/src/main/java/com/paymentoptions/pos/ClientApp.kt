@@ -25,6 +25,8 @@ class ClientApp : Application() {
             val clientAppInitRes =
                 HeadlessSetup.initSoftPos(this@ClientApp, "payment-options.license")
             Log.d("ClientApp ->", "Application init: $clientAppInitRes")
+            val res = HeadlessSetup.initialSetup(this@ClientApp)
+            Log.d("Inital Setup--->", res.toString())
             _sdkInitStatus.emit(clientAppInitRes)
         }
     }

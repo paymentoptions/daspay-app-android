@@ -3,6 +3,7 @@ package com.paymentoptions.pos.services.apiService
 import com.google.gson.GsonBuilder
 import com.paymentoptions.pos.utils.retrofitTimeout
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
@@ -119,7 +120,12 @@ var gson = GsonBuilder()
     .setLenient()
     .create()
 
+val logging = HttpLoggingInterceptor().apply {
+    setLevel(HttpLoggingInterceptor.Level.BODY)
+}
+
 var okHttpClient = OkHttpClient.Builder()
+    .addInterceptor(logging)
     .connectTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to establish the connection
     .readTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to wait for the server to send data
     .writeTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to send data to the server
