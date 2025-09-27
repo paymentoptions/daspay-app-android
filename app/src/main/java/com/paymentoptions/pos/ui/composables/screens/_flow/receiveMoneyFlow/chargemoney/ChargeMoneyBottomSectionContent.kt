@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.device.getDasmid
+import com.paymentoptions.pos.device.getTapPayDasmid
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.Address
 import com.paymentoptions.pos.services.apiService.PaymentRequest
@@ -208,6 +208,8 @@ fun Tap_ChargeMoney(
     var transactionDetailsText by remember { mutableStateOf("") }
     var showTransactionStatus by remember { mutableStateOf(false) }
 
+    var hasLaunchedPayment by remember { mutableStateOf(false) }
+
     val authDetails = SharedPreferences.getAuthDetails(context)
 
     if (authDetails == null) {
@@ -223,7 +225,7 @@ fun Tap_ChargeMoney(
     val decodedJwtPayloadJson = decodeJwtPayload(authDetails.data.token.idToken)
     val currency = getTransactionCurrency(context)
 
-    merchant["dasmid"] = getDasmid(context)
+    merchant["dasmid"] = getTapPayDasmid(context)
     merchant["name"] = getKeyFromToken(decodedJwtPayloadJson, "name")
     merchant["email"] = getKeyFromToken(decodedJwtPayloadJson, "email")
     merchant["contact"] = getKeyFromToken(decodedJwtPayloadJson, "custom:ContactNo")
@@ -380,7 +382,7 @@ fun Tap_ChargeMoney(
         time_zone = getDeviceTimeZone()
     )
 
-    scope.launch {
+    /**scope.launch {
         paymentLoader = true
 
         try {
@@ -422,6 +424,51 @@ fun Tap_ChargeMoney(
             println("Error: ${e.toString()}")
         } finally {
             paymentLoader = false
+        }
+    }**/
+    if (!hasLaunchedPayment) {
+        hasLaunchedPayment = true
+
+        scope.launch {
+            paymentLoader = true
+            try {
+                val paymentResponse: PaymentResponse? = payment(context, paymentRequest)
+                println("paymentResponse: $paymentResponse")
+                if (paymentResponse == null) {
+                    Toast.makeText(
+                        context, "Token invalid! Please login again.", Toast.LENGTH_LONG
+                    ).show()
+                    navController.navigate(Screens.SignIn.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                    return@launch
+                }
+
+                paymentResponse?.let {
+                    if (it.success) {
+                        println("inThis PaymentResponse ---->")
+                        launcher.launch(
+                            PoiRequest.ActionNew(
+                                tranType = TranType.SALE,
+                                amount = Amount(
+                                    BigDecimal(amountToCharge),
+                                    Currency.getInstance(currency),
+                                ),
+                                profileId = "prof_01K36002RM7DMMPHG0QEX3E9BR",
+                                posReference = it.transaction_details.id
+                            )
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                SharedPreferences.clearSharedPreferences(context)
+                navController.navigate(Screens.SignIn.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+                println("Error: ${e.toString()}")
+            } finally {
+                paymentLoader = false
+            }
         }
     }
 }

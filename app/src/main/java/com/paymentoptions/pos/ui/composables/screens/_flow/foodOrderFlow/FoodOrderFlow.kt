@@ -522,7 +522,9 @@ fun FoodOrderFlow(
                                 LaunchedEffect(Unit) {
                                     try {
                                         payByLinkApiResponseLoading = true
-                                        payByLinkResponse = payByLink(context, payByLinkRequest)
+                                        val dasmid = com.paymentoptions.pos.device.getPayByLinkDasmid(context)
+//                                      payByLinkResponse = payByLink(context, payByLinkRequest)
+                                        payByLinkResponse = payByLink(context, payByLinkRequest, dasmid)
 
                                         println("payByLinkResponse: $payByLinkResponse")
 

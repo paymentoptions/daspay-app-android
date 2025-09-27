@@ -107,6 +107,10 @@ import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.paymentoptions.pos.utils.viaLinkPaymentMethod
 import java.text.SimpleDateFormat
 import java.util.Date
+import com.paymentoptions.pos.services.apiService.endpoints.payByQr
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
+import com.paymentoptions.pos.ui.theme.red300
+import com.paymentoptions.pos.utils.generateQrCode
 
 fun formatAmount(input: String): String {
     if (input.isEmpty()) return "0.00"
@@ -160,7 +164,6 @@ fun ReceiveMoneyFlow(
                 if (currentNfcStatus.second) {
                     showNFCNotEnabled = false //hide the dialog
                 }
-                startTapAndPay=false
             }
         }
         //adding observer to the lifecycle
@@ -256,12 +259,12 @@ fun ReceiveMoneyFlow(
                             //when (selectedPaymentMethod) {
                             when (paymentMethod) {
                                 tapPaymentMethod -> {
-                                    val currentNfcStatusPair = Nfc.getStatus(context)
-
-                                    if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
-                                        true
-                                    else if (!nfcStatusPair.second) showNFCNotEnabled = true
-                                    else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
+//                                    val currentNfcStatusPair = Nfc.getStatus(context)
+//
+//                                    if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
+//                                        true
+//                                    else if (!nfcStatusPair.second) showNFCNotEnabled = true
+//                                    else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
 
                                     MyDialog(
                                         showDialog = false,
@@ -289,7 +292,7 @@ fun ReceiveMoneyFlow(
                                         acceptButtonText = "Go to Settings",
                                         cancelButtonText = "Cancel",
                                         onAcceptFn = {
-                                            showNFCNotEnabled = false
+//                                            showNFCNotEnabled = false
                                             val intent = Intent(Settings.ACTION_NFC_SETTINGS)
                                             context.startActivity(intent)
                                         },
@@ -309,7 +312,17 @@ fun ReceiveMoneyFlow(
 
                                     FilledButton(
                                         text = "Tap here to start Tap To Pay",
-                                        onClick = { startTapAndPay = true },
+//                                        onClick = { startTapAndPay = true },
+                                        onClick = {
+                                          //check the NFC status
+                                            if (Nfc.getStatus(context).second) {
+                                                //If NFC is enable proceed with payment
+                                                startTapAndPay = true
+                                            } else {
+                                                //If NFC is disabled, show the dialog
+                                                showNFCNotEnabled = true
+                                            }
+                                        },
                                         modifier = Modifier
                                             .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                                             .height(59.dp)
@@ -319,7 +332,7 @@ fun ReceiveMoneyFlow(
                                     PaymentSchemesRow(modifier = Modifier.height(50.dp))
                                 }
 
-                                qrCodePaymentMethod -> {
+                                /**qrCodePaymentMethod -> {
 
                                     Text(
                                         text = "Scan QR Code",
@@ -343,6 +356,84 @@ fun ReceiveMoneyFlow(
 
                                     NoteChip(
                                         text = "Ask customer to scan with GrabPay",
+                                        color = Color.White,
+                                        modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                    )
+                                }**/
+                                qrCodePaymentMethod -> {
+
+                                    var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                                    var qrCodeLoading by remember { mutableStateOf(false) }
+                                    var qrCodeError by remember { mutableStateOf<String?>(null) }
+
+                                    // This effect runs the API call once when the screen appears
+                                    LaunchedEffect(Unit) {
+                                        qrCodeLoading = true
+                                        qrCodeError = null
+                                        try {
+                                            val amountValue = amountToChargeState.toLongOrNull()?.div(100f) ?: 0f
+                                            val request = PayByLinkRequest(
+                                                PBLLinkName = "QR Payment",
+                                                ExpiryDate = SimpleDateFormat("YYYY-dd MMMM, YYYY HH:mm:ss").format(Date()),
+                                                Product = listOf(PayByLinkRequestProduct(
+                                                    Currency = currency,
+                                                    Name = "POS Sale",
+                                                    Quantity = 1,
+                                                    Price = amountValue,
+                                                    TotalPrice = amountValue.toString()
+                                                ))
+                                            )
+
+                                            val response = payByQr(context, request)
+                                            if (response != null && response.success) {
+                                                val paymentUrl = "https://daspay/" + response.data.ID
+                                                qrCodeBitmap = generateQrCode(paymentUrl)
+                                            } else {
+                                                qrCodeError = "Failed to generate QR code."
+                                            }
+                                        } catch (e: Exception) {
+                                            qrCodeError = "An error occurred."
+                                            e.printStackTrace()
+                                        } finally {
+                                            qrCodeLoading = false
+                                        }
+                                    }
+
+                                    Text(
+                                        text = "Scan QR Code",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 18.sp,
+                                        textAlign = TextAlign.Center,
+                                    )
+
+                                    // This block handles showing the Loader, Error, or QR Code
+                                    if (qrCodeLoading) {
+                                        MyCircularProgressIndicator()
+                                    } else if (qrCodeError != null) {
+                                        Text(
+                                            text = qrCodeError!!,
+                                            color = red300,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(16.dp)
+                                        )
+                                    } else {
+                                        PaymentQrCodeImage(
+                                            qrBitmap = qrCodeBitmap, // generated bitmap here
+                                            modifier = Modifier
+                                                .padding(horizontal = 20.dp)
+                                                .fillMaxWidth()
+                                                .height(220.dp)
+                                                .clip(
+                                                    shape = RoundedCornerShape(16.dp)
+                                                )
+                                        )
+                                    }
+
+                                    PaymentApmsRow(modifier = Modifier.height(50.dp))
+
+                                    NoteChip(
+                                        text = "Ask customer to scan with their payment app",
                                         color = Color.White,
                                         modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                                     )
@@ -384,15 +475,24 @@ fun ReceiveMoneyFlow(
                                     }
                                     var payByLinkScanCodeBottomSheetExpanded by remember {
                                         mutableStateOf(
+                                            //true
                                             false
                                         )
                                     }
                                     val sheetState = rememberModalBottomSheetState()
+                                    //added a state variable to hold the generated QR bitmap
+                                    var viaLinkQrBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
                                     LaunchedEffect(Unit) {
                                         try {
                                             payByLinkApiResponseLoading = true
-                                            payByLinkResponse = payByLink(context, payByLinkRequest)
+                                            val dasmid = com.paymentoptions.pos.device.getPayByLinkDasmid(context)
+                                            payByLinkResponse = payByLink(context, payByLinkRequest, dasmid)
+                                            //payByLinkResponse = payByLink(context, payByLinkRequest)
+                                            if (payByLinkResponse != null && payByLinkResponse!!.success) {
+                                                val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
+                                                viaLinkQrBitmap = generateQrCode(paymentUrl)
+                                            }
 
                                             println("payByLinkResponse: $payByLinkResponse")
 
@@ -456,6 +556,7 @@ fun ReceiveMoneyFlow(
                                             ) {
 
                                                 PaymentQrCodeImage(
+                                                    qrBitmap = viaLinkQrBitmap,
                                                     modifier = Modifier
                                                         .padding(horizontal = 20.dp)
                                                         .fillMaxWidth()

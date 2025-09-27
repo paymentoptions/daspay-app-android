@@ -2,6 +2,8 @@ package com.paymentoptions.pos
 
 import android.app.Application
 import android.util.Log
+import androidx.lifecycle.lifecycleScope
+import com.paymentoptions.pos.MainActivity
 import com.theminesec.sdk.headless.HeadlessSetup
 import com.theminesec.sdk.headless.model.WrappedResult
 import com.theminesec.sdk.headless.model.setup.SdkInitResp
@@ -27,5 +29,8 @@ class ClientApp : Application() {
             Log.d("ClientApp ->", "Application init: $clientAppInitRes")
             _sdkInitStatus.emit(clientAppInitRes)
         }
+
     }
+
+
 }

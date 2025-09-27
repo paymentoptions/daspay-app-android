@@ -553,6 +553,8 @@ data class DevicePaymentMethod(
     val SettlementCCY: String,
     val schemes: DevicePaymentMethod_Schemes,
     val apms: DevicePaymentMethod_Apms,
+    val Type: String,
+    val Status: String,
 )
 
 @Serializable

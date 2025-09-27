@@ -66,10 +66,13 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
     val credentialModel = if (inProduction) CredentialModel.Empty else CredentialModel.Robowah
 
-    val emailState = rememberTextFieldState(initialText = credentialModel.email)
+    val (savedEmail, savedPassword) = remember { SharedPreferences.getSavedCredentials(context) }
+//  val emailState = rememberTextFieldState(initialText = credentialModel.email)
+    val emailState = rememberTextFieldState(initialText = savedEmail ?: "")
     var emailError by remember { mutableStateOf(false) }
 
-    val passwordState = rememberTextFieldState(initialText = credentialModel.password)
+//  val passwordState = rememberTextFieldState(initialText = credentialModel.password)
+    val passwordState = rememberTextFieldState(initialText = savedPassword ?: "")
     var passwordError by remember { mutableStateOf(false) }
 
     val otpState = rememberTextFieldState()
@@ -171,6 +174,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                         signInResponse?.let {
                             if (signInResponse.success) {
+                                SharedPreferences.saveCredentials(
+                                    context,
+                                    emailState.text.toString(),
+                                    passwordState.text.toString()
+                                )
 
                                 FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
