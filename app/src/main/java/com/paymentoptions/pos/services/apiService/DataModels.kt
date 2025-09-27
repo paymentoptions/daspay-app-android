@@ -390,7 +390,7 @@ data class PayByLinkResponseDataProduct(
 )
 
 data class PayByLinkResponseData(
-    val ProductId: String,
+    val ProductID: String,
     val DASMID: String,
     val Product: List<PayByLinkResponseDataProduct>,
     val Amount: Float,

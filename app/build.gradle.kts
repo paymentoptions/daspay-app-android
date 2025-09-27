@@ -115,4 +115,7 @@ dependencies {
 
     // QR Code Generation (ZXing)
     implementation("com.google.zxing:core:3.5.3")
+
+    // For logging API requests and responses
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }

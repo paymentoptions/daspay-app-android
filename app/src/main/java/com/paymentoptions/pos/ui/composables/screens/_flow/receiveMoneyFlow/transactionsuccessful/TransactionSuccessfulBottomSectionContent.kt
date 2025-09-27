@@ -77,6 +77,13 @@ fun TransactionSuccessfulBottomSectionContent(
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
 
+    // Shareable text summary for the successful Transaction
+    val shareableSuccessText = if (transaction != null) {
+        "Receipt for successful transaction #${transaction.TransactionID}\nAmount: $amountToCharge $currency\nDate: $dateStringFormatted\nStatus: SUCCESSFUL"
+    } else {
+        "Transaction was successful. Details are unavailable."
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -239,7 +246,12 @@ fun TransactionSuccessfulBottomSectionContent(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     EmailButton(
-                        text = "Email", email = Email(), modifier = Modifier
+                        text = "Email",
+                        email = Email(
+                            subject = "Your DASPay Transaction Receipt",
+                            text = shareableSuccessText
+                        ),
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,
@@ -251,7 +263,9 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     ShareButton(
-                        text = "Share", modifier = Modifier
+                        text = "Share",
+                        shareContent = shareableSuccessText,
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,

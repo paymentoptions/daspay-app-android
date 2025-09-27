@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.endpoints.payment
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
@@ -57,6 +58,14 @@ fun ReceiptBottomSectionContent(
     signatureDate: Date,
     enableScrolling: Boolean = false,
 ) {
+
+    //Sharable text summary for the failed Transaction
+    val shareableReceiptText = if (transaction != null) {
+        "Receipt for transaction #${transaction.uuid}\nAmount: ${transaction.amount}"
+    } else {
+        "Receipt details are unavailable"
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -496,7 +505,12 @@ fun ReceiptBottomSectionContent(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 EmailButton(
-                    text = "Email", email = Email(), modifier = Modifier
+                    text = "Email",
+                    email = Email(
+                        subject = "Your DASPay Receipt",
+                        text = shareableReceiptText
+                    ),
+                    modifier = Modifier
                         .weight(1f)
                         .border(
                             2.dp,
@@ -508,7 +522,9 @@ fun ReceiptBottomSectionContent(
                 )
 
                 ShareButton(
-                    text = "Share", modifier = Modifier
+                    text = "Share",
+                    shareContent = shareableReceiptText,
+                    modifier = Modifier
                         .weight(1f)
                         .border(
                             2.dp,

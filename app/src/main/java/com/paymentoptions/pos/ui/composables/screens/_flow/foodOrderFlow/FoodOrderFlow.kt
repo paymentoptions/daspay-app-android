@@ -139,6 +139,7 @@ fun FoodOrderFlow(
     var foodItemListAvailable by remember { mutableStateOf(false) }
     var startTapAndPay by remember { mutableStateOf(false) }
     var apms by remember { mutableStateOf(getApms(context)) }
+    var paymentUrl by remember { mutableStateOf("") }
 
     var cartState by remember {
         mutableStateOf<Cart>(
@@ -651,7 +652,8 @@ fun FoodOrderFlow(
 //                                            )
 
                                                 Text(
-                                                    text = "https://daspay/" + payByLinkResponse!!.data.ID,
+//                                                    text = "https://daspay/" + payByLinkResponse!!.data.ID,
+                                                    text = "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID,
                                                     fontWeight = FontWeight.SemiBold,
                                                     fontSize = 18.sp,
                                                     color = primary900,
@@ -673,7 +675,10 @@ fun FoodOrderFlow(
                                         ) {
                                             EmailButton(
                                                 text = "Email",
-                                                email = Email(),
+                                                email = Email(
+                                                    subject = "DASPay payment Link",
+                                                    text = paymentUrl
+                                                ),
                                                 modifier = Modifier
                                                     .weight(1f)
                                                     .border(
@@ -690,6 +695,7 @@ fun FoodOrderFlow(
 
                                             ShareButton(
                                                 text = "Share",
+                                                shareContent = paymentUrl,
                                                 modifier = Modifier
                                                     .weight(1f)
                                                     .border(

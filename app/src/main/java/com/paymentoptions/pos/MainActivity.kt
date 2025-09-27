@@ -17,7 +17,6 @@ import com.paymentoptions.pos.ui.theme.AppTheme
 import com.theminesec.sdk.headless.HeadlessSetup
 import kotlinx.coroutines.launch
 import androidx.core.graphics.drawable.toDrawable
-import android.util.Log
 
 class MainActivity : FragmentActivity() {
 
@@ -41,7 +40,7 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         immersiveMode()
-        setup()
+//        setup()
 
         setContent {
 //            SystemUiController()
@@ -57,15 +56,11 @@ class MainActivity : FragmentActivity() {
         }
     }
 
-    fun setup() = lifecycleScope.launch {
-        val res = HeadlessSetup.initialSetup(this@MainActivity)
-        HeadlessSetup.initialSetup(this@MainActivity) {
-            withTestCapk = true
-            Log.d("Calling initiakl->","mine")
-        }
-        Log.d("Initial Setup-->",res.toString())
+    /*fun setup() = lifecycleScope.launch {
+        var res = HeadlessSetup.initialSetup(this@MainActivity)
+
         HeadlessSetup.getEmvParams()
         HeadlessSetup.getCapks()
         HeadlessSetup.getTermParam()
-    }
+    }*/
 }
