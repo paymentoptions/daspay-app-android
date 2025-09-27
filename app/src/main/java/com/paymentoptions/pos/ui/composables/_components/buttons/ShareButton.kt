@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables._components.buttons
 
 import android.content.Intent
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,16 +25,23 @@ import com.paymentoptions.pos.ui.theme.primary900
 
 @Composable
 
-fun ShareButton(text: String, modifier: Modifier = Modifier) {
+fun ShareButton(text: String, shareContent: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val sendIntent = Intent(Intent.ACTION_SEND).apply {
+
+    //The intent is now created inside the clickable modifier to ensure it captures the latest shareContent.
+    /**val sendIntent = Intent(Intent.ACTION_SEND).apply {
         putExtra(Intent.EXTRA_TEXT, "Share")
         type = "text/plain"
     }
-    val shareIntent = Intent.createChooser(sendIntent, null)
+    val shareIntent = Intent.createChooser(sendIntent, null)**/
 
     Column(
         modifier = modifier.clickable {
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                putExtra(Intent.EXTRA_TEXT, shareContent)
+                type = "text/plain"
+            }
+            val shareIntent = Intent.createChooser(sendIntent, null)
             startActivity(context, shareIntent, null)
         },
         horizontalAlignment = Alignment.CenterHorizontally,

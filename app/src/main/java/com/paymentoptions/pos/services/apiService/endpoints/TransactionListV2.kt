@@ -6,7 +6,7 @@ import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.TransactionListV2Request
 import com.paymentoptions.pos.services.apiService.TransactionListV2RequestFilter
-import com.paymentoptions.pos.services.apiService.generateRequestHeaders
+import com.paymentoptions.pos.services.apiService.generateRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun transactionListV2(
@@ -24,7 +24,7 @@ suspend fun transactionListV2(
         if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
         val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generateRequestHeaders(idToken ?: "")
+        val requestHeaders = generateRequestHeader(idToken ?: "")
 
         val request = TransactionListV2Request(take = take, skip = skip, filter = filter)
         val transactionListResponse = RetrofitClient.api.transactionListV2(requestHeaders, request)

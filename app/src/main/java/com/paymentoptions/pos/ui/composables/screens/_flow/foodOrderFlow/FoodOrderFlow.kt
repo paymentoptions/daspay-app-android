@@ -11,22 +11,30 @@ import androidx.compose.animation.core.animateIntOffsetAsState
 import androidx.compose.animation.core.keyframes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,9 +44,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -47,9 +57,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.getApms
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
@@ -63,23 +75,17 @@ import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndic
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
+import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
 import com.paymentoptions.pos.ui.composables._components.images.PayByLinkImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentTapToPayImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.AmexImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.JcbImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.MastercardImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.VisaImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.AliPayImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.ApplePayImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.GrabPayImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment2
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment3
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.WechatPayImage
+import com.paymentoptions.pos.ui.composables._components.paymentimagerow.PaymentApmsRow
+import com.paymentoptions.pos.ui.composables._components.paymentimagerow.PaymentSchemesRow
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.additionalcharge.AdditionalChargeBottomSectionContent
@@ -94,6 +100,7 @@ import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.green100
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.ui.theme.red500
@@ -110,6 +117,7 @@ import kotlin.math.roundToInt
 
 const val MAX_QUANTITY_PER_FOOD_ITEM = 20
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodOrderFlow(
     navController: NavController,
@@ -129,6 +137,9 @@ fun FoodOrderFlow(
     var selectedFoodCategory by remember { mutableStateOf<CategoryListDataRecord?>(null) }
     var foodCategoryListAvailable by remember { mutableStateOf(false) }
     var foodItemListAvailable by remember { mutableStateOf(false) }
+    var startTapAndPay by remember { mutableStateOf(false) }
+    var apms by remember { mutableStateOf(getApms(context)) }
+    var paymentUrl by remember { mutableStateOf("") }
 
     var cartState by remember {
         mutableStateOf<Cart>(
@@ -181,6 +192,16 @@ fun FoodOrderFlow(
 
     fun updateFlowStage(newFoodOrderFlowStage: FoodOrderFlowStage) {
         foodOrderFlowStage = newFoodOrderFlowStage
+    }
+
+    if (!nfcStatusPair.first) {
+        tapPaymentMethod.setIsEnabled(false)
+        Toast.makeText(context, "Your device does not support NFC", Toast.LENGTH_SHORT).show()
+    }
+
+    if (!apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
+        qrCodePaymentMethod.setIsEnabled(false)
+        Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
     }
 
     LaunchedEffect(Unit) {
@@ -367,10 +388,12 @@ fun FoodOrderFlow(
                     ) {
                         when (selectedPaymentMethod) {
                             tapPaymentMethod -> {
+                                val currentNfcStatusPair = Nfc.getStatus(context)
 
                                 if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
                                     true
                                 else if (!nfcStatusPair.second) showNFCNotEnabled = true
+                                else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
 
                                 MyDialog(
                                     showDialog = showDeveloperOptionsEnabled,
@@ -412,53 +435,19 @@ fun FoodOrderFlow(
                                         .padding(horizontal = 20.dp)
                                         .fillMaxWidth()
                                         .height(230.dp)
-                                        .clip(
-                                            shape = RoundedCornerShape(16.dp)
-                                        )
+                                        .clip(shape = RoundedCornerShape(16.dp))
+                                        .clickable { startTapAndPay = true })
+
+                                FilledButton(
+                                    text = "Tap here to start Tap To Pay",
+                                    onClick = { startTapAndPay = true },
+                                    modifier = Modifier
+                                        .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                        .height(59.dp)
+                                        .scale(0.8f)
                                 )
 
-                                Text(
-                                    text = "Tap To Pay",
-                                    color = Color.White,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 18.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.height(60.dp)
-                                ) {
-                                    VisaImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(8.dp))
-                                            .weight(1f)
-                                    )
-
-                                    MastercardImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(8.dp))
-                                            .weight(1f)
-                                    )
-
-                                    AmexImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(8.dp))
-                                            .weight(1f)
-                                    )
-
-                                    JcbImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(8.dp))
-                                            .weight(1f)
-                                    )
-                                }
+                                PaymentSchemesRow(modifier = Modifier.height(50.dp))
                             }
 
                             qrCodePaymentMethod -> {
@@ -481,53 +470,7 @@ fun FoodOrderFlow(
                                         )
                                 )
 
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.height(50.dp)
-                                ) {
-                                    GrabPayImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-
-                                    QrPayment2(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-
-                                    QrPayment3(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-
-                                    AliPayImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-
-                                    ApplePayImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-
-                                    WechatPayImage(
-                                        modifier = Modifier
-                                            .fillMaxHeight()
-                                            .clip(shape = RoundedCornerShape(16.dp))
-                                            .weight(1f)
-                                    )
-                                }
+                                PaymentApmsRow(modifier = Modifier.height(50.dp))
 
                                 NoteChip(
                                     text = "Ask customer to scan with GrabPay",
@@ -537,7 +480,6 @@ fun FoodOrderFlow(
                             }
 
                             cashPaymentMethod -> {
-
                                 Text(
                                     text = "Please pay cash",
                                     color = Color.White,
@@ -571,11 +513,19 @@ fun FoodOrderFlow(
                                     )
                                 }
                                 var payByLinkApiResponseLoading by remember { mutableStateOf(false) }
+                                var payByLinkScanCodeBottomSheetExpanded by remember {
+                                    mutableStateOf(
+                                        true
+                                    )
+                                }
+                                val sheetState = rememberModalBottomSheetState()
 
                                 LaunchedEffect(Unit) {
                                     try {
                                         payByLinkApiResponseLoading = true
-                                        payByLinkResponse = payByLink(context, payByLinkRequest)
+                                        val dasmid = com.paymentoptions.pos.device.getPayByLinkDasmid(context)
+//                                      payByLinkResponse = payByLink(context, payByLinkRequest)
+                                        payByLinkResponse = payByLink(context, payByLinkRequest, dasmid)
 
                                         println("payByLinkResponse: $payByLinkResponse")
 
@@ -592,6 +542,67 @@ fun FoodOrderFlow(
 
                                 if (payByLinkApiResponseLoading) MyCircularProgressIndicator()
                                 else if (payByLinkResponse.isNotNull()) {
+
+                                    if (payByLinkScanCodeBottomSheetExpanded) ModalBottomSheet(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onDismissRequest = {
+                                            payByLinkScanCodeBottomSheetExpanded = false
+                                        },
+                                        sheetState = sheetState,
+                                        containerColor = Color.White,
+                                        contentColor = primary500,
+                                        dragHandle = {}) {
+
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 20.dp)
+                                        ) {
+                                            Icon(
+                                                painter = painterResource(R.drawable.logo),
+                                                contentDescription = "DASPay Logo",
+                                                tint = primary500,
+                                                modifier = Modifier
+                                                    .height(
+                                                        LOGO_HEIGHT_IN_DP.div(1.5f)
+                                                    )
+                                                    .align(Alignment.Center)
+                                            )
+
+                                            IconButton(
+                                                modifier = Modifier.align(alignment = Alignment.CenterEnd),
+                                                onClick = {
+                                                    payByLinkScanCodeBottomSheetExpanded = false
+                                                }) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Close,
+                                                    contentDescription = "Close",
+                                                    modifier = Modifier.size(28.dp)
+                                                )
+                                            }
+                                        }
+
+                                        Column(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+
+                                            PaymentQrCodeImage(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 20.dp)
+                                                    .fillMaxWidth()
+                                                    .height(220.dp)
+                                                    .clip(shape = RoundedCornerShape(16.dp))
+                                            )
+
+                                            Spacer(modifier = Modifier.height(10.dp))
+
+                                            NoteChip(
+                                                text = "Scan with your device",
+                                                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                            )
+                                        }
+                                    }
 
                                     Column(
                                         modifier = Modifier
@@ -641,7 +652,8 @@ fun FoodOrderFlow(
 //                                            )
 
                                                 Text(
-                                                    text = "https://daspay/" + payByLinkResponse!!.data.ID,
+//                                                    text = "https://daspay/" + payByLinkResponse!!.data.ID,
+                                                    text = "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID,
                                                     fontWeight = FontWeight.SemiBold,
                                                     fontSize = 18.sp,
                                                     color = primary900,
@@ -663,7 +675,10 @@ fun FoodOrderFlow(
                                         ) {
                                             EmailButton(
                                                 text = "Email",
-                                                email = Email(),
+                                                email = Email(
+                                                    subject = "DASPay payment Link",
+                                                    text = paymentUrl
+                                                ),
                                                 modifier = Modifier
                                                     .weight(1f)
                                                     .border(
@@ -680,6 +695,7 @@ fun FoodOrderFlow(
 
                                             ShareButton(
                                                 text = "Share",
+                                                shareContent = paymentUrl,
                                                 modifier = Modifier
                                                     .weight(1f)
                                                     .border(
@@ -708,7 +724,9 @@ fun FoodOrderFlow(
                                                         shape = RoundedCornerShape(10.dp)
                                                     )
                                                     .padding(horizontal = 10.dp, vertical = 20.dp)
-                                            )
+                                                    .clickable {
+                                                        payByLinkScanCodeBottomSheetExpanded = true
+                                                    })
                                         }
                                     }
                                 } else {
@@ -733,7 +751,9 @@ fun FoodOrderFlow(
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
                     updateFlowStage = { updateFlowStage(it as FoodOrderFlowStage) },
-                    onChangeAmount = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) })
+                    onChangeAmount = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
+                    startTapAndPay = startTapAndPay,
+                    turnoffStartTapToPay = { startTapAndPay = false })
             }
         }
 

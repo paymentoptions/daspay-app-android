@@ -36,13 +36,13 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlowStage
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -76,6 +76,13 @@ fun TransactionSuccessfulBottomSectionContent(
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
+
+    // Shareable text summary for the successful Transaction
+    val shareableSuccessText = if (transaction != null) {
+        "Receipt for successful transaction #${transaction.TransactionID}\nAmount: $amountToCharge $currency\nDate: $dateStringFormatted\nStatus: SUCCESSFUL"
+    } else {
+        "Transaction was successful. Details are unavailable."
+    }
 
     Column(
         modifier = Modifier
@@ -239,7 +246,12 @@ fun TransactionSuccessfulBottomSectionContent(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     EmailButton(
-                        text = "Email", email = Email(), modifier = Modifier
+                        text = "Email",
+                        email = Email(
+                            subject = "Your DASPay Transaction Receipt",
+                            text = shareableSuccessText
+                        ),
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,
@@ -251,7 +263,9 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     ShareButton(
-                        text = "Share", modifier = Modifier
+                        text = "Share",
+                        shareContent = shareableSuccessText,
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,

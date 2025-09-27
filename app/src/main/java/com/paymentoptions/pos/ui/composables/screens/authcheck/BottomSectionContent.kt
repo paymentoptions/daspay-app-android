@@ -40,7 +40,7 @@ fun BottomSectionContent(navController: NavController) {
     LaunchedEffect(Unit) {
         isLoading = true
         authDetails = SharedPreferences.getAuthDetails(context)
-        isTokenVerified = SharedPreferences.getTokenStatus(context = context)
+        isTokenVerified = SharedPreferences.getTokenStatus(context = context).first
         isAuthenticated = authDetails?.success == true
         isLoading = false
     }

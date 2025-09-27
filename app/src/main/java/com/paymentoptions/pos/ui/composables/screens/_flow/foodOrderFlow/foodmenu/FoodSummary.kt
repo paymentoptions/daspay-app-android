@@ -99,7 +99,9 @@ fun FoodSummary(
             modifier = Modifier.size(44.dp)
         )
 
-        FoodDetail(foodItem, modifier = Modifier.weight(1f))
+        FoodDetail(foodItem, modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f))
 
         //Add to cart button
         Row(

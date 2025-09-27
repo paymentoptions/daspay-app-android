@@ -6,7 +6,7 @@ import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SignOutRequest
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.Token
-import com.paymentoptions.pos.services.apiService.generateRequestHeaders
+import com.paymentoptions.pos.services.apiService.generateRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun signOut(context: Context): SignOutResponse? {
@@ -22,7 +22,7 @@ suspend fun signOut(context: Context): SignOutResponse? {
         val idToken = authDetails?.data?.token?.idToken ?: ""
         refreshToken = authDetails?.data?.token?.refreshToken ?: ""
 
-        val requestHeaders = generateRequestHeaders()
+        val requestHeaders = generateRequestHeader()
         val token = Token(accessToken, idToken, refreshToken)
         val signOutRequest = SignOutRequest(username, token)
 

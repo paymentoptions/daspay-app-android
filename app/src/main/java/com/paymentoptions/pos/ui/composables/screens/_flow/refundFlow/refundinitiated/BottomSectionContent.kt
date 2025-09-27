@@ -79,6 +79,13 @@ fun BottomSectionContent(
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
 
+    //Shareable text summary for the refund
+    val shareableRefundText = if (transaction != null) {
+        "Refund initiated for transaction #${transaction.TransactionID}\nAmount: ${transaction.amount} $currency\nDate: $dateStringFormatted"
+    } else {
+        "Refund initiated. Details are unavailable."
+    }
+
     LaunchedEffect(showRefundStatus) {
         scrollState.scrollTo(if (showRefundStatus) scrollState.maxValue else 0)
     }
@@ -241,7 +248,12 @@ fun BottomSectionContent(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     EmailButton(
-                        text = "Email", email = Email(), modifier = Modifier
+                        text = "Email",
+                        email = Email(
+                            subject = "Your DASPay Refund Confirmation",
+                            text = shareableRefundText
+                        ),
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,
@@ -253,7 +265,9 @@ fun BottomSectionContent(
                     )
 
                     ShareButton(
-                        text = "Share", modifier = Modifier
+                        text = "Share",
+                        shareContent = shareableRefundText,
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,

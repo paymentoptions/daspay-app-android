@@ -1,41 +1,3 @@
-/**package com.paymentoptions.pos.ui.composables.screens.splash
-
-import android.os.Handler
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
-import com.paymentoptions.pos.ui.composables._components.images.LogoImage
-import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
-import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayout
-import com.paymentoptions.pos.ui.composables.navigation.Screens
-
-@Composable
-fun SplashScreen(navController: NavController) {
-    Handler().postDelayed({
-        navController.navigate(Screens.AuthCheck.route)
-    }, 1000)
-
-    SimpleLayout {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            LogoImage(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(LOGO_HEIGHT_IN_DP)
-            )
-        }
-    }
-}**/
-
 package com.paymentoptions.pos.ui.composables.screens.splash
 
 import android.os.Handler
@@ -65,12 +27,10 @@ fun SplashScreen(navController: NavController) {
             modifier = Modifier.fillMaxSize()
         ) {
             AsyncImage(
-                model = R.drawable.loader_new,
+                model = R.drawable.daspay_loader_transparent,
                 contentDescription = "Loading Animation",
                 contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxSize()
-//                    .height(600.dp)
+                modifier = Modifier.fillMaxSize()
             )
         }
     }

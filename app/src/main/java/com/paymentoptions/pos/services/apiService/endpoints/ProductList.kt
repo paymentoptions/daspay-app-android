@@ -4,7 +4,7 @@ import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.ProductListResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
-import com.paymentoptions.pos.services.apiService.generateRequestHeaders
+import com.paymentoptions.pos.services.apiService.generateRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun productList(context: Context, categoryId: String): ProductListResponse? {
@@ -17,7 +17,7 @@ suspend fun productList(context: Context, categoryId: String): ProductListRespon
         if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
         val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generateRequestHeaders(idToken ?: "")
+        val requestHeaders = generateRequestHeader(idToken ?: "")
 
         val productListResponse =
             RetrofitClient.api.productList(headers = requestHeaders, categoryId = categoryId)

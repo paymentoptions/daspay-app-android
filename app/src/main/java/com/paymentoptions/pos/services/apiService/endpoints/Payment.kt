@@ -5,7 +5,7 @@ import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.PaymentRequest
 import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
-import com.paymentoptions.pos.services.apiService.generatePaymentRequestHeaders
+import com.paymentoptions.pos.services.apiService.generatePaymentRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun payment(
@@ -21,7 +21,7 @@ suspend fun payment(
         if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
         val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generatePaymentRequestHeaders(idToken ?: "")
+        val requestHeaders = generatePaymentRequestHeader(idToken ?: "")
 
         var paymentResponse: PaymentResponse =
             RetrofitClient.api.payment(headers = requestHeaders, request = paymentRequest)

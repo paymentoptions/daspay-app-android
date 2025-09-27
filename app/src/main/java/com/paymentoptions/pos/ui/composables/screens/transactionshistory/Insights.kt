@@ -7,19 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -31,28 +26,27 @@ import co.yml.charts.common.model.Point
 import co.yml.charts.ui.barchart.BarChart
 import co.yml.charts.ui.barchart.models.BarChartData
 import co.yml.charts.ui.barchart.models.BarData
-import com.paymentoptions.pos.R
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderColor
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500
-import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary100
-import com.paymentoptions.pos.ui.theme.primary300
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
-import com.paymentoptions.pos.ui.theme.shadowColor2
 import com.paymentoptions.pos.utils.formatToPrecisionString
-import com.paymentoptions.pos.utils.modifiers.innerShadow
 import java.time.OffsetDateTime
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
+val months = arrayOf(
+    "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JULY", "AUG", "SEP", "OCT", "NOV", "DEC"
+)
+
 @Composable
 fun Insights(
-    transactions: List<TransactionListDataRecord>,
+    transactions: List<InsightsResponseDataRecord>,
     currency: String,
     updateReceivalAmount: (Float) -> Unit,
 ) {
@@ -64,7 +58,7 @@ fun Insights(
     var barData: MutableList<BarData> = mutableListOf()
 
     val higherPercentage = 15
-    val higherString = buildAnnotatedString {
+    buildAnnotatedString {
         withStyle(
             SpanStyle(primary500, fontWeight = FontWeight.Medium, fontSize = 11.sp)
         ) { append("Your Earnings are ") }
@@ -86,15 +80,15 @@ fun Insights(
 
                 if (index == 0) chartMaxValue = transaction.amount.toFloat()
 
-                val date = OffsetDateTime.parse(transaction.Date).toLocalDateTime()
+                val date = OffsetDateTime.parse(transaction.TransactionDate).toLocalDateTime()
 
                 barData.add(
                     BarData(
                         point = Point(x = counter++.toFloat(), y = transaction.amount.toFloat()),
-                        color = if (transaction.TransactionType == "REFUND") red500.copy(alpha = 0.4f) else Color.Green.copy(
-                            alpha = 0.4f
+                        color = if (transaction.TransactionType == "REFUND") red500.copy(alpha = 0.8f) else Color.Green.copy(
+                            alpha = 0.8f
                         ),
-                        label = "${date.dayOfMonth} ${date.month}",
+                        label = "${date.dayOfMonth} ${months[date.monthValue]}",
                         gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
                         description = if (transaction.TransactionType == "REFUND") "Refund Txn #: ${transaction.uuid}" else "Purchase Txn #: ${transaction.uuid}",
                     )
@@ -122,10 +116,6 @@ fun Insights(
         }
 
         updateReceivalAmount(earningAmount)
-
-        val months = arrayOf(
-            "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JULY", "AUG", "SEP", "OCT", "NOV", "DEC"
-        )
 
         //Bar Graph
         Row(
@@ -403,35 +393,35 @@ fun Insights(
                 }
             }
 
-            AssistChip(
-                modifier = Modifier
-                    .fillMaxWidth(),
-                onClick = { },
-                label = {
-                    Text(
-                        text = higherString,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = primary500,
-                        lineHeight = 16.sp,
-                        maxLines = 1,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                    )
-                },
-                border = noBorder,
-                colors = AssistChipDefaults.assistChipColors(
-                    containerColor = Color.LightGray.copy(0.2f)
-                ),
-                leadingIcon = {
-                    Icon(
-                        modifier = Modifier.offset(y = 8.dp),
-                        painter = painterResource(R.drawable.higher),
-                        contentDescription = "Hint",
-                        tint = Color(0xFF1BCC91),
-                    )
-                })
+//            AssistChip(
+//                modifier = Modifier
+//                    .fillMaxWidth(),
+//                onClick = { },
+//                label = {
+//                    Text(
+//                        text = higherString,
+//                        fontSize = 10.sp,
+//                        fontWeight = FontWeight.Medium,
+//                        color = primary500,
+//                        lineHeight = 16.sp,
+//                        maxLines = 1,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(vertical = 6.dp),
+//                    )
+//                },
+//                border = noBorder,
+//                colors = AssistChipDefaults.assistChipColors(
+//                    containerColor = Color.LightGray.copy(0.2f)
+//                ),
+//                leadingIcon = {
+//                    Icon(
+//                        modifier = Modifier.offset(y = 8.dp),
+//                        painter = painterResource(R.drawable.higher),
+//                        contentDescription = "Hint",
+//                        tint = Color(0xFF1BCC91),
+//                    )
+//                })
 
         }
     }

@@ -7,7 +7,7 @@ import com.paymentoptions.pos.services.apiService.CompleteDeviceRegistrationResp
 import com.paymentoptions.pos.services.apiService.DeviceMetadata
 import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
-import com.paymentoptions.pos.services.apiService.generateRequestHeaders
+import com.paymentoptions.pos.services.apiService.generateRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 import com.paymentoptions.pos.utils.getDeviceIdentifier
 
@@ -26,7 +26,7 @@ suspend fun completeDeviceRegistration(
         }
 
         val idToken = authDetails?.data?.token?.idToken ?: ""
-        val requestHeaders = generateRequestHeaders(idToken)
+        val requestHeaders = generateRequestHeader(idToken)
 
         val deviceNumber = getDeviceIdentifier(context)
         val uniqueCode = otp // The static unique code
@@ -76,7 +76,7 @@ suspend fun getExternalDeviceConfiguration(
         }
 
         val idToken = authDetails?.data?.token?.idToken ?: ""
-        val requestHeaders = generateRequestHeaders(idToken)
+        val requestHeaders = generateRequestHeader(idToken)
 
         //Log.d("Request Headers-->", "$requestHeaders->$deviceNumber->$uniqueCode")
 

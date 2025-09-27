@@ -5,7 +5,7 @@ import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.RefreshTokenRequest
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SignInResponse
-import com.paymentoptions.pos.services.apiService.generateRequestHeaders
+import com.paymentoptions.pos.services.apiService.generateRequestHeader
 
 suspend fun refreshTokens(
     context: Context,
@@ -14,7 +14,7 @@ suspend fun refreshTokens(
 ): SignInResponse? {
     println("---> Refreshing tokens")
     try {
-        val requestHeaders = generateRequestHeaders()
+        val requestHeaders = generateRequestHeader()
         val refreshTokenRequest = RefreshTokenRequest(username, refreshToken)
         val refreshTokenResponse =
             RetrofitClient.api.refreshToken(requestHeaders, refreshTokenRequest)

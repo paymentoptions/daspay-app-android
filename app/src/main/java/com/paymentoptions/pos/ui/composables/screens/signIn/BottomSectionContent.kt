@@ -38,6 +38,7 @@ import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.inProduction
 import com.paymentoptions.pos.utils.validation.validateEmail
 import com.paymentoptions.pos.utils.validation.validateOtp
 import com.paymentoptions.pos.utils.validation.validatePassword
@@ -63,13 +64,15 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var isLoading by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-//    val credentialModel = CredentialModel.Empty
-    val credentialModel = CredentialModel.Robowah
+    val credentialModel = if (inProduction) CredentialModel.Empty else CredentialModel.Robowah
 
-    val emailState = rememberTextFieldState(initialText = credentialModel.email)
+    val (savedEmail, savedPassword) = remember { SharedPreferences.getSavedCredentials(context) }
+//  val emailState = rememberTextFieldState(initialText = credentialModel.email)
+    val emailState = rememberTextFieldState(initialText = savedEmail ?: "")
     var emailError by remember { mutableStateOf(false) }
 
-    val passwordState = rememberTextFieldState(initialText = credentialModel.password)
+//  val passwordState = rememberTextFieldState(initialText = credentialModel.password)
+    val passwordState = rememberTextFieldState(initialText = savedPassword ?: "")
     var passwordError by remember { mutableStateOf(false) }
 
     val otpState = rememberTextFieldState()
@@ -171,6 +174,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                         signInResponse?.let {
                             if (signInResponse.success) {
+                                SharedPreferences.saveCredentials(
+                                    context,
+                                    emailState.text.toString(),
+                                    passwordState.text.toString()
+                                )
 
                                 FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
                                     if (task.isSuccessful) {

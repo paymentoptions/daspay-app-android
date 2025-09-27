@@ -589,7 +589,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 )
 
                                 SharedPreferences.saveTokenStatus(
-                                    context = context, isVerified = true
+                                    context = context, tokenCode = otp.value, isVerified = true
                                 )
 
                                 getExternalDeviceConfiguration(
@@ -635,7 +635,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                     ).onSuccess { configResponse ->
 
                                         SharedPreferences.saveTokenStatus(
-                                            context = context, isVerified = true
+                                            context = context,
+                                            tokenCode = otp.value,
+                                            isVerified = true
                                         )
 
                                         Log.d(

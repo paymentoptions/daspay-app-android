@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.refundFlow.refundTransaction
 
-import android.os.Handler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,11 +28,10 @@ import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.refund
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.dashboard.TRANSACTION_TO_BE_REFUNDED
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -82,7 +80,11 @@ fun BottomSectionContent(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            CurrencyText(currency = currency, amount = transaction?.amount.toString(), fontWeight = FontWeight(980))
+            CurrencyText(
+                currency = currency,
+                amount = transaction?.amount.toString(),
+                fontWeight = FontWeight(980)
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -198,12 +200,12 @@ fun BottomSectionContent(
                     var refundResponse: RefundResponse? = null
 
                     try {
-                        updateRefundStatus(StatusScreenType.PROCESSING)
+//                        updateRefundStatus(StatusScreenType.PROCESSING)
 
                         val refundRequest = RefundRequest(
                             id = transaction?.uuid.toString(),
                             merchant_id = transaction?.DASMID.toString(),
-                            refundAmount = transaction?.amount?.toFloat() ?: 0.0f,
+                            refundAmount = transaction?.amount?.toInt() ?: 0,
 //                            note = noteState.text
                         )
 
@@ -214,19 +216,19 @@ fun BottomSectionContent(
 //                            Toast.makeText(
 //                                context, "Refund processed successfully", Toast.LENGTH_LONG
 //                            ).show()
-                            updateRefundStatus(StatusScreenType.SUCCESS)
+//                            updateRefundStatus(StatusScreenType.SUCCESS)
 
-                            Handler().postDelayed({
-                                navController.navigate(Screens.RefundInitiated.route)
-                            }, 2000)
+//                            Handler().postDelayed({
+//                                navController.navigate(Screens.RefundInitiated.route)
+//                            }, 2000)
 
                         }
                     } catch (e: Exception) {
 //                        Toast.makeText(context, "Error processing refund", Toast.LENGTH_LONG).show()
-                        updateRefundStatus(StatusScreenType.ERROR)
-                        Handler().postDelayed({
-                            navController.navigate(Screens.RefundInitiated.route)
-                        }, 2000)
+//                        updateRefundStatus(StatusScreenType.ERROR)
+//                        Handler().postDelayed({
+//                            navController.navigate(Screens.RefundInitiated.route)
+//                        }, 2000)
                     } finally {
                         isLoading = false
                     }

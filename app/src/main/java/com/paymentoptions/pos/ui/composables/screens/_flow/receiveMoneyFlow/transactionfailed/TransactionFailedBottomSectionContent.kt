@@ -27,11 +27,11 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlowStage
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -59,6 +59,13 @@ fun TransactionFailedBottomSectionContent(
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val formattedDate = SimpleDateFormat("dd MMMM YYYY").format(date)
+
+    //Sharable text summary for the failed Transaction
+    val shareableFailureText = if (transaction != null) {
+        "Details for failed transaction #${transaction.TransactionID}\nAmount: $amountToCharge $currency\nDate: $formattedDate\nStatus: FAILED"
+    } else {
+        "Transaction failed. Details are unavailable."
+    }
 
     Column(
         modifier = Modifier
@@ -196,7 +203,12 @@ fun TransactionFailedBottomSectionContent(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     EmailButton(
-                        text = "Email", email = Email(), modifier = Modifier
+                        text = "Email",
+                        email = Email(
+                            subject = "DASPay Transaction Failure Details",
+                            text = shareableFailureText
+                        ),
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,
@@ -208,7 +220,9 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     ShareButton(
-                        text = "Share", modifier = Modifier
+                        text = "Share",
+                        shareContent = shareableFailureText ,
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,
