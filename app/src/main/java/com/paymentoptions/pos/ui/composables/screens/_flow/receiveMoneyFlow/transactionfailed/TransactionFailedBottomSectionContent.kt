@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.getTransactionCurrency
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -47,7 +47,7 @@ import java.util.Date
 @Composable
 fun TransactionFailedBottomSectionContent(
     navController: NavController,
-    transaction: TransactionListDataRecord?,
+    paymentDetailsResponse: PaymentDetailsResponse?,
     enableScrolling: Boolean = false,
     amountToCharge: String,
     updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
@@ -55,14 +55,15 @@ fun TransactionFailedBottomSectionContent(
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
     val dateString =
-        transaction?.Date ?: OffsetDateTime.now().toString()  //"2025-04-23T03:38:57.349+00:00"
+        paymentDetailsResponse?.data?.Date ?: OffsetDateTime.now()
+            .toString()  //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val formattedDate = SimpleDateFormat("dd MMMM YYYY").format(date)
 
     //Sharable text summary for the failed Transaction
-    val shareableFailureText = if (transaction != null) {
-        "Details for failed transaction #${transaction.TransactionID}\nAmount: $amountToCharge $currency\nDate: $formattedDate\nStatus: FAILED"
+    val shareableFailureText = if (paymentDetailsResponse != null) {
+        "Details for failed transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: $amountToCharge $currency\nDate: $formattedDate\nStatus: FAILED"
     } else {
         "Transaction failed. Details are unavailable."
     }
@@ -119,7 +120,7 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-                        transaction?.TransactionID.toString(),
+                        paymentDetailsResponse?.data?.TransactionID.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -221,7 +222,7 @@ fun TransactionFailedBottomSectionContent(
 
                     ShareButton(
                         text = "Share",
-                        shareContent = shareableFailureText ,
+                        shareContent = shareableFailureText,
                         modifier = Modifier
                             .weight(1f)
                             .border(

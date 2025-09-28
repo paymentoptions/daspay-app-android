@@ -84,7 +84,7 @@ interface ApiService {
     suspend fun paymentStatus(
         @HeaderMap headers: Map<String, String>,
         @Body request: PaymentStatusRequest,
-    ): PaymentResponse
+    ): String
 
     @GET("entities/merchant/catalog/all-categories/{merchantId}")
     suspend fun categoryList(
@@ -114,6 +114,12 @@ interface ApiService {
         @HeaderMap headers: Map<String, String>,
         @Body request: StatsV2Request,
     ): StatsV2Response
+
+    @GET("transactions/{paymentId}")
+    suspend fun paymentDetails(
+        @HeaderMap headers: Map<String, String>,
+        @Path("paymentId") paymentId: String,
+    ): PaymentDetailsResponse
 }
 
 var gson = GsonBuilder()

@@ -4,7 +4,9 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,18 +14,32 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -31,39 +47,109 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.payment
+import com.paymentoptions.pos.R
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
+import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import java.text.SimpleDateFormat
 import java.util.Date
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiptBottomSectionContent(
     navController: NavController,
-    transaction: TransactionListDataRecord?,
+    paymentDetailsResponse: PaymentDetailsResponse?,
     signatureBitmap: Bitmap?,
     signatureDate: Date,
     enableScrolling: Boolean = false,
 ) {
 
+    var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+
     //Sharable text summary for the failed Transaction
-    val shareableReceiptText = if (transaction != null) {
-        "Receipt for transaction #${transaction.uuid}\nAmount: ${transaction.amount}"
+    val shareableReceiptText = if (paymentDetailsResponse != null) {
+        "Receipt for transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.CurrencyCode}${paymentDetailsResponse.data.Amount}"
     } else {
         "Receipt details are unavailable"
+    }
+
+    if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
+        modifier = Modifier.fillMaxWidth(),
+        onDismissRequest = { showQrCodeBottomSheetExpanded = false },
+        sheetState = sheetState,
+        containerColor = Color.White,
+        contentColor = primary500,
+        dragHandle = {}) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 20.dp)
+        ) {
+
+            Icon(
+                painter = painterResource(R.drawable.logo),
+                contentDescription = "DASPay Logo",
+                tint = primary500,
+                modifier = Modifier
+                    .height(
+                        LOGO_HEIGHT_IN_DP.div(1.5f)
+                    )
+                    .align(Alignment.Center)
+            )
+
+            IconButton(
+                modifier = Modifier.align(alignment = Alignment.CenterEnd),
+                onClick = {
+                    showQrCodeBottomSheetExpanded = false
+                }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            val linkQrBitmap = generateQrCode("http://www.google.com")
+
+            PaymentQrCodeImage(
+                qrBitmap = linkQrBitmap,
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(shape = RoundedCornerShape(16.dp))
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            NoteChip(
+                text = "Scan with your device",
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            )
+        }
     }
 
     Column(
@@ -83,7 +169,7 @@ fun ReceiptBottomSectionContent(
         ) {
             SelectionContainer {
                 Text(
-                    text = "tx# " + transaction?.uuid,
+                    text = "tx# " + paymentDetailsResponse?.data?.TransactionID,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     color = purple50
@@ -134,7 +220,7 @@ fun ReceiptBottomSectionContent(
                     color = primary500
                 )
                 Text(
-                    text = transaction?.Date.toString(),
+                    text = paymentDetailsResponse?.data?.Date.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     color = purple50
@@ -165,8 +251,8 @@ fun ReceiptBottomSectionContent(
             )
 
             CurrencyText(
-                currency = transaction?.CurrencyCode.toString(),
-                amount = transaction?.amount.toString(),
+                currency = paymentDetailsResponse?.data?.CurrencyCode.toString(),
+                amount = paymentDetailsResponse?.data?.Amount.toString(),
                 fontSize = 20.sp,
                 color = primary500
             )
@@ -308,7 +394,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transaction?.uuid.toString(),
+                    paymentDetailsResponse?.data?.TransactionID.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -325,7 +411,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transaction?.status.toString(),
+                    paymentDetailsResponse?.data?.Status.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = green500
@@ -342,7 +428,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transaction?.uuid.toString(),
+                    paymentDetailsResponse?.data?.TransactionID.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -545,11 +631,13 @@ fun ReceiptBottomSectionContent(
                         )
                         .background(Color.White)
                         .padding(horizontal = 10.dp, vertical = 20.dp)
+                        .clickable {
+                            showQrCodeBottomSheetExpanded = true
+                        }
                 )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-
 
             FilledButton(
                 text = "Print Receipt",
@@ -560,10 +648,6 @@ fun ReceiptBottomSectionContent(
                     .height(39.dp)
                     .scale(0.7f)
             )
-
-
         }
-
     }
-
 }

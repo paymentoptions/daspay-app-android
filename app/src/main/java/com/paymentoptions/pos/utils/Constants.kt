@@ -1,4 +1,4 @@
 package com.paymentoptions.pos.utils
 
 const val retrofitTimeout: Long = 15
-const val inProduction: Boolean = true
+const val inProduction: Boolean = false

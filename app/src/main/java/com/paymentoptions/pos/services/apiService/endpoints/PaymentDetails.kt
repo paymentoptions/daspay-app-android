@@ -2,15 +2,15 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.services.apiService.PaymentStatusRequest
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
-import com.paymentoptions.pos.services.apiService.generatePaymentStatusHeader
+import com.paymentoptions.pos.services.apiService.generateRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
-suspend fun paymentStatus(
+suspend fun paymentDetails(
     context: Context,
-    request: PaymentStatusRequest,
-): Boolean {
+    paymentId: String,
+): PaymentDetailsResponse? {
     try {
         var authDetails = SharedPreferences.getAuthDetails(context)
         val username = authDetails?.data?.email ?: ""
@@ -19,17 +19,18 @@ suspend fun paymentStatus(
 
         if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
-        val requestHeaders = generatePaymentStatusHeader()
+        val idToken = authDetails?.data?.token?.idToken ?: ""
+        val requestHeaders = generateRequestHeader(authToken = idToken)
 
-        println("inThis PaymentStatus request -->: $request")
-        var response: String =
-            RetrofitClient.api.paymentStatus(headers = requestHeaders, request = request)
+        println("PaymentDetails payment Id -->: $paymentId")
+        var response: PaymentDetailsResponse =
+            RetrofitClient.api.paymentDetails(headers = requestHeaders, paymentId = paymentId)
 
-        println("inThis PaymentStatus response -->: $response")
+        println("PaymentDetails response -->: $response")
 
-        return response.uppercase() == "SUCCESS"
+        return response
     } catch (e: Exception) {
-        println("paymentStatusError: ${e.stackTrace}")
+        println("PaymentDetails error: ${e.stackTrace}")
         throw e
     }
 }

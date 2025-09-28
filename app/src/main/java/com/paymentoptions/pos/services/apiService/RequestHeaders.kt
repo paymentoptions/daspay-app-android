@@ -68,7 +68,6 @@ fun generatePaymentRequestHeader(authToken: String = ""): Map<String, String> {
     return headers
 }
 
-
 fun generatePaymentStatusHeader(): Map<String, String> {
     val headers = mapOf<String, String>(
         "content-type" to "application/json",

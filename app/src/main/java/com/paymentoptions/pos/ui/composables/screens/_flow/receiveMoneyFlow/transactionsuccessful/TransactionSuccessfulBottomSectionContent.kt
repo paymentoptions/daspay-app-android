@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.getTransactionCurrency
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -61,25 +61,27 @@ import java.util.Date
 @Composable
 fun TransactionSuccessfulBottomSectionContent(
     navController: NavController,
-    transaction: TransactionListDataRecord?,
+    paymentDetailsResponse: PaymentDetailsResponse?,
     enableScrolling: Boolean = false,
     amountToCharge: String,
     signatureBitmap: Bitmap?,
     signatureDate: Date,
     updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
 ) {
+    println("paymentDetailsResponse successful: $paymentDetailsResponse")
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
     val scrollState = rememberScrollState()
     val dateString =
-        transaction?.Date ?: OffsetDateTime.now().toString()  //"2025-04-23T03:38:57.349+00:00"
+        paymentDetailsResponse?.data?.Date ?: OffsetDateTime.now()
+            .toString()  //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
 
     // Shareable text summary for the successful Transaction
-    val shareableSuccessText = if (transaction != null) {
-        "Receipt for successful transaction #${transaction.TransactionID}\nAmount: $amountToCharge $currency\nDate: $dateStringFormatted\nStatus: SUCCESSFUL"
+    val shareableSuccessText = if (paymentDetailsResponse != null) {
+        "Receipt for successful transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: $amountToCharge $currency\nDate: $dateStringFormatted\nStatus: SUCCESSFUL"
     } else {
         "Transaction was successful. Details are unavailable."
     }
@@ -162,7 +164,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        transaction?.TransactionID.toString(),
+                        paymentDetailsResponse?.data?.TransactionID.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500

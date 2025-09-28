@@ -67,12 +67,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val credentialModel = if (inProduction) CredentialModel.Empty else CredentialModel.Robowah
 
     val (savedEmail, savedPassword) = remember { SharedPreferences.getSavedCredentials(context) }
-//  val emailState = rememberTextFieldState(initialText = credentialModel.email)
-    val emailState = rememberTextFieldState(initialText = savedEmail ?: "")
+
+    val emailState = rememberTextFieldState(initialText = savedEmail ?: credentialModel.email)
     var emailError by remember { mutableStateOf(false) }
 
-//  val passwordState = rememberTextFieldState(initialText = credentialModel.password)
-    val passwordState = rememberTextFieldState(initialText = savedPassword ?: "")
+    val passwordState =
+        rememberTextFieldState(initialText = savedPassword ?: credentialModel.password)
     var passwordError by remember { mutableStateOf(false) }
 
     val otpState = rememberTextFieldState()
