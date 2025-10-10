@@ -46,6 +46,8 @@ import com.paymentoptions.pos.services.apiService.endpoints.payment
 import com.paymentoptions.pos.services.apiService.endpoints.paymentStatus
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
+import com.paymentoptions.pos.ui.composables._components.dialogs.AlertDialogType
+import com.paymentoptions.pos.ui.composables._components.dialogs.MyAlertDialog
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.PAYMENT_STATUS_TRANSACTION_ID
@@ -71,7 +73,6 @@ import com.theminesec.sdk.headless.model.WrappedResult
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.Currency
-import java.util.UUID
 
 @Composable
 fun PaymentMethodButton(
@@ -116,6 +117,7 @@ fun ChargeMoneyBottomSectionContent(
     amountToCharge: String,
     selectedPaymentMethod: PaymentMethod,
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
+    onLoader: () -> Unit = {},
     onSuccessUpdateFlowStage: () -> Unit = {},
     onFailureUpdateFlowStage: () -> Unit = {},
     onChangeAmount: () -> Unit,
@@ -129,6 +131,7 @@ fun ChargeMoneyBottomSectionContent(
         navController = navController,
         amountToCharge = amountToCharge,
         turnoffStartTapToPay = turnoffStartTapToPay,
+        onLoader = onLoader,
         onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
         onFailureUpdateFlowStage = onFailureUpdateFlowStage
     )
@@ -203,31 +206,34 @@ fun Tap_ChargeMoney(
     navController: NavController,
     amountToCharge: String,
     turnoffStartTapToPay: () -> Unit = {},
+    onLoader: () -> Unit = {},
     onSuccessUpdateFlowStage: () -> Unit = {},
     onFailureUpdateFlowStage: () -> Unit = {},
 ) {
-    println("amountToCharge: $amountToCharge")
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var rawInput = ""
-    var paymentLoader = false
+    var paymentLoader by remember { mutableStateOf(false) }
     var transactionDetailsText by remember { mutableStateOf("") }
-//    var showTransactionStatus by remember { mutableStateOf(false) }
 
     var hasLaunchedPayment by remember { mutableStateOf(false) }
 
     val authDetails = SharedPreferences.getAuthDetails(context)
 
     if (authDetails == null) {
-        Toast.makeText(context, "Token invalid! Please login again.", Toast.LENGTH_LONG).show()
-        navController.navigate(Screens.SignIn.route) {
+        Toast.makeText(
+            context,
+            "Your session has expired. Please log in again to continue",
+            Toast.LENGTH_LONG
+        ).show()
+        SharedPreferences.clearSharedPreferences(context)
+        navController.navigate(Screens.AuthCheck.route) {
             popUpTo(0) { inclusive = true }
         }
-        return
     }
 
     val merchant: MutableMap<String, String> = mutableMapOf<String, String>()
-    val decodedJwtPayloadJson = decodeJwtPayload(authDetails.data.token.idToken)
+    val decodedJwtPayloadJson = decodeJwtPayload(authDetails!!.data.token.idToken)
     val currency = getTransactionCurrency(context)
 
     merchant["dasmid"] = getTapPayDasmid(context)
@@ -235,25 +241,11 @@ fun Tap_ChargeMoney(
     merchant["email"] = getKeyFromToken(decodedJwtPayloadJson, "email")
     merchant["contact"] = getKeyFromToken(decodedJwtPayloadJson, "custom:ContactNo")
 
-//    MyDialog(
-//        showDialog = showTransactionStatus,
-//        title = "Transaction Status",
-//        text = transactionDetailsText,
-//        acceptButtonText = "Ok",
-//        showCancelButton = false,
-//        onAcceptFn = {
-//            showTransactionStatus = false
-//            turnoffStartTapToPay()
-//        },
-//        onDismissFn = {
-//            showTransactionStatus = false
-//            turnoffStartTapToPay()
-//        },
-//    )
-
     val launcher = rememberLauncherForActivityResult(
         HeadlessActivity.contract(ClientHeadlessImpl::class.java)
     ) {
+
+        paymentLoader = false
 
         var completedSaleTranId: String? = ""
         var completedSalePosReference: String? = ""
@@ -348,10 +340,6 @@ fun Tap_ChargeMoney(
         }
     }
 
-
-    val uuid: UUID = UUID.randomUUID()
-    uuid.toString()
-
     val paymentReturnUrl = PaymentReturnUrl(
         webhook_url = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454%22",
         success_url = "https://api-bpm.hiji.xyz/dgv3/success%22",
@@ -395,6 +383,15 @@ fun Tap_ChargeMoney(
         time_zone = getDeviceTimeZone()
     )
 
+    MyAlertDialog(
+        showDialog = paymentLoader,
+        text = "Loading Tap to Pay...Please wait a moment.",
+        actionButtonText = "Try Again",
+        type = AlertDialogType.LOADER,
+        showActionButton = false,
+        onActionFn = {
+        })
+
     if (!hasLaunchedPayment) {
         hasLaunchedPayment = true
 
@@ -405,12 +402,14 @@ fun Tap_ChargeMoney(
                 println("paymentResponse: $paymentResponse")
                 if (paymentResponse == null) {
                     Toast.makeText(
-                        context, "Token invalid! Please login again.", Toast.LENGTH_LONG
+                        context,
+                        "Your session has expired. Please log in again to continue",
+                        Toast.LENGTH_LONG
                     ).show()
-                    navController.navigate(Screens.SignIn.route) {
+                    SharedPreferences.clearSharedPreferences(context)
+                    navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                    return@launch
                 }
 
                 paymentResponse?.let {
@@ -431,7 +430,7 @@ fun Tap_ChargeMoney(
                 }
             } catch (e: Exception) {
                 SharedPreferences.clearSharedPreferences(context)
-                navController.navigate(Screens.SignIn.route) {
+                navController.navigate(Screens.AuthCheck.route) {
                     popUpTo(0) { inclusive = true }
                 }
                 println("Error: ${e.toString()}")

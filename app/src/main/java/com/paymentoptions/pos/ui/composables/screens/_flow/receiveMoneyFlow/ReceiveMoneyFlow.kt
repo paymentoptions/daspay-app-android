@@ -3,6 +3,7 @@ package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow
 import MyDialog
 import android.content.Intent
 import android.graphics.Bitmap
+import android.os.Handler
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
@@ -70,7 +71,6 @@ import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.payByLink
 import com.paymentoptions.pos.services.apiService.endpoints.payByQr
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
@@ -81,7 +81,6 @@ import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
-import com.paymentoptions.pos.ui.composables._components.images.CreditCardImage
 import com.paymentoptions.pos.ui.composables._components.images.PayByLinkImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentTapToPayImage
@@ -96,6 +95,9 @@ import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.inpu
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionfailed.TransactionFailedBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionsuccessful.TransactionSuccessfulBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
+import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
+import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
@@ -473,6 +475,8 @@ fun ReceiveMoneyFlow(
                                 }
 
                                 viaLinkPaymentMethod -> {
+                                    val amountValue =
+                                        amountToChargeState.toLongOrNull()?.div(100f) ?: 0f
 
                                     var payByLinkRequest = PayByLinkRequest(
                                         PBLLinkName = "PayByLink Test",
@@ -482,8 +486,8 @@ fun ReceiveMoneyFlow(
                                                 Currency = currency,
                                                 Name = "Charge Money Test",
                                                 Quantity = 1,
-                                                Price = amountToChargeState.toFloat(),
-                                                TotalPrice = amountToChargeState
+                                                Price = amountValue,
+                                                TotalPrice = amountValue.toString()
                                             )
                                         )
                                     )
@@ -515,9 +519,6 @@ fun ReceiveMoneyFlow(
                                                     "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID
                                                 viaLinkQrBitmap = generateQrCode(paymentUrl)
                                             }
-
-                                            println("payByLinkResponse: $payByLinkResponse")
-
                                         } catch (e: Exception) {
                                             Toast.makeText(
                                                 context,
@@ -745,6 +746,7 @@ fun ReceiveMoneyFlow(
                     amountToCharge = formatAmount(amountToChargeState),
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
+                    onLoader = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_PROCESSING) },
                     onSuccessUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) },
                     onFailureUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED) },
                     onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) },
@@ -753,63 +755,79 @@ fun ReceiveMoneyFlow(
             }
         }
 
+        ReceiveMoneyFlowStage.TRANSACTION_PROCESSING -> {
+
+            val dataMessage = MessageForStatusScreen(
+                text = "Processing...", statusScreenType = StatusScreenType.PROCESSING
+            )
+            StatusScreen(navController, dataMessage, strategyFn = {
+//                Handler().postDelayed({
+//                    updateRefundStatus(StatusScreenType.SUCCESS)
+//                }, 2000)
+            })
+        }
+
         ReceiveMoneyFlowStage.TRANSACTION_FAILED -> {
-            SectionedLayout(
-                navController = navController,
-                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
-                bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMaxHeightRatio = 0.95f,
-                imageBelowLogo = {
-                    CreditCardImage(
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .fillMaxWidth()
-                            .height(100.dp)
-                            .clip(
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                    )
-                },
-                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
-            ) {
-                TransactionFailedBottomSectionContent(
-                    navController,
-                    enableScrolling = enableScrollingInsideBottomSectionContent,
-                    amountToCharge = formatAmount(amountToChargeState),
-                    paymentDetailsResponse = paymentDetailsResponse,
-                    updateFlowStage = { updateFlowStage(it) })
-            }
+
+            var proceedFlag by remember { mutableStateOf(false) }
+
+            val dataMessage = MessageForStatusScreen(
+                text = "Payment Failed", statusScreenType = StatusScreenType.ERROR
+            )
+            StatusScreen(navController, dataMessage, strategyFn = {
+                Handler().postDelayed({
+                    proceedFlag = true
+                }, 2000)
+            })
+
+            if (proceedFlag)
+                SectionedLayout(
+                    navController = navController,
+                    bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                    bottomSectionPaddingInDp = 0.dp,
+                    bottomSectionMaxHeightRatio = 0.95f,
+                    enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+                ) {
+                    TransactionFailedBottomSectionContent(
+                        navController,
+                        enableScrolling = enableScrollingInsideBottomSectionContent,
+                        amountToCharge = formatAmount(amountToChargeState),
+                        paymentDetailsResponse = paymentDetailsResponse,
+
+                        updateFlowStage = { updateFlowStage(it) })
+                }
         }
 
         ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL -> {
-            SectionedLayout(
-                navController = navController,
-                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
-                bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMaxHeightRatio = 0.95f,
-                imageBelowLogo = {
-                    CreditCardImage(
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .fillMaxWidth()
-                            .height(100.dp)
-                            .clip(
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                    )
-                },
-                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
-            ) {
-                TransactionSuccessfulBottomSectionContent(
-                    navController,
-                    enableScrolling = enableScrollingInsideBottomSectionContent,
-                    paymentDetailsResponse = paymentDetailsResponse,
-                    amountToCharge = formatAmount(amountToChargeState),
-                    signatureBitmap = signatureBitmap,
-                    signatureDate = signatureDate,
-                    updateFlowStage = { updateFlowStage(it) })
+            var proceedFlag by remember { mutableStateOf(false) }
 
-            }
+            val dataMessage = MessageForStatusScreen(
+                text = "Payment Successful", statusScreenType = StatusScreenType.SUCCESS
+            )
+            StatusScreen(
+                navController,
+                dataMessage,
+                strategyFn = {
+                    Handler().postDelayed({ proceedFlag = true }, 2000)
+                })
+
+            if (proceedFlag)
+                SectionedLayout(
+                    navController = navController,
+                    bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                    bottomSectionPaddingInDp = 0.dp,
+                    bottomSectionMinHeightRatio = 0.6f,
+                    enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+                ) {
+                    TransactionSuccessfulBottomSectionContent(
+                        navController,
+                        enableScrolling = enableScrollingInsideBottomSectionContent,
+                        paymentDetailsResponse = paymentDetailsResponse,
+                        amountToCharge = formatAmount(amountToChargeState),
+                        signatureBitmap = signatureBitmap,
+                        signatureDate = signatureDate,
+                        updateFlowStage = { updateFlowStage(it) })
+                }
         }
 
         ReceiveMoneyFlowStage.DIGITAL_SIGNATURE -> {
@@ -836,13 +854,68 @@ fun ReceiveMoneyFlow(
         }
 
         ReceiveMoneyFlowStage.RECEIPT -> {
+
+//            Box(
+//                modifier = Modifier.fillMaxSize()
+//            ) {
+//
+//                BackgroundImage(
+//                    modifier = Modifier
+//                        .fillMaxSize()
+//                        .zIndex(1f)
+//                )
+//
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(top = LOGO_TOP_PADDING_IN_DP)
+//                        .zIndex(1f)
+//                ) {
+//                    LogoImage(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(LOGO_HEIGHT_IN_DP)
+//                    )
+//
+//                    Spacer(modifier = Modifier.height(20.dp))
+//
+//                    Text(
+//                        text = "Receipt",
+//                        color = Color.White,
+//                        textAlign = TextAlign.Center,
+//                        modifier = Modifier.fillMaxWidth()
+//                    )
+//
+//                    Spacer(modifier = Modifier.height(20.dp))
+//
+//                    ZigZagContainer2(modifier = Modifier.background(Color.White)) {
+//                        ReceiptBottomSectionContent(
+//                            navController,
+//                            enableScrolling = true,
+//                            paymentDetailsResponse = paymentDetailsResponse,
+//                            signatureBitmap = signatureBitmap,
+//                            signatureDate = signatureDate,
+//                        )
+//                    }
+//                }
+//            }
+
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.NOTHING,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMinHeightRatio = 0.95f,
-                bottomSectionMaxHeightRatio = 0.95f,
+                bottomSectionMinHeightRatio = 0.75f,
+                bottomSectionMaxHeightRatio = 0.75f,
                 enableScrollingOfBottomSectionContent = false,
+                enableZigZagContainerForBottomSection = true,
+                imageBelowLogo = {
+                    Text(
+                        text = "Receipt",
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             ) {
                 ReceiptBottomSectionContent(
                     navController,

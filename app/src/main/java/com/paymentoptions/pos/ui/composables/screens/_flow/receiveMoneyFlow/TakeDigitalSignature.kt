@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,13 +65,21 @@ fun TakeDigitalSignatureBottomSectionContent(
     updateSignature: (Path, Bitmap?, Date) -> Unit = { _, _, _ -> },
     updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
 ) {
-
     var path by remember { mutableStateOf(signaturePath) }
     var saveBitmap by remember { mutableStateOf(false) }
     var isSigned by remember { mutableStateOf(false) }
     var currentPosition by remember { mutableStateOf(Offset.Unspecified) }
     val density = LocalDensity.current
     val canvasHeight = 300.dp
+
+    fun resetPath() {
+        path = Path()
+        updateSignature(path, null, signatureDate)
+    }
+
+    LaunchedEffect(Unit) {
+        resetPath()
+    }
 
     Column(
         modifier = Modifier
@@ -95,33 +104,30 @@ fun TakeDigitalSignatureBottomSectionContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp)
-                .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
-                .padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
+                .dashedBorder(color = Color.Gray, shape = RoundedCornerShape(8.dp))
+                .padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(
                 text = "Sign Again",
-                onClick = {
-                    path = Path()
-                    updateSignature(path, null, signatureDate)
-                },
+                onClick = { resetPath() },
                 modifier = Modifier
                     .align(alignment = Alignment.End)
                     .height(35.dp)
                     .scale(0.8f)
-                    .offset(x = 20.dp)
+                    .offset(x = 10.dp)
             )
 
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White, RoundedCornerShape(4.dp))
+                    .height(500.dp)
+                    .background(Color.Black.copy(alpha = 0.03f), RoundedCornerShape(4.dp))
                     .clipToBounds()
                     .pointerInput(true) {
                         detectDragGestures(onDragStart = { offset ->
                             path.moveTo(offset.x, offset.y)
-                            isSigned = true
                             currentPosition = offset
+                            isSigned = true
                         }, onDrag = { change, _ ->
                             path.lineTo(change.position.x, change.position.y)
                             currentPosition = change.position
@@ -131,20 +137,19 @@ fun TakeDigitalSignatureBottomSectionContent(
                         })
                     }) {
 
-//                if (currentPosition != Offset.Unspecified) {
-                drawPath(
-                    path = path, color = primary500, style = Stroke(
-                        width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round
+                if (currentPosition != Offset.Unspecified) {
+                    drawPath(
+                        path = path, color = primary500, style = Stroke(
+                            width = 8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round
+                        )
                     )
-                )
-//                }
+                }
 
                 if (saveBitmap) {
                     updateSignature(
                         path, createSignatureBitmap(
                             path, size.width, with(density) { canvasHeight.toPx() }.toInt()
                         ), signatureDate
-
                     )
                     saveBitmap = false
                 }
@@ -180,7 +185,6 @@ fun TakeDigitalSignatureBottomSectionContent(
             }, modifier = Modifier.fillMaxWidth()
         )
     }
-
 }
 
 fun createSignatureBitmap(
@@ -190,7 +194,6 @@ fun createSignatureBitmap(
 ): Bitmap {
     val bitmap = createBitmap(width.roundToInt(), height)
 
-    // Create a Canvas to draw on the Bitmap
     val canvas = android.graphics.Canvas(bitmap)
     canvas.drawColor(android.graphics.Color.WHITE)
 

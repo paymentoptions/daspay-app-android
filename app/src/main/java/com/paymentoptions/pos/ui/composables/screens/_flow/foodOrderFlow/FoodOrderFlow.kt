@@ -144,20 +144,10 @@ fun FoodOrderFlow(
     var startTapAndPay by remember { mutableStateOf(false) }
     var apms by remember { mutableStateOf(getApms(context)) }
     var paymentUrl by remember { mutableStateOf("") }
-
-    var cartState by remember {
-        mutableStateOf<Cart>(
-            Cart(
-                serviceChargePercentage = 10f,
-                gstPercentage = 9f,
-                additionalCharge = 0f,
-                additionalAmountNote = ""
-            )
-        )
-    }
+    var cartState by remember { mutableStateOf<Cart>(Cart()) }
 
     LaunchedEffect(Unit) {
-        val savedCart = SharedPreferences.getCart(context)
+        val savedCart = Cart.load(context)
         if (savedCart.isNotNull()) cartState = savedCart!!
     }
 
@@ -223,8 +213,11 @@ fun FoodOrderFlow(
                 context, "Error fetching food categories from API", Toast.LENGTH_SHORT
             ).show()
 
-            if (e.toString().contains("HTTP 401")) navController.navigate(Screens.SignIn.route) {
-                popUpTo(0) { inclusive = true }
+            if (e.toString().contains("HTTP 401")) {
+                SharedPreferences.clearSharedPreferences(context)
+                navController.navigate(Screens.AuthCheck.route) {
+                    popUpTo(0) { inclusive = true }
+                }
             }
         } finally {
             foodCategoryListAvailable = true
@@ -252,13 +245,16 @@ fun FoodOrderFlow(
                     selectedFoodCategory!!.CategoryID, listOf<FoodItem>(), context
                 )
             } catch (e: Exception) {
-                Toast.makeText(context, "Error fetching products from API", Toast.LENGTH_SHORT)
-                    .show()
+//                Toast.makeText(context, "Error fetching products from API", Toast.LENGTH_SHORT)
+//                    .show()
 
                 if (e.toString()
                         .contains("HTTP 401")
-                ) navController.navigate(Screens.SignIn.route) {
-                    popUpTo(0) { inclusive = true }
+                ) {
+                    SharedPreferences.clearSharedPreferences(context)
+                    navController.navigate(Screens.AuthCheck.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 }
             }
         }
@@ -400,8 +396,8 @@ fun FoodOrderFlow(
                                 else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
 
                                 MyDialog(
-                                    showDialog = false,
-//                                    showDialog = showDeveloperOptionsEnabled,
+//                                    showDialog = false,
+                                    showDialog = showDeveloperOptionsEnabled,
                                     title = "Caution",
                                     text = "You need to disable developer options to proceed further.",
                                     acceptButtonText = "Developer Options",
@@ -533,16 +529,27 @@ fun FoodOrderFlow(
                                     textAlign = TextAlign.Center,
                                 )
 
-                                PaymentQrCodeImage(
-                                    qrBitmap = qrCodeBitmap,
-                                    modifier = Modifier
-                                        .padding(horizontal = 20.dp)
-                                        .fillMaxWidth()
-                                        .height(240.dp)
-                                        .clip(
-                                            shape = RoundedCornerShape(16.dp)
-                                        )
-                                )
+                                if (qrCodeLoading) {
+                                    MyCircularProgressIndicator(useWhiteLoader = true)
+                                } else if (qrCodeError != null) {
+                                    Text(
+                                        text = qrCodeError!!,
+                                        color = red300,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(16.dp)
+                                    )
+                                } else {
+                                    PaymentQrCodeImage(
+                                        qrBitmap = qrCodeBitmap,
+                                        modifier = Modifier
+                                            .padding(horizontal = 20.dp)
+                                            .fillMaxWidth()
+                                            .height(240.dp)
+                                            .clip(
+                                                shape = RoundedCornerShape(16.dp)
+                                            )
+                                    )
+                                }
 
                                 PaymentApmsRow(modifier = Modifier.height(50.dp))
 
@@ -647,7 +654,9 @@ fun FoodOrderFlow(
                                     }
                                 }
 
-                                if (payByLinkApiResponseLoading) MyCircularProgressIndicator()
+                                if (payByLinkApiResponseLoading) MyCircularProgressIndicator(
+                                    useWhiteLoader = true
+                                )
                                 else if (payByLinkResponse.isNotNull()) {
 
                                     if (payByLinkScanCodeBottomSheetExpanded) ModalBottomSheet(
@@ -856,6 +865,7 @@ fun FoodOrderFlow(
                     amountToCharge = cartState.calculateGrandTotal().formatToPrecisionString(),
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
+                    onLoader = { updateFlowStage(FoodOrderFlowStage.RESULT_PROCESSING) },
                     onSuccessUpdateFlowStage = { updateFlowStage(FoodOrderFlowStage.RESULT_SUCCESS) },
                     onFailureUpdateFlowStage = { updateFlowStage(FoodOrderFlowStage.RESULT_ERROR) },
                     onChangeAmount = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
@@ -874,37 +884,29 @@ fun FoodOrderFlow(
 //                    updateRefundStatus(StatusScreenType.SUCCESS)
 //                }, 2000)
             })
-
         }
 
         FoodOrderFlowStage.RESULT_ERROR -> {
-
             val dataMessage = MessageForStatusScreen(
                 text = "Payment Failed", statusScreenType = StatusScreenType.ERROR
             )
             StatusScreen(navController, dataMessage, strategyFn = {
                 Handler().postDelayed({
-//                    updateRefundStatus(null)
-//
-//                    Toast.makeText(
-//                        context,
-//                        "Error processing refund. Try again..",
-//                        Toast.LENGTH_SHORT
-//                    ).show()
+                    navController.navigate(Screens.FoodOrderFlow.route)
                 }, 2000)
             })
         }
 
         FoodOrderFlowStage.RESULT_SUCCESS -> {
             Cart.clearSavedCart(context)
+
             val dataMessage = MessageForStatusScreen(
                 text = "Payment Successful", statusScreenType = StatusScreenType.SUCCESS
             )
             StatusScreen(navController, dataMessage, strategyFn = {
-//                Handler().postDelayed({
-////                    updateRefundStatus(StatusScreenType.ERROR)
-//                    navController.navigate(Screens.RefundInitiated.route)
-//                }, 2000)
+                Handler().postDelayed({
+                    navController.navigate(Screens.FoodOrderFlow.route)
+                }, 2000)
             })
         }
     }

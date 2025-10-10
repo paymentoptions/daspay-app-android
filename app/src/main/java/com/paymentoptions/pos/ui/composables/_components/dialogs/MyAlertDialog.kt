@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.images.ErrorImage
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -24,7 +25,7 @@ import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 
 enum class AlertDialogType {
-    ERROR, SUCCESS, WARNING
+    ERROR, SUCCESS, WARNING, LOADER
 }
 
 @Composable
@@ -41,6 +42,7 @@ fun MyAlertDialog(
         AlertDialogType.ERROR -> red500
         AlertDialogType.SUCCESS -> green500
         AlertDialogType.WARNING -> Color.Magenta
+        AlertDialogType.LOADER -> Color.Black
     }
 
     if (showDialog) {
@@ -70,7 +72,6 @@ fun MyAlertDialog(
                     when (type) {
                         AlertDialogType.ERROR -> ErrorImage(
                             modifier = Modifier
-
                                 .fillMaxWidth()
                                 .height(100.dp)
 
@@ -78,19 +79,18 @@ fun MyAlertDialog(
 
                         AlertDialogType.SUCCESS -> ErrorImage(
                             modifier = Modifier
-
                                 .fillMaxWidth()
                                 .height(100.dp)
-
                         )
 
                         AlertDialogType.WARNING -> ErrorImage(
                             modifier = Modifier
-
                                 .fillMaxWidth()
                                 .height(100.dp)
 
                         )
+
+                        AlertDialogType.LOADER -> MyCircularProgressIndicator(color = Color.Blue)
                     }
 
                     Text(

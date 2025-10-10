@@ -39,6 +39,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.device.printDocument
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
@@ -80,6 +82,7 @@ fun ReceiptBottomSectionContent(
     enableScrolling: Boolean = false,
 ) {
 
+    val context = LocalContext.current
     var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
@@ -152,6 +155,7 @@ fun ReceiptBottomSectionContent(
         }
     }
 
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -184,7 +188,7 @@ fun ReceiptBottomSectionContent(
             )
 
             Text(
-                text = "No.8, Victoria Road, Here’s your receipt",
+                text = "9 Tamasek Boulevard, Suntec City Tower 2 # 19-02 Singapore 038989",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 color = purple50
@@ -211,7 +215,8 @@ fun ReceiptBottomSectionContent(
             }
 
             Column(
-                modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = "Approved",
@@ -247,7 +252,10 @@ fun ReceiptBottomSectionContent(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Total", fontSize = 20.sp, fontWeight = FontWeight.Medium, color = primary500
+                text = "Total",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Medium,
+                color = primary500
             )
 
             CurrencyText(
@@ -270,7 +278,8 @@ fun ReceiptBottomSectionContent(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "MID", style = AppTheme.typography.footnote.copy(
@@ -287,7 +296,8 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "TID", style = AppTheme.typography.footnote.copy(
@@ -296,12 +306,16 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "****5678", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                    "****5678",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
                 )
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "Batch", style = AppTheme.typography.footnote.copy(
@@ -310,12 +324,16 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "000017", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                    "000017",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
                 )
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "Trace", style = AppTheme.typography.footnote.copy(
@@ -324,12 +342,16 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "889026", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                    "889026",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
                 )
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "RRN", style = AppTheme.typography.footnote.copy(
@@ -346,7 +368,8 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "Approval Code", style = AppTheme.typography.footnote.copy(
@@ -355,7 +378,10 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "305927", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                    "305927",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
                 )
             }
         }
@@ -402,7 +428,8 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "STATE", style = AppTheme.typography.footnote.copy(
@@ -419,7 +446,8 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "DATE TIME", style = AppTheme.typography.footnote.copy(
@@ -436,7 +464,8 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "ATC", style = AppTheme.typography.footnote.copy(
@@ -450,7 +479,8 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "TVR", style = AppTheme.typography.footnote.copy(
@@ -467,7 +497,8 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "APP NAME", style = AppTheme.typography.footnote.copy(
@@ -481,7 +512,8 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "AID", style = AppTheme.typography.footnote.copy(
@@ -498,7 +530,8 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "TC", style = AppTheme.typography.footnote.copy(
@@ -641,7 +674,9 @@ fun ReceiptBottomSectionContent(
 
             FilledButton(
                 text = "Print Receipt",
-                onClick = { },
+                onClick = {
+                    printDocument(context = context)
+                },
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier

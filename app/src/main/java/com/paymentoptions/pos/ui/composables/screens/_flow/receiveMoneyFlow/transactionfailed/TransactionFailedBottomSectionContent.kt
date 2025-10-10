@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,6 +34,7 @@ import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlowStage
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
@@ -71,12 +73,20 @@ fun TransactionFailedBottomSectionContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            .padding(all = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            .padding(top = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            ScreenTitleWithCloseButton(navController = navController)
+        ScreenTitleWithCloseButton(
+            navController = navController,
+            fontSize = 8.sp,
+            onClose = { navController.navigate(Screens.Dashboard) })
+
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.offset(y = 20.dp.times(-1))
+        ) {
 
             Text(
                 text = "Transaction Failed",

@@ -72,12 +72,12 @@ class SharedPreferences {
         }
 
         /**fun clearSharedPreferences(context: Context) = runBlocking {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+        val sharedPreferences =
+        context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
 
-            with(sharedPreferences.edit()) {
-                clear().apply()
-            }
+        with(sharedPreferences.edit()) {
+        clear().apply()
+        }
         }**/
         fun clearSharedPreferences(context: Context) = runBlocking {
             val sharedPreferences =
@@ -88,6 +88,7 @@ class SharedPreferences {
                 apply()
             }
         }
+
         fun saveFcmToken(context: Context, token: String) {
             val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             with(sharedPref.edit()) {
@@ -108,7 +109,7 @@ class SharedPreferences {
             val sharedPreferences =
                 context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
 
-            val cartJsonString = sharedPreferences.getString("cart", null)
+            val cartJsonString = sharedPreferences.getString("cart", "{}")
 
             val cart = cartJsonString?.let { Json.decodeFromString<Cart>(it) }
 
@@ -121,7 +122,9 @@ class SharedPreferences {
         }
 
         fun clearSavedCart(context: Context) {
-            saveKeyValue(context, "cart", "")
+            context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE).apply {
+                edit().remove("cart")
+            }
         }
 
         fun saveDeviceConfiguration(context: Context, config: ExternalConfigurationResponse) {
@@ -156,7 +159,8 @@ class SharedPreferences {
         }
 
         fun saveCredentials(context: Context, email: String, password: String) {
-            val sharedPreferences = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences =
+                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             with(sharedPreferences.edit()) {
                 putString("saved_email", email)
                 putString("saved_password", password) // Saving plain text password as requested
@@ -165,7 +169,8 @@ class SharedPreferences {
         }
 
         fun getSavedCredentials(context: Context): Pair<String?, String?> {
-            val sharedPreferences = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences =
+                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             val email = sharedPreferences.getString("saved_email", null)
             val password = sharedPreferences.getString("saved_password", null)
             return Pair(email, password)
@@ -195,6 +200,7 @@ fun getSettlementCurrency(context: Context): String {
     }
     return settlementCurrency
 }
+
 //SOFTPOS DASMID
 fun getTapPayDasmid(context: Context): String {
     val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
@@ -210,6 +216,7 @@ fun getTapPayDasmid(context: Context): String {
     }
     return dasmid
 }
+
 //QP DASMID
 fun getQRDasmid(context: Context): String {
     val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
@@ -225,6 +232,7 @@ fun getQRDasmid(context: Context): String {
     }
     return dasmid
 }
+
 //PBl DASMID
 fun getPayByLinkDasmid(context: Context): String {
     val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
@@ -256,6 +264,7 @@ fun getSchemes(context: Context): DevicePaymentMethod_Schemes {
     }
     return schemes
 }
+
 //this function will extract apms from the external device configuration in which the payment method type is QR
 fun getApms(context: Context): DevicePaymentMethod_Apms {
     val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)

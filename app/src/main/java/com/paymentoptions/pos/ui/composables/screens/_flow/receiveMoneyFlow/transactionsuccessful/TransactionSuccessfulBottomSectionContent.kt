@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -44,6 +47,7 @@ import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlowStage
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
@@ -89,13 +93,20 @@ fun TransactionSuccessfulBottomSectionContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            .padding(bottom = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            ScreenTitleWithCloseButton(navController = navController)
+        ScreenTitleWithCloseButton(
+            navController = navController,
+            fontSize = 8.sp,
+            onClose = { navController.navigate(Screens.Dashboard) })
 
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.offset(y = 20.dp.times(-1))
+        ) {
             Text(
                 text = "Transaction Successful",
                 fontSize = 16.sp,
@@ -103,10 +114,7 @@ fun TransactionSuccessfulBottomSectionContent(
                 color = green500,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
             CurrencyText(currency = currency, amount = amountToCharge.toString())
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.scale(0.7f),
@@ -125,15 +133,13 @@ fun TransactionSuccessfulBottomSectionContent(
 
                 FilledButton(
                     text = "View Full Receipt",
-                    onClick = { },
+                    onClick = { updateFlowStage(ReceiveMoneyFlowStage.RECEIPT) },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
 
         Column(
             modifier = Modifier
@@ -218,9 +224,26 @@ fun TransactionSuccessfulBottomSectionContent(
                         "null", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Aggregator", style = AppTheme.typography.footnote.copy(
+                            fontWeight = FontWeight.Normal, fontSize = 14.sp
+                        )
+                    )
+
+                    Text(
+                        paymentDetailsResponse?.data?.Scheme.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+            }
 
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
@@ -291,17 +314,17 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 //Show Signature
                 if (signatureBitmap != null) {
                     Column(
                         modifier = Modifier
-                            .background(Color.White)
                             .fillMaxWidth()
-                            .aspectRatio(16 / 9f)
+//                            .height(200.dp)
                             .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
-                            .padding(8.dp)
+                            .padding(4.dp)
+//                            .clickable { updateFlowStage(ReceiveMoneyFlowStage.DIGITAL_SIGNATURE) }
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -335,15 +358,28 @@ fun TransactionSuccessfulBottomSectionContent(
 
                         }
 
-                        Image(
-                            bitmap = signatureBitmap.asImageBitmap(),
-                            contentDescription = "Customer signature"
-                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(16 / 9f)
+                                .background(Color.Green)
+                        ) {
+                            Image(
+//                                modifier = Modifier.scale(0.9f),
+                                bitmap = signatureBitmap.asImageBitmap(),
+                                contentDescription = "Customer signature",
+                                contentScale = ContentScale.FillBounds,
+                                alignment = Alignment.Center,
+//                                modifier = Modifier.rotate(270f)
+                            )
+                        }
                     }
 
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 FilledButton(
                     text = if (signatureBitmap != null) "View Transaction Details" else "Take Digital Signature",

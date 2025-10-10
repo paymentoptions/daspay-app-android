@@ -92,11 +92,15 @@ fun AdditionalChargeBottomSectionContent(
     val noteState = rememberTextFieldState()
 
     if (authDetails == null) {
-        Toast.makeText(context, "Token invalid! Please login again.", Toast.LENGTH_LONG).show()
-        navController.navigate(Screens.SignIn.route) {
+        Toast.makeText(
+            context,
+            "Your session has expired. Please log in again to continue",
+            Toast.LENGTH_LONG
+        ).show()
+        SharedPreferences.clearSharedPreferences(context)
+        navController.navigate(Screens.AuthCheck.route) {
             popUpTo(0) { inclusive = true }
         }
-        return
     }
 
     val currency = getTransactionCurrency(context)

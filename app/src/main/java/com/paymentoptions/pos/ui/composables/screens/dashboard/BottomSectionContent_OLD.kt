@@ -16,6 +16,7 @@ import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -32,58 +33,68 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getTransactionCurrency
-import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.insights
+import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.composables.screens.transactionshistory.Transactions
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
+import kotlin.math.ceil
 
 @Composable
-fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
+fun BottomSectionContent_OLD(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var viewAll by remember { mutableStateOf(false) }
-    var transactions by remember { mutableStateOf<List<InsightsResponseDataRecord>>(listOf()) }
+    var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
     var take: Int by remember { mutableIntStateOf(10) }
     var currentPage: Int by remember { mutableIntStateOf(1) }
+    var maxPage: Int by remember { mutableIntStateOf(0) }
     val scrollState = rememberScrollState()
-
+    val scrollingEndReached by remember {
+        derivedStateOf {
+            scrollState.value == scrollState.maxValue
+        }
+    }
     var totalTransactionCount by remember { mutableIntStateOf(10) }
+
+    fun nextPageHandler() {
+        if (currentPage < maxPage) currentPage++
+    }
 
     LaunchedEffect(viewAll) {
         take = if (viewAll) totalTransactionCount else 10
         currentPage = 1
-        transactions = listOf<InsightsResponseDataRecord>()
+        transactions = listOf<TransactionListDataRecord>()
     }
 
     LaunchedEffect(currentPage, take) {
         apiResponseAvailable = false
         try {
-            val today = OffsetDateTime.now()
-            val transactionListFromAPI = insights(
-                context,
-                startDate = today.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                endDate = today.format(DateTimeFormatter.ISO_LOCAL_DATE),
-            )
+            val skip = (currentPage - 1) * take
+            val transactionListFromAPI = transactionListV2(context, take, skip)
 
-            if (transactionListFromAPI != null)
+            if (transactionListFromAPI != null) {
+                maxPage =
+                    ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
+
+                totalTransactionCount = transactionListFromAPI.data.total_count
                 transactions = transactions.plus(transactionListFromAPI.data.records)
+            }
         } catch (e: Exception) {
-            Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Error fetching next page from API 2", Toast.LENGTH_SHORT)
+                .show()
 
             if (e.toString().contains("HTTP 401")) {
+                println("signInResponse: test")
                 SharedPreferences.clearSharedPreferences(context)
                 navController.navigate(Screens.AuthCheck.route) {
                     popUpTo(0) { inclusive = true }
@@ -91,13 +102,26 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
         } finally {
             apiResponseAvailable = true
+//            val scrollToIndex = if (currentPage >= 2) (currentPage - 2) * take else 0
+//            println("scrollToIndex: $scrollToIndex")
+//            scrollState.scrollTo(
+//                scrollToIndex * 20
+//
+//            )
         }
     }
 
+    if (scrollingEndReached && !viewAll) LaunchedEffect(Unit) {
+        nextPageHandler()
+        scrollState.scrollTo(0)
+    }
 
     fun updateReceivalAmount(newAmount: Float) {
         receivalAmount = newAmount
     }
+
+//    val deviceConfig = SharedPreferences.getDeviceConfiguration(context)
+//    println("deviceConfig: $deviceConfig")
 
     Column(
         modifier = Modifier

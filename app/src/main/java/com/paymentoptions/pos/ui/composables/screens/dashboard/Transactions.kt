@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
+import java.time.OffsetDateTime
 
 @Composable
 fun Transactions(
@@ -41,7 +42,7 @@ fun Transactions(
         modifier = Modifier.fillMaxSize()
     ) {
 
-        var earningAmount = 0.0f
+        var earningAmountTodayOnly = 0.0f
 
         transactions.forEachIndexed { index, transaction ->
 
@@ -54,7 +55,14 @@ fun Transactions(
 //            }
 
             if (!skip) {
-                if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") earningAmount += transaction.amount.toFloat()
+                if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
+
+                    val transactionDate = OffsetDateTime.parse(transaction.Date)
+                    val today = OffsetDateTime.now()
+
+                    if (transactionDate.dayOfMonth == today.dayOfMonth && transactionDate.year == today.year)
+                        earningAmountTodayOnly += transaction.amount.toFloat()
+                }
 
                 TransactionSummary(
                     navController, transaction, longClickedTransactionId, onLongClick = {
@@ -84,6 +92,6 @@ fun Transactions(
                     })
             }
         }
-        updateReceivalAmount(earningAmount)
+        updateReceivalAmount(earningAmountTodayOnly)
     }
 }
