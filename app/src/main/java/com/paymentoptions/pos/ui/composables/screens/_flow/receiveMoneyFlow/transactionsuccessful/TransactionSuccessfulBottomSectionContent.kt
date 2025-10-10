@@ -48,7 +48,6 @@ import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlowStage
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500
@@ -70,7 +69,8 @@ fun TransactionSuccessfulBottomSectionContent(
     amountToCharge: String,
     signatureBitmap: Bitmap?,
     signatureDate: Date,
-    updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
+    updateFlowToDigitalSignature: () -> Unit = {},
+    updateFlowToReceipt: () -> Unit = {},
 ) {
     println("paymentDetailsResponse successful: $paymentDetailsResponse")
     val context = LocalContext.current
@@ -133,7 +133,7 @@ fun TransactionSuccessfulBottomSectionContent(
 
                 FilledButton(
                     text = "View Full Receipt",
-                    onClick = { updateFlowStage(ReceiveMoneyFlowStage.RECEIPT) },
+                    onClick = { updateFlowToReceipt() },
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier
@@ -364,7 +364,7 @@ fun TransactionSuccessfulBottomSectionContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(16 / 9f)
-                                .background(Color.Green)
+//                                .background(Color.Green)
                         ) {
                             Image(
 //                                modifier = Modifier.scale(0.9f),
@@ -385,8 +385,8 @@ fun TransactionSuccessfulBottomSectionContent(
                     text = if (signatureBitmap != null) "View Transaction Details" else "Take Digital Signature",
                     onClick = {
                         if (signatureBitmap != null) {
-                            updateFlowStage(ReceiveMoneyFlowStage.RECEIPT)
-                        } else updateFlowStage(ReceiveMoneyFlowStage.DIGITAL_SIGNATURE)
+                            updateFlowToReceipt()
+                        } else updateFlowToDigitalSignature()
                     },
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,

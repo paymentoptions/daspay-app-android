@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -69,9 +70,11 @@ import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.endpoints.categoryList
 import com.paymentoptions.pos.services.apiService.endpoints.payByLink
 import com.paymentoptions.pos.services.apiService.endpoints.payByQr
+import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.services.apiService.endpoints.productList
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
@@ -95,7 +98,12 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmen
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu.ToastData
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu.ToastType
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.reviewcart.ReviewCartBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.PAYMENT_STATUS_TRANSACTION_ID
+import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.TakeDigitalSignatureBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.chargemoney.ChargeMoneyBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionfailed.TransactionFailedBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionsuccessful.TransactionSuccessfulBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
@@ -130,7 +138,8 @@ fun FoodOrderFlow(
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
     val enableScrollingInsideBottomSectionContent = true
-
+    var failureProceedFlag by remember { mutableStateOf(false) }
+    var successProceedFlag by remember { mutableStateOf(false) }
     var foodOrderFlowStage by remember {
         mutableStateOf<FoodOrderFlowStage>(
             initialFoodOrderFlowStage
@@ -145,6 +154,24 @@ fun FoodOrderFlow(
     var apms by remember { mutableStateOf(getApms(context)) }
     var paymentUrl by remember { mutableStateOf("") }
     var cartState by remember { mutableStateOf<Cart>(Cart()) }
+    var paymentDetailsResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
+    var signatureBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    var signatureDate by remember { mutableStateOf(Date()) }
+    var signaturePath by remember { mutableStateOf(Path()) }
+
+    if (PAYMENT_STATUS_TRANSACTION_ID != null) {
+
+        LaunchedEffect(Unit) {
+            try {
+                paymentDetailsResponse = paymentDetails(
+                    context = context,
+                    paymentId = PAYMENT_STATUS_TRANSACTION_ID.toString()
+                )
+            } catch (e: Exception) {
+                paymentDetailsResponse = null
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         val savedCart = Cart.load(context)
@@ -240,7 +267,6 @@ fun FoodOrderFlow(
                     cartState.replaceFoodCategory(
                         categoryId = selectedFoodCategory!!.CategoryID, newFoodItems, context
                     )
-
                 } else cartState.replaceFoodCategory(
                     selectedFoodCategory!!.CategoryID, listOf<FoodItem>(), context
                 )
@@ -891,10 +917,25 @@ fun FoodOrderFlow(
                 text = "Payment Failed", statusScreenType = StatusScreenType.ERROR
             )
             StatusScreen(navController, dataMessage, strategyFn = {
-                Handler().postDelayed({
-                    navController.navigate(Screens.FoodOrderFlow.route)
-                }, 2000)
+                failureProceedFlag = true
+                updateFlowStage(FoodOrderFlowStage.REVIEW_CART)
             })
+
+            if (failureProceedFlag)
+                SectionedLayout(
+                    navController = navController,
+                    bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                    bottomSectionPaddingInDp = 0.dp,
+                    bottomSectionMaxHeightRatio = 0.95f,
+                    enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+                ) {
+                    TransactionFailedBottomSectionContent(
+                        navController,
+                        enableScrolling = enableScrollingInsideBottomSectionContent,
+                        amountToCharge = cartState.calculateGrandTotal().formatToPrecisionString(),
+                        paymentDetailsResponse = paymentDetailsResponse,
+                        updateFlowStage = { })
+                }
         }
 
         FoodOrderFlowStage.RESULT_SUCCESS -> {
@@ -905,9 +946,80 @@ fun FoodOrderFlow(
             )
             StatusScreen(navController, dataMessage, strategyFn = {
                 Handler().postDelayed({
-                    navController.navigate(Screens.FoodOrderFlow.route)
+                    Handler().postDelayed({ successProceedFlag = true }, 2000)
                 }, 2000)
             })
+
+            if (successProceedFlag)
+                SectionedLayout(
+                    navController = navController,
+                    bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                    bottomSectionPaddingInDp = 0.dp,
+                    bottomSectionMinHeightRatio = 0.6f,
+                    enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+                ) {
+                    TransactionSuccessfulBottomSectionContent(
+                        navController,
+                        enableScrolling = enableScrollingInsideBottomSectionContent,
+                        paymentDetailsResponse = paymentDetailsResponse,
+                        amountToCharge = cartState.calculateGrandTotal().formatToPrecisionString(),
+                        signatureBitmap = signatureBitmap,
+                        signatureDate = signatureDate,
+                        updateFlowToDigitalSignature = { updateFlowStage(FoodOrderFlowStage.DIGITAL_SIGNATURE) },
+                        updateFlowToReceipt = { updateFlowStage(FoodOrderFlowStage.RECEIPT) })
+                }
         }
+
+        FoodOrderFlowStage.DIGITAL_SIGNATURE -> {
+            SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NOTHING,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.95f,
+                bottomSectionMaxHeightRatio = 0.95f,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+            ) {
+                TakeDigitalSignatureBottomSectionContent(
+                    navController,
+                    enableScrolling = enableScrollingInsideBottomSectionContent,
+                    signaturePath = signaturePath,
+                    signatureDate = signatureDate,
+                    updateSignature = { path, bitmap, signDate ->
+                        signaturePath = path
+                        signatureBitmap = bitmap
+                        signatureDate = signDate
+                    },
+                    updateFlowStageToSuccess = { updateFlowStage(FoodOrderFlowStage.RESULT_SUCCESS) })
+            }
+        }
+
+        FoodOrderFlowStage.RECEIPT -> {
+            SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.75f,
+                bottomSectionMaxHeightRatio = 0.75f,
+                enableScrollingOfBottomSectionContent = false,
+                enableZigZagContainerForBottomSection = true,
+                imageBelowLogo = {
+                    Text(
+                        text = "Receipt",
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            ) {
+                ReceiptBottomSectionContent(
+                    navController,
+                    enableScrolling = true,
+                    paymentDetailsResponse = paymentDetailsResponse,
+                    signatureBitmap = signatureBitmap,
+                    signatureDate = signatureDate,
+                )
+            }
+        }
+
     }
 }

@@ -311,21 +311,13 @@ fun Tap_ChargeMoney(
                         val paymentStatusResponse =
                             paymentStatus(context = context, request = paymentStatusRequest)
 
-                        println("paymentStatusResponse : $paymentStatusResponse")
-
                         if (paymentStatusResponse) {
                             PAYMENT_STATUS_TRANSACTION_ID = paymentStatusRequest.tranId.toString()
-
                             onSuccessUpdateFlowStage()
-
-//                            updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL)
                         }
                     } catch (e: Exception) {
-                        println("inThis paymentStatus error: ${e.toString()}")
-
                         PAYMENT_STATUS_TRANSACTION_ID = paymentStatusRequest.tranId.toString()
                         onFailureUpdateFlowStage()
-//                        updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
                     }
                 }
             }

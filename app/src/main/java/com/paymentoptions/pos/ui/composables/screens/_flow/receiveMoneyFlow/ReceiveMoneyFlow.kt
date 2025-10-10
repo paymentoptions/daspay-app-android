@@ -131,7 +131,8 @@ fun ReceiveMoneyFlow(
 ) {
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
-
+    var failureProceedFlag by remember { mutableStateOf(false) }
+    var successProceedFlag by remember { mutableStateOf(false) }
     val enableScrollingInsideBottomSectionContent = false
     val scrollState = rememberScrollState()
 
@@ -285,8 +286,8 @@ fun ReceiveMoneyFlow(
 //                                    else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
 
                                     MyDialog(
-//                                        showDialog = false,
-                                        showDialog = showDeveloperOptionsEnabled,
+                                        showDialog = false,
+//                                        showDialog = showDeveloperOptionsEnabled,
                                         title = "Caution",
                                         text = "You need to disable developer options to proceed further.",
                                         acceptButtonText = "Developer Options",
@@ -768,19 +769,16 @@ fun ReceiveMoneyFlow(
         }
 
         ReceiveMoneyFlowStage.TRANSACTION_FAILED -> {
-
-            var proceedFlag by remember { mutableStateOf(false) }
-
             val dataMessage = MessageForStatusScreen(
                 text = "Payment Failed", statusScreenType = StatusScreenType.ERROR
             )
             StatusScreen(navController, dataMessage, strategyFn = {
                 Handler().postDelayed({
-                    proceedFlag = true
+                    failureProceedFlag = true
                 }, 2000)
             })
 
-            if (proceedFlag)
+            if (failureProceedFlag)
                 SectionedLayout(
                     navController = navController,
                     bottomBarContent = BottomBarContent.NAVIGATION_BAR,
@@ -793,14 +791,11 @@ fun ReceiveMoneyFlow(
                         enableScrolling = enableScrollingInsideBottomSectionContent,
                         amountToCharge = formatAmount(amountToChargeState),
                         paymentDetailsResponse = paymentDetailsResponse,
-
-                        updateFlowStage = { updateFlowStage(it) })
+                        updateFlowStage = { })
                 }
         }
 
         ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL -> {
-            var proceedFlag by remember { mutableStateOf(false) }
-
             val dataMessage = MessageForStatusScreen(
                 text = "Payment Successful", statusScreenType = StatusScreenType.SUCCESS
             )
@@ -808,10 +803,10 @@ fun ReceiveMoneyFlow(
                 navController,
                 dataMessage,
                 strategyFn = {
-                    Handler().postDelayed({ proceedFlag = true }, 2000)
+                    Handler().postDelayed({ successProceedFlag = true }, 2000)
                 })
 
-            if (proceedFlag)
+            if (successProceedFlag)
                 SectionedLayout(
                     navController = navController,
                     bottomBarContent = BottomBarContent.NAVIGATION_BAR,
@@ -826,7 +821,8 @@ fun ReceiveMoneyFlow(
                         amountToCharge = formatAmount(amountToChargeState),
                         signatureBitmap = signatureBitmap,
                         signatureDate = signatureDate,
-                        updateFlowStage = { updateFlowStage(it) })
+                        updateFlowToDigitalSignature = { updateFlowStage(ReceiveMoneyFlowStage.DIGITAL_SIGNATURE) },
+                        updateFlowToReceipt = { updateFlowStage(ReceiveMoneyFlowStage.RECEIPT) })
                 }
         }
 
@@ -849,57 +845,11 @@ fun ReceiveMoneyFlow(
                         signatureBitmap = bitmap
                         signatureDate = signDate
                     },
-                    updateFlowStage = { updateFlowStage(it) })
+                    updateFlowStageToSuccess = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) })
             }
         }
 
         ReceiveMoneyFlowStage.RECEIPT -> {
-
-//            Box(
-//                modifier = Modifier.fillMaxSize()
-//            ) {
-//
-//                BackgroundImage(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .zIndex(1f)
-//                )
-//
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(top = LOGO_TOP_PADDING_IN_DP)
-//                        .zIndex(1f)
-//                ) {
-//                    LogoImage(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(LOGO_HEIGHT_IN_DP)
-//                    )
-//
-//                    Spacer(modifier = Modifier.height(20.dp))
-//
-//                    Text(
-//                        text = "Receipt",
-//                        color = Color.White,
-//                        textAlign = TextAlign.Center,
-//                        modifier = Modifier.fillMaxWidth()
-//                    )
-//
-//                    Spacer(modifier = Modifier.height(20.dp))
-//
-//                    ZigZagContainer2(modifier = Modifier.background(Color.White)) {
-//                        ReceiptBottomSectionContent(
-//                            navController,
-//                            enableScrolling = true,
-//                            paymentDetailsResponse = paymentDetailsResponse,
-//                            signatureBitmap = signatureBitmap,
-//                            signatureDate = signatureDate,
-//                        )
-//                    }
-//                }
-//            }
-
             SectionedLayout(
                 navController = navController,
                 bottomBarContent = BottomBarContent.NAVIGATION_BAR,

@@ -29,7 +29,7 @@ class MyPrintDocumentAdapter(private var context: Context) : PrintDocumentAdapte
     private var pageHeight: Int = 0
     private var pageWidth: Int = 0
     private var myPdfDocument: PdfDocument? = null
-    private var totalpages = 4
+    private var totalpages = 1
 
     override fun onLayout(
         oldAttributes: PrintAttributes,
@@ -58,7 +58,7 @@ class MyPrintDocumentAdapter(private var context: Context) : PrintDocumentAdapte
 
         if (totalpages > 0) {
             val builder =
-                PrintDocumentInfo.Builder("print_output.pdf").setContentType(
+                PrintDocumentInfo.Builder("receipt.pdf").setContentType(
                     PrintDocumentInfo.CONTENT_TYPE_DOCUMENT
                 )
                     .setPageCount(totalpages)

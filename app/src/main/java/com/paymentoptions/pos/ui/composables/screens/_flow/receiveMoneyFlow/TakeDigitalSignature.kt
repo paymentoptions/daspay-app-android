@@ -63,7 +63,7 @@ fun TakeDigitalSignatureBottomSectionContent(
     signaturePath: Path,
     signatureDate: Date,
     updateSignature: (Path, Bitmap?, Date) -> Unit = { _, _, _ -> },
-    updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
+    updateFlowStageToSuccess: () -> Unit = {},
 ) {
     var path by remember { mutableStateOf(signaturePath) }
     var saveBitmap by remember { mutableStateOf(false) }
@@ -90,7 +90,7 @@ fun TakeDigitalSignatureBottomSectionContent(
 
         ScreenTitleWithCloseButton(
             navController = navController,
-            onClose = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) })
+            onClose = { updateFlowStageToSuccess() })
 
         Text(
             text = "Signature",
@@ -181,7 +181,7 @@ fun TakeDigitalSignatureBottomSectionContent(
         FilledButton(
             text = "Confirm", onClick = {
                 saveBitmap = true
-                updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL)
+                updateFlowStageToSuccess()
             }, modifier = Modifier.fillMaxWidth()
         )
     }
@@ -193,6 +193,7 @@ fun createSignatureBitmap(
     height: Int,
 ): Bitmap {
     val bitmap = createBitmap(width.roundToInt(), height)
+//    val bitmap = createBitmap(height,width.roundToInt())
 
     val canvas = android.graphics.Canvas(bitmap)
     canvas.drawColor(android.graphics.Color.WHITE)

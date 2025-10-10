@@ -35,7 +35,6 @@ import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlowStage
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary100
@@ -52,7 +51,7 @@ fun TransactionFailedBottomSectionContent(
     paymentDetailsResponse: PaymentDetailsResponse?,
     enableScrolling: Boolean = false,
     amountToCharge: String,
-    updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
+    updateFlowStage: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)

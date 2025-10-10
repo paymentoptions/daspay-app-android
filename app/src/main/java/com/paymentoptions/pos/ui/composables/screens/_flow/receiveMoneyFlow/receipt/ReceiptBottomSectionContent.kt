@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -69,8 +70,18 @@ import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
+
+private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
+    println("screenshot: -->")
+    outputStream().use { out ->
+        bitmap.compress(format, quality, out)
+        out.flush()
+        out.close()
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,17 +92,39 @@ fun ReceiptBottomSectionContent(
     signatureDate: Date,
     enableScrolling: Boolean = false,
 ) {
-
+    LocalView.current
     val context = LocalContext.current
     var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
-
     //Sharable text summary for the failed Transaction
     val shareableReceiptText = if (paymentDetailsResponse != null) {
         "Receipt for transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.CurrencyCode}${paymentDetailsResponse.data.Amount}"
     } else {
         "Receipt details are unavailable"
     }
+//
+//    val handler = Handler(Looper.getMainLooper())
+//    handler.postDelayed(Runnable {
+//        val bmp = createBitmap(view.width, view.height).applyCanvas {
+//            view.draw(this)
+//        }
+//        bmp.let {
+//
+//            val root: String = Environment.getExternalStorageDirectory().toString();
+////
+////            try {
+////                val out= FileOutputStream(root)
+////                bmp.compress(Bitmap.CompressFormat.JPEG, 90, out)
+////                out.flush()
+////                out.close()
+////            } catch (e: Exception) {
+////                e.printStackTrace()
+////            }
+//
+//            File(root, "receipt.png")
+//                .writeBitmap(bmp, Bitmap.CompressFormat.PNG, 90)
+//        }
+//    }, 1000)
 
     if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),
