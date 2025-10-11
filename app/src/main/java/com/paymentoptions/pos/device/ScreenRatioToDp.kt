@@ -6,7 +6,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun screenRatioToDp(ratio: Float): Dp {
+fun ScreenRatioToDp(ratio: Float): Dp {
     val configuration = LocalConfiguration.current
     return configuration.screenHeightDp.dp.times(ratio)
 }

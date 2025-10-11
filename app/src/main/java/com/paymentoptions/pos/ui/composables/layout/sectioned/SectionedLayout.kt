@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.screenRatioToDp
+import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
 import com.paymentoptions.pos.ui.composables._components.ZigZagContainer2
 import com.paymentoptions.pos.ui.composables._components.buttons.ReceiveMoneyFAB
@@ -85,8 +85,8 @@ fun SectionedLayout(
 ) {
     var bottomBarContentState by remember { mutableStateOf(bottomBarContent) }
 
-    val bottomSectionMinHeightDp = screenRatioToDp(bottomSectionMinHeightRatio)
-    var bottomSectionMaxHeightDp = screenRatioToDp(bottomSectionMaxHeightRatio)
+    val bottomSectionMinHeightDp = ScreenRatioToDp(bottomSectionMinHeightRatio)
+    var bottomSectionMaxHeightDp = ScreenRatioToDp(bottomSectionMaxHeightRatio)
 
     var showMoreItems by remember { mutableStateOf(false) }
 

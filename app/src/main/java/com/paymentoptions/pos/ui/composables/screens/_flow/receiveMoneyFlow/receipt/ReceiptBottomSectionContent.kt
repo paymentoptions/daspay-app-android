@@ -1,6 +1,9 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt
 
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,12 +18,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CopyAll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -29,19 +34,25 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ExperimentalComposeApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -49,8 +60,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.print.PrintHelper
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.printDocument
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
@@ -70,20 +81,18 @@ import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
-import java.io.File
+import com.paymentoptions.pos.utils.topdf.ComposePdfExporter
+import com.paymentoptions.pos.utils.topdf.PageSize
+import com.paymentoptions.pos.utils.topdf.PdfExportProgress
+import dev.shreyaspatil.capturable.capturable
+import dev.shreyaspatil.capturable.controller.rememberCaptureController
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 
-private fun File.writeBitmap(bitmap: Bitmap, format: Bitmap.CompressFormat, quality: Int) {
-    println("screenshot: -->")
-    outputStream().use { out ->
-        bitmap.compress(format, quality, out)
-        out.flush()
-        out.close()
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalComposeApi::class
+)
 @Composable
 fun ReceiptBottomSectionContent(
     navController: NavController,
@@ -92,39 +101,18 @@ fun ReceiptBottomSectionContent(
     signatureDate: Date,
     enableScrolling: Boolean = false,
 ) {
-    LocalView.current
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
+    var bitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    val clipboardManager = LocalClipboardManager.current
     //Sharable text summary for the failed Transaction
     val shareableReceiptText = if (paymentDetailsResponse != null) {
         "Receipt for transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.CurrencyCode}${paymentDetailsResponse.data.Amount}"
     } else {
         "Receipt details are unavailable"
     }
-//
-//    val handler = Handler(Looper.getMainLooper())
-//    handler.postDelayed(Runnable {
-//        val bmp = createBitmap(view.width, view.height).applyCanvas {
-//            view.draw(this)
-//        }
-//        bmp.let {
-//
-//            val root: String = Environment.getExternalStorageDirectory().toString();
-////
-////            try {
-////                val out= FileOutputStream(root)
-////                bmp.compress(Bitmap.CompressFormat.JPEG, 90, out)
-////                out.flush()
-////                out.close()
-////            } catch (e: Exception) {
-////                e.printStackTrace()
-////            }
-//
-//            File(root, "receipt.png")
-//                .writeBitmap(bmp, Bitmap.CompressFormat.PNG, 90)
-//        }
-//    }, 1000)
 
     if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),
@@ -151,8 +139,7 @@ fun ReceiptBottomSectionContent(
             )
 
             IconButton(
-                modifier = Modifier.align(alignment = Alignment.CenterEnd),
-                onClick = {
+                modifier = Modifier.align(alignment = Alignment.CenterEnd), onClick = {
                     showQrCodeBottomSheetExpanded = false
                 }) {
                 Icon(
@@ -164,8 +151,7 @@ fun ReceiptBottomSectionContent(
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
             val linkQrBitmap = generateQrCode("http://www.google.com")
@@ -187,7 +173,7 @@ fun ReceiptBottomSectionContent(
             )
         }
     }
-
+    val captureController = rememberCaptureController()
 
     Column(
         modifier = Modifier
@@ -200,16 +186,35 @@ fun ReceiptBottomSectionContent(
         //Section 1
         Column(
             modifier = Modifier
+                .capturable(captureController)  //this captures the view to print
                 .fillMaxWidth()
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            SelectionContainer {
-                Text(
-                    text = "tx# " + paymentDetailsResponse?.data?.TransactionID,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = purple50
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                SelectionContainer {
+                    Text(
+                        text = "tx# " + paymentDetailsResponse?.data?.TransactionID,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = purple50
+                    )
+                }
+
+                Icon(
+                    Icons.Default.CopyAll,
+                    contentDescription = "Copy transaction id",
+                    tint = primary500,
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clickable {
+                            clipboardManager.setText(AnnotatedString(paymentDetailsResponse?.data?.TransactionID.toString()))
+                        }
+
                 )
             }
 
@@ -248,8 +253,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
                     text = "Approved",
@@ -285,10 +289,7 @@ fun ReceiptBottomSectionContent(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Total",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                color = primary500
+                text = "Total", fontSize = 20.sp, fontWeight = FontWeight.Medium, color = primary500
             )
 
             CurrencyText(
@@ -303,7 +304,6 @@ fun ReceiptBottomSectionContent(
             modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
         )
 
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -311,8 +311,7 @@ fun ReceiptBottomSectionContent(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "MID", style = AppTheme.typography.footnote.copy(
@@ -329,8 +328,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "TID", style = AppTheme.typography.footnote.copy(
@@ -339,16 +337,12 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "****5678",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
+                    "****5678", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
                 )
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "Batch", style = AppTheme.typography.footnote.copy(
@@ -357,16 +351,12 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "000017",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
+                    "000017", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
                 )
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "Trace", style = AppTheme.typography.footnote.copy(
@@ -375,16 +365,12 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "889026",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
+                    "889026", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
                 )
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "RRN", style = AppTheme.typography.footnote.copy(
@@ -401,8 +387,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "Approval Code", style = AppTheme.typography.footnote.copy(
@@ -411,18 +396,13 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "305927",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
+                    "305927", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
                 )
             }
         }
 
-
         HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.LightGray.copy(alpha = 0.2f)
+            modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
         )
 
         //Additional Info
@@ -461,8 +441,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "STATE", style = AppTheme.typography.footnote.copy(
@@ -479,8 +458,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "DATE TIME", style = AppTheme.typography.footnote.copy(
@@ -497,8 +475,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "ATC", style = AppTheme.typography.footnote.copy(
@@ -512,8 +489,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "TVR", style = AppTheme.typography.footnote.copy(
@@ -530,8 +506,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "APP NAME", style = AppTheme.typography.footnote.copy(
@@ -545,8 +520,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "AID", style = AppTheme.typography.footnote.copy(
@@ -563,8 +537,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     "TC", style = AppTheme.typography.footnote.copy(
@@ -582,7 +555,6 @@ fun ReceiptBottomSectionContent(
         }
 
         //Signature
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -630,7 +602,6 @@ fun ReceiptBottomSectionContent(
                                 }
                             }, style = AppTheme.typography.footnote
                         )
-
                     }
 
                     Image(
@@ -638,7 +609,6 @@ fun ReceiptBottomSectionContent(
                         contentDescription = "Customer signature"
                     )
                 }
-
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -657,12 +627,9 @@ fun ReceiptBottomSectionContent(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 EmailButton(
-                    text = "Email",
-                    email = Email(
-                        subject = "Your DASPay Receipt",
-                        text = shareableReceiptText
-                    ),
-                    modifier = Modifier
+                    text = "Email", email = Email(
+                        subject = "Your DASPay Receipt", text = shareableReceiptText
+                    ), modifier = Modifier
                         .weight(1f)
                         .border(
                             2.dp,
@@ -699,16 +666,38 @@ fun ReceiptBottomSectionContent(
                         .padding(horizontal = 10.dp, vertical = 20.dp)
                         .clickable {
                             showQrCodeBottomSheetExpanded = true
-                        }
-                )
+                        })
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
+//            bitmap?.let {
+//                Image(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    painter = rememberAsyncImagePainter(bitmap!!.asAndroidBitmap()),
+//                    contentScale = ContentScale.FillBounds,
+//                    contentDescription = null,
+//                )
+//            }
+
             FilledButton(
                 text = "Print Receipt",
                 onClick = {
-                    printDocument(context = context)
+                    scope.launch {
+                        val bitmapAsync = captureController.captureAsync()
+                        try {
+                            bitmap = bitmapAsync.await()
+                            Toast.makeText(
+                                context,
+                                "Screenshot taken successfully",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            doPhotoPrint(context, bitmap!!.asAndroidBitmap())
+                        } catch (error: Throwable) {
+                            Toast.makeText(context, "Error taking screenshot", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
                 },
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -718,4 +707,98 @@ fun ReceiptBottomSectionContent(
             )
         }
     }
+}
+
+private fun doPhotoPrint(context: Context, bitmap: Bitmap) {
+    PrintHelper(context).apply {
+        scaleMode = PrintHelper.SCALE_MODE_FIT
+    }.also { printHelper ->
+        printHelper.printBitmap("Receipt", bitmap)
+    }
+}
+
+@Composable
+fun PrintToPDF() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    FilledButton(
+        text = "Print Receipt",
+        onClick = {
+            scope.launch {
+                ComposePdfExporter.export(
+                    context = context,
+                    fileName = "Receipt",
+                    pageSize = PageSize.A4,
+                    spacing = 4,
+                    composable = { state ->
+                        LazyColumn(
+                            state = state,
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth()
+                                .background(Color.Green.copy(0.1f))
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            item {
+                                Text("Capture Test 1", color = Color.Black)
+                                Text("Capture Test 2", color = Color.Black)
+                                Text("Capture Test 3", color = Color.Black)
+                            }
+                        }
+
+                    },
+                    onProgress = { result ->
+                        when (result) {
+                            is PdfExportProgress.Success -> {
+
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    putExtra(Intent.EXTRA_STREAM, result.output)
+                                    flags += Intent.FLAG_ACTIVITY_NEW_TASK
+                                    flags += Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                    type = "text/pdf"
+                                }
+                                val chooser = Intent.createChooser(intent, null)
+                                context.startActivity(chooser)
+
+//                                val sendIntent = Intent(Intent.ACTION_SEND).apply {
+//                                    putExtra(Intent.EXTRA_STREAM, result.output)
+//                                    type = "text/pdf"
+//                                }
+//                                val shareIntent = Intent.createChooser(sendIntent, null)
+//                                startActivity(context, shareIntent, null)
+
+//                                context.startActivity(
+//                                    Intent.createChooser(
+//                                        Intent().apply {
+//                                            action = Intent.ACTION_SENDTO
+//                                            putExtra(Intent.EXTRA_STREAM, result.output)
+//                                            type = "application/pdf"
+//                                        },
+//                                        null
+//                                    )
+//                                )
+                            }
+
+                            is PdfExportProgress.Error -> {
+//                                toastManager.show(
+//                                    result.exception.localizedMessage
+//                                        ?: context.getString(
+//                                            R.string.unknown_error
+//                                        )
+//                                )
+                            }
+
+                            else -> {}
+                        }
+                    })
+            }
+        },
+        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .height(39.dp)
+            .scale(0.7f)
+    )
 }

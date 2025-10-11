@@ -64,9 +64,9 @@ import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.Nfc
+import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.device.getApms
 import com.paymentoptions.pos.device.getTransactionCurrency
-import com.paymentoptions.pos.device.screenRatioToDp
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
@@ -269,7 +269,7 @@ fun ReceiveMoneyFlow(
                         }) { paymentMethod ->
                         Column(
                             modifier = Modifier
-                                .height(screenRatioToDp(0.5f))
+                                .height(ScreenRatioToDp(0.5f))
                                 .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                                 .verticalScroll(scrollState),
                             verticalArrangement = Arrangement.spacedBy(20.dp),

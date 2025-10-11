@@ -113,8 +113,11 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     // QR Code Generation (ZXing)
-    implementation("com.google.zxing:core:3.5.3")
+    implementation(libs.core)
 
     // For logging API requests and responses
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation(libs.logging.interceptor)
+
+    //https://github.com/PatilShreyas/Capturable?tab=readme-ov-file
+    implementation(libs.capturable)
 }

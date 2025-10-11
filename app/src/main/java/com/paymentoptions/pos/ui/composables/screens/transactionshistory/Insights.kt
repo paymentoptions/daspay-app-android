@@ -88,7 +88,7 @@ fun Insights(
                         color = if (transaction.TransactionType == "REFUND") red500.copy(alpha = 0.8f) else Color.Green.copy(
                             alpha = 0.8f
                         ),
-                        label = "${date.dayOfMonth} ${months[date.monthValue]}",
+                        label = "${date.dayOfMonth} ${months[date.monthValue - 1]}",
                         gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
                         description = if (transaction.TransactionType == "REFUND") "Refund Txn #: ${transaction.uuid}" else "Purchase Txn #: ${transaction.uuid}",
                     )
@@ -132,13 +132,12 @@ fun Insights(
                 .labelData { index -> months[index] }.build()
 
             val yAxisData = if (barData.isNotEmpty()) AxisData.Builder().axisStepSize(2.dp)
-                .steps(barData.size - 1).axisOffset(30.dp).endPadding(0.dp)
+                .steps(5).axisOffset(30.dp).endPadding(0.dp)
                 .axisLabelColor(Color.LightGray).axisLineThickness(0.dp).axisLabelFontSize(8.sp)
                 .axisLabelAngle(0f).axisLineColor(Color.White).labelAndAxisLinePadding(0.dp)
                 .backgroundColor(Color.White).labelData { index ->
                     try {
-                        val label =
-                            if (barData.size == 1) chartMaxValue else index * chartMaxValue / (barData.size - 1)
+                        val label = index * chartMaxValue / 5
 
                         "$currency ${label.roundToInt()}"
                     } catch (_: Exception) {

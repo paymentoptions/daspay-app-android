@@ -54,7 +54,9 @@ import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
@@ -124,46 +126,45 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
 
             "Week" -> {
-                val today = OffsetDateTime.now().toLocalDateTime()
-                val sevenDaysAgo = today.minusDays(7)
+                val today = OffsetDateTime.now()
+                val aWeekAgo = today.minusWeeks(1)
 
                 receivalForText = "Receival for the week"
-                receivalForTimePeriodText = "${sevenDaysAgo.dayOfMonth} ${
-                    sevenDaysAgo.month.toString().lowercase()
+                receivalForTimePeriodText = "${aWeekAgo.dayOfMonth} ${
+                    aWeekAgo.month.toString().lowercase()
                         .replaceFirstChar { it.titlecase(Locale.ROOT) }
-                }, ${sevenDaysAgo.year} to ${today.dayOfMonth} ${
+                }, ${aWeekAgo.year} to ${today.dayOfMonth} ${
                     today.month.toString().lowercase()
                         .replaceFirstChar { it.titlecase(Locale.ROOT) }
                 }, ${today.year}"
                 receivalAmount = 0.0f
 
-                startDate = endDate.minusDays(7)
+                startDate = aWeekAgo
             }
 
             "Month" -> {
-                val today = OffsetDateTime.now().toLocalDateTime()
-                val thirtyDaysAgo = today.minusDays(30)
+                val today = OffsetDateTime.now()
+                val aMonthAgo = today.minusMonths(1)
 
                 receivalForText = "Receival for the month"
                 receivalForTimePeriodText = run {
                     today.month.toString()
-                    "${thirtyDaysAgo.dayOfMonth} ${
-                        thirtyDaysAgo.month.toString().lowercase()
+                    "${aMonthAgo.dayOfMonth} ${
+                        aMonthAgo.month.toString().lowercase()
                             .replaceFirstChar { it.titlecase(Locale.ROOT) }
-                    }, ${thirtyDaysAgo.year} to ${today.dayOfMonth} ${
+                    }, ${aMonthAgo.year} to ${today.dayOfMonth} ${
                         today.month.toString().lowercase()
                             .replaceFirstChar { it.titlecase(Locale.ROOT) }
                     }, ${today.year}"
                 }
                 receivalAmount = 0.0f
 
-                startDate = endDate.minusDays(30)
+                startDate = aMonthAgo
             }
 
             "Custom" -> {
                 receivalForText = "Receival for the period"
                 receivalAmount = 0.0f
-
 
                 if (fromDateCustomFilter != null && toDateCustomFilter != null) {
                     val simpleDateFormat = SimpleDateFormat("dd MMMM YYYY")
@@ -172,20 +173,25 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         "${simpleDateFormat.format(fromDateCustomFilter)} to ${
                             simpleDateFormat.format(toDateCustomFilter)
                         }"
+
+                    startDate = OffsetDateTime.ofInstant(
+                        Instant.ofEpochMilli(fromDateCustomFilter!!),
+                        ZoneId.systemDefault()
+                    )
+
+                    endDate = OffsetDateTime.ofInstant(
+                        Instant.ofEpochMilli(toDateCustomFilter!!),
+                        ZoneId.systemDefault()
+                    )
                 } else receivalForTimePeriodText = ""
-
-                startDate = endDate.minusDays(30)
-
-//                endDate = OffsetDateTime.ofInstant(toDateCustomFilter)
-//                startDate = fromDateCustomFilter
             }
         }
 
         try {
             val insightsResponse = insights(
                 context,
-                startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                endDate = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00:00",
+                endDate = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " 23:59:59",
             )
 
             if (insightsResponse != null) transactions = insightsResponse.data.records
