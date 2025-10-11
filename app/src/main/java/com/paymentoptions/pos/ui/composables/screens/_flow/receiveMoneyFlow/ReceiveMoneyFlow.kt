@@ -105,6 +105,7 @@ import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.generateQrCode
+import com.paymentoptions.pos.utils.inProduction
 import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
@@ -286,8 +287,7 @@ fun ReceiveMoneyFlow(
 //                                    else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
 
                                     MyDialog(
-                                        showDialog = false,
-//                                        showDialog = showDeveloperOptionsEnabled,
+                                        showDialog = if (inProduction) showDeveloperOptionsEnabled else false,
                                         title = "Caution",
                                         text = "You need to disable developer options to proceed further.",
                                         acceptButtonText = "Developer Options",
