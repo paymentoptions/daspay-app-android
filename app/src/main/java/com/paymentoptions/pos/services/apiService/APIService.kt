@@ -103,7 +103,7 @@ interface ApiService {
         @HeaderMap headers: Map<String, String>,
         @Query("deviceNumber") deviceNumber: String = "12345678kg1",
         @Query("uniqueCode") uniqueCode: String = "213fsdHJ51MOBILEKG1",
-        @Query("TimeZone") timeZone: String = "undefined",
+//        @Query("TimeZone") timeZone: String = "undefined",
         @Query("startDate") startDate: String = "undefined",
         @Query("endDate") endDate: String = "undefined",
         @Query("take") take: Int,

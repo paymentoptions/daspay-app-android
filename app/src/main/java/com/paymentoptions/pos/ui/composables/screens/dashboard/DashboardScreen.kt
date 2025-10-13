@@ -21,10 +21,7 @@ fun DashboardScreen(navController: NavController) {
         bottomSectionPaddingInDp = 0.dp,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
     ) {
-//        BottomSectionContent(
-//            navController, enableScrolling = enableScrollingInsideBottomSectionContent
-//        )
-        BottomSectionContent_OLD(
+        BottomSectionContent(
             navController,
             enableScrolling = enableScrollingInsideBottomSectionContent
         )

@@ -41,31 +41,31 @@ fun FoodCategories(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
 
-        foodCategories.forEach {
+        foodCategories.filter { it.CategoryStatus == "true" }.forEach {
             val isSelected = selectedFoodCategory == it
 
             /**Box(
-                modifier = Modifier
-                    .conditional(isSelected) {
-                        shadow(
-                            14.dp, spotColor = borderColor, shape = RoundedCornerShape(10.dp)
-                        ).border(borderThin, shape = RoundedCornerShape(10.dp))
-                    }
-                    .background(
-                        if (isSelected) Color.White else purple50.copy(
-                            alpha = 0.05f
-                        ), shape = RoundedCornerShape(10.dp)
-                    )
-                    .padding(10.dp)
-                    .noRippleClickable(enabled = !isSelected) { onClick(it) },
-                contentAlignment = Alignment.Center
+            modifier = Modifier
+            .conditional(isSelected) {
+            shadow(
+            14.dp, spotColor = borderColor, shape = RoundedCornerShape(10.dp)
+            ).border(borderThin, shape = RoundedCornerShape(10.dp))
+            }
+            .background(
+            if (isSelected) Color.White else purple50.copy(
+            alpha = 0.05f
+            ), shape = RoundedCornerShape(10.dp)
+            )
+            .padding(10.dp)
+            .noRippleClickable(enabled = !isSelected) { onClick(it) },
+            contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = it.CategoryName,
-                    color = if (isSelected) primary600 else purple50,
-                    fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                )
+            Text(
+            text = it.CategoryName,
+            color = if (isSelected) primary600 else purple50,
+            fontSize = 14.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            )
             }**/
             Box(
                 modifier = Modifier

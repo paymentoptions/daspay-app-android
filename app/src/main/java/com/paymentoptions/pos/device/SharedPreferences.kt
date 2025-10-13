@@ -125,6 +125,11 @@ class SharedPreferences {
             context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE).apply {
                 edit().remove("cart")
             }
+
+            println("cart cleared ->")
+
+            val cart = getCart(context)
+            println("cart: $cart")
         }
 
         fun saveDeviceConfiguration(context: Context, config: ExternalConfigurationResponse) {

@@ -31,10 +31,6 @@ class Cart(
                 return Cart()
             }
         }
-
-        fun clearSavedCart(context: Context) {
-            SharedPreferences.clearSavedCart(context)
-        }
     }
 
     fun calculateServiceCharge() = itemTotal.times(serviceChargePercentage.div(100))
@@ -44,6 +40,21 @@ class Cart(
 
     fun toJson(): String {
         return Json.encodeToString(this)
+    }
+
+    fun clearSavedCart(context: Context) {
+        foodItemMapByCategoryId.forEach {
+            it.value.forEach { foodItem ->
+                removeFoodItemQuantity(foodItem, context)
+            }
+        }
+    }
+
+    fun removeFoodItemQuantity(foodItem: FoodItem, context: Context) {
+        foodItem.cartQuantity = 0
+        this.itemQuantity = 0
+        this.itemTotal = 0.0f
+        save(context, this)
     }
 
     fun decreaseFoodItemQuantity(foodItem: FoodItem, context: Context) {

@@ -587,6 +587,7 @@ data class InsightsResponseDataRecord(
     val uuid: String,
     val status: String, //"NOTSUCCESSFUL"
     val TerminalID: String,
+    val ID: String,
     val amount: Float,
     val CurrencyCode: String,
     val TransactionDate: String,

@@ -66,7 +66,6 @@ fun TransactionSuccessfulBottomSectionContent(
     navController: NavController,
     paymentDetailsResponse: PaymentDetailsResponse?,
     enableScrolling: Boolean = false,
-    amountToCharge: String,
     signatureBitmap: Bitmap?,
     signatureDate: Date,
     updateFlowToDigitalSignature: () -> Unit = {},
@@ -85,7 +84,7 @@ fun TransactionSuccessfulBottomSectionContent(
 
     // Shareable text summary for the successful Transaction
     val shareableSuccessText = if (paymentDetailsResponse != null) {
-        "Receipt for successful transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: $amountToCharge $currency\nDate: $dateStringFormatted\nStatus: SUCCESSFUL"
+        "Receipt for successful transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.Amount} $currency\nDate: $dateStringFormatted\nStatus: SUCCESSFUL"
     } else {
         "Transaction was successful. Details are unavailable."
     }
@@ -114,7 +113,10 @@ fun TransactionSuccessfulBottomSectionContent(
                 color = green500,
             )
 
-            CurrencyText(currency = currency, amount = amountToCharge.toString())
+            CurrencyText(
+                currency = currency,
+                amount = paymentDetailsResponse?.data?.Amount.toString()
+            )
 
             Row(
                 modifier = Modifier.scale(0.7f),

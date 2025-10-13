@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,8 +42,6 @@ fun StatusScreen(
     dataMessage: MessageForStatusScreen,
     strategyFn: () -> Unit = {},
 ) {
-    Icons.Filled.Check
-
     SimpleLayout {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

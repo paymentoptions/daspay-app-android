@@ -50,7 +50,6 @@ import com.paymentoptions.pos.ui.composables._components.dialogs.AlertDialogType
 import com.paymentoptions.pos.ui.composables._components.dialogs.MyAlertDialog
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.PAYMENT_STATUS_TRANSACTION_ID
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary600
@@ -117,12 +116,12 @@ fun ChargeMoneyBottomSectionContent(
     amountToCharge: String,
     selectedPaymentMethod: PaymentMethod,
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
-    onLoader: () -> Unit = {},
+    onLoader: (nextStage: () -> Unit) -> Unit = {},
     onSuccessUpdateFlowStage: () -> Unit = {},
     onFailureUpdateFlowStage: () -> Unit = {},
     onChangeAmount: () -> Unit,
     startTapAndPay: Boolean = false,
-    turnoffStartTapToPay: () -> Unit = {},
+    updateLatestTransaction: (id: String) -> Unit,
 ) {
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
@@ -130,10 +129,10 @@ fun ChargeMoneyBottomSectionContent(
     if (startTapAndPay && selectedPaymentMethod === tapPaymentMethod) Tap_ChargeMoney(
         navController = navController,
         amountToCharge = amountToCharge,
-        turnoffStartTapToPay = turnoffStartTapToPay,
         onLoader = onLoader,
         onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
-        onFailureUpdateFlowStage = onFailureUpdateFlowStage
+        onFailureUpdateFlowStage = onFailureUpdateFlowStage,
+        updateLatestTransaction = updateLatestTransaction
     )
 
     Column(
@@ -205,19 +204,18 @@ fun ChargeMoneyBottomSectionContent(
 fun Tap_ChargeMoney(
     navController: NavController,
     amountToCharge: String,
-    turnoffStartTapToPay: () -> Unit = {},
-    onLoader: () -> Unit = {},
+    onLoader: (nextStage: () -> Unit) -> Unit = {},
     onSuccessUpdateFlowStage: () -> Unit = {},
     onFailureUpdateFlowStage: () -> Unit = {},
+    updateLatestTransaction: (id: String) -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var rawInput = ""
     var paymentLoader by remember { mutableStateOf(false) }
+    var showProcessingScreen by remember { mutableStateOf(false) }
     var transactionDetailsText by remember { mutableStateOf("") }
-
     var hasLaunchedPayment by remember { mutableStateOf(false) }
-
     val authDetails = SharedPreferences.getAuthDetails(context)
 
     if (authDetails == null) {
@@ -307,17 +305,25 @@ fun Tap_ChargeMoney(
                 val paymentStatusRequest = createPaymentRequest(it.value)
 
                 scope.launch {
+                    showProcessingScreen = true
                     try {
                         val paymentStatusResponse =
                             paymentStatus(context = context, request = paymentStatusRequest)
 
+                        showProcessingScreen = false
                         if (paymentStatusResponse) {
-                            PAYMENT_STATUS_TRANSACTION_ID = paymentStatusRequest.tranId.toString()
-                            onSuccessUpdateFlowStage()
+                            updateLatestTransaction(paymentStatusRequest.tranId.toString())
+                            onLoader {
+                                onSuccessUpdateFlowStage()
+                            }
+
                         }
                     } catch (e: Exception) {
-                        PAYMENT_STATUS_TRANSACTION_ID = paymentStatusRequest.tranId.toString()
-                        onFailureUpdateFlowStage()
+                        showProcessingScreen = false
+                        updateLatestTransaction(paymentStatusRequest.tranId.toString())
+                        onLoader {
+                            onFailureUpdateFlowStage()
+                        }
                     }
                 }
             }

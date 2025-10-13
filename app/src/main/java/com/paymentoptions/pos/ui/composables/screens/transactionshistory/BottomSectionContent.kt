@@ -190,8 +190,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         try {
             val insightsResponse = insights(
                 context,
-                startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " 00:00:00",
-                endDate = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE) + " 23:59:59",
+                startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    .replace('-', '/') + " 00:00:00",
+                endDate = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    .replace('-', '/') + " 23:59:59",
             )
 
             if (insightsResponse != null) transactions = insightsResponse.data.records

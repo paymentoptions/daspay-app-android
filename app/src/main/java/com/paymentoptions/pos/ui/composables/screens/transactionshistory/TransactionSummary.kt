@@ -166,7 +166,7 @@ fun TransactionSummary(
                         dateStr, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = purple50
                     )
                     Text(
-                        text = (if (isCardTransaction) "Txn ID - " else "Cash Id - ") + transaction.uuid.toString(),
+                        text = "Txn ID - ${transaction.ID}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = primary500

@@ -160,16 +160,16 @@ fun TransactionSummary(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 /**if (!isLongClicked) Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(iconBackgroundColor), contentAlignment = Alignment.Center
+                modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(iconBackgroundColor), contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(if (isCardTransaction) R.drawable.icon_card else R.drawable.icon_money),
-                        contentDescription = "Icon",
-                        tint = purple50
-                    )
+                Icon(
+                painter = painterResource(if (isCardTransaction) R.drawable.icon_card else R.drawable.icon_money),
+                contentDescription = "Icon",
+                tint = purple50
+                )
                 }**/
                 if (!isLongClicked) Box(
                     modifier = Modifier
@@ -193,7 +193,7 @@ fun TransactionSummary(
                         dateStr, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = purple50
                     )
                     Text(
-                        text = (if (isCardTransaction) "Txn ID - " else "Cash Id - ") + transaction.TransactionID.toString(),
+                        text = "Txn Id - ${transaction.TransactionID}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = primary500
@@ -208,19 +208,19 @@ fun TransactionSummary(
                     modifier = Modifier.weight(3f)
                 ) {
                     /**Text(
-                        transaction.CurrencyCode,
-                        textAlign = TextAlign.End,
-                        color = if (isTransactionAmountPositive) green200 else Color.Red,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
+                    transaction.CurrencyCode,
+                    textAlign = TextAlign.End,
+                    color = if (isTransactionAmountPositive) green200 else Color.Red,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
                     )
 
                     Text(
-                        text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
-                        color = if (isTransactionAmountPositive) green500 else Color.Red,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        maxLines = 1
+                    text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
+                    color = if (isTransactionAmountPositive) green500 else Color.Red,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    maxLines = 1
                     )**/
                     Text(
                         transaction.CurrencyCode,

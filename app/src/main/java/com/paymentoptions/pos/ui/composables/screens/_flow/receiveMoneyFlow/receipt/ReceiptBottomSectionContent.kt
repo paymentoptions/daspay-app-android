@@ -107,6 +107,7 @@ fun ReceiptBottomSectionContent(
     val sheetState = rememberModalBottomSheetState()
     var bitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     val clipboardManager = LocalClipboardManager.current
+
     //Sharable text summary for the failed Transaction
     val shareableReceiptText = if (paymentDetailsResponse != null) {
         "Receipt for transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.CurrencyCode}${paymentDetailsResponse.data.Amount}"
@@ -245,7 +246,7 @@ fun ReceiptBottomSectionContent(
                     color = primary500
                 )
                 Text(
-                    text = "AMEX",
+                    text = paymentDetailsResponse?.data?.Scheme.toString(),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500

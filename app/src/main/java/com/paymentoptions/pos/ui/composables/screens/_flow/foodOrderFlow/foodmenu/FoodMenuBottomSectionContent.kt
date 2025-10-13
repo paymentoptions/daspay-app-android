@@ -135,7 +135,7 @@ fun FoodMenuBottomSectionContent(
                     ?: listOf<FoodItem>()
 
             val filteredFoodItems = foodItemsInCategory.filter { foodItem ->
-                searchLogic(
+                foodItem.item.ProductStatus && searchLogic(
                     foodItem.item, searchState.text.toString()
                 )
             }

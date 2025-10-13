@@ -65,6 +65,7 @@ import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.ScreenRatioToDp
+import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getApms
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
@@ -90,6 +91,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.chargemoney.ChargeMoneyBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.inputnoney.InputMoneyBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
@@ -122,8 +124,6 @@ fun formatAmount(input: String): String {
     return "$dollars.$centPortion"
 }
 
-var PAYMENT_STATUS_TRANSACTION_ID: String? = null
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiveMoneyFlow(
@@ -136,6 +136,7 @@ fun ReceiveMoneyFlow(
     var successProceedFlag by remember { mutableStateOf(false) }
     val enableScrollingInsideBottomSectionContent = false
     val scrollState = rememberScrollState()
+    var latestTransactionId by remember { mutableStateOf<String?>(null) }
 
     var receiveMoneyFlowStage by remember {
         mutableStateOf<ReceiveMoneyFlowStage>(
@@ -160,14 +161,14 @@ fun ReceiveMoneyFlow(
 
     var paymentDetailsResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
 
-    if (PAYMENT_STATUS_TRANSACTION_ID != null) {
-
-        LaunchedEffect(Unit) {
+    latestTransactionId?.let {
+        LaunchedEffect(latestTransactionId) {
             try {
                 paymentDetailsResponse = paymentDetails(
-                    context = context,
-                    paymentId = PAYMENT_STATUS_TRANSACTION_ID.toString()
+                    context = context, paymentId = latestTransactionId.toString()
                 )
+
+                println("paymentDetailsResponse: $paymentDetailsResponse")
             } catch (e: Exception) {
                 paymentDetailsResponse = null
             }
@@ -351,34 +352,6 @@ fun ReceiveMoneyFlow(
                                     PaymentSchemesRow(modifier = Modifier.height(50.dp))
                                 }
 
-                                /**qrCodePaymentMethod -> {
-
-                                Text(
-                                text = "Scan QR Code",
-                                color = Color.White,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 18.sp,
-                                textAlign = TextAlign.Center,
-                                )
-
-                                PaymentQrCodeImage(
-                                modifier = Modifier
-                                .padding(horizontal = 20.dp)
-                                .fillMaxWidth()
-                                .height(220.dp)
-                                .clip(
-                                shape = RoundedCornerShape(16.dp)
-                                )
-                                )
-
-                                PaymentApmsRow(modifier = Modifier.height(50.dp))
-
-                                NoteChip(
-                                text = "Ask customer to scan with GrabPay",
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                                )
-                                }**/
                                 qrCodePaymentMethod -> {
 
                                     var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
@@ -417,8 +390,22 @@ fun ReceiveMoneyFlow(
                                                 qrCodeError = "Failed to generate QR code."
                                             }
                                         } catch (e: Exception) {
-                                            qrCodeError = "An error occurred."
+                                            qrCodeError =
+                                                "Your session has expired. Please log in again to continue."
                                             e.printStackTrace()
+
+                                            Toast.makeText(
+                                                context,
+                                                "Your session has expired. Please log in again to continue.",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+
+                                            if (e.toString().contains("HTTP 401")) {
+                                                SharedPreferences.clearSharedPreferences(context)
+                                                navController.navigate(Screens.AuthCheck.route) {
+                                                    popUpTo(0) { inclusive = true }
+                                                }
+                                            }
                                         } finally {
                                             qrCodeLoading = false
                                         }
@@ -449,9 +436,7 @@ fun ReceiveMoneyFlow(
                                                 .padding(horizontal = 20.dp)
                                                 .fillMaxWidth()
                                                 .height(220.dp)
-                                                .clip(
-                                                    shape = RoundedCornerShape(16.dp)
-                                                )
+                                                .clip(shape = RoundedCornerShape(16.dp))
                                         )
                                     }
 
@@ -551,15 +536,12 @@ fun ReceiveMoneyFlow(
                                                     .fillMaxWidth()
                                                     .padding(vertical = 20.dp)
                                             ) {
-
                                                 Icon(
                                                     painter = painterResource(R.drawable.logo),
                                                     contentDescription = "DASPay Logo",
                                                     tint = primary500,
                                                     modifier = Modifier
-                                                        .height(
-                                                            LOGO_HEIGHT_IN_DP.div(1.5f)
-                                                        )
+                                                        .height(LOGO_HEIGHT_IN_DP.div(1.5f))
                                                         .align(Alignment.Center)
                                                 )
 
@@ -622,9 +604,7 @@ fun ReceiveMoneyFlow(
                                                     .padding(horizontal = 20.dp)
                                                     .fillMaxWidth()
                                                     .height(100.dp)
-                                                    .clip(
-                                                        shape = RoundedCornerShape(16.dp)
-                                                    )
+                                                    .clip(shape = RoundedCornerShape(16.dp))
                                             )
 
                                             Spacer(modifier = Modifier.height(10.dp))
@@ -639,7 +619,6 @@ fun ReceiveMoneyFlow(
                                                     .padding(vertical = 16.dp, horizontal = 12.dp),
                                             ) {
                                                 Text(
-//                                                  text = "https://daspay/" + payByLinkResponse!!.data.ID,
                                                     text = "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID,
                                                     fontWeight = FontWeight.SemiBold,
                                                     fontSize = 16.sp,
@@ -663,12 +642,10 @@ fun ReceiveMoneyFlow(
                                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                                             ) {
                                                 EmailButton(
-                                                    text = "Email",
-                                                    email = Email(
+                                                    text = "Email", email = Email(
                                                         subject = "DASPay payment link",
                                                         text = paymentUrl
-                                                    ),
-                                                    modifier = Modifier
+                                                    ), modifier = Modifier
                                                         .weight(1f)
                                                         .border(
                                                             2.dp,
@@ -747,12 +724,18 @@ fun ReceiveMoneyFlow(
                     amountToCharge = formatAmount(amountToChargeState),
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
-                    onLoader = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_PROCESSING) },
+                    onLoader = {
+                        updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_PROCESSING)
+
+                        Handler().postDelayed({
+                            Handler().postDelayed({ it() }, 1000)
+                        }, 2000)
+                    },
                     onSuccessUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) },
                     onFailureUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED) },
                     onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) },
                     startTapAndPay = startTapAndPay,
-                    turnoffStartTapToPay = { startTapAndPay = false })
+                    updateLatestTransaction = { latestTransactionId = it })
             }
         }
 
@@ -761,11 +744,7 @@ fun ReceiveMoneyFlow(
             val dataMessage = MessageForStatusScreen(
                 text = "Processing...", statusScreenType = StatusScreenType.PROCESSING
             )
-            StatusScreen(navController, dataMessage, strategyFn = {
-//                Handler().postDelayed({
-//                    updateRefundStatus(StatusScreenType.SUCCESS)
-//                }, 2000)
-            })
+            StatusScreen(navController, dataMessage, strategyFn = { })
         }
 
         ReceiveMoneyFlowStage.TRANSACTION_FAILED -> {
@@ -778,21 +757,20 @@ fun ReceiveMoneyFlow(
                 }, 2000)
             })
 
-            if (failureProceedFlag)
-                SectionedLayout(
-                    navController = navController,
-                    bottomBarContent = BottomBarContent.NAVIGATION_BAR,
-                    bottomSectionPaddingInDp = 0.dp,
-                    bottomSectionMaxHeightRatio = 0.95f,
-                    enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
-                ) {
-                    TransactionFailedBottomSectionContent(
-                        navController,
-                        enableScrolling = enableScrollingInsideBottomSectionContent,
-                        amountToCharge = formatAmount(amountToChargeState),
-                        paymentDetailsResponse = paymentDetailsResponse,
-                        updateFlowStage = { })
-                }
+            if (failureProceedFlag) SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMaxHeightRatio = 0.95f,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+            ) {
+                TransactionFailedBottomSectionContent(
+                    navController,
+                    enableScrolling = enableScrollingInsideBottomSectionContent,
+                    amountToCharge = formatAmount(amountToChargeState),
+                    paymentDetailsResponse = paymentDetailsResponse,
+                    updateFlowStage = { })
+            }
         }
 
         ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL -> {
@@ -800,30 +778,26 @@ fun ReceiveMoneyFlow(
                 text = "Payment Successful", statusScreenType = StatusScreenType.SUCCESS
             )
             StatusScreen(
-                navController,
-                dataMessage,
-                strategyFn = {
+                navController, dataMessage, strategyFn = {
                     Handler().postDelayed({ successProceedFlag = true }, 2000)
                 })
 
-            if (successProceedFlag)
-                SectionedLayout(
-                    navController = navController,
-                    bottomBarContent = BottomBarContent.NAVIGATION_BAR,
-                    bottomSectionPaddingInDp = 0.dp,
-                    bottomSectionMinHeightRatio = 0.6f,
-                    enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
-                ) {
-                    TransactionSuccessfulBottomSectionContent(
-                        navController,
-                        enableScrolling = enableScrollingInsideBottomSectionContent,
-                        paymentDetailsResponse = paymentDetailsResponse,
-                        amountToCharge = formatAmount(amountToChargeState),
-                        signatureBitmap = signatureBitmap,
-                        signatureDate = signatureDate,
-                        updateFlowToDigitalSignature = { updateFlowStage(ReceiveMoneyFlowStage.DIGITAL_SIGNATURE) },
-                        updateFlowToReceipt = { updateFlowStage(ReceiveMoneyFlowStage.RECEIPT) })
-                }
+            if (successProceedFlag) SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.6f,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+            ) {
+                TransactionSuccessfulBottomSectionContent(
+                    navController,
+                    enableScrolling = enableScrollingInsideBottomSectionContent,
+                    paymentDetailsResponse = paymentDetailsResponse,
+                    signatureBitmap = signatureBitmap,
+                    signatureDate = signatureDate,
+                    updateFlowToDigitalSignature = { updateFlowStage(ReceiveMoneyFlowStage.DIGITAL_SIGNATURE) },
+                    updateFlowToReceipt = { updateFlowStage(ReceiveMoneyFlowStage.RECEIPT) })
+            }
         }
 
         ReceiveMoneyFlowStage.DIGITAL_SIGNATURE -> {
@@ -865,8 +839,7 @@ fun ReceiveMoneyFlow(
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                }
-            ) {
+                }) {
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,
