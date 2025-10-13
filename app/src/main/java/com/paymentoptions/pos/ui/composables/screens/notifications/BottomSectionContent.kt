@@ -145,7 +145,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 transactions = transactions.plus(transactionListFromAPI.data.records)
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                "Your session has expired. Please log in again to continue.",
+                Toast.LENGTH_SHORT
+            ).show()
 
             if (e.toString().contains("HTTP 401")) {
                 SharedPreferences.clearSharedPreferences(context)

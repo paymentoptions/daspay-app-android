@@ -94,7 +94,7 @@ fun AdditionalChargeBottomSectionContent(
     if (authDetails == null) {
         Toast.makeText(
             context,
-            "Your session has expired. Please log in again to continue",
+            "Your session has expired. Please log in again to continue.",
             Toast.LENGTH_LONG
         ).show()
         SharedPreferences.clearSharedPreferences(context)

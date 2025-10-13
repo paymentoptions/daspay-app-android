@@ -221,7 +221,7 @@ fun Tap_ChargeMoney(
     if (authDetails == null) {
         Toast.makeText(
             context,
-            "Your session has expired. Please log in again to continue",
+            "Your session has expired. Please log in again to continue.",
             Toast.LENGTH_LONG
         ).show()
         SharedPreferences.clearSharedPreferences(context)
@@ -401,7 +401,7 @@ fun Tap_ChargeMoney(
                 if (paymentResponse == null) {
                     Toast.makeText(
                         context,
-                        "Your session has expired. Please log in again to continue",
+                        "Your session has expired. Please log in again to continue.",
                         Toast.LENGTH_LONG
                     ).show()
                     SharedPreferences.clearSharedPreferences(context)

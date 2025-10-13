@@ -237,7 +237,9 @@ fun FoodOrderFlow(
 
         } catch (e: Exception) {
             Toast.makeText(
-                context, "Error fetching food categories from API", Toast.LENGTH_SHORT
+                context,
+                "Your session has expired. Please log in again to continue.",
+                Toast.LENGTH_SHORT
             ).show()
 
             if (e.toString().contains("HTTP 401")) {
