@@ -218,6 +218,22 @@ fun SectionedLayout(
             )
         }
 
+        if (showMoreItems) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = BOTTOM_NAVIGATION_HEIGHT_IN_DP) // Important it leaves the bottom nav bar uncovered.
+                    //.background(Color.Black.copy(alpha = 0.05f))
+                    .zIndex(3f)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        showMoreItems = false
+                    }
+            )
+        }
+
         //Bottom Navigation Bar
         if (bottomBarContentState === BottomBarContent.NAVIGATION_BAR) {
             ReceiveMoneyFAB(

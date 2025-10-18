@@ -2,6 +2,7 @@ package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow
 
 import android.graphics.Bitmap
 import android.graphics.Paint
+import android.graphics.Matrix
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -33,6 +34,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -70,7 +72,11 @@ fun TakeDigitalSignatureBottomSectionContent(
     var isSigned by remember { mutableStateOf(false) }
     var currentPosition by remember { mutableStateOf(Offset.Unspecified) }
     val density = LocalDensity.current
-    val canvasHeight = 300.dp
+//    val canvasHeight = 300.dp
+    var canvasWith by remember { mutableStateOf(0f) }
+    var canvasHeight by remember { mutableStateOf(0) }
+    var startY by remember { mutableStateOf(0f) }
+    var isDrawnTopToBottom by remember { mutableStateOf(true) }
 
     fun resetPath() {
         path = Path()
@@ -123,17 +129,24 @@ fun TakeDigitalSignatureBottomSectionContent(
                     .height(500.dp)
                     .background(Color.Black.copy(alpha = 0.03f), RoundedCornerShape(4.dp))
                     .clipToBounds()
+                    .onSizeChanged {
+                        canvasWith = it.width.toFloat()
+                        canvasHeight = it.height
+
+                    }
                     .pointerInput(true) {
                         detectDragGestures(onDragStart = { offset ->
                             path.moveTo(offset.x, offset.y)
                             currentPosition = offset
                             isSigned = true
+                            startY = offset.y //record the starting Y position
                         }, onDrag = { change, _ ->
                             path.lineTo(change.position.x, change.position.y)
                             currentPosition = change.position
                             isSigned = true
                         }, onDragEnd = {
-                            saveBitmap = true
+//                            saveBitmap = true
+                            isDrawnTopToBottom = currentPosition.y > startY //determine direction when user lifts their finger
                         })
                     }) {
 
@@ -145,14 +158,14 @@ fun TakeDigitalSignatureBottomSectionContent(
                     )
                 }
 
-                if (saveBitmap) {
+                /*if (saveBitmap) {
                     updateSignature(
                         path, createSignatureBitmap(
                             path, size.width, with(density) { canvasHeight.toPx() }.toInt()
                         ), signatureDate
                     )
                     saveBitmap = false
-                }
+                }*/
             }
         }
 
@@ -180,14 +193,18 @@ fun TakeDigitalSignatureBottomSectionContent(
 
         FilledButton(
             text = "Confirm", onClick = {
-                saveBitmap = true
+//                saveBitmap = true
+//                updateFlowStageToSuccess()
+                if (isSigned) { // Only save if something was drawn
+                    val signatureBitmap = createSignatureBitmap(path, canvasWith, canvasHeight, isDrawnTopToBottom)
+                    updateSignature(path, signatureBitmap, signatureDate)
+                }
                 updateFlowStageToSuccess()
             }, modifier = Modifier.fillMaxWidth()
         )
     }
 }
-
-fun createSignatureBitmap(
+/*fun createSignatureBitmap(
     path: Path,
     width: Float,
     height: Int,
@@ -210,4 +227,57 @@ fun createSignatureBitmap(
     canvas.drawPath(path.asAndroidPath(), paint)
 
     return bitmap
+}*/
+
+//created new function for createSignatureBitmap for showing the signature in portrait
+fun createSignatureBitmap(
+    path: Path,
+    width: Float,
+    height: Int,
+    isDrawnTopToBottom: Boolean
+): Bitmap {
+    //get the actual bounds of the signature drawing
+    val bounds = path.getBounds()
+
+    //create a clean bitmap that is tightly cropped to the signature
+    val croppedBitmap = createBitmap(
+        bounds.width.roundToInt(),
+        bounds.height.roundToInt()
+    )
+    val canvas = android.graphics.Canvas(croppedBitmap)
+    canvas.drawColor(android.graphics.Color.TRANSPARENT)
+
+    //Move the signature path to the top left corner
+    val croppedPath = Path().apply { addPath(path) }
+
+    croppedPath.translate(Offset(-bounds.left, -bounds.top))
+    //Set up the paint for drawing
+    val paint = Paint().apply {
+        color = android.graphics.Color.BLACK
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+        strokeJoin = Paint.Join.ROUND
+        strokeWidth = 8f
+        isAntiAlias = true
+    }
+    canvas.drawPath(croppedPath.asAndroidPath(), paint)
+
+    //Check for if the signature is taller than it is wide
+    if (bounds.height > bounds.width) {
+        val matrix = Matrix().apply {
+            if (isDrawnTopToBottom) {
+                //For toptobottom, rotate counter-clockwise
+                postRotate(270f)
+            } else {
+                //For bottomtotop, rotate clockwise
+                postRotate(90f)
+            }
+        }
+        return Bitmap.createBitmap(
+            croppedBitmap, 0, 0, croppedBitmap.width, croppedBitmap.height, matrix, true
+        )
+    } else {
+        //If signature is already landscape return it as it is
+        return croppedBitmap
+    }
 }

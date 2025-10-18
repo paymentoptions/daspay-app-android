@@ -110,6 +110,7 @@ data class TransactionListDataRecord(
 
 data class TransactionListData(
     val total_count: Int,
+    val total_amount: Double?,
     val records: Array<TransactionListDataRecord>,
 ) {
     override fun equals(other: Any?): Boolean {
@@ -119,6 +120,7 @@ data class TransactionListData(
         other as TransactionListData
 
         if (total_count != other.total_count) return false
+        if (total_amount != other.total_amount) return false
         if (!records.contentEquals(other.records)) return false
 
         return true
@@ -126,6 +128,7 @@ data class TransactionListData(
 
     override fun hashCode(): Int {
         var result = total_count
+        result = 31 * result + (total_amount?.hashCode() ?: 0)
         result = 31 * result + records.contentHashCode()
         return result
     }

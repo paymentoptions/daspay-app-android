@@ -22,7 +22,7 @@ import java.time.OffsetDateTime
 fun Transactions(
     navController: NavController,
     transactions: List<TransactionListDataRecord>,
-    updateReceivalAmount: (Float) -> Unit,
+    updateReceivalAmount: (Float) -> Unit = {},
     lazyColumnState: LazyListState,
 ) {
     var selectedFilterKey by remember { mutableStateOf("ALL") }

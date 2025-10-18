@@ -114,6 +114,7 @@ fun ChargeMoneyBottomSectionContent(
     navController: NavController,
     enableScrolling: Boolean = false,
     amountToCharge: String,
+    availablePaymentMethods: List<PaymentMethod>,
     selectedPaymentMethod: PaymentMethod,
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
     onLoader: (nextStage: () -> Unit) -> Unit = {},
@@ -158,7 +159,8 @@ fun ChargeMoneyBottomSectionContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            paymentMethods.filter { it.isEnabled }.forEach {
+//            paymentMethods.filter { it.isEnabled }.forEach {
+            availablePaymentMethods.filter { it.isEnabled }.forEach {
                 PaymentMethodButton(
                     paymentMethod = it,
                     selectedPaymentMethod = selectedPaymentMethod,

@@ -146,7 +146,7 @@ fun ReceiveMoneyFlow(
     var amountToChargeState by remember { mutableStateOf("") }
     var noteState by remember { mutableStateOf("") }
 
-    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(paymentMethods.first()) }
+//    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(paymentMethods.first()) }
     var nfcStatusPair by remember { mutableStateOf(Nfc.getStatus(context)) }
 
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
@@ -160,6 +160,25 @@ fun ReceiveMoneyFlow(
     var paymentUrl by remember { mutableStateOf("") }
 
     var paymentDetailsResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
+
+    val availablePaymentMethods = remember(nfcStatusPair) {
+        val (isNfcSupported, _) = nfcStatusPair
+        if (isNfcSupported) {
+            // If NFC is supported (even if disabled), show all payment methods
+            paymentMethods
+        } else {
+            // If NFC is not supported, filter out the 'Tap' payment method
+            paymentMethods.filter { it != tapPaymentMethod }
+        }
+    }
+    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(availablePaymentMethods.first()) }
+
+    LaunchedEffect(availablePaymentMethods) {
+        // If the currently selected method is no longer available, default to the first available one.
+        if (selectedPaymentMethod !in availablePaymentMethods) {
+            selectedPaymentMethod = availablePaymentMethods.first()
+        }
+    }
 
     latestTransactionId?.let {
         LaunchedEffect(latestTransactionId) {
@@ -193,11 +212,13 @@ fun ReceiveMoneyFlow(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+
+    /*
     if (!nfcStatusPair.first) {
         tapPaymentMethod.setIsEnabled(false)
         Toast.makeText(context, "Your device does not support NFC", Toast.LENGTH_SHORT).show()
     }
-
+    */
     if (!apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
         qrCodePaymentMethod.setIsEnabled(false)
         Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
@@ -232,7 +253,8 @@ fun ReceiveMoneyFlow(
                 bottomSectionPaddingInDp = 0.dp,
                 enableScrollingOfBottomSectionContent = false,
                 imageBelowLogo = {
-                    val paymentMethodIndices = paymentMethods.map { it.text }
+//                    val paymentMethodIndices = paymentMethods.map { it.text }
+                    val paymentMethodIndices = availablePaymentMethods.map { it.text }
                     AnimatedContent(
                         targetState = selectedPaymentMethod,
                         label = "payment_method_animation",
@@ -722,6 +744,7 @@ fun ReceiveMoneyFlow(
                     navController,
                     enableScrolling = false,
                     amountToCharge = formatAmount(amountToChargeState),
+                    availablePaymentMethods = availablePaymentMethods,
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
                     onLoader = {

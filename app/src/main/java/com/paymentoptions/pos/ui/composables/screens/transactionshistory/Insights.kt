@@ -35,6 +35,9 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
+import co.yml.charts.ui.barchart.models.BarStyle
+import co.yml.charts.ui.barchart.models.SelectionHighlightData
+import androidx.compose.ui.text.TextStyle
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import java.time.OffsetDateTime
 import kotlin.math.absoluteValue
@@ -230,10 +233,26 @@ fun Insights(
                 ),
                 xAxisData = xAxisData,
                 yAxisData = yAxisData,
-//                showYAxis = false,
-//                showXAxis = false,
                 paddingTop = 0.dp,
                 paddingEnd = 0.dp,
+                barStyle = BarStyle(
+                    paddingBetweenBars = 10.dp,
+                    barWidth = 20.dp,
+                    isGradientEnabled = false,
+                    selectionHighlightData = SelectionHighlightData(
+                        highlightBarColor = primary500.copy(alpha = 0.5f),
+                        highlightTextColor = Color.Black,
+                        highlightTextBackgroundColor = Color.White,
+                        popUpLabel = { x, y ->
+                            val selectedBar = barData.find { it.point.x == x }
+                            val date = selectedBar?.label ?: ""
+                            val amount = y.roundToInt()
+                            "$date: $currency $amount"
+                        },
+                        isHighlightBarRequired = true
+                    )
+                )
+
             )
 
             BarChart(

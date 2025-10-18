@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,24 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import com.paymentoptions.pos.R
+import androidx.compose.foundation.layout.size
+import com.paymentoptions.pos.ui.composables._components.NoteChip
+import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
+import com.paymentoptions.pos.utils.generateQrCode
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -60,7 +79,9 @@ import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionSuccessfulBottomSectionContent(
     navController: NavController,
@@ -89,6 +110,76 @@ fun TransactionSuccessfulBottomSectionContent(
         "Transaction was successful. Details are unavailable."
     }
 
+    val transactionUuid = paymentDetailsResponse?.data?.TransactionRefID
+    val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
+        "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
+    } else {
+        null
+    }
+
+    var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+
+    if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
+        modifier = Modifier.fillMaxWidth(),
+        onDismissRequest = { showQrCodeBottomSheetExpanded = false },
+        sheetState = sheetState,
+        containerColor = Color.White,
+        contentColor = primary500,
+        dragHandle = {}) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 20.dp)
+        ) {
+
+            Icon(
+                painter = painterResource(R.drawable.logo),
+                contentDescription = "DASPay Logo",
+                tint = primary500,
+                modifier = Modifier
+                    .height(
+                        com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP.div(1.5f)
+                    )
+                    .align(Alignment.Center)
+            )
+
+            IconButton(
+                modifier = Modifier.align(alignment = Alignment.CenterEnd), onClick = {
+                    showQrCodeBottomSheetExpanded = false
+                }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            val linkQrBitmap = generateQrCode(transactionDetailUrl ?: "")
+
+            PaymentQrCodeImage(
+                qrBitmap = linkQrBitmap,
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(shape = RoundedCornerShape(16.dp))
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            NoteChip(
+                text = "Scan with your device",
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            )
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,7 +206,8 @@ fun TransactionSuccessfulBottomSectionContent(
 
             CurrencyText(
                 currency = currency,
-                amount = paymentDetailsResponse?.data?.Amount.toString()
+//                amount = paymentDetailsResponse?.data?.Amount.toString()
+                amount = String.format(Locale.US, "%.2f", paymentDetailsResponse?.data?.Amount ?: 0.0)
             )
 
             Row(
@@ -276,7 +368,8 @@ fun TransactionSuccessfulBottomSectionContent(
                         text = "Email",
                         email = Email(
                             subject = "Your DASPay Transaction Receipt",
-                            text = shareableSuccessText
+//                            text = shareableSuccessText
+                            text = transactionDetailUrl ?: "Transaction details unavailable"
                         ),
                         modifier = Modifier
                             .weight(1f)
@@ -291,7 +384,8 @@ fun TransactionSuccessfulBottomSectionContent(
 
                     ShareButton(
                         text = "Share",
-                        shareContent = shareableSuccessText,
+//                        shareContent = shareableSuccessText,
+                        shareContent = transactionDetailUrl ?: "Transaction details unavailable",
                         modifier = Modifier
                             .weight(1f)
                             .border(
@@ -313,6 +407,7 @@ fun TransactionSuccessfulBottomSectionContent(
                             )
                             .background(Color.White)
                             .padding(horizontal = 10.dp, vertical = 20.dp)
+                            .clickable { showQrCodeBottomSheetExpanded = true }
                     )
                 }
 
@@ -369,10 +464,12 @@ fun TransactionSuccessfulBottomSectionContent(
 //                                .background(Color.Green)
                         ) {
                             Image(
+                                modifier = Modifier.padding(8.dp),//added padding to center signature
 //                                modifier = Modifier.scale(0.9f),
                                 bitmap = signatureBitmap.asImageBitmap(),
                                 contentDescription = "Customer signature",
-                                contentScale = ContentScale.FillBounds,
+//                                contentScale = ContentScale.FillBounds,
+                                contentScale = ContentScale.Fit,
                                 alignment = Alignment.Center,
 //                                modifier = Modifier.rotate(270f)
                             )

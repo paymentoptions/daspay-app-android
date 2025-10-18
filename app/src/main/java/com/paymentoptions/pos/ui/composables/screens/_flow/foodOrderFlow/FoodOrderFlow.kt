@@ -179,13 +179,33 @@ fun FoodOrderFlow(
     }
 
     val scrollState = rememberScrollState()
-    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(paymentMethods.first()) }
+//    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(paymentMethods.first()) }
     var nfcStatusPair by remember { mutableStateOf(Nfc.getStatus(context)) }
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
 
     var toastData by remember { mutableStateOf(ToastData()) }
     var showToast by remember { mutableStateOf(false) }
+
+    val availablePaymentMethods = remember(nfcStatusPair) {
+        val (isNfcSupported, _) = nfcStatusPair
+        if (isNfcSupported) {
+            //If NFC is supported even if disabled, show all payment methods
+            paymentMethods
+        } else {
+            //If NFC is not supported, filter out the 'Tap' payment method
+            paymentMethods.filter { it != tapPaymentMethod }
+        }
+    }
+
+    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(availablePaymentMethods.first()) }
+
+    LaunchedEffect(availablePaymentMethods) {
+        // If the currently selected method is no longer available, default to the first available one.
+        if (selectedPaymentMethod !in availablePaymentMethods) {
+            selectedPaymentMethod = availablePaymentMethods.first()
+        }
+    }
 
     val pxToMove = with(LocalDensity.current) {
         20.times(-1).dp.toPx().roundToInt()
@@ -214,12 +234,12 @@ fun FoodOrderFlow(
     fun updateFlowStage(newFoodOrderFlowStage: FoodOrderFlowStage) {
         foodOrderFlowStage = newFoodOrderFlowStage
     }
-
+    /*
     if (!nfcStatusPair.first) {
         tapPaymentMethod.setIsEnabled(false)
         Toast.makeText(context, "Your device does not support NFC", Toast.LENGTH_SHORT).show()
     }
-
+    */
     if (!apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
         qrCodePaymentMethod.setIsEnabled(false)
         Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
@@ -888,6 +908,7 @@ fun FoodOrderFlow(
                 ChargeMoneyBottomSectionContent(
                     navController,
                     enableScrolling = false,
+                    availablePaymentMethods = availablePaymentMethods,
                     amountToCharge = cartState.calculateGrandTotal().formatToPrecisionString(),
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },

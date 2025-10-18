@@ -88,6 +88,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                 totalTransactionCount = transactionListFromAPI.data.total_count
                 transactions = transactions.plus(transactionListFromAPI.data.records)
+
+                //set receival amount from API total_amount field (rounded to two decimal place)
+                receivalAmount = transactionListFromAPI.data.total_amount?.toFloat() ?: 0.0f
             }
         } catch (e: Exception) {
             Toast.makeText(
@@ -113,9 +116,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         nextPageHandler()
     }
 
-    fun updateReceivalAmount(newAmount: Float) {
-        receivalAmount = newAmount
-    }
+//    fun updateReceivalAmount(newAmount: Float) {
+//        receivalAmount = newAmount
+//    }
 
     Column(
         modifier = Modifier
@@ -189,9 +192,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             MyCircularProgressIndicator()
         } else Column(modifier = Modifier.fillMaxWidth()) {
             Transactions(
-                navController, transactions = transactions, updateReceivalAmount = {
-                    updateReceivalAmount(it)
-                }, lazyColumnState = lazyColumnState
+                navController,
+                transactions = transactions,
+//                updateReceivalAmount = {
+//                    updateReceivalAmount(it)
+//                },
+                lazyColumnState = lazyColumnState
             )
         }
     }
