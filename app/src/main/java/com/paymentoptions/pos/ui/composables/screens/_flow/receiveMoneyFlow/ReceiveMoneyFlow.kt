@@ -202,8 +202,13 @@ fun ReceiveMoneyFlow(
             if (event == Lifecycle.Event.ON_RESUME) {
                 //when app resumes check NFC status again
                 val currentNfcStatus = Nfc.getStatus(context)
+                nfcStatusPair = currentNfcStatus
                 if (currentNfcStatus.second) {
                     showNFCNotEnabled = false //hide the dialog
+                }
+                //Developer's option check
+                if (!DeveloperOptions.isEnabled(context)) {
+                    showDeveloperOptionsEnabled = false //hide the dialog
                 }
             }
         }
@@ -305,10 +310,10 @@ fun ReceiveMoneyFlow(
                                 tapPaymentMethod -> {
                                     val currentNfcStatusPair = Nfc.getStatus(context)
 
-                                    if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
-                                        true
-                                    else if (!nfcStatusPair.second) showNFCNotEnabled = true
-                                    else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
+//                                    if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
+//                                        true
+//                                    else if (!nfcStatusPair.second) showNFCNotEnabled = true
+//                                    else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
 
                                     MyDialog(
                                         showDialog = if (inProduction) showDeveloperOptionsEnabled else false,
@@ -317,7 +322,7 @@ fun ReceiveMoneyFlow(
                                         acceptButtonText = "Developer Options",
                                         cancelButtonText = "Cancel",
                                         onAcceptFn = {
-                                            showDeveloperOptionsEnabled = false
+//                                            showDeveloperOptionsEnabled = false
                                             val intent =
                                                 Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
                                             context.startActivity(intent)
@@ -356,7 +361,7 @@ fun ReceiveMoneyFlow(
                                     FilledButton(
                                         text = "Tap here to start Tap To Pay",
 //                                        onClick = { startTapAndPay = true },
-                                        onClick = {
+                                        /*onClick = {
                                             //check the NFC status
                                             if (Nfc.getStatus(context).second) {
                                                 //If NFC is enable proceed with payment
@@ -364,6 +369,16 @@ fun ReceiveMoneyFlow(
                                             } else {
                                                 //If NFC is disabled, show the dialog
                                                 showNFCNotEnabled = true
+                                            }
+                                        },*/
+                                        onClick = {
+                                            if (DeveloperOptions.isEnabled(context)) {
+                                                showDeveloperOptionsEnabled = true
+                                            }
+                                            else if (!Nfc.getStatus(context).second) {
+                                                showNFCNotEnabled = true
+                                            } else {
+                                                startTapAndPay = true
                                             }
                                         },
                                         modifier = Modifier

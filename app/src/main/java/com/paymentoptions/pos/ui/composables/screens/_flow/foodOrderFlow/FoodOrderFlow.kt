@@ -38,6 +38,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -205,6 +206,23 @@ fun FoodOrderFlow(
         if (selectedPaymentMethod !in availablePaymentMethods) {
             selectedPaymentMethod = availablePaymentMethods.first()
         }
+    }
+
+    val lifecycleOwner = LocalContext.current as androidx.lifecycle.LifecycleOwner
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                val currentNfcStatus = Nfc.getStatus(context)
+                if (currentNfcStatus.second) {
+                    showNFCNotEnabled = false
+                }
+                if (!DeveloperOptions.isEnabled(context)) {
+                    showDeveloperOptionsEnabled = false
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     val pxToMove = with(LocalDensity.current) {
@@ -436,10 +454,10 @@ fun FoodOrderFlow(
                             tapPaymentMethod -> {
                                 val currentNfcStatusPair = Nfc.getStatus(context)
 
-                                if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
-                                    true
-                                else if (!nfcStatusPair.second) showNFCNotEnabled = true
-                                else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
+//                                if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
+//                                    true
+//                                else if (!nfcStatusPair.second) showNFCNotEnabled = true
+//                                else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
 
                                 MyDialog(
                                     showDialog = if (inProduction) showDeveloperOptionsEnabled else false,
@@ -448,7 +466,7 @@ fun FoodOrderFlow(
                                     acceptButtonText = "Developer Options",
                                     cancelButtonText = "Cancel",
                                     onAcceptFn = {
-                                        showDeveloperOptionsEnabled = false
+//                                        showDeveloperOptionsEnabled = false
                                         val intent =
                                             Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
                                         context.startActivity(intent)
@@ -466,7 +484,7 @@ fun FoodOrderFlow(
                                     acceptButtonText = "Go to Settings",
                                     cancelButtonText = "Cancel",
                                     onAcceptFn = {
-                                        showNFCNotEnabled = false
+//                                        showNFCNotEnabled = false
                                         val intent = Intent(Settings.ACTION_NFC_SETTINGS)
                                         context.startActivity(intent)
                                     },
@@ -486,7 +504,14 @@ fun FoodOrderFlow(
 
                                 FilledButton(
                                     text = "Tap here to start Tap To Pay",
-                                    onClick = { startTapAndPay = true },
+                                    onClick = {
+                                        if (DeveloperOptions.isEnabled(context)) {
+                                            showDeveloperOptionsEnabled = true
+                                        } else if (!Nfc.getStatus(context).second) {
+                                            showNFCNotEnabled = true
+                                        } else {
+                                            startTapAndPay = true
+                                        } },
                                     modifier = Modifier
                                         .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                                         .height(59.dp)
