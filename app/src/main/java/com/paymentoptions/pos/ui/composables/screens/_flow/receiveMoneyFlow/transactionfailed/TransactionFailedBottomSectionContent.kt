@@ -41,6 +41,7 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.utils.formatToPrecisionString
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -50,7 +51,6 @@ fun TransactionFailedBottomSectionContent(
     navController: NavController,
     paymentDetailsResponse: PaymentDetailsResponse?,
     enableScrolling: Boolean = false,
-    amountToCharge: String,
     updateFlowStage: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -64,7 +64,7 @@ fun TransactionFailedBottomSectionContent(
 
     //Sharable text summary for the failed Transaction
     val shareableFailureText = if (paymentDetailsResponse != null) {
-        "Details for failed transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: $amountToCharge $currency\nDate: $formattedDate\nStatus: FAILED"
+        "Details for failed transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.Amount.formatToPrecisionString()} $currency\nDate: $formattedDate\nStatus: FAILED"
     } else {
         "Transaction failed. Details are unavailable."
     }
@@ -95,7 +95,10 @@ fun TransactionFailedBottomSectionContent(
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            CurrencyText(currency = currency, amount = amountToCharge)
+            CurrencyText(
+                currency = currency,
+                amount = paymentDetailsResponse?.data?.Amount.formatToPrecisionString()
+            )
         }
 
         Spacer(modifier = Modifier.height(32.dp))

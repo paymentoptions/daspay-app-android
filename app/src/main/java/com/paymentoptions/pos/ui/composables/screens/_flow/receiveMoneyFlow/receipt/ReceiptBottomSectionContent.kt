@@ -47,7 +47,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -79,6 +78,7 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.topdf.ComposePdfExporter
@@ -107,7 +107,6 @@ fun ReceiptBottomSectionContent(
     val scope = rememberCoroutineScope()
     var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
-    var bitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     val clipboardManager = LocalClipboardManager.current
 
     val transactionUuid = paymentDetailsResponse?.data?.TransactionRefID
@@ -118,7 +117,7 @@ fun ReceiptBottomSectionContent(
     }
 
     //Sharable text summary for the failed Transaction
-    val shareableReceiptText = if (paymentDetailsResponse != null) {
+    if (paymentDetailsResponse != null) {
         "Receipt for transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.CurrencyCode}${paymentDetailsResponse.data.Amount}"
     } else {
         "Receipt details are unavailable"
@@ -894,7 +893,7 @@ private fun ReceiptContentForPDF(
             )
             CurrencyText(
                 currency = paymentDetailsResponse?.data?.CurrencyCode.toString(),
-                amount = paymentDetailsResponse?.data?.Amount.toString(),
+                amount = paymentDetailsResponse?.data?.Amount.formatToPrecisionString(),
                 fontSize = 20.sp,
                 color = primary500
             )

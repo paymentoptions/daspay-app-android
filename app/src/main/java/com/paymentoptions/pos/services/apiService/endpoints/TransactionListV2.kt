@@ -26,7 +26,12 @@ suspend fun transactionListV2(
         val idToken = authDetails?.data?.token?.idToken
         val requestHeaders = generateRequestHeader(idToken ?: "")
 
-        val request = TransactionListV2Request(take = take, skip = skip, filter = filter)
+        val request = TransactionListV2Request(
+            take = take,
+            skip = skip,
+            filter = filter,
+            totalRequired = true
+        )
         val transactionListResponse = RetrofitClient.api.transactionListV2(requestHeaders, request)
 
         return transactionListResponse

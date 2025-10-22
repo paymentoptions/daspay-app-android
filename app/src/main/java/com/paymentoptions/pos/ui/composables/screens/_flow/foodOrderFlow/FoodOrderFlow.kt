@@ -954,7 +954,6 @@ fun FoodOrderFlow(
                 TransactionFailedBottomSectionContent(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
-                    amountToCharge = cartState.calculateGrandTotal().formatToPrecisionString(),
                     paymentDetailsResponse = paymentDetailsResponse,
                     updateFlowStage = { })
             }

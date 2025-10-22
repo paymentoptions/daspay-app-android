@@ -70,6 +70,7 @@ data class TransactionListV2RequestFilter(
 data class TransactionListV2Request(
     val take: Int,
     val skip: Int,
+    val totalRequired: Boolean = true,
     val TimeZone: String = "Indian/Mahe",
     val filter: List<TransactionListV2RequestFilter>,
 )
@@ -110,29 +111,9 @@ data class TransactionListDataRecord(
 
 data class TransactionListData(
     val total_count: Int,
-    val total_amount: Double?,
-    val records: Array<TransactionListDataRecord>,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as TransactionListData
-
-        if (total_count != other.total_count) return false
-        if (total_amount != other.total_amount) return false
-        if (!records.contentEquals(other.records)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = total_count
-        result = 31 * result + (total_amount?.hashCode() ?: 0)
-        result = 31 * result + records.contentHashCode()
-        return result
-    }
-}
+    val total_amount: Double,
+    val records: List<TransactionListDataRecord>,
+)
 
 data class TransactionListResponse(
     val statusCode: Int,

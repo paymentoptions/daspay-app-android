@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.paymentoptions.pos"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.paymentoptions.pos"
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -120,4 +120,7 @@ dependencies {
 
     //https://github.com/PatilShreyas/Capturable?tab=readme-ov-file
     implementation(libs.capturable)
+
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
 }

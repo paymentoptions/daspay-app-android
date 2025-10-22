@@ -26,6 +26,8 @@ import co.yml.charts.common.model.Point
 import co.yml.charts.ui.barchart.BarChart
 import co.yml.charts.ui.barchart.models.BarChartData
 import co.yml.charts.ui.barchart.models.BarData
+import co.yml.charts.ui.barchart.models.BarStyle
+import co.yml.charts.ui.barchart.models.SelectionHighlightData
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderColor
@@ -35,9 +37,6 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
-import co.yml.charts.ui.barchart.models.BarStyle
-import co.yml.charts.ui.barchart.models.SelectionHighlightData
-import androidx.compose.ui.text.TextStyle
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import java.time.OffsetDateTime
 import kotlin.math.absoluteValue
@@ -152,85 +151,86 @@ fun Insights(
                 .axisLabelFontSize(8.sp).axisLabelAngle(0f).axisLineColor(Color.White)
                 .labelAndAxisLinePadding(0.dp).backgroundColor(Color.White).build()
 
-
             val barChartData = BarChartData(
-                chartData = if (barData.isNotEmpty()) barData else mutableListOf<BarData>(
+                chartData = barData.ifEmpty {
+                    mutableListOf<BarData>(
 
-                    BarData(
-                        point = Point(x = 0f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 1f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 2f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 3f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 4f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 5f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 6f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 7f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 8f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 9f, y = 0f),
+                        BarData(
+                            point = Point(x = 0f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 1f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 2f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 3f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 4f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 5f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 6f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 7f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 8f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 9f, y = 0f),
 
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 10f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
-                    ), BarData(
-                        point = Point(x = 11f, y = 0f),
-                        color = Color.Gray.copy(alpha = 0.4f),
-                        label = "",
-                        gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
-                        description = "",
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 10f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        ), BarData(
+                            point = Point(x = 11f, y = 0f),
+                            color = Color.Gray.copy(alpha = 0.4f),
+                            label = "",
+                            gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
+                            description = "",
+                        )
                     )
-                ),
+                },
                 xAxisData = xAxisData,
                 yAxisData = yAxisData,
                 paddingTop = 0.dp,
@@ -252,7 +252,6 @@ fun Insights(
                         isHighlightBarRequired = true
                     )
                 )
-
             )
 
             BarChart(

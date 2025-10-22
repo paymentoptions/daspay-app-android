@@ -63,6 +63,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.device.SharedPreferences
@@ -302,12 +303,12 @@ fun ReceiveMoneyFlow(
                             //when (selectedPaymentMethod) {
                             when (paymentMethod) {
                                 tapPaymentMethod -> {
-//                                    val currentNfcStatusPair = Nfc.getStatus(context)
-//
-//                                    if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
-//                                        true
-//                                    else if (!nfcStatusPair.second) showNFCNotEnabled = true
-//                                    else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
+                                    val currentNfcStatusPair = Nfc.getStatus(context)
+
+                                    if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
+                                        true
+                                    else if (!nfcStatusPair.second) showNFCNotEnabled = true
+                                    else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
 
                                     MyDialog(
                                         showDialog = if (inProduction) showDeveloperOptionsEnabled else false,
@@ -329,7 +330,7 @@ fun ReceiveMoneyFlow(
 
                                     MyDialog(
                                         showDialog = showNFCNotEnabled,
-                                        title = "NFC Disabled",
+                                        title = "NFC Required",
                                         text = "This feature needs NFC. Please enable it in your device settings.",
                                         acceptButtonText = "Go to Settings",
                                         cancelButtonText = "Cancel",
@@ -416,13 +417,13 @@ fun ReceiveMoneyFlow(
                                                 "Your session has expired. Please log in again to continue."
                                             e.printStackTrace()
 
-                                            Toast.makeText(
-                                                context,
-                                                "Your session has expired. Please log in again to continue.",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-
                                             if (e.toString().contains("HTTP 401")) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Your session has expired. Please log in again to continue.",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+
                                                 SharedPreferences.clearSharedPreferences(context)
                                                 navController.navigate(Screens.AuthCheck.route) {
                                                     popUpTo(0) { inclusive = true }
@@ -790,7 +791,6 @@ fun ReceiveMoneyFlow(
                 TransactionFailedBottomSectionContent(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
-                    amountToCharge = formatAmount(amountToChargeState),
                     paymentDetailsResponse = paymentDetailsResponse,
                     updateFlowStage = { })
             }

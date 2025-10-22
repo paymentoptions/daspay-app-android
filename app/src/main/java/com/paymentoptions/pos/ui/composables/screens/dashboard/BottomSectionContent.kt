@@ -49,13 +49,13 @@ import kotlin.math.ceil
 @Composable
 fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
-    var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
+    var receivalAmount by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
     var firstPageFetch by remember { mutableStateOf(false) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var viewAll by remember { mutableStateOf(false) }
     var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
-    var take by remember { mutableIntStateOf(20) }
+    val take by remember { derivedStateOf { if (viewAll) 20 else 15 } }
     var currentPage by remember { mutableIntStateOf(1) }
     var maxPage by remember { mutableIntStateOf(0) }
     val lazyColumnState = rememberLazyListState()
@@ -71,9 +71,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     }
 
     LaunchedEffect(viewAll) {
-        take = if (viewAll) totalTransactionCount else take
-        currentPage = 1
-        transactions = listOf<TransactionListDataRecord>()
+        if (!viewAll) {
+            currentPage = 1
+            transactions = listOf<TransactionListDataRecord>()
+            firstPageFetch = false
+        }
     }
 
     LaunchedEffect(currentPage, take) {
@@ -87,19 +89,22 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
 
                 totalTransactionCount = transactionListFromAPI.data.total_count
+
                 transactions = transactions.plus(transactionListFromAPI.data.records)
 
                 //set receival amount from API total_amount field (rounded to two decimal place)
-                receivalAmount = transactionListFromAPI.data.total_amount?.toFloat() ?: 0.0f
+                receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
             }
         } catch (e: Exception) {
-            Toast.makeText(
-                context,
-                "Your session has expired. Please log in again to continue.",
-                Toast.LENGTH_SHORT
-            ).show()
+
 
             if (e.toString().contains("HTTP 401")) {
+                Toast.makeText(
+                    context,
+                    "Your session has expired. Please log in again to continue.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
                 println("signInResponse: test")
                 SharedPreferences.clearSharedPreferences(context)
                 navController.navigate(Screens.AuthCheck.route) {
@@ -112,13 +117,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         }
     }
 
-    if (scrollingEndReached && !viewAll) LaunchedEffect(Unit) {
+    if (scrollingEndReached && viewAll) LaunchedEffect(Unit) {
         nextPageHandler()
     }
-
-//    fun updateReceivalAmount(newAmount: Float) {
-//        receivalAmount = newAmount
-//    }
 
     Column(
         modifier = Modifier
@@ -194,9 +195,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             Transactions(
                 navController,
                 transactions = transactions,
-//                updateReceivalAmount = {
-//                    updateReceivalAmount(it)
-//                },
                 lazyColumnState = lazyColumnState
             )
         }

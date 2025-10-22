@@ -71,13 +71,13 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 })
             }
         } catch (e: Exception) {
-            Toast.makeText(
-                context,
-                "Your session has expired. Please log in again to continue.",
-                Toast.LENGTH_SHORT
-            ).show()
-
             if (e.toString().contains("HTTP 401")) {
+                Toast.makeText(
+                    context,
+                    "Your session has expired. Please log in again to continue.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
                 SharedPreferences.clearSharedPreferences(context)
                 navController.navigate(Screens.AuthCheck.route) {
                     popUpTo(0) { inclusive = true }
