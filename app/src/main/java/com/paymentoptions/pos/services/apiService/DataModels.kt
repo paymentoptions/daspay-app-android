@@ -333,7 +333,7 @@ data class PaymentStatusRequest(
     val acqMid: String = "null",
     val acqTid: String = "null",
     val notifyId: Int = 0,
-//    val acquirerResponse: String = "",
+    val acquirerResponse: String = "",
 )
 
 data class PaymentStatusResponseData(

@@ -200,28 +200,13 @@ fun TransactionSummary(
                     )
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.weight(3f)
                 ) {
-                    /**Text(
-                    transaction.CurrencyCode,
-                    textAlign = TextAlign.End,
-                    color = if (isTransactionAmountPositive) green200 else Color.Red,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    )
-
-                    Text(
-                    text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
-                    color = if (isTransactionAmountPositive) green500 else Color.Red,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    maxLines = 1
-                    )**/
                     Text(
                         transaction.CurrencyCode,
                         textAlign = TextAlign.End,

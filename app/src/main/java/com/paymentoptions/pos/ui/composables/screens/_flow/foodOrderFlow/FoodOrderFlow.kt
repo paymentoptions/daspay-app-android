@@ -452,7 +452,7 @@ fun FoodOrderFlow(
                     ) {
                         when (selectedPaymentMethod) {
                             tapPaymentMethod -> {
-                                val currentNfcStatusPair = Nfc.getStatus(context)
+                                Nfc.getStatus(context)
 
 //                                if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
 //                                    true
@@ -500,7 +500,15 @@ fun FoodOrderFlow(
                                         .fillMaxWidth()
                                         .height(230.dp)
                                         .clip(shape = RoundedCornerShape(16.dp))
-                                        .clickable { startTapAndPay = true })
+                                        .clickable {
+                                            if (DeveloperOptions.isEnabled(context)) {
+                                                showDeveloperOptionsEnabled = true
+                                            } else if (!Nfc.getStatus(context).second) {
+                                                showNFCNotEnabled = true
+                                            } else {
+                                                startTapAndPay = true
+                                            }
+                                        })
 
                                 FilledButton(
                                     text = "Tap here to start Tap To Pay",
@@ -511,7 +519,8 @@ fun FoodOrderFlow(
                                             showNFCNotEnabled = true
                                         } else {
                                             startTapAndPay = true
-                                        } },
+                                        }
+                                    },
                                     modifier = Modifier
                                         .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                                         .height(59.dp)
@@ -1021,11 +1030,11 @@ fun FoodOrderFlow(
                 bottomSectionPaddingInDp = 0.dp,
                 bottomSectionMinHeightRatio = 0.95f,
                 bottomSectionMaxHeightRatio = 0.95f,
-                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                enableScrollingOfBottomSectionContent = true,
             ) {
                 TakeDigitalSignatureBottomSectionContent(
                     navController,
-                    enableScrolling = enableScrollingInsideBottomSectionContent,
+                    enableScrolling = false,
                     signaturePath = signaturePath,
                     signatureDate = signatureDate,
                     updateSignature = { path, bitmap, signDate ->

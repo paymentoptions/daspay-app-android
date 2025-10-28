@@ -308,7 +308,7 @@ fun ReceiveMoneyFlow(
                             //when (selectedPaymentMethod) {
                             when (paymentMethod) {
                                 tapPaymentMethod -> {
-                                    val currentNfcStatusPair = Nfc.getStatus(context)
+                                    Nfc.getStatus(context)
 
 //                                    if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
 //                                        true
@@ -356,7 +356,15 @@ fun ReceiveMoneyFlow(
                                             .fillMaxWidth()
                                             .height(230.dp)
                                             .clip(shape = RoundedCornerShape(16.dp))
-                                            .clickable { startTapAndPay = true })
+                                            .clickable {
+                                                if (DeveloperOptions.isEnabled(context)) {
+                                                    showDeveloperOptionsEnabled = true
+                                                } else if (!Nfc.getStatus(context).second) {
+                                                    showNFCNotEnabled = true
+                                                } else {
+                                                    startTapAndPay = true
+                                                }
+                                            })
 
                                     FilledButton(
                                         text = "Tap here to start Tap To Pay",
@@ -374,8 +382,7 @@ fun ReceiveMoneyFlow(
                                         onClick = {
                                             if (DeveloperOptions.isEnabled(context)) {
                                                 showDeveloperOptionsEnabled = true
-                                            }
-                                            else if (!Nfc.getStatus(context).second) {
+                                            } else if (!Nfc.getStatus(context).second) {
                                                 showNFCNotEnabled = true
                                             } else {
                                                 startTapAndPay = true
@@ -845,11 +852,11 @@ fun ReceiveMoneyFlow(
                 bottomSectionPaddingInDp = 0.dp,
                 bottomSectionMinHeightRatio = 0.95f,
                 bottomSectionMaxHeightRatio = 0.95f,
-                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                enableScrollingOfBottomSectionContent = true,
             ) {
                 TakeDigitalSignatureBottomSectionContent(
                     navController,
-                    enableScrolling = enableScrollingInsideBottomSectionContent,
+                    enableScrolling = false,
                     signaturePath = signaturePath,
                     signatureDate = signatureDate,
                     updateSignature = { path, bitmap, signDate ->

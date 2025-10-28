@@ -1,6 +1,9 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.chargemoney
 
+import MyDialog
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
@@ -34,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
+import com.paymentoptions.pos.device.DeveloperOptions
+import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getTapPayDasmid
 import com.paymentoptions.pos.device.getTransactionCurrency
@@ -59,9 +64,10 @@ import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getDeviceIpAddress
 import com.paymentoptions.pos.utils.getDeviceTimeZone
 import com.paymentoptions.pos.utils.getKeyFromToken
+import com.paymentoptions.pos.utils.inProduction
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
-import com.paymentoptions.pos.utils.paymentMethods
+import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
@@ -70,6 +76,9 @@ import com.theminesec.lib.dto.transaction.Transaction
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+
+import kotlinx.serialization.json.Json
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -127,14 +136,57 @@ fun ChargeMoneyBottomSectionContent(
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
 
-    if (startTapAndPay && selectedPaymentMethod === tapPaymentMethod) Tap_ChargeMoney(
-        navController = navController,
-        amountToCharge = amountToCharge,
-        onLoader = onLoader,
-        onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
-        onFailureUpdateFlowStage = onFailureUpdateFlowStage,
-        updateLatestTransaction = updateLatestTransaction
+    var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
+    var showNFCNotEnabled by remember { mutableStateOf(false) }
+
+    MyDialog(
+        showDialog = if (inProduction) showDeveloperOptionsEnabled else false,
+        title = "Caution",
+        text = "You need to disable developer options to proceed further.",
+        acceptButtonText = "Developer Options",
+        cancelButtonText = "Cancel",
+        onAcceptFn = {
+            val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+            context.startActivity(intent)
+        },
+        onDismissFn = {
+            showDeveloperOptionsEnabled = false
+            updateSelectedPaymentMethod(qrCodePaymentMethod)
+        },
     )
+
+    MyDialog(
+        showDialog = showNFCNotEnabled,
+        title = "NFC Required",
+        text = "This feature needs NFC. Please enable it in your device settings.",
+        acceptButtonText = "Go to Settings",
+        cancelButtonText = "Cancel",
+        onAcceptFn = {
+            val intent = Intent(Settings.ACTION_NFC_SETTINGS)
+            context.startActivity(intent)
+        },
+        onDismissFn = {
+            showNFCNotEnabled = false
+            updateSelectedPaymentMethod(qrCodePaymentMethod)
+        },
+    )
+
+    if (startTapAndPay && selectedPaymentMethod === tapPaymentMethod) {
+
+        if (DeveloperOptions.isEnabled(context)) {
+            showDeveloperOptionsEnabled = true
+        } else if (!Nfc.getStatus(context).second) {
+            showNFCNotEnabled = true
+        } else
+            Tap_ChargeMoney(
+                navController = navController,
+                amountToCharge = amountToCharge,
+                onLoader = onLoader,
+                onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
+                onFailureUpdateFlowStage = onFailureUpdateFlowStage,
+                updateLatestTransaction = updateLatestTransaction
+            )
+    }
 
     Column(
         modifier = Modifier
@@ -222,9 +274,7 @@ fun Tap_ChargeMoney(
 
     if (authDetails == null) {
         Toast.makeText(
-            context,
-            "Your session has expired. Please log in again to continue.",
-            Toast.LENGTH_LONG
+            context, "Your session has expired. Please log in again to continue.", Toast.LENGTH_LONG
         ).show()
         SharedPreferences.clearSharedPreferences(context)
         navController.navigate(Screens.AuthCheck.route) {
@@ -244,7 +294,6 @@ fun Tap_ChargeMoney(
     val launcher = rememberLauncherForActivityResult(
         HeadlessActivity.contract(ClientHeadlessImpl::class.java)
     ) {
-
         paymentLoader = false
 
         var completedSaleTranId: String? = ""
@@ -256,14 +305,14 @@ fun Tap_ChargeMoney(
                 tranId = transaction.posReference.toString(), //it.value.tranId,
                 cvmPerformed = transaction.cvmPerformed.toString(),
                 tsi = transaction.tsi.toString(),
-                mcc = transaction.mcc.toString(),
-                merchantName = transaction.merchantName.toString(),
+                mcc = transaction.mcc,
+                merchantName = transaction.merchantName,
                 tranStatus = transaction.tranStatus.toString(),
                 tranType = transaction.tranType.toString(),
                 atc = transaction.atc.toString(),
                 createdAt = transaction.createdAt.toEpochMilliseconds().toString(),
                 updatedAt = transaction.updatedAt?.toEpochMilliseconds().toString(),
-                trace = transaction.trace.toString(),
+                trace = transaction.trace,
                 callbackUrl = transaction.callbackUrl.toString(),
                 entryMode = transaction.entryMode.toString(),
                 amount = "{\"currency\":\"${transaction.amount.currency}\",\"value\":${transaction.amount.value.toFloat()}",
@@ -279,10 +328,10 @@ fun Tap_ChargeMoney(
                 paymentMethod = transaction.paymentMethod.toString(),
                 hostMessageFormat = transaction.hostMessageFormat.toString(),
                 aid = transaction.aid.toString(),
-//                    acqMid = it.value,
-//                    acqTid = it.value,
-//                    notifyId = it.value,
-//                    acquirerResponse = Json.encodeToString(it.value)
+                acquirerResponse = Json.encodeToString(transaction),
+//                                    acqMid = transaction.,
+//                                    acqTid = transaction.,
+//                                    notifyId = transaction.
             )
         }
 
@@ -356,19 +405,17 @@ fun Tap_ChargeMoney(
         postal_code = "100001"
     )
 
-    val shippingAddress = Address(
-        country = "IN",
-        email = merchant["email"]!!,
-        address1 = "Chiyoda1-1",
-        phone_number = merchant["contact"]!!,
-        city = "Minatoku",
-        state = "Tokyoto",
-        postal_code = "100001"
-    )
+//    val shippingAddress = Address(
+//        country = "IN",
+//        email = merchant["email"]!!,
+//        address1 = "Chiyoda1-1",
+//        phone_number = merchant["contact"]!!,
+//        city = "Minatoku",
+//        state = "Tokyoto",
+//        postal_code = "100001"
+//    )
 
-    val paymentMethod = com.paymentoptions.pos.services.apiService.PaymentMethod(
-        type = "daspay"
-    )
+    val paymentMethod = com.paymentoptions.pos.services.apiService.PaymentMethod(type = "daspay")
 
     val paymentRequest = PaymentRequest(
         amount = amountToCharge.toString(),
@@ -378,7 +425,7 @@ fun Tap_ChargeMoney(
         merchant_id = merchant["dasmid"]!!,
         return_url = paymentReturnUrl,
         billing_address = billingAddress,
-        shipping_address = shippingAddress,
+        shipping_address = billingAddress, //shippingAddress,
         payment_method = paymentMethod,
         time_zone = getDeviceTimeZone()
     )
@@ -389,8 +436,7 @@ fun Tap_ChargeMoney(
         actionButtonText = "Try Again",
         type = AlertDialogType.LOADER,
         showActionButton = false,
-        onActionFn = {
-        })
+        onActionFn = {})
 
     if (!hasLaunchedPayment) {
         hasLaunchedPayment = true
