@@ -12,6 +12,8 @@ import retrofit2.http.HeaderMap
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import java.util.concurrent.TimeUnit
 
 const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/"
@@ -120,6 +122,14 @@ interface ApiService {
         @HeaderMap headers: Map<String, String>,
         @Path("paymentId") paymentId: String,
     ): PaymentDetailsResponse
+
+    @FormUrlEncoded
+    @POST("entities/minesec/generate-image")
+    suspend fun uploadSignature(
+        @HeaderMap headers: Map<String, String>,
+        @Field("signature") signature: String,
+        @Field("TransactionID") TransactionID: String,
+    ): UploadSignatureResponse
 }
 
 var gson = GsonBuilder()

@@ -3,6 +3,7 @@ package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow
 import android.graphics.Bitmap
 import android.graphics.Paint
 import android.graphics.Matrix
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -22,6 +23,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
+import com.paymentoptions.pos.services.apiService.endpoints.uploadSignature
+import kotlinx.coroutines.launch
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -64,6 +71,7 @@ fun TakeDigitalSignatureBottomSectionContent(
     enableScrolling: Boolean = false,
     signaturePath: Path,
     signatureDate: Date,
+    paymentDetailsResponse: PaymentDetailsResponse?,
     updateSignature: (Path, Bitmap?, Date) -> Unit = { _, _, _ -> },
     updateFlowStageToSuccess: () -> Unit = {},
 ) {
@@ -78,9 +86,14 @@ fun TakeDigitalSignatureBottomSectionContent(
     var startY by remember { mutableStateOf(0f) }
     var isDrawnTopToBottom by remember { mutableStateOf(true) }
 
+    var isLoading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
     fun resetPath() {
         path = Path()
         updateSignature(path, null, signatureDate)
+        isSigned = false
     }
 
     LaunchedEffect(Unit) {
@@ -191,6 +204,7 @@ fun TakeDigitalSignatureBottomSectionContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        /*
         FilledButton(
             text = "Confirm", onClick = {
 //                saveBitmap = true
@@ -202,6 +216,52 @@ fun TakeDigitalSignatureBottomSectionContent(
                 updateFlowStageToSuccess()
             }, modifier = Modifier.fillMaxWidth()
         )
+    }
+}*/
+        if (isLoading) {
+            MyCircularProgressIndicator()
+        } else {
+            FilledButton(
+                text = "Confirm",
+                onClick = {
+                    val transactionId_value = paymentDetailsResponse?.data?.TransactionRefID
+
+                    if (isSigned && transactionId_value != null) {
+                        val signatureBitmap = createSignatureBitmap(path, canvasWith, canvasHeight, isDrawnTopToBottom)
+                        updateSignature(path, signatureBitmap, signatureDate)
+
+                        scope.launch {
+                            isLoading = true
+                            try {
+                                val response = uploadSignature(
+                                    context = context,
+                                    signatureBitmap = signatureBitmap,
+                                    transactionId = transactionId_value
+                                )
+
+                                if (response != null && response.success) {
+                                    Toast.makeText(context, "Signature Uploaded Successfully", Toast.LENGTH_SHORT).show()
+                                    updateFlowStageToSuccess()
+                                } else {
+                                    Toast.makeText(context, "Signature upload failed. Please try again.", Toast.LENGTH_LONG).show()
+                                }
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+
+                    } else if (transactionId_value == null) {
+                        // should not happen just for check
+                        Toast.makeText(context, "Error: Transaction ID not found.", Toast.LENGTH_SHORT).show()
+                    } else {
+                        updateFlowStageToSuccess()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 /*fun createSignatureBitmap(
@@ -262,11 +322,11 @@ fun createSignatureBitmap(
     }
     canvas.drawPath(croppedPath.asAndroidPath(), paint)
 
-    //Check for if the signature is taller than it is wide
+    //if the signature is taller than it is wide
     if (bounds.height > bounds.width) {
         val matrix = Matrix().apply {
             if (isDrawnTopToBottom) {
-                //For toptobottom, rotate counter-clockwise
+                //For toptobottom, rotate counter clockwise
                 postRotate(270f)
             } else {
                 //For bottomtotop, rotate clockwise

@@ -677,3 +677,11 @@ data class PaymentDetailsResponseData_TransactionHistory(
     val Isrecurring: Boolean,
 )
 // -------------------------------------------------------
+//Signature API Models
+@Serializable
+data class UploadSignatureResponse(
+    val statusCode: Int,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean
+)

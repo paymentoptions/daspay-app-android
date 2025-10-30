@@ -859,6 +859,7 @@ fun ReceiveMoneyFlow(
                     enableScrolling = false,
                     signaturePath = signaturePath,
                     signatureDate = signatureDate,
+                    paymentDetailsResponse = paymentDetailsResponse,
                     updateSignature = { path, bitmap, signDate ->
                         signaturePath = path
                         signatureBitmap = bitmap
