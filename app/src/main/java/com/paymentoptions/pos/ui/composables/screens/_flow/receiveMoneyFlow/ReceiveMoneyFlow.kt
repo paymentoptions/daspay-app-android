@@ -852,7 +852,7 @@ fun ReceiveMoneyFlow(
                 bottomSectionPaddingInDp = 0.dp,
                 bottomSectionMinHeightRatio = 0.95f,
                 bottomSectionMaxHeightRatio = 0.95f,
-                enableScrollingOfBottomSectionContent = true,
+                enableScrollingOfBottomSectionContent = false,
             ) {
                 TakeDigitalSignatureBottomSectionContent(
                     navController,
