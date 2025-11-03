@@ -118,9 +118,6 @@ dependencies {
     // For logging API requests and responses
     implementation(libs.logging.interceptor)
 
-    //https://github.com/PatilShreyas/Capturable?tab=readme-ov-file
-    implementation(libs.capturable)
-
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
 }

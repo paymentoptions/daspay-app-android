@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ExperimentalComposeApi
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -61,7 +61,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.print.PrintHelper
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
+import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -84,10 +86,9 @@ import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.topdf.ComposePdfExporter
 import com.paymentoptions.pos.utils.topdf.PageSize
 import com.paymentoptions.pos.utils.topdf.PdfExportProgress
-import dev.shreyaspatil.capturable.capturable
-import dev.shreyaspatil.capturable.controller.rememberCaptureController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -98,7 +99,7 @@ import java.util.Locale
 @Composable
 fun ReceiptBottomSectionContent(
     navController: NavController,
-    paymentDetailsResponse: PaymentDetailsResponse?,
+    transactionId: String,
     signatureBitmap: Bitmap?,
     signatureDate: Date,
     enableScrolling: Boolean = false,
@@ -108,20 +109,43 @@ fun ReceiptBottomSectionContent(
     var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
     val clipboardManager = LocalClipboardManager.current
+    var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
+    var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
 
-    val transactionUuid = paymentDetailsResponse?.data?.TransactionRefID
+    LaunchedEffect(Unit) {
+        paymentDetailsLatestResponse = try {
+            paymentDetails(
+                context = context,
+                paymentId = transactionId
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
+
+    if (paymentDetailsLatestResponse != null)
+        transactionAquirerResponse =
+            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
+                Json.decodeFromString<AquirerResponse>(
+                    it
+                )
+            }
+
     val transactionDetailUrl = if (transactionUuid != null) {
         "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
-    } else {
+    } else
         null
-    }
+
+    println("current ---> paymentDetailsLatestResponse: $paymentDetailsLatestResponse | transactionAquirerResponse: $transactionAquirerResponse")
 
     //Sharable text summary for the failed Transaction
-    if (paymentDetailsResponse != null) {
-        "Receipt for transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.CurrencyCode}${paymentDetailsResponse.data.Amount}"
-    } else {
-        "Receipt details are unavailable"
-    }
+//    if (paymentDetailsLatestResponse != null) {
+//        "Receipt for transaction #${paymentDetailsLatestResponse.data.TransactionID}\nAmount: ${paymentDetailsLatestResponse.data.CurrencyCode}${paymentDetailsLatestResponse.data.Amount}"
+//    } else {
+//        "Receipt details are unavailable"
+//    }
 
     if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),
@@ -141,9 +165,7 @@ fun ReceiptBottomSectionContent(
                 contentDescription = "DASPay Logo",
                 tint = primary500,
                 modifier = Modifier
-                    .height(
-                        LOGO_HEIGHT_IN_DP.div(1.5f)
-                    )
+                    .height(LOGO_HEIGHT_IN_DP.div(1.5f))
                     .align(Alignment.Center)
             )
 
@@ -183,7 +205,6 @@ fun ReceiptBottomSectionContent(
             )
         }
     }
-    val captureController = rememberCaptureController()
 
     Column(
         modifier = Modifier
@@ -196,7 +217,6 @@ fun ReceiptBottomSectionContent(
         //Section 1
         Column(
             modifier = Modifier
-                .capturable(captureController)  //this captures the view to print
                 .background(Color.White)
                 .fillMaxWidth()
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
@@ -209,7 +229,7 @@ fun ReceiptBottomSectionContent(
             ) {
                 SelectionContainer {
                     Text(
-                        text = "tx# " + paymentDetailsResponse?.data?.TransactionID,
+                        text = "tx# " + paymentDetailsLatestResponse?.data?.TransactionID,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
                         color = purple50
@@ -223,7 +243,7 @@ fun ReceiptBottomSectionContent(
                     modifier = Modifier
                         .size(16.dp)
                         .clickable {
-                            clipboardManager.setText(AnnotatedString(paymentDetailsResponse?.data?.TransactionID.toString()))
+                            clipboardManager.setText(AnnotatedString(paymentDetailsLatestResponse?.data?.TransactionID.toString()))
                         }
 
                 )
@@ -256,7 +276,7 @@ fun ReceiptBottomSectionContent(
                     color = primary500
                 )
                 Text(
-                    text = paymentDetailsResponse?.data?.Scheme.toString(),
+                    text = transactionAquirerResponse?.paymentMethod.toString(),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -273,7 +293,7 @@ fun ReceiptBottomSectionContent(
                     color = primary500
                 )
                 Text(
-                    text = paymentDetailsResponse?.data?.Date.toString(),
+                    text = paymentDetailsLatestResponse?.data?.Date.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     color = purple50
@@ -304,9 +324,13 @@ fun ReceiptBottomSectionContent(
             )
 
             CurrencyText(
-                currency = paymentDetailsResponse?.data?.CurrencyCode.toString(),
-//                amount = paymentDetailsResponse?.data?.Amount.toString(),
-                amount = String.format(Locale.US, "%.2f", paymentDetailsResponse?.data?.Amount ?: 0.0),
+                currency = paymentDetailsLatestResponse?.data?.CurrencyCode.toString(),
+//                amount = paymentDetailsLatestResponse?.data?.Amount.toString(),
+                amount = String.format(
+                    Locale.US,
+                    "%.2f",
+                    paymentDetailsLatestResponse?.data?.Amount ?: 0.0
+                ),
                 fontSize = 20.sp,
                 color = primary500
             )
@@ -332,7 +356,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "******7890",
+                    transactionAquirerResponse?.primaryMid.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -349,7 +373,10 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "****5678", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                    transactionAquirerResponse?.primaryTid.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
                 )
             }
 
@@ -363,7 +390,10 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "000017", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                    transactionAquirerResponse?.batchNo.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
                 )
             }
 
@@ -377,7 +407,10 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "889026", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                    transactionAquirerResponse?.trace.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
                 )
             }
 
@@ -391,7 +424,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "94445675305927",
+                    transactionAquirerResponse?.rrn.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -408,7 +441,10 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "305927", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                    transactionAquirerResponse?.approvalCode.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
                 )
             }
         }
@@ -445,7 +481,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    paymentDetailsResponse?.data?.TransactionID.toString(),
+                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -462,7 +498,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    paymentDetailsResponse?.data?.Status.toString(),
+                    paymentDetailsLatestResponse?.data?.Status.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = green500
@@ -479,7 +515,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    paymentDetailsResponse?.data?.TransactionID.toString(),
+                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -496,7 +532,10 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "-", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                    transactionAquirerResponse?.atc.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
                 )
             }
 
@@ -510,7 +549,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "040008000",
+                    transactionAquirerResponse?.tvr.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -527,7 +566,10 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "A800", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                    transactionAquirerResponse?.appName.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
                 )
             }
 
@@ -541,7 +583,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "A000000000250013543",
+                    transactionAquirerResponse?.aid.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -558,7 +600,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    "110DD9C04027D889",
+                    transactionAquirerResponse?.tc.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -686,40 +728,6 @@ fun ReceiptBottomSectionContent(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-//            bitmap?.let {
-//                Image(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    painter = rememberAsyncImagePainter(bitmap!!.asAndroidBitmap()),
-//                    contentScale = ContentScale.FillBounds,
-//                    contentDescription = null,
-//                )
-//            }
-
-            /*FilledButton(
-                text = "Print Receipt",
-                onClick = {
-                    scope.launch {
-                        val bitmapAsync = captureController.captureAsync()
-                        try {
-                            bitmap = bitmapAsync.await()
-                            Toast.makeText(
-                                context,
-                                "Screenshot taken successfully",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            doPhotoPrint(context, bitmap!!.asAndroidBitmap())
-                        } catch (error: Throwable) {
-                            Toast.makeText(context, "Error taking screenshot", Toast.LENGTH_SHORT)
-                                .show()
-                        }
-                    }
-                },
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .height(39.dp)
-                    .scale(0.7f)
-            )*/
             FilledButton(
                 text = "Print Receipt",
                 onClick = {
@@ -727,7 +735,7 @@ fun ReceiptBottomSectionContent(
                         try {
                             ComposePdfExporter.export(
                                 context = context,
-                                fileName = "Receipt_${paymentDetailsResponse?.data?.TransactionID}",
+                                fileName = "Receipt_${paymentDetailsLatestResponse?.data?.TransactionID}",
                                 pageSize = PageSize.A4,
                                 composable = { state ->
                                     LazyColumn(
@@ -738,7 +746,7 @@ fun ReceiptBottomSectionContent(
                                     ) {
                                         item {
                                             ReceiptContentForPDF(
-                                                paymentDetailsResponse = paymentDetailsResponse,
+                                                paymentDetailsLatestResponse = paymentDetailsLatestResponse,
                                                 signatureBitmap = signatureBitmap,
                                                 signatureDate = signatureDate
                                             )
@@ -751,25 +759,43 @@ fun ReceiptBottomSectionContent(
                                             is PdfExportProgress.Success -> {
                                                 try {
                                                     // Direct print intent
-                                                    val printIntent = Intent(Intent.ACTION_VIEW).apply {
-                                                        setDataAndType(result.output, "application/pdf")
-                                                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                                    }
+                                                    val printIntent =
+                                                        Intent(Intent.ACTION_VIEW).apply {
+                                                            setDataAndType(
+                                                                result.output,
+                                                                "application/pdf"
+                                                            )
+                                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                        }
                                                     context.startActivity(printIntent)
-                                                    Toast.makeText(context, "PDF created - Opening...", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(
+                                                        context,
+                                                        "PDF created - Opening...",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
                                                 } catch (e: Exception) {
-                                                    Toast.makeText(context, "Error opening PDF: ${e.message}", Toast.LENGTH_LONG).show()
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Error opening PDF: ${e.message}",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
                                                 }
                                             }
+
                                             is PdfExportProgress.Error -> {
-                                                android.util.Log.e("PDF_ERROR", "Error creating PDF", result.exception)
+                                                android.util.Log.e(
+                                                    "PDF_ERROR",
+                                                    "Error creating PDF",
+                                                    result.exception
+                                                )
                                                 Toast.makeText(
                                                     context,
                                                     "Error: ${result.exception.message ?: "Unknown error"}",
                                                     Toast.LENGTH_LONG
                                                 ).show()
                                             }
+
                                             else -> {}
                                         }
                                     }
@@ -777,7 +803,8 @@ fun ReceiptBottomSectionContent(
                             )
                         } catch (e: Exception) {
                             android.util.Log.e("PDF_ERROR", "Caught exception", e)
-                            Toast.makeText(context, "Exception: ${e.message}", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Exception: ${e.message}", Toast.LENGTH_LONG)
+                                .show()
                         }
                     }
                 },
@@ -793,9 +820,9 @@ fun ReceiptBottomSectionContent(
 
 @Composable
 private fun ReceiptContentForPDF(
-    paymentDetailsResponse: PaymentDetailsResponse?,
+    paymentDetailsLatestResponse: PaymentDetailsResponse?,
     signatureBitmap: Bitmap?,
-    signatureDate: Date
+    signatureDate: Date,
 ) {
     Column(
         modifier = Modifier
@@ -809,7 +836,7 @@ private fun ReceiptContentForPDF(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "tx ${paymentDetailsResponse?.data?.TransactionID}",
+                text = "tx ${paymentDetailsLatestResponse?.data?.TransactionID}",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 color = purple50
@@ -843,7 +870,7 @@ private fun ReceiptContentForPDF(
                 color = primary500
             )
             Text(
-                text = paymentDetailsResponse?.data?.Scheme.toString(),
+                text = paymentDetailsLatestResponse?.data?.Scheme.toString(),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
@@ -861,7 +888,7 @@ private fun ReceiptContentForPDF(
                 color = primary500
             )
             Text(
-                text = paymentDetailsResponse?.data?.Date.toString(),
+                text = paymentDetailsLatestResponse?.data?.Date.toString(),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 color = purple50
@@ -892,8 +919,8 @@ private fun ReceiptContentForPDF(
                 color = primary500
             )
             CurrencyText(
-                currency = paymentDetailsResponse?.data?.CurrencyCode.toString(),
-                amount = paymentDetailsResponse?.data?.Amount.formatToPrecisionString(),
+                currency = paymentDetailsLatestResponse?.data?.CurrencyCode.toString(),
+                amount = paymentDetailsLatestResponse?.data?.Amount.formatToPrecisionString(),
                 fontSize = 20.sp,
                 color = primary500
             )
@@ -913,42 +940,71 @@ private fun ReceiptContentForPDF(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("MID", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
+                Text(
+                    "MID",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
                 Text("7890", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("TID", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
+                Text(
+                    "TID",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
                 Text("5678", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Batch", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
+                Text(
+                    "Batch",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
                 Text("000017", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Trace", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
+                Text(
+                    "Trace",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
                 Text("889026", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("RRN", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
-                Text("94445675305927", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    "RRN",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
+                Text(
+                    "94445675305927",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Approval Code", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
+                Text(
+                    "Approval Code",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
                 Text("305927", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
             }
         }
@@ -976,50 +1032,103 @@ private fun ReceiptContentForPDF(
                     .padding(top = 16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("TRANSACTION ID", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
-                Text(paymentDetailsResponse?.data?.TransactionID.toString(), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    "TRANSACTION ID",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
+                Text(
+                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("STATE", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
-                Text(paymentDetailsResponse?.data?.Status.toString(), fontSize = 14.sp, fontWeight = FontWeight.Medium, color = green500)
+                Text(
+                    "STATE",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
+                Text(
+                    paymentDetailsLatestResponse?.data?.Status.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = green500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("ATC", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
+                Text(
+                    "ATC",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
                 Text("-", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("TVR", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
-                Text("040008000", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    "TVR",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
+                Text(
+                    "040008000",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("APP NAME", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
+                Text(
+                    "APP NAME",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
                 Text("A800", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("AID", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
-                Text("A000000000250013543", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    "AID",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
+                Text(
+                    "A000000000250013543",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("TC", style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal), fontSize = 14.sp)
-                Text("110DD9C04027D889", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    "TC",
+                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                    fontSize = 14.sp
+                )
+                Text(
+                    "110DD9C04027D889",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
         }
 

@@ -661,9 +661,76 @@ data class PaymentDetailsResponseData(
     val ProductDetails: Any, // [],
     val SubscriptionDetails: String?,
     val PaymentType: String,
+    val AcquirerResponse: List<String?>,
     val transactionHistory: List<PaymentDetailsResponseData_TransactionHistory>,
 )
 
+@Serializable
+data class AquirerResponse(
+    val tranId: String = "",
+    val tranType: String = "",
+    val tranStatus: String = "",
+    val amount: AquirerResponseAmount = AquirerResponseAmount(),
+    val paymentMethod: String = "",
+    val entryMode: String = "",
+    val accountMasked: String = "",
+    val accountBin: String = "",
+    val accountLast4: String = "",
+    val issCountryCode: String = "",
+    val aid: String = "",
+    val appName: String = "",
+    val tc: String = "",
+    val tvr: String = "",
+    val tsi: String = "",
+    val atc: String = "",
+    val profileId: String = "",
+    val acceptanceId: String = "",
+    val acptId: String = "",
+    val sdkId: String = "",
+    val posReference: String = "",
+    val trace: String = "",
+    val merchantName: String = "",
+    val merchantAddr: String = "",
+    val mcc: String = "",
+    val primaryMid: String = "",
+    val primaryTid: String = "",
+    val hostMessageFormat: String = "",
+    val providerReference: String = "",
+    val providerMchId: String = "",
+    val extraData: String = "",
+    val rrn: String = "",
+    val approvalCode: String = "",
+    val batchId: String = "",
+    val batchNo: String = "",
+    val actions: List<AquirerResponseAction> = listOf(AquirerResponseAction()),
+    val srsTranId: String = "",
+    val consumerPaymentDevice: String = "",
+    val createdAt: String = "",
+)
+
+@Serializable
+data class AquirerResponseAmount(
+    val value: String = "",
+    val currency: String = "",
+)
+
+@Serializable
+data class AquirerResponseAction(
+    val actionId: String = "",
+    val trace: String = "",
+    val actionType: String = "",
+    val actionStatus: String = "",
+    val requestId: String = "",
+    val amount: AquirerResponseAmount = AquirerResponseAmount(),
+    val tranId: String = "",
+    val reason: String = "",
+    val hostRespCode: String = "",
+    val posReference: String = "",
+    val extraData: String = "",
+    val createdAt: String = "",
+)
+
+@Serializable
 data class PaymentDetailsResponseData_TransactionHistory(
     val uuid: String,
     val trackid: String?,
@@ -676,6 +743,7 @@ data class PaymentDetailsResponseData_TransactionHistory(
     val CurrencyCode: String,
     val Isrecurring: Boolean,
 )
+
 // -------------------------------------------------------
 //Signature API Models
 @Serializable
@@ -683,5 +751,5 @@ data class UploadSignatureResponse(
     val statusCode: Int,
     val message: String,
     val messageCode: String,
-    val success: Boolean
+    val success: Boolean,
 )

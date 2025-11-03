@@ -187,8 +187,6 @@ fun ReceiveMoneyFlow(
                 paymentDetailsResponse = paymentDetails(
                     context = context, paymentId = latestTransactionId.toString()
                 )
-
-                println("paymentDetailsResponse: $paymentDetailsResponse")
             } catch (e: Exception) {
                 paymentDetailsResponse = null
             }
@@ -322,7 +320,6 @@ fun ReceiveMoneyFlow(
                                         acceptButtonText = "Developer Options",
                                         cancelButtonText = "Cancel",
                                         onAcceptFn = {
-//                                            showDeveloperOptionsEnabled = false
                                             val intent =
                                                 Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
                                             context.startActivity(intent)
@@ -357,13 +354,15 @@ fun ReceiveMoneyFlow(
                                             .height(230.dp)
                                             .clip(shape = RoundedCornerShape(16.dp))
                                             .clickable {
-                                                if (DeveloperOptions.isEnabled(context)) {
-                                                    showDeveloperOptionsEnabled = true
-                                                } else if (!Nfc.getStatus(context).second) {
-                                                    showNFCNotEnabled = true
-                                                } else {
-                                                    startTapAndPay = true
-                                                }
+                                                if (inProduction)
+                                                    if (DeveloperOptions.isEnabled(context)) {
+                                                        showDeveloperOptionsEnabled = true
+                                                    } else if (!Nfc.getStatus(context).second) {
+                                                        showNFCNotEnabled = true
+                                                    } else {
+                                                        startTapAndPay = true
+                                                    }
+                                                else startTapAndPay = true
                                             })
 
                                     FilledButton(
@@ -380,13 +379,15 @@ fun ReceiveMoneyFlow(
                                             }
                                         },*/
                                         onClick = {
-                                            if (DeveloperOptions.isEnabled(context)) {
-                                                showDeveloperOptionsEnabled = true
-                                            } else if (!Nfc.getStatus(context).second) {
-                                                showNFCNotEnabled = true
-                                            } else {
-                                                startTapAndPay = true
-                                            }
+                                            if (inProduction)
+                                                if (DeveloperOptions.isEnabled(context)) {
+                                                    showDeveloperOptionsEnabled = true
+                                                } else if (!Nfc.getStatus(context).second) {
+                                                    showNFCNotEnabled = true
+                                                } else {
+                                                    startTapAndPay = true
+                                                }
+                                            else startTapAndPay = true
                                         },
                                         modifier = Modifier
                                             .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
@@ -889,7 +890,7 @@ fun ReceiveMoneyFlow(
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,
-                    paymentDetailsResponse = paymentDetailsResponse,
+                    transactionId = latestTransactionId.toString(),
                     signatureBitmap = signatureBitmap,
                     signatureDate = signatureDate,
                 )

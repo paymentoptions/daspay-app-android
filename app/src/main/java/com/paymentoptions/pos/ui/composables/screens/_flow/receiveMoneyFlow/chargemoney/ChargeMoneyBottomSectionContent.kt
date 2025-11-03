@@ -173,9 +173,9 @@ fun ChargeMoneyBottomSectionContent(
 
     if (startTapAndPay && selectedPaymentMethod === tapPaymentMethod) {
 
-        if (DeveloperOptions.isEnabled(context)) {
+        if (inProduction && DeveloperOptions.isEnabled(context)) {
             showDeveloperOptionsEnabled = true
-        } else if (!Nfc.getStatus(context).second) {
+        } else if (inProduction && !Nfc.getStatus(context).second) {
             showNFCNotEnabled = true
         } else
             Tap_ChargeMoney(

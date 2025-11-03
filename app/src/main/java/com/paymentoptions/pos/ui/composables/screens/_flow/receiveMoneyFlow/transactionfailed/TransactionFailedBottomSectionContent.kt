@@ -61,6 +61,8 @@ fun TransactionFailedBottomSectionContent(
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val formattedDate = SimpleDateFormat("dd MMMM YYYY").format(date)
+    //    val transactionAquirerResponse = paymentDetailsResponse?.data?.AcquirerResponse?.firstOrNull() ?: AquirerResponse()
+
 
     //Sharable text summary for the failed Transaction
     val shareableFailureText = if (paymentDetailsResponse != null) {
@@ -168,7 +170,11 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-                        "null", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+//                        text = transactionAquirerResponse?.trace.toString(),
+                        text = "null",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
                     )
                 }
 
@@ -183,7 +189,11 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-                        "null", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+//                        text = transactionAquirerResponse?.approvalCode.toString(),
+                        text = "null",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
                     )
                 }
             }

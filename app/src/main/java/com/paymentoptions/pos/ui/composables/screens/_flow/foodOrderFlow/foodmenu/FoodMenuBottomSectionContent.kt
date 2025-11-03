@@ -107,7 +107,7 @@ fun FoodMenuBottomSectionContent(
         Spacer(modifier = Modifier.height(10.dp))
 
         if (!foodCategoriesAvailable) MyCircularProgressIndicator(text = "Loading food categories...")
-        else if (foodCategories.isEmpty()) NoData(text = " No food categories available") else FoodCategories(
+        else if (foodCategories.isEmpty()) NoData(text = "No food categories available") else FoodCategories(
             foodCategories = foodCategories,
             selectedFoodCategory = selectedFoodCategory,
             onClick = { updateSelectedFoodCategory(it) },

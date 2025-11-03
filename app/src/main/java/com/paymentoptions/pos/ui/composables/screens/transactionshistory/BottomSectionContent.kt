@@ -78,7 +78,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var receivalForText by remember { mutableStateOf("Receival for the day") }
     var receivalForTimePeriodText by remember { mutableStateOf("") }
 
-    var filters = mapOf<String, String>(
+    val filters = mapOf<String, String>(
         "Today" to "Today",
         "Week" to "Week",
         "Month" to "Month",

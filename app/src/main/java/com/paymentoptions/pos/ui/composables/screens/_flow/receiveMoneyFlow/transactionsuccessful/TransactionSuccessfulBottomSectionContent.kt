@@ -16,38 +16,34 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
-import com.paymentoptions.pos.R
-import androidx.compose.foundation.layout.size
-import com.paymentoptions.pos.ui.composables._components.NoteChip
-import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
-import com.paymentoptions.pos.utils.generateQrCode
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -55,9 +51,11 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
@@ -65,6 +63,7 @@ import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
+import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -74,6 +73,7 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import java.text.SimpleDateFormat
@@ -102,9 +102,10 @@ fun TransactionSuccessfulBottomSectionContent(
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
+//    val transactionAquirerResponse = paymentDetailsResponse?.data?.AcquirerResponse?.firstOrNull() ?: AquirerResponse()
 
     // Shareable text summary for the successful Transaction
-    val shareableSuccessText = if (paymentDetailsResponse != null) {
+    if (paymentDetailsResponse != null) {
         "Receipt for successful transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.Amount} $currency\nDate: $dateStringFormatted\nStatus: SUCCESSFUL"
     } else {
         "Transaction was successful. Details are unavailable."
@@ -139,7 +140,9 @@ fun TransactionSuccessfulBottomSectionContent(
                 tint = primary500,
                 modifier = Modifier
                     .height(
-                        com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP.div(1.5f)
+                        com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP.div(
+                            1.5f
+                        )
                     )
                     .align(Alignment.Center)
             )
@@ -207,7 +210,11 @@ fun TransactionSuccessfulBottomSectionContent(
             CurrencyText(
                 currency = currency,
 //                amount = paymentDetailsResponse?.data?.Amount.toString()
-                amount = String.format(Locale.US, "%.2f", paymentDetailsResponse?.data?.Amount ?: 0.0)
+                amount = String.format(
+                    Locale.US,
+                    "%.2f",
+                    paymentDetailsResponse?.data?.Amount ?: 0.0
+                )
             )
 
             Row(
@@ -300,7 +307,11 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        "null", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+//                        text =transactionAquirerResponse?.trace.toString(),
+                        text = "null",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
                     )
                 }
 
@@ -315,7 +326,11 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        "null", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+//                        text =transactionAquirerResponse?.approvalCode.toString(),
+                        text = "null",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
                     )
                 }
 

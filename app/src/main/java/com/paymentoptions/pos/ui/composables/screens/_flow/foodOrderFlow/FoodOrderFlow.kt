@@ -166,8 +166,6 @@ fun FoodOrderFlow(
                 paymentDetailsResponse = paymentDetails(
                     context = context, paymentId = latestTransactionId.toString()
                 )
-
-                println("paymentDetailsResponse: $paymentDetailsResponse")
             } catch (e: Exception) {
                 paymentDetailsResponse = null
             }
@@ -274,13 +272,13 @@ fun FoodOrderFlow(
             selectedFoodCategory = foodCategoryList.firstOrNull()
 
         } catch (e: Exception) {
-            Toast.makeText(
-                context,
-                "Your session has expired. Please log in again to continue.",
-                Toast.LENGTH_SHORT
-            ).show()
-
             if (e.toString().contains("HTTP 401")) {
+                Toast.makeText(
+                    context,
+                    "Your session has expired. Please log in again to continue.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
                 SharedPreferences.clearSharedPreferences(context)
                 navController.navigate(Screens.AuthCheck.route) {
                     popUpTo(0) { inclusive = true }
@@ -311,10 +309,14 @@ fun FoodOrderFlow(
                     selectedFoodCategory!!.CategoryID, listOf<FoodItem>(), context
                 )
             } catch (e: Exception) {
-//                Toast.makeText(context, "Error fetching products from API", Toast.LENGTH_SHORT)
-//                    .show()
 
                 if (e.toString().contains("HTTP 401")) {
+                    Toast.makeText(
+                        context,
+                        "Your session has expired. Please log in again to continue.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
                     SharedPreferences.clearSharedPreferences(context)
                     navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
@@ -596,13 +598,15 @@ fun FoodOrderFlow(
                                             "Your session has expired. Please log in again to continue."
                                         e.printStackTrace()
 
-                                        Toast.makeText(
-                                            context,
-                                            "Your session has expired. Please log in again to continue.",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+
 
                                         if (e.toString().contains("HTTP 401")) {
+                                            Toast.makeText(
+                                                context,
+                                                "Your session has expired. Please log in again to continue.",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+
                                             SharedPreferences.clearSharedPreferences(context)
                                             navController.navigate(Screens.AuthCheck.route) {
                                                 popUpTo(0) { inclusive = true }
@@ -1067,7 +1071,7 @@ fun FoodOrderFlow(
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,
-                    paymentDetailsResponse = paymentDetailsResponse,
+                    transactionId = latestTransactionId.toString(),
                     signatureBitmap = signatureBitmap,
                     signatureDate = signatureDate,
                 )
