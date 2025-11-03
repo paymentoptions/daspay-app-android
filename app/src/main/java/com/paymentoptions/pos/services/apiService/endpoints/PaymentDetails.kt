@@ -11,8 +11,6 @@ suspend fun paymentDetails(
     context: Context,
     paymentId: String,
 ): PaymentDetailsResponse? {
-
-    println("current ---> paymentId: $paymentId")
     try {
         var authDetails = SharedPreferences.getAuthDetails(context)
         val username = authDetails?.data?.email ?: ""
@@ -27,11 +25,11 @@ suspend fun paymentDetails(
         val response: PaymentDetailsResponse =
             RetrofitClient.api.paymentDetails(headers = requestHeaders, paymentId = paymentId)
 
-        println("current ---> response: $response")
+        println("PaymentDetails: $response")
 
         return response
     } catch (e: Exception) {
-        println("current ---> PaymentDetails error: ${e.stackTrace}")
+        println("PaymentDetails error: ${e.stackTrace}")
         throw e
     }
 }
