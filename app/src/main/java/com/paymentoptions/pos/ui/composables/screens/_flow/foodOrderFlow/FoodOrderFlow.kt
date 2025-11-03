@@ -992,7 +992,7 @@ fun FoodOrderFlow(
                 TransactionFailedBottomSectionContent(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
-                    paymentDetailsResponse = paymentDetailsResponse,
+                    transactionId = latestTransactionId.toString(),
                     updateFlowStage = { })
             }
         }
@@ -1019,7 +1019,7 @@ fun FoodOrderFlow(
                 TransactionSuccessfulBottomSectionContent(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
-                    paymentDetailsResponse = paymentDetailsResponse,
+                    transactionId = latestTransactionId.toString(),
                     signatureBitmap = signatureBitmap,
                     signatureDate = signatureDate,
                     updateFlowToDigitalSignature = { updateFlowStage(FoodOrderFlowStage.DIGITAL_SIGNATURE) },

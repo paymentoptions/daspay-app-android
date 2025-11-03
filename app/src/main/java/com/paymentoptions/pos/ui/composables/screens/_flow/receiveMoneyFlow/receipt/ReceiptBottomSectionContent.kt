@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt
 
-import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.widget.Toast
@@ -59,7 +58,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.print.PrintHelper
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
@@ -137,15 +135,6 @@ fun ReceiptBottomSectionContent(
         "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
     } else
         null
-
-    println("current ---> paymentDetailsLatestResponse: $paymentDetailsLatestResponse | transactionAquirerResponse: $transactionAquirerResponse")
-
-    //Sharable text summary for the failed Transaction
-//    if (paymentDetailsLatestResponse != null) {
-//        "Receipt for transaction #${paymentDetailsLatestResponse.data.TransactionID}\nAmount: ${paymentDetailsLatestResponse.data.CurrencyCode}${paymentDetailsLatestResponse.data.Amount}"
-//    } else {
-//        "Receipt details are unavailable"
-//    }
 
     if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),
@@ -301,7 +290,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Text(
-                text = "**** **** **** 1025(T)",
+                text = "**** **** **** " + transactionAquirerResponse?.accountLast4.toString(),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
@@ -515,7 +504,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
+                    text = paymentDetailsLatestResponse?.data?.Date.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -683,7 +672,6 @@ fun ReceiptBottomSectionContent(
                 EmailButton(
                     text = "Email", email = Email(
                         subject = "Your DASPay Receipt",
-//                        text = shareableReceiptText
                         text = transactionDetailUrl ?: "Transaction details unavailable"
                     ), modifier = Modifier
                         .weight(1f)
@@ -824,6 +812,16 @@ private fun ReceiptContentForPDF(
     signatureBitmap: Bitmap?,
     signatureDate: Date,
 ) {
+    var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
+
+    if (paymentDetailsLatestResponse != null)
+        transactionAquirerResponse =
+            paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()?.let {
+                Json.decodeFromString<AquirerResponse>(
+                    it
+                )
+            }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -945,7 +943,12 @@ private fun ReceiptContentForPDF(
                     style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
                     fontSize = 14.sp
                 )
-                Text("7890", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    text = transactionAquirerResponse?.primaryMid.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -956,7 +959,12 @@ private fun ReceiptContentForPDF(
                     style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
                     fontSize = 14.sp
                 )
-                Text("5678", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    text = transactionAquirerResponse?.primaryTid.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -967,7 +975,12 @@ private fun ReceiptContentForPDF(
                     style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
                     fontSize = 14.sp
                 )
-                Text("000017", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    text = transactionAquirerResponse?.batchNo.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -978,7 +991,12 @@ private fun ReceiptContentForPDF(
                     style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
                     fontSize = 14.sp
                 )
-                Text("889026", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    text = transactionAquirerResponse?.trace.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -990,7 +1008,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    "94445675305927",
+                    text = transactionAquirerResponse?.rrn.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1005,7 +1023,12 @@ private fun ReceiptContentForPDF(
                     style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
                     fontSize = 14.sp
                 )
-                Text("305927", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    text = transactionAquirerResponse?.approvalCode.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
         }
 
@@ -1069,7 +1092,12 @@ private fun ReceiptContentForPDF(
                     style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
                     fontSize = 14.sp
                 )
-                Text("-", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    text = transactionAquirerResponse?.atc.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1081,7 +1109,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    "040008000",
+                    text = transactionAquirerResponse?.tvr.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1096,7 +1124,12 @@ private fun ReceiptContentForPDF(
                     style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
                     fontSize = 14.sp
                 )
-                Text("A800", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500)
+                Text(
+                    text = transactionAquirerResponse?.appName.toString(),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
             }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1108,7 +1141,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    "A000000000250013543",
+                    text = transactionAquirerResponse?.aid.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1124,7 +1157,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    "110DD9C04027D889",
+                    text = transactionAquirerResponse?.tc.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1182,99 +1215,4 @@ private fun ReceiptContentForPDF(
             }
         }
     }
-}
-
-
-private fun doPhotoPrint(context: Context, bitmap: Bitmap) {
-    PrintHelper(context).apply {
-        scaleMode = PrintHelper.SCALE_MODE_FIT
-    }.also { printHelper ->
-        printHelper.printBitmap("Receipt", bitmap)
-    }
-}
-
-@Composable
-fun PrintToPDF() {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    FilledButton(
-        text = "Print Receipt",
-        onClick = {
-            scope.launch {
-                ComposePdfExporter.export(
-                    context = context,
-                    fileName = "Receipt",
-                    pageSize = PageSize.A4,
-                    spacing = 4,
-                    composable = { state ->
-                        LazyColumn(
-                            state = state,
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth()
-                                .background(Color.Green.copy(0.1f))
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            item {
-                                Text("Capture Test 1", color = Color.Black)
-                                Text("Capture Test 2", color = Color.Black)
-                                Text("Capture Test 3", color = Color.Black)
-                            }
-                        }
-
-                    },
-                    onProgress = { result ->
-                        when (result) {
-                            is PdfExportProgress.Success -> {
-
-                                val intent = Intent(Intent.ACTION_SEND).apply {
-                                    putExtra(Intent.EXTRA_STREAM, result.output)
-                                    flags += Intent.FLAG_ACTIVITY_NEW_TASK
-                                    flags += Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                    type = "text/pdf"
-                                }
-                                val chooser = Intent.createChooser(intent, null)
-                                context.startActivity(chooser)
-
-//                                val sendIntent = Intent(Intent.ACTION_SEND).apply {
-//                                    putExtra(Intent.EXTRA_STREAM, result.output)
-//                                    type = "text/pdf"
-//                                }
-//                                val shareIntent = Intent.createChooser(sendIntent, null)
-//                                startActivity(context, shareIntent, null)
-
-//                                context.startActivity(
-//                                    Intent.createChooser(
-//                                        Intent().apply {
-//                                            action = Intent.ACTION_SENDTO
-//                                            putExtra(Intent.EXTRA_STREAM, result.output)
-//                                            type = "application/pdf"
-//                                        },
-//                                        null
-//                                    )
-//                                )
-                            }
-
-                            is PdfExportProgress.Error -> {
-//                                toastManager.show(
-//                                    result.exception.localizedMessage
-//                                        ?: context.getString(
-//                                            R.string.unknown_error
-//                                        )
-//                                )
-                            }
-
-                            else -> {}
-                        }
-                    })
-            }
-        },
-        fontSize = 14.sp,
-        fontWeight = FontWeight.SemiBold,
-        modifier = Modifier
-            .height(39.dp)
-            .scale(0.7f)
-    )
 }

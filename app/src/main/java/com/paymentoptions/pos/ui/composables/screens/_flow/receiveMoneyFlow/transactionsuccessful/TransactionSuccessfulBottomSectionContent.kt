@@ -31,6 +31,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,7 +54,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
+import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
@@ -76,6 +79,7 @@ import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
+import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -85,38 +89,51 @@ import java.util.Locale
 @Composable
 fun TransactionSuccessfulBottomSectionContent(
     navController: NavController,
-    paymentDetailsResponse: PaymentDetailsResponse?,
+    transactionId: String,
     enableScrolling: Boolean = false,
     signatureBitmap: Bitmap?,
     signatureDate: Date,
     updateFlowToDigitalSignature: () -> Unit = {},
     updateFlowToReceipt: () -> Unit = {},
 ) {
-    println("paymentDetailsResponse successful: $paymentDetailsResponse")
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
     val scrollState = rememberScrollState()
-    val dateString =
-        paymentDetailsResponse?.data?.Date ?: OffsetDateTime.now()
-            .toString()  //"2025-04-23T03:38:57.349+00:00"
-    val dateTime = OffsetDateTime.parse(dateString)
-    val date: Date = Date.from(dateTime.toInstant())
-    val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
-//    val transactionAquirerResponse = paymentDetailsResponse?.data?.AcquirerResponse?.firstOrNull() ?: AquirerResponse()
+    var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
+    var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
 
-    // Shareable text summary for the successful Transaction
-    if (paymentDetailsResponse != null) {
-        "Receipt for successful transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.Amount} $currency\nDate: $dateStringFormatted\nStatus: SUCCESSFUL"
-    } else {
-        "Transaction was successful. Details are unavailable."
+    LaunchedEffect(Unit) {
+        paymentDetailsLatestResponse = try {
+            paymentDetails(
+                context = context,
+                paymentId = transactionId
+            )
+        } catch (e: Exception) {
+            null
+        }
     }
 
-    val transactionUuid = paymentDetailsResponse?.data?.TransactionRefID
+    if (paymentDetailsLatestResponse != null)
+        transactionAquirerResponse =
+            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
+                Json.decodeFromString<AquirerResponse>(
+                    it
+                )
+            }
+
+    val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
         "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
     } else {
         null
     }
+
+    val dateString =
+        paymentDetailsLatestResponse?.data?.Date ?: OffsetDateTime.now()
+            .toString()
+    val dateTime = OffsetDateTime.parse(dateString)
+    val date: Date = Date.from(dateTime.toInstant())
+    val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
 
     var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
@@ -209,11 +226,11 @@ fun TransactionSuccessfulBottomSectionContent(
 
             CurrencyText(
                 currency = currency,
-//                amount = paymentDetailsResponse?.data?.Amount.toString()
+//                amount = paymentDetailsLatestResponse?.data?.Amount.toString()
                 amount = String.format(
                     Locale.US,
                     "%.2f",
-                    paymentDetailsResponse?.data?.Amount ?: 0.0
+                    paymentDetailsLatestResponse?.data?.Amount ?: 0.0
                 )
             )
 
@@ -271,7 +288,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        paymentDetailsResponse?.data?.TransactionID.toString(),
+                        paymentDetailsLatestResponse?.data?.TransactionID.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -307,8 +324,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-//                        text =transactionAquirerResponse?.trace.toString(),
-                        text = "null",
+                        text = transactionAquirerResponse?.trace.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -326,8 +342,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-//                        text =transactionAquirerResponse?.approvalCode.toString(),
-                        text = "null",
+                        text = transactionAquirerResponse?.approvalCode.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -346,7 +361,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        paymentDetailsResponse?.data?.Scheme.toString(),
+                        paymentDetailsLatestResponse?.data?.Scheme.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -383,7 +398,6 @@ fun TransactionSuccessfulBottomSectionContent(
                         text = "Email",
                         email = Email(
                             subject = "Your DASPay Transaction Receipt",
-//                            text = shareableSuccessText
                             text = transactionDetailUrl ?: "Transaction details unavailable"
                         ),
                         modifier = Modifier

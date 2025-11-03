@@ -17,6 +17,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,7 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
+import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -42,6 +49,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -49,26 +57,47 @@ import java.util.Date
 @Composable
 fun TransactionFailedBottomSectionContent(
     navController: NavController,
-    paymentDetailsResponse: PaymentDetailsResponse?,
+    transactionId: String,
     enableScrolling: Boolean = false,
     updateFlowStage: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
+    var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
+    var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
+
+    LaunchedEffect(Unit) {
+        paymentDetailsLatestResponse = try {
+            paymentDetails(
+                context = context,
+                paymentId = transactionId
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    if (paymentDetailsLatestResponse != null)
+        transactionAquirerResponse =
+            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
+                Json.decodeFromString<AquirerResponse>(
+                    it
+                )
+            }
+
     val dateString =
-        paymentDetailsResponse?.data?.Date ?: OffsetDateTime.now()
+        paymentDetailsLatestResponse?.data?.Date ?: OffsetDateTime.now()
             .toString()  //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val formattedDate = SimpleDateFormat("dd MMMM YYYY").format(date)
-    //    val transactionAquirerResponse = paymentDetailsResponse?.data?.AcquirerResponse?.firstOrNull() ?: AquirerResponse()
 
-
-    //Sharable text summary for the failed Transaction
-    val shareableFailureText = if (paymentDetailsResponse != null) {
-        "Details for failed transaction #${paymentDetailsResponse.data.TransactionID}\nAmount: ${paymentDetailsResponse.data.Amount.formatToPrecisionString()} $currency\nDate: $formattedDate\nStatus: FAILED"
-    } else {
+    var shareableFailureText =
         "Transaction failed. Details are unavailable."
+
+    paymentDetailsLatestResponse?.let {
+        shareableFailureText =
+            "Details for failed transaction #${paymentDetailsLatestResponse!!.data.TransactionID}\nAmount: ${paymentDetailsLatestResponse!!.data.Amount.formatToPrecisionString()} $currency\nDate: $formattedDate\nStatus: FAILED"
     }
 
     Column(
@@ -99,7 +128,7 @@ fun TransactionFailedBottomSectionContent(
             Spacer(modifier = Modifier.height(8.dp))
             CurrencyText(
                 currency = currency,
-                amount = paymentDetailsResponse?.data?.Amount.formatToPrecisionString()
+                amount = paymentDetailsLatestResponse?.data?.Amount.formatToPrecisionString()
             )
         }
 
@@ -134,7 +163,7 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-                        paymentDetailsResponse?.data?.TransactionID.toString(),
+                        paymentDetailsLatestResponse?.data?.TransactionID.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -170,8 +199,7 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-//                        text = transactionAquirerResponse?.trace.toString(),
-                        text = "null",
+                        text = transactionAquirerResponse?.trace.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -189,8 +217,7 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-//                        text = transactionAquirerResponse?.approvalCode.toString(),
-                        text = "null",
+                        text = transactionAquirerResponse?.approvalCode.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500

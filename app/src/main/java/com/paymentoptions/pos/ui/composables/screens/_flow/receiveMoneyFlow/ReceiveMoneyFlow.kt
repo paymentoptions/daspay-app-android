@@ -147,7 +147,6 @@ fun ReceiveMoneyFlow(
     var amountToChargeState by remember { mutableStateOf("") }
     var noteState by remember { mutableStateOf("") }
 
-//    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(paymentMethods.first()) }
     var nfcStatusPair by remember { mutableStateOf(Nfc.getStatus(context)) }
 
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
@@ -814,7 +813,7 @@ fun ReceiveMoneyFlow(
                 TransactionFailedBottomSectionContent(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
-                    paymentDetailsResponse = paymentDetailsResponse,
+                    transactionId = latestTransactionId.toString(),
                     updateFlowStage = { })
             }
         }
@@ -838,7 +837,7 @@ fun ReceiveMoneyFlow(
                 TransactionSuccessfulBottomSectionContent(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
-                    paymentDetailsResponse = paymentDetailsResponse,
+                    transactionId = latestTransactionId.toString(),
                     signatureBitmap = signatureBitmap,
                     signatureDate = signatureDate,
                     updateFlowToDigitalSignature = { updateFlowStage(ReceiveMoneyFlowStage.DIGITAL_SIGNATURE) },

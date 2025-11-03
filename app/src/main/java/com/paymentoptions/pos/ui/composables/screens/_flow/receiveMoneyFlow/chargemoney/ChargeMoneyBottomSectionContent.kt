@@ -364,9 +364,7 @@ fun Tap_ChargeMoney(
                         showProcessingScreen = false
                         if (paymentStatusResponse) {
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
-                            onLoader {
-                                onSuccessUpdateFlowStage()
-                            }
+                            onLoader { onSuccessUpdateFlowStage() }
 
                         }
                     } catch (e: Exception) {
@@ -381,10 +379,6 @@ fun Tap_ChargeMoney(
 
             is WrappedResult.Failure -> {
                 println("inThis Launcher failure ---->: $it")
-//
-//                Toast.makeText(
-//                    context, "Transaction of $$amountToCharge was failed", Toast.LENGTH_LONG
-//                ).show()
             }
         }
     }
@@ -405,27 +399,17 @@ fun Tap_ChargeMoney(
         postal_code = "100001"
     )
 
-//    val shippingAddress = Address(
-//        country = "IN",
-//        email = merchant["email"]!!,
-//        address1 = "Chiyoda1-1",
-//        phone_number = merchant["contact"]!!,
-//        city = "Minatoku",
-//        state = "Tokyoto",
-//        postal_code = "100001"
-//    )
-
     val paymentMethod = com.paymentoptions.pos.services.apiService.PaymentMethod(type = "daspay")
 
     val paymentRequest = PaymentRequest(
-        amount = amountToCharge.toString(),
+        amount = amountToCharge,
         currency = currency,
         merchant_txn_ref = "TEST00989012878787878787878787",
         customer_ip = getDeviceIpAddress(),
         merchant_id = merchant["dasmid"]!!,
         return_url = paymentReturnUrl,
         billing_address = billingAddress,
-        shipping_address = billingAddress, //shippingAddress,
+        shipping_address = billingAddress,
         payment_method = paymentMethod,
         time_zone = getDeviceTimeZone()
     )
