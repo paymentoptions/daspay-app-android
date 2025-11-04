@@ -288,7 +288,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        paymentDetailsLatestResponse?.data?.TransactionID.toString(),
+                        paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -361,7 +361,8 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        paymentDetailsLatestResponse?.data?.Scheme.toString(),
+//                        paymentDetailsLatestResponse?.data?.Scheme.toString(),
+                        transactionAquirerResponse?.paymentMethod.toString(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500

@@ -269,8 +269,7 @@ fun TakeDigitalSignatureBottomSectionContent(
         }
     }
 }
-
-//created new function for createSignatureBitmap for showing the signature in portrait
+/*
 fun createSignatureBitmap(
     path: Path,
     width: Float,
@@ -321,4 +320,57 @@ fun createSignatureBitmap(
         //If signature is already landscape return it as it is
         return croppedBitmap
     }
+}
+*/
+
+fun createSignatureBitmap(
+    path: Path,
+    width: Float,
+    height: Int,
+    isDrawnTopToBottom: Boolean,
+): Bitmap {
+    val bounds = path.getBounds()
+
+    val croppedBitmap = createBitmap(
+        bounds.width.roundToInt(),
+        bounds.height.roundToInt()
+    )
+    val canvas = android.graphics.Canvas(croppedBitmap)
+    canvas.drawColor(android.graphics.Color.TRANSPARENT)
+
+    val croppedPath = Path().apply { addPath(path) }
+    croppedPath.translate(Offset(-bounds.left, -bounds.top))
+
+    val paint = Paint().apply {
+        color = android.graphics.Color.BLACK
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+        strokeJoin = Paint.Join.ROUND
+        strokeWidth = 8f
+        isAntiAlias = true
+    }
+    canvas.drawPath(croppedPath.asAndroidPath(), paint)
+
+    // aspect ratio with threshold to determine if signature is vertical
+    val aspectRatio = bounds.height / bounds.width
+
+    // If signature is significantly taller than wide threshold of 1.2 or higher
+    if (aspectRatio > 1.2f) {
+        val signatureCenterX = bounds.left + (bounds.width / 2f)
+        val canvasCenterX = width / 2f
+
+        val matrix = Matrix().apply {
+            if (signatureCenterX < canvasCenterX) {
+                postRotate(270f)
+            } else {
+                postRotate(90f)
+            }
+        }
+
+        return Bitmap.createBitmap(
+            croppedBitmap, 0, 0, croppedBitmap.width, croppedBitmap.height, matrix, true
+        )
+    }
+
+    return croppedBitmap
 }

@@ -110,6 +110,30 @@ fun ReceiptBottomSectionContent(
     var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
 
+    val dateFormatted = try {
+        val dateString = paymentDetailsLatestResponse?.data?.Date.toString()
+        val timezoneId = paymentDetailsLatestResponse?.data?.TransactionTimezone.toString()
+
+        val utcDateTime = java.time.OffsetDateTime.parse(dateString)
+        val transactionZoneId = java.time.ZoneId.of(timezoneId)
+        val localDateTime = utcDateTime.atZoneSameInstant(transactionZoneId)
+
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss (z)")
+        localDateTime.format(formatter)
+    } catch (e: Exception) {
+        paymentDetailsLatestResponse?.data?.Date.toString() // Fallback
+    }
+
+    val billingAddressFormatted = try {
+        val address = paymentDetailsLatestResponse?.data?.BillingAddress.toString()
+        val city = paymentDetailsLatestResponse?.data?.BillingCity.toString()
+        val postcode = paymentDetailsLatestResponse?.data?.BillingPostcode.toString()
+        val country = paymentDetailsLatestResponse?.data?.BillingCountry.toString()
+        "$address, $city, $postcode, $country"
+    } catch (e: Exception) {
+        "Address unavailable"
+    }
+
     LaunchedEffect(Unit) {
         paymentDetailsLatestResponse = try {
             paymentDetails(
@@ -218,7 +242,7 @@ fun ReceiptBottomSectionContent(
             ) {
                 SelectionContainer {
                     Text(
-                        text = "tx# " + paymentDetailsLatestResponse?.data?.TransactionID,
+                        text = "tx# " + paymentDetailsLatestResponse?.data?.TransactionRefID,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
                         color = purple50
@@ -239,14 +263,16 @@ fun ReceiptBottomSectionContent(
             }
 
             Text(
-                text = "Payment Options",
+//                text = "Payment Options",
+                text = paymentDetailsLatestResponse?.data?.Merchant.toString(),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
             )
 
             Text(
-                text = "9 Tamasek Boulevard, Suntec City Tower 2 # 19-02 Singapore 038989",
+//                text = "9 Tamasek Boulevard, Suntec City Tower 2 # 19-02 Singapore 038989",
+                text = billingAddressFormatted,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 color = purple50
@@ -276,13 +302,15 @@ fun ReceiptBottomSectionContent(
                 modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "Approved",
+//                    text = "Approved",
+                    paymentDetailsLatestResponse?.data?.Status.toString(),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
                 )
                 Text(
-                    text = paymentDetailsLatestResponse?.data?.Date.toString(),
+//                    text = paymentDetailsLatestResponse?.data?.Date.toString(),
+                    text = dateFormatted,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     color = purple50
@@ -345,7 +373,8 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.primaryMid.toString(),
+//                    transactionAquirerResponse?.primaryMid.toString(),
+                    paymentDetailsLatestResponse?.data?.DASMID.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -362,7 +391,8 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.primaryTid.toString(),
+//                    transactionAquirerResponse?.primaryTid.toString(),
+                    paymentDetailsLatestResponse?.data?.TerminalID.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -470,7 +500,8 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
+//                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
+                    paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -487,7 +518,8 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    paymentDetailsLatestResponse?.data?.Status.toString(),
+//                    paymentDetailsLatestResponse?.data?.Status.toString(),
+                    transactionAquirerResponse?.tranStatus.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = green500
@@ -504,7 +536,8 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    text = paymentDetailsLatestResponse?.data?.Date.toString(),
+//                    text = paymentDetailsLatestResponse?.data?.Date.toString(),
+                    text = dateFormatted,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -814,6 +847,30 @@ private fun ReceiptContentForPDF(
 ) {
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
 
+    val pdfDateFormatted = try {
+        val dateString = paymentDetailsLatestResponse?.data?.Date.toString()
+        val timezoneId = paymentDetailsLatestResponse?.data?.TransactionTimezone.toString()
+
+        val utcDateTime = java.time.OffsetDateTime.parse(dateString)
+        val transactionZoneId = java.time.ZoneId.of(timezoneId)
+        val localDateTime = utcDateTime.atZoneSameInstant(transactionZoneId)
+
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss (z)")
+        localDateTime.format(formatter)
+    } catch (e: Exception) {
+        paymentDetailsLatestResponse?.data?.Date.toString()
+    }
+
+    val pdfBillingAddressFormatted = try {
+        val address = paymentDetailsLatestResponse?.data?.BillingAddress.toString()
+        val city = paymentDetailsLatestResponse?.data?.BillingCity.toString()
+        val postcode = paymentDetailsLatestResponse?.data?.BillingPostcode.toString()
+        val country = paymentDetailsLatestResponse?.data?.BillingCountry.toString()
+        "$address, $city, $postcode, $country"
+    } catch (e: Exception) {
+        "Address unavailable"
+    }
+
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
             paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()?.let {
@@ -834,7 +891,8 @@ private fun ReceiptContentForPDF(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "tx ${paymentDetailsLatestResponse?.data?.TransactionID}",
+//                text = "tx ${paymentDetailsLatestResponse?.data?.TransactionID}",
+                text = "tx# ${paymentDetailsLatestResponse?.data?.TransactionRefID}",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 color = purple50
@@ -842,14 +900,16 @@ private fun ReceiptContentForPDF(
         }
 
         Text(
-            text = "Payment Options",
+//            text = "Payment Options",
+            text = paymentDetailsLatestResponse?.data?.Merchant.toString(),
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
             color = primary500
         )
 
         Text(
-            text = "9 Tamasek Boulevard, Suntec City Tower 2 19-02 Singapore 038989",
+//            text = "9 Tamasek Boulevard, Suntec City Tower 2 19-02 Singapore 038989",
+            text = pdfBillingAddressFormatted,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,
             color = purple50
@@ -868,7 +928,8 @@ private fun ReceiptContentForPDF(
                 color = primary500
             )
             Text(
-                text = paymentDetailsLatestResponse?.data?.Scheme.toString(),
+//                text = paymentDetailsLatestResponse?.data?.Scheme.toString(),
+                text = transactionAquirerResponse?.paymentMethod.toString(),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
@@ -880,13 +941,15 @@ private fun ReceiptContentForPDF(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = "Approved",
+//                text = "Approved",
+                paymentDetailsLatestResponse?.data?.Status.toString(),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
             )
             Text(
-                text = paymentDetailsLatestResponse?.data?.Date.toString(),
+//                text = paymentDetailsLatestResponse?.data?.Date.toString(),
+                text = pdfDateFormatted,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 color = purple50
@@ -894,7 +957,8 @@ private fun ReceiptContentForPDF(
         }
 
         Text(
-            text = "10:25T",
+//            text = "10:25T",
+            text = "**** **** **** " + transactionAquirerResponse?.accountLast4.toString(),
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
             color = primary500
@@ -944,7 +1008,8 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.primaryMid.toString(),
+//                    text = transactionAquirerResponse?.primaryMid.toString(),
+                    text = paymentDetailsLatestResponse?.data?.DASMID.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -960,7 +1025,8 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.primaryTid.toString(),
+//                    text = transactionAquirerResponse?.primaryTid.toString(),
+                    text = paymentDetailsLatestResponse?.data?.TerminalID.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1061,7 +1127,8 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
+//                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
+                    paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1077,7 +1144,8 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    paymentDetailsLatestResponse?.data?.Status.toString(),
+//                    paymentDetailsLatestResponse?.data?.Status.toString(),
+                    text = transactionAquirerResponse?.tranStatus.toString(),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = green500
