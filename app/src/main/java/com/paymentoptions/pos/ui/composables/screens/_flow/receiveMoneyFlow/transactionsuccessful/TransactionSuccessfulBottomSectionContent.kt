@@ -279,16 +279,20 @@ fun TransactionSuccessfulBottomSectionContent(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
                     Text(
                         "Reference No.", style = AppTheme.typography.footnote.copy(
                             fontWeight = FontWeight.Normal, fontSize = 14.sp
-                        )
+                        ),
+                        modifier = Modifier.padding(end = 8.dp)
                     )
 
                     Text(
                         paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                        modifier = Modifier.weight(1f),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500

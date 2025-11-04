@@ -121,15 +121,26 @@ fun ReceiptBottomSectionContent(
         val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss (z)")
         localDateTime.format(formatter)
     } catch (e: Exception) {
-        paymentDetailsLatestResponse?.data?.Date.toString() // Fallback
+        paymentDetailsLatestResponse?.data?.Date.toString()
     }
 
-    val billingAddressFormatted = try {
-        val address = paymentDetailsLatestResponse?.data?.BillingAddress.toString()
-        val city = paymentDetailsLatestResponse?.data?.BillingCity.toString()
-        val postcode = paymentDetailsLatestResponse?.data?.BillingPostcode.toString()
-        val country = paymentDetailsLatestResponse?.data?.BillingCountry.toString()
-        "$address, $city, $postcode, $country"
+    val merchantAddressFormatted = try {
+        val address = paymentDetailsLatestResponse?.data?.PrimaryAddress
+        if (address == null) {
+            "Address unavailable"
+        } else {
+            val parts = listOfNotNull(
+                address.Line1?.takeIf { it.isNotBlank() },
+                address.Line2?.takeIf { it.isNotBlank() },
+                address.Line3?.takeIf { it.isNotBlank() },
+                address.Line4?.takeIf { it.isNotBlank() },
+                address.Locality?.takeIf { it.isNotBlank() },
+                address.Region?.takeIf { it.isNotBlank() },
+                address.PostCode?.takeIf { it.isNotBlank() },
+                address.Country?.takeIf { it.isNotBlank() }
+            )
+            parts.joinToString(", ").ifEmpty { "Address unavailable" }
+        }
     } catch (e: Exception) {
         "Address unavailable"
     }
@@ -272,7 +283,7 @@ fun ReceiptBottomSectionContent(
 
             Text(
 //                text = "9 Tamasek Boulevard, Suntec City Tower 2 # 19-02 Singapore 038989",
-                text = billingAddressFormatted,
+                text = merchantAddressFormatted,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Normal,
                 color = purple50
@@ -491,17 +502,21 @@ fun ReceiptBottomSectionContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
                 Text(
                     "TRANSACTION ID", style = AppTheme.typography.footnote.copy(
                         fontWeight = FontWeight.Normal, fontSize = 14.sp
-                    )
+                    ),
+                    modifier = Modifier.padding(end = 8.dp)
                 )
 
                 Text(
 //                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
                     paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                    modifier = Modifier.weight(1f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -861,12 +876,23 @@ private fun ReceiptContentForPDF(
         paymentDetailsLatestResponse?.data?.Date.toString()
     }
 
-    val pdfBillingAddressFormatted = try {
-        val address = paymentDetailsLatestResponse?.data?.BillingAddress.toString()
-        val city = paymentDetailsLatestResponse?.data?.BillingCity.toString()
-        val postcode = paymentDetailsLatestResponse?.data?.BillingPostcode.toString()
-        val country = paymentDetailsLatestResponse?.data?.BillingCountry.toString()
-        "$address, $city, $postcode, $country"
+    val pdfMerchantAddressFormatted = try {
+        val address = paymentDetailsLatestResponse?.data?.PrimaryAddress
+        if (address == null) {
+            "Address unavailable"
+        } else {
+            val parts = listOfNotNull(
+                address.Line1?.takeIf { it.isNotBlank() },
+                address.Line2?.takeIf { it.isNotBlank() },
+                address.Line3?.takeIf { it.isNotBlank() },
+                address.Line4?.takeIf { it.isNotBlank() },
+                address.Locality?.takeIf { it.isNotBlank() },
+                address.Region?.takeIf { it.isNotBlank() },
+                address.PostCode?.takeIf { it.isNotBlank() },
+                address.Country?.takeIf { it.isNotBlank() }
+            )
+            parts.joinToString(", ").ifEmpty { "Address unavailable" }
+        }
     } catch (e: Exception) {
         "Address unavailable"
     }
@@ -909,7 +935,7 @@ private fun ReceiptContentForPDF(
 
         Text(
 //            text = "9 Tamasek Boulevard, Suntec City Tower 2 19-02 Singapore 038989",
-            text = pdfBillingAddressFormatted,
+            text = pdfMerchantAddressFormatted,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,
             color = purple50
@@ -1119,16 +1145,20 @@ private fun ReceiptContentForPDF(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
             ) {
                 Text(
                     "TRANSACTION ID",
                     style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(end = 8.dp)
                 )
                 Text(
 //                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
                     paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                    modifier = Modifier.weight(1f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500

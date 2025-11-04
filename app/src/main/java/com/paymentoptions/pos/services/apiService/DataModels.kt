@@ -652,6 +652,7 @@ data class PaymentDetailsResponseData(
     val browser_info: String?,
     val MerchantCategoryCode: String,
     val ProductType: String,
+    val PrimaryAddress: PrimaryAddress?,
     val Merchant: String,
     val Referenceremark: String,
     val LegalNameInEnglish: String,
@@ -663,6 +664,17 @@ data class PaymentDetailsResponseData(
     val PaymentType: String,
     val AcquirerResponse: List<String?>,
     val transactionHistory: List<PaymentDetailsResponseData_TransactionHistory>,
+)
+
+data class PrimaryAddress(
+    val Line1: String?,
+    val Line2: String?,
+    val Line3: String?,
+    val Line4: String?,
+    val Locality: String?,
+    val Region: String?,
+    val PostCode: String?,
+    val Country: String?
 )
 
 @Serializable

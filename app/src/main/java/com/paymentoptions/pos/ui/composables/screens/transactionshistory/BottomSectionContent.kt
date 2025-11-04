@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import android.widget.Toast
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.insights
@@ -71,7 +72,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var transactions by remember { mutableStateOf<List<InsightsResponseDataRecord>>(listOf()) }
     val scrollState = rememberScrollState()
 
-    var showInsights by remember { mutableStateOf(true) }
+//    var showInsights by remember { mutableStateOf(true) }
+    var showInsights by remember { mutableStateOf(false) }
     var fromDateCustomFilter by remember { mutableStateOf<Long?>(null) }
     var toDateCustomFilter by remember { mutableStateOf<Long?>(null) }
 
@@ -269,7 +271,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             offsetX = 0.dp,
                             offsetY = 0.dp
                         )
-                        .clickable(onClick = { showInsights = !showInsights })
+//                        .clickable(onClick = { showInsights = !showInsights })
                         .zIndex(1f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -283,6 +285,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             .background(if (!showInsights) Color.White else Color.Transparent)
                             .padding(4.dp)
                             .zIndex(2f)
+                            .clickable { showInsights = false }
                     )
                     Icon(
                         imageVector = Icons.Default.BarChart,
@@ -293,6 +296,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             .background(if (showInsights) Color.White else Color.Transparent)
                             .padding(4.dp)
                             .zIndex(2f)
+                            .clickable {
+                                Toast.makeText(context, "In Progress", Toast.LENGTH_SHORT).show()
+                            }
                     )
                 }
             }
