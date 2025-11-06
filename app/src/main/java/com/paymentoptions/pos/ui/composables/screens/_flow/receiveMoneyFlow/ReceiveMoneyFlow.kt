@@ -140,9 +140,7 @@ fun ReceiveMoneyFlow(
     var latestTransactionId by remember { mutableStateOf<String?>(null) }
 
     var receiveMoneyFlowStage by remember {
-        mutableStateOf<ReceiveMoneyFlowStage>(
-            initialReceiveMoneyFlowStage
-        )
+        mutableStateOf(initialReceiveMoneyFlowStage)
     }
     var amountToChargeState by remember { mutableStateOf("") }
     var noteState by remember { mutableStateOf("") }
@@ -186,7 +184,7 @@ fun ReceiveMoneyFlow(
                 paymentDetailsResponse = paymentDetails(
                     context = context, paymentId = latestTransactionId.toString()
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 paymentDetailsResponse = null
             }
         }
@@ -366,17 +364,6 @@ fun ReceiveMoneyFlow(
 
                                     FilledButton(
                                         text = "Tap here to start Tap To Pay",
-//                                        onClick = { startTapAndPay = true },
-                                        /*onClick = {
-                                            //check the NFC status
-                                            if (Nfc.getStatus(context).second) {
-                                                //If NFC is enable proceed with payment
-                                                startTapAndPay = true
-                                            } else {
-                                                //If NFC is disabled, show the dialog
-                                                showNFCNotEnabled = true
-                                            }
-                                        },*/
                                         onClick = {
                                             if (inProduction)
                                                 if (DeveloperOptions.isEnabled(context)) {
@@ -398,6 +385,8 @@ fun ReceiveMoneyFlow(
                                 }
 
                                 qrCodePaymentMethod -> {
+
+                                    startTapAndPay = false
 
                                     var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
                                     var qrCodeLoading by remember { mutableStateOf(false) }
@@ -495,6 +484,8 @@ fun ReceiveMoneyFlow(
                                 }
 
                                 cashPaymentMethod -> {
+                                    startTapAndPay = false
+
                                     Text(
                                         text = "Please pay cash",
                                         color = Color.White,
@@ -506,13 +497,15 @@ fun ReceiveMoneyFlow(
                                 }
 
                                 viaLinkPaymentMethod -> {
+                                    startTapAndPay = false
+
                                     val amountValue =
                                         amountToChargeState.toLongOrNull()?.div(100f) ?: 0f
 
-                                    var payByLinkRequest = PayByLinkRequest(
+                                    val payByLinkRequest = PayByLinkRequest(
                                         PBLLinkName = "PayByLink Test",
                                         ExpiryDate = OffsetDateTime.now().toString(),
-                                        Product = listOf<PayByLinkRequestProduct>(
+                                        Product = listOf(
                                             PayByLinkRequestProduct(
                                                 Currency = currency,
                                                 Name = "Charge Money Test",
@@ -550,7 +543,7 @@ fun ReceiveMoneyFlow(
                                                     "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID
                                                 viaLinkQrBitmap = generateQrCode(paymentUrl)
                                             }
-                                        } catch (e: Exception) {
+                                        } catch (_: Exception) {
                                             Toast.makeText(
                                                 context,
                                                 "Error generating payment link...",

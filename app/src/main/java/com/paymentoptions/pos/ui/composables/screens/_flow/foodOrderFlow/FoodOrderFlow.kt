@@ -533,6 +533,9 @@ fun FoodOrderFlow(
                             }
 
                             qrCodePaymentMethod -> {
+
+                                startTapAndPay = false
+
                                 var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
                                 var qrCodeLoading by remember { mutableStateOf(false) }
                                 var qrCodeError by remember { mutableStateOf<String?>(null) }
@@ -655,6 +658,8 @@ fun FoodOrderFlow(
                             }
 
                             cashPaymentMethod -> {
+                                startTapAndPay = false
+
                                 Text(
                                     text = "Please pay cash",
                                     color = Color.White,
@@ -666,6 +671,8 @@ fun FoodOrderFlow(
                             }
 
                             viaLinkPaymentMethod -> {
+
+                                startTapAndPay = false
 
                                 var payByLinkRequest = PayByLinkRequest(
                                     PBLLinkName = "PayByLink for Food Test",
