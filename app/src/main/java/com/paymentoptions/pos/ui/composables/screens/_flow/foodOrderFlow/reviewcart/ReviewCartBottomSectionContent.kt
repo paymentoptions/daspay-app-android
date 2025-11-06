@@ -180,7 +180,7 @@ fun ReviewCartBottomSectionContent(
                     }, verticalArrangement = Arrangement.Center
             ) {
 
-                if (cartState.additionalCharge.toFloat() == 0.0f) {
+                if (cartState.additionalCharge == 0.0f) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -228,7 +228,7 @@ fun ReviewCartBottomSectionContent(
 
                         CurrencyText(
                             "",
-                            cartState.additionalCharge.toString(),
+                            cartState.additionalCharge.formatToPrecisionString(),
                             fontSize = 12.sp,
                             textAlign = TextAlign.End,
                             addSpaceAfterCurrency = true
