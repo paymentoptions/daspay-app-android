@@ -56,9 +56,6 @@ class MainActivity : FragmentActivity() {
     }
 
     fun setup() = lifecycleScope.launch {
-        /**HeadlessSetup.initialSetup(this@MainActivity) {
-        withTestCapk = true
-        }**/
         HeadlessSetup.initialSetup(this@MainActivity)
 
         HeadlessSetup.getEmvParams()
