@@ -46,6 +46,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.timeAgo
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -166,14 +167,14 @@ fun TransactionSummary(
                         dateStr, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = purple50
                     )
                     Text(
-                        text = (if (isCardTransaction) "Txn ID - " else "Cash Id - ") + transaction.uuid.toString(),
+                        text = "Txn ID - ${transaction.ID}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = primary500
                     )
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
                 Column(
                     horizontalAlignment = Alignment.End,
@@ -189,7 +190,7 @@ fun TransactionSummary(
                     )
 
                     Text(
-                        text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount.toString(),
+                        text = if (isTransactionAmountPositive) "+${transaction.amount.formatToPrecisionString()}" else transaction.amount.formatToPrecisionString(),
                         color = statusColor,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,

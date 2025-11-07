@@ -13,10 +13,10 @@ class Cart(
     var timestampInMilliseconds: Long? = null,
     var itemQuantity: Int = 0,
     var itemTotal: Float = 0.0f,
-    var serviceChargePercentage: Float,
-    var gstPercentage: Float,
-    var additionalCharge: Float,
-    var additionalAmountNote: String,
+    var serviceChargePercentage: Float = 10f,
+    var gstPercentage: Float = 9f,
+    var additionalCharge: Float = 0f,
+    var additionalAmountNote: String = "",
 ) {
     companion object {
         fun save(context: Context, cart: Cart) {
@@ -24,12 +24,12 @@ class Cart(
         }
 
         fun load(context: Context): Cart? {
-            val cart = SharedPreferences.getCart(context)
-            return cart
-        }
-
-        fun clearSavedCart(context: Context) {
-            SharedPreferences.clearSavedCart(context)
+            try {
+                val cart = SharedPreferences.getCart(context)
+                return cart
+            } catch (e: Exception) {
+                return Cart()
+            }
         }
     }
 
@@ -40,6 +40,21 @@ class Cart(
 
     fun toJson(): String {
         return Json.encodeToString(this)
+    }
+
+    fun clearSavedCart(context: Context) {
+        foodItemMapByCategoryId.forEach {
+            it.value.forEach { foodItem ->
+                removeFoodItemQuantity(foodItem, context)
+            }
+        }
+    }
+
+    fun removeFoodItemQuantity(foodItem: FoodItem, context: Context) {
+        foodItem.cartQuantity = 0
+        this.itemQuantity = 0
+        this.itemTotal = 0.0f
+        save(context, this)
     }
 
     fun decreaseFoodItemQuantity(foodItem: FoodItem, context: Context) {

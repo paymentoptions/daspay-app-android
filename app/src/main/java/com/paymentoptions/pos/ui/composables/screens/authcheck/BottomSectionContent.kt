@@ -67,19 +67,20 @@ fun BottomSectionContent(navController: NavController) {
     } else if (isAuthenticated) {
 
         if (!isTokenVerified) navController.navigate(Screens.Token.route) {
-            popUpTo(Screens.SignIn.route) { inclusive = true }
+            popUpTo(Screens.AuthCheck.route) { inclusive = true }
         }
         else FingerprintScanScreen(
             navController = navController, onAuthSuccess = {
-            navController.navigate(Screens.Dashboard.route) {
-                popUpTo(Screens.SignIn.route) { inclusive = true }
-            }
+                navController.navigate(Screens.Dashboard.route) {
+                    popUpTo(Screens.AuthCheck.route) { inclusive = true }
+                }
             }, onAuthFailed = {
-            Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
             }, bypassBiometric = !biometricStatus
         )
     } else {
-        Toast.makeText(context, "You are signed out. Please sign in.", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(context, "You are signed out. Please sign in.", Toast.LENGTH_SHORT).show()
+        SharedPreferences.clearSharedPreferences(context)
         navController.navigate(Screens.SignIn.route) {
             popUpTo(0) { inclusive = true }
         }

@@ -2,7 +2,6 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.PaymentStatusRequest
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.generatePaymentStatusHeader
@@ -11,7 +10,7 @@ import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 suspend fun paymentStatus(
     context: Context,
     request: PaymentStatusRequest,
-): PaymentResponse? {
+): Boolean {
     try {
         var authDetails = SharedPreferences.getAuthDetails(context)
         val username = authDetails?.data?.email ?: ""
@@ -20,16 +19,15 @@ suspend fun paymentStatus(
 
         if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
 
-//        val idToken = authDetails?.data?.token?.idToken
         val requestHeaders = generatePaymentStatusHeader()
 
         println("inThis PaymentStatus request -->: $request")
-        var response: PaymentResponse =
+        var response: String =
             RetrofitClient.api.paymentStatus(headers = requestHeaders, request = request)
 
         println("inThis PaymentStatus response -->: $response")
 
-        return response
+        return response.uppercase() == "SUCCESS"
     } catch (e: Exception) {
         println("paymentStatusError: ${e.stackTrace}")
         throw e

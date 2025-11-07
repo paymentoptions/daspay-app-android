@@ -10,8 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
@@ -43,36 +43,39 @@ import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.formatToPrecisionString
-import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.utils.isScrolledToTheEnd
 import kotlin.math.ceil
 
 @Composable
 fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
-    var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
+    var receivalAmount by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
+    var firstPageFetch by remember { mutableStateOf(false) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var viewAll by remember { mutableStateOf(false) }
     var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
-    var take: Int by remember { mutableIntStateOf(10) }
-    var currentPage: Int by remember { mutableIntStateOf(1) }
-    var maxPage: Int by remember { mutableIntStateOf(0) }
-    val scrollState = rememberScrollState()
+    val take by remember { derivedStateOf { if (viewAll) 20 else 15 } }
+    var currentPage by remember { mutableIntStateOf(1) }
+    var maxPage by remember { mutableIntStateOf(0) }
+    val lazyColumnState = rememberLazyListState()
+
     val scrollingEndReached by remember {
-        derivedStateOf {
-            scrollState.value == scrollState.maxValue
-        }
+        derivedStateOf { lazyColumnState.isScrolledToTheEnd() }
     }
-    var totalTransactionCount by remember { mutableIntStateOf(10) }
+
+    var totalTransactionCount by remember { mutableIntStateOf(take) }
 
     fun nextPageHandler() {
         if (currentPage < maxPage) currentPage++
     }
 
     LaunchedEffect(viewAll) {
-        take = if (viewAll) totalTransactionCount else 10
-        currentPage = 1
-        transactions = listOf<TransactionListDataRecord>()
+        if (!viewAll) {
+            currentPage = 1
+            transactions = listOf<TransactionListDataRecord>()
+            firstPageFetch = false
+        }
     }
 
     LaunchedEffect(currentPage, take) {
@@ -86,36 +89,37 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
 
                 totalTransactionCount = transactionListFromAPI.data.total_count
+
                 transactions = transactions.plus(transactionListFromAPI.data.records)
+
+                //set receival amount from API total_amount field (rounded to two decimal place)
+                receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
 
-            if (e.toString().contains("HTTP 401")) navController.navigate(Screens.SignIn.route) {
-                popUpTo(0) { inclusive = true }
+
+            if (e.toString().contains("HTTP 401")) {
+                Toast.makeText(
+                    context,
+                    "Your session has expired. Please log in again to continue.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                println("signInResponse: test")
+                SharedPreferences.clearSharedPreferences(context)
+                navController.navigate(Screens.AuthCheck.route) {
+                    popUpTo(0) { inclusive = true }
+                }
             }
         } finally {
             apiResponseAvailable = true
-//            val scrollToIndex = if (currentPage >= 2) (currentPage - 2) * take else 0
-//            println("scrollToIndex: $scrollToIndex")
-//            scrollState.scrollTo(
-//                scrollToIndex * 20
-//
-//            )
+            firstPageFetch = true
         }
     }
 
-    if (scrollingEndReached && !viewAll) LaunchedEffect(Unit) {
+    if (scrollingEndReached && viewAll) LaunchedEffect(Unit) {
         nextPageHandler()
-        scrollState.scrollTo(0)
     }
-
-    fun updateReceivalAmount(newAmount: Float) {
-        receivalAmount = newAmount
-    }
-
-//    val deviceConfig = SharedPreferences.getDeviceConfiguration(context)
-//    println("deviceConfig: $deviceConfig")
 
     Column(
         modifier = Modifier
@@ -185,17 +189,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
         }
 
-        if (!apiResponseAvailable) {
+        if (!firstPageFetch && !apiResponseAvailable) {
             MyCircularProgressIndicator()
-        } else Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .conditional(enableScrolling) { verticalScroll(scrollState) }) {
-
+        } else Column(modifier = Modifier.fillMaxWidth()) {
             Transactions(
-                navController, transactions = transactions, updateReceivalAmount = {
-                    updateReceivalAmount(it)
-                })
+                navController,
+                transactions = transactions,
+                lazyColumnState = lazyColumnState
+            )
         }
     }
 }

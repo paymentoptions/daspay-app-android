@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import android.widget.Toast
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.insights
@@ -54,7 +55,9 @@ import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
@@ -69,14 +72,15 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var transactions by remember { mutableStateOf<List<InsightsResponseDataRecord>>(listOf()) }
     val scrollState = rememberScrollState()
 
-    var showInsights by remember { mutableStateOf(true) }
+//    var showInsights by remember { mutableStateOf(true) }
+    var showInsights by remember { mutableStateOf(false) }
     var fromDateCustomFilter by remember { mutableStateOf<Long?>(null) }
     var toDateCustomFilter by remember { mutableStateOf<Long?>(null) }
 
     var receivalForText by remember { mutableStateOf("Receival for the day") }
     var receivalForTimePeriodText by remember { mutableStateOf("") }
 
-    var filters = mapOf<String, String>(
+    val filters = mapOf<String, String>(
         "Today" to "Today",
         "Week" to "Week",
         "Month" to "Month",
@@ -124,46 +128,45 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
 
             "Week" -> {
-                val today = OffsetDateTime.now().toLocalDateTime()
-                val sevenDaysAgo = today.minusDays(7)
+                val today = OffsetDateTime.now()
+                val aWeekAgo = today.minusWeeks(1)
 
                 receivalForText = "Receival for the week"
-                receivalForTimePeriodText = "${sevenDaysAgo.dayOfMonth} ${
-                    sevenDaysAgo.month.toString().lowercase()
+                receivalForTimePeriodText = "${aWeekAgo.dayOfMonth} ${
+                    aWeekAgo.month.toString().lowercase()
                         .replaceFirstChar { it.titlecase(Locale.ROOT) }
-                }, ${sevenDaysAgo.year} to ${today.dayOfMonth} ${
+                }, ${aWeekAgo.year} to ${today.dayOfMonth} ${
                     today.month.toString().lowercase()
                         .replaceFirstChar { it.titlecase(Locale.ROOT) }
                 }, ${today.year}"
                 receivalAmount = 0.0f
 
-                startDate = endDate.minusDays(7)
+                startDate = aWeekAgo
             }
 
             "Month" -> {
-                val today = OffsetDateTime.now().toLocalDateTime()
-                val thirtyDaysAgo = today.minusDays(30)
+                val today = OffsetDateTime.now()
+                val aMonthAgo = today.minusMonths(1)
 
                 receivalForText = "Receival for the month"
                 receivalForTimePeriodText = run {
                     today.month.toString()
-                    "${thirtyDaysAgo.dayOfMonth} ${
-                        thirtyDaysAgo.month.toString().lowercase()
+                    "${aMonthAgo.dayOfMonth} ${
+                        aMonthAgo.month.toString().lowercase()
                             .replaceFirstChar { it.titlecase(Locale.ROOT) }
-                    }, ${thirtyDaysAgo.year} to ${today.dayOfMonth} ${
+                    }, ${aMonthAgo.year} to ${today.dayOfMonth} ${
                         today.month.toString().lowercase()
                             .replaceFirstChar { it.titlecase(Locale.ROOT) }
                     }, ${today.year}"
                 }
                 receivalAmount = 0.0f
 
-                startDate = endDate.minusDays(30)
+                startDate = aMonthAgo
             }
 
             "Custom" -> {
                 receivalForText = "Receival for the period"
                 receivalAmount = 0.0f
-
 
                 if (fromDateCustomFilter != null && toDateCustomFilter != null) {
                     val simpleDateFormat = SimpleDateFormat("dd MMMM YYYY")
@@ -172,20 +175,27 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         "${simpleDateFormat.format(fromDateCustomFilter)} to ${
                             simpleDateFormat.format(toDateCustomFilter)
                         }"
+
+                    startDate = OffsetDateTime.ofInstant(
+                        Instant.ofEpochMilli(fromDateCustomFilter!!),
+                        ZoneId.systemDefault()
+                    )
+
+                    endDate = OffsetDateTime.ofInstant(
+                        Instant.ofEpochMilli(toDateCustomFilter!!),
+                        ZoneId.systemDefault()
+                    )
                 } else receivalForTimePeriodText = ""
-
-                startDate = endDate.minusDays(30)
-
-//                endDate = OffsetDateTime.ofInstant(toDateCustomFilter)
-//                startDate = fromDateCustomFilter
             }
         }
 
         try {
             val insightsResponse = insights(
                 context,
-                startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                endDate = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    .replace('-', '/') + " 00:00:00",
+                endDate = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                    .replace('-', '/') + " 23:59:59",
             )
 
             if (insightsResponse != null) transactions = insightsResponse.data.records
@@ -261,7 +271,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             offsetX = 0.dp,
                             offsetY = 0.dp
                         )
-                        .clickable(onClick = { showInsights = !showInsights })
+//                        .clickable(onClick = { showInsights = !showInsights })
                         .zIndex(1f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -275,6 +285,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             .background(if (!showInsights) Color.White else Color.Transparent)
                             .padding(4.dp)
                             .zIndex(2f)
+                            .clickable { showInsights = false }
                     )
                     Icon(
                         imageVector = Icons.Default.BarChart,
@@ -285,6 +296,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             .background(if (showInsights) Color.White else Color.Transparent)
                             .padding(4.dp)
                             .zIndex(2f)
+                            .clickable {
+                                Toast.makeText(context, "In Progress", Toast.LENGTH_SHORT).show()
+                            }
                     )
                 }
             }

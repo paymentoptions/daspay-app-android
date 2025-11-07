@@ -45,8 +45,9 @@ import com.paymentoptions.pos.utils.validation.validatePassword
 import kotlinx.coroutines.launch
 
 sealed class CredentialModel(
-    val email: String,
-    val password: String,
+    val email: String = "",
+    val password: String = "",
+    val otp: String = "123456",
 ) {
     object Ankit :
         CredentialModel(email = "ankitkambale097@myyahoo.com", password = "Test12345678@#")
@@ -54,7 +55,7 @@ sealed class CredentialModel(
     object Vijay : CredentialModel(email = "vijacip629@daupload.com", password = "Test123456789@#")
     object Kavita : CredentialModel(email = "kavitest15@ghunowa.com", password = "Kavios@12345678")
     object Robowah : CredentialModel(email = "rabowah650@fursee.com", password = "Test12345678@#")
-    object Empty : CredentialModel(email = "", password = "")
+    object Empty : CredentialModel()
 }
 
 @Composable
@@ -67,15 +68,16 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val credentialModel = if (inProduction) CredentialModel.Empty else CredentialModel.Robowah
 
     val (savedEmail, savedPassword) = remember { SharedPreferences.getSavedCredentials(context) }
-//  val emailState = rememberTextFieldState(initialText = credentialModel.email)
-    val emailState = rememberTextFieldState(initialText = savedEmail ?: "")
+
+    val emailState = rememberTextFieldState(initialText = savedEmail ?: credentialModel.email)
     var emailError by remember { mutableStateOf(false) }
 
-//  val passwordState = rememberTextFieldState(initialText = credentialModel.password)
-    val passwordState = rememberTextFieldState(initialText = savedPassword ?: "")
+    val passwordState =
+        rememberTextFieldState(initialText = savedPassword ?: credentialModel.password)
     var passwordError by remember { mutableStateOf(false) }
 
-    val otpState = rememberTextFieldState()
+    val otpState =
+        rememberTextFieldState(initialText = if (inProduction) "" else credentialModel.otp)
     var otpError by remember { mutableStateOf(false) }
 
     LaunchedEffect(emailState.text) {

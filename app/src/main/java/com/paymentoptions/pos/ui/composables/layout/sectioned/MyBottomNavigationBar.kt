@@ -161,7 +161,8 @@ fun MyBottomNavigationBar(
                     println("signOutResponse: $signOutResponse")
 
                     if (signOutResponse == null) {
-                        navController.navigate(Screens.SignIn.route) {
+                        SharedPreferences.clearSharedPreferences(context)
+                        navController.navigate(Screens.AuthCheck.route) {
                             popUpTo(0) { inclusive = true }
                         }
                     }
@@ -169,14 +170,14 @@ fun MyBottomNavigationBar(
                     signOutResponse?.let {
                         if (it.success) {
                             SharedPreferences.clearSharedPreferences(context)
-                            navController.navigate(Screens.SignIn.route) {
+                            navController.navigate(Screens.AuthCheck.route) {
                                 popUpTo(0) { inclusive = true }
                             }
                         }
                     }
                 } catch (e: Exception) {
                     SharedPreferences.clearSharedPreferences(context)
-                    navController.navigate(Screens.SignIn.route) {
+                    navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
                     }
 

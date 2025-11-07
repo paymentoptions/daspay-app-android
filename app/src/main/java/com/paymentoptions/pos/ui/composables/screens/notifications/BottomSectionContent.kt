@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
@@ -144,10 +145,17 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 transactions = transactions.plus(transactionListFromAPI.data.records)
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
+            if (e.toString().contains("HTTP 401")) {
+                Toast.makeText(
+                    context,
+                    "Your session has expired. Please log in again to continue.",
+                    Toast.LENGTH_SHORT
+                ).show()
 
-            if (e.toString().contains("HTTP 401")) navController.navigate(Screens.SignIn.route) {
-                popUpTo(0) { inclusive = true }
+                SharedPreferences.clearSharedPreferences(context)
+                navController.navigate(Screens.AuthCheck.route) {
+                    popUpTo(0) { inclusive = true }
+                }
             }
         } finally {
             apiResponseAvailable = true

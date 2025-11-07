@@ -23,7 +23,6 @@ fun Transactions(
     updateReceivalAmount: (Float) -> Unit,
 ) {
     var selectedFilterKey by remember { mutableStateOf("ALL") }
-//    var transactionsWithTrackId = mutableMapOf<String, Boolean>()
     var longClickedTransactionId by remember { mutableStateOf("") }
     var backPressHandled by remember { mutableStateOf(false) }
 
@@ -43,13 +42,10 @@ fun Transactions(
 
         transactions.forEachIndexed { index, transaction ->
 
-//            if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] = true
             var skip = true
 
-//            if (!transactionsWithTrackId.contains(transaction.uuid)) {
             if ((selectedFilterKey == "ALL" || (selectedFilterKey == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selectedFilterKey == transaction.TransactionType.uppercase())) skip =
                 false
-//            }
 
             if (!skip) {
                 if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") earningAmount += transaction.amount.toFloat()

@@ -36,7 +36,7 @@ suspend fun insights(
             headers = requestHeaders,
             deviceNumber = deviceNumber,
             uniqueCode = tokenCode,
-            timeZone = timeZone,
+//            timeZone = timeZone,
             startDate = startDate,
             endDate = endDate,
             take = take,

@@ -31,7 +31,7 @@ import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoData
-import com.paymentoptions.pos.ui.composables._components.ZigZagContainer
+import com.paymentoptions.pos.ui.composables._components.ZigZagContainer1
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.SearchInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -107,7 +107,7 @@ fun FoodMenuBottomSectionContent(
         Spacer(modifier = Modifier.height(10.dp))
 
         if (!foodCategoriesAvailable) MyCircularProgressIndicator(text = "Loading food categories...")
-        else if (foodCategories.isEmpty()) NoData(text = " No food categories available") else FoodCategories(
+        else if (foodCategories.isEmpty()) NoData(text = "No food categories available") else FoodCategories(
             foodCategories = foodCategories,
             selectedFoodCategory = selectedFoodCategory,
             onClick = { updateSelectedFoodCategory(it) },
@@ -135,7 +135,7 @@ fun FoodMenuBottomSectionContent(
                     ?: listOf<FoodItem>()
 
             val filteredFoodItems = foodItemsInCategory.filter { foodItem ->
-                searchLogic(
+                foodItem.item.ProductStatus && searchLogic(
                     foodItem.item, searchState.text.toString()
                 )
             }
@@ -161,7 +161,7 @@ fun FoodMenuBottomSectionContent(
         Spacer(modifier = Modifier.height(10.dp))
 
         //Cart details
-        ZigZagContainer {
+        ZigZagContainer1 {
             Column(
                 modifier = Modifier
                     .background(brush = containerBackgroundGradientBrush)
