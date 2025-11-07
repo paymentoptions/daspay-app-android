@@ -61,7 +61,11 @@ fun BottomSectionContent(navController: NavController) {
 //    var immersiveMode by remember { mutableStateOf(systemUiController.isSystemBarsVisible) }
 
     val lastLoginString: String =
-        SimpleDateFormat("DD MMMM YYYY | hh:mm a").format(authDetails?.data?.auth_time ?: "")
+        SimpleDateFormat("dd MMMM YYYY | hh:mm a").format(
+            authDetails?.data?.auth_time?.times(
+                1000
+            ) ?: 0
+        )
 
     MyDialog(
         showDialog = showSignOutConfirmationDialog,
@@ -74,37 +78,17 @@ fun BottomSectionContent(navController: NavController) {
 
                 try {
                     signOutResponse = signOut(context)
-                    println("signOutResponse: $signOutResponse")
-
-                    if (signOutResponse == null) {
-                        navController.navigate(Screens.SignIn.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-
-                    signOutResponse?.let {
-                        if (it.success) {
-                            SharedPreferences.clearSharedPreferences(context)
-                            navController.navigate(Screens.SignIn.route) {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        }
-                    }
                 } catch (e: Exception) {
-//                            Toast.makeText(context, "Unable to sign out", Toast.LENGTH_LONG).show()
-
-                    SharedPreferences.clearSharedPreferences(context)
-                    navController.navigate(Screens.SignIn.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-
                     println("Error: ${e.toString()}")
                 } finally {
+                    SharedPreferences.clearSharedPreferences(context)
+                    navController.navigate(Screens.Splash.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
                     signOutLoader = false
+                    showSignOutConfirmationDialog = false
                 }
             }
-
-            showSignOutConfirmationDialog = false
         },
         onDismissFn = { showSignOutConfirmationDialog = false })
 

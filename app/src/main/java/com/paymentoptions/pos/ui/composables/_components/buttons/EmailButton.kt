@@ -55,14 +55,6 @@ fun EmailButton(text: String, email: Email, modifier: Modifier = Modifier) {
     }
 
     fun emailAction() {
-        /**val sendIntent = Intent(Intent.ACTION_SEND).apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_EMAIL, arrayOf<String>(emailState.text.toString()))
-            putExtra(Intent.EXTRA_SUBJECT, email.subject)
-            putExtra(Intent.EXTRA_TEXT, email.text)
-            type = "text/plain"
-        }
-        val shareIntent = Intent.createChooser(sendIntent, null)**/
         val intent = Intent(Intent.ACTION_SENDTO).apply {
             data = Uri.parse("mailto:${emailState.text}")
             putExtra(Intent.EXTRA_SUBJECT, email.subject)

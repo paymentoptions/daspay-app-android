@@ -73,7 +73,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
     if (openFingerprintScan) FingerprintScanScreen(navController = navController, onAuthSuccess = {
         navController.navigate(Screens.Dashboard.route) {
-            popUpTo(Screens.SignIn.route) { inclusive = true }
+            popUpTo(Screens.AuthCheck.route) { inclusive = true }
         }
         openFingerprintScan = false
 
@@ -663,9 +663,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                         "Token expired. Please sign in again.",
                                         Toast.LENGTH_SHORT
                                     ).show()
-
-                                    navController.navigate(Screens.SignIn.route) {
-                                        popUpTo(Screens.SignIn.route) { inclusive = true }
+                                    SharedPreferences.clearSharedPreferences(context)
+                                    navController.navigate(Screens.AuthCheck.route) {
+                                        popUpTo(Screens.AuthCheck.route) { inclusive = true }
                                     }
                                 } else {
                                     errorMessage = exceptionMessage ?: "An unknown error occurred"

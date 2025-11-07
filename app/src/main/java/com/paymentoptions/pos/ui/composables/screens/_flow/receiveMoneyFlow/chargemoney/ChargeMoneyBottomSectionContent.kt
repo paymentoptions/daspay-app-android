@@ -2,6 +2,8 @@ package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.cha
 
 import MyDialog
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
@@ -35,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
+import com.paymentoptions.pos.device.DeveloperOptions
+import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getTapPayDasmid
 import com.paymentoptions.pos.device.getTransactionCurrency
@@ -47,6 +51,8 @@ import com.paymentoptions.pos.services.apiService.endpoints.payment
 import com.paymentoptions.pos.services.apiService.endpoints.paymentStatus
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
+import com.paymentoptions.pos.ui.composables._components.dialogs.AlertDialogType
+import com.paymentoptions.pos.ui.composables._components.dialogs.MyAlertDialog
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
@@ -58,19 +64,23 @@ import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getDeviceIpAddress
 import com.paymentoptions.pos.utils.getDeviceTimeZone
 import com.paymentoptions.pos.utils.getKeyFromToken
+import com.paymentoptions.pos.utils.inProduction
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
-import com.paymentoptions.pos.utils.paymentMethods
+import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
+import com.theminesec.lib.dto.transaction.Transaction
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+
+import kotlinx.serialization.json.Json
 import java.math.BigDecimal
 import java.util.Currency
-import java.util.UUID
 
 @Composable
 fun PaymentMethodButton(
@@ -113,21 +123,70 @@ fun ChargeMoneyBottomSectionContent(
     navController: NavController,
     enableScrolling: Boolean = false,
     amountToCharge: String,
+    availablePaymentMethods: List<PaymentMethod>,
     selectedPaymentMethod: PaymentMethod,
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
-    updateFlowStage: (Any) -> Unit = {},
+    onLoader: (nextStage: () -> Unit) -> Unit = {},
+    onSuccessUpdateFlowStage: () -> Unit = {},
+    onFailureUpdateFlowStage: () -> Unit = {},
     onChangeAmount: () -> Unit,
     startTapAndPay: Boolean = false,
-    turnoffStartTapToPay: () -> Unit = {},
+    updateLatestTransaction: (id: String) -> Unit,
 ) {
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
 
-    if (startTapAndPay && selectedPaymentMethod === tapPaymentMethod) Tap_ChargeMoney(
-        navController = navController,
-        amountToCharge = amountToCharge,
-        turnoffStartTapToPay = turnoffStartTapToPay
+    var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
+    var showNFCNotEnabled by remember { mutableStateOf(false) }
+
+    MyDialog(
+        showDialog = if (inProduction) showDeveloperOptionsEnabled else false,
+        title = "Caution",
+        text = "You need to disable developer options to proceed further.",
+        acceptButtonText = "Developer Options",
+        cancelButtonText = "Cancel",
+        onAcceptFn = {
+            val intent = Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
+            context.startActivity(intent)
+        },
+        onDismissFn = {
+            showDeveloperOptionsEnabled = false
+            updateSelectedPaymentMethod(qrCodePaymentMethod)
+        },
     )
+
+    MyDialog(
+        showDialog = showNFCNotEnabled,
+        title = "NFC Required",
+        text = "This feature needs NFC. Please enable it in your device settings.",
+        acceptButtonText = "Go to Settings",
+        cancelButtonText = "Cancel",
+        onAcceptFn = {
+            val intent = Intent(Settings.ACTION_NFC_SETTINGS)
+            context.startActivity(intent)
+        },
+        onDismissFn = {
+            showNFCNotEnabled = false
+            updateSelectedPaymentMethod(qrCodePaymentMethod)
+        },
+    )
+
+    if (startTapAndPay && selectedPaymentMethod === tapPaymentMethod) {
+
+        if (inProduction && DeveloperOptions.isEnabled(context)) {
+            showDeveloperOptionsEnabled = true
+        } else if (inProduction && !Nfc.getStatus(context).second) {
+            showNFCNotEnabled = true
+        } else
+            Tap_ChargeMoney(
+                navController = navController,
+                amountToCharge = amountToCharge,
+                onLoader = onLoader,
+                onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
+                onFailureUpdateFlowStage = onFailureUpdateFlowStage,
+                updateLatestTransaction = updateLatestTransaction
+            )
+    }
 
     Column(
         modifier = Modifier
@@ -152,7 +211,8 @@ fun ChargeMoneyBottomSectionContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            paymentMethods.filter { it.isEnabled }.forEach {
+//            paymentMethods.filter { it.isEnabled }.forEach {
+            availablePaymentMethods.filter { it.isEnabled }.forEach {
                 PaymentMethodButton(
                     paymentMethod = it,
                     selectedPaymentMethod = selectedPaymentMethod,
@@ -198,31 +258,33 @@ fun ChargeMoneyBottomSectionContent(
 fun Tap_ChargeMoney(
     navController: NavController,
     amountToCharge: String,
-    turnoffStartTapToPay: () -> Unit = {},
+    onLoader: (nextStage: () -> Unit) -> Unit = {},
+    onSuccessUpdateFlowStage: () -> Unit = {},
+    onFailureUpdateFlowStage: () -> Unit = {},
+    updateLatestTransaction: (id: String) -> Unit = {},
 ) {
-    println("amountToCharge: $amountToCharge")
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var rawInput = ""
-    var paymentLoader = false
+    var paymentLoader by remember { mutableStateOf(false) }
+    var showProcessingScreen by remember { mutableStateOf(false) }
     var transactionDetailsText by remember { mutableStateOf("") }
-    var showTransactionStatus by remember { mutableStateOf(false) }
-
     var hasLaunchedPayment by remember { mutableStateOf(false) }
-
     val authDetails = SharedPreferences.getAuthDetails(context)
 
     if (authDetails == null) {
-        Toast.makeText(context, "Token invalid! Please login again.", Toast.LENGTH_LONG).show()
-        navController.navigate(Screens.SignIn.route) {
+        Toast.makeText(
+            context, "Your session has expired. Please log in again to continue.", Toast.LENGTH_LONG
+        ).show()
+        SharedPreferences.clearSharedPreferences(context)
+        navController.navigate(Screens.AuthCheck.route) {
             popUpTo(0) { inclusive = true }
         }
-        return
     }
 
     
     val merchant: MutableMap<String, String> = mutableMapOf<String, String>()
-    val decodedJwtPayloadJson = decodeJwtPayload(authDetails.data.token.idToken)
+    val decodedJwtPayloadJson = decodeJwtPayload(authDetails!!.data.token.idToken)
     val currency = getTransactionCurrency(context)
 
     merchant["dasmid"] = getTapPayDasmid(context)
@@ -230,32 +292,50 @@ fun Tap_ChargeMoney(
     merchant["email"] = getKeyFromToken(decodedJwtPayloadJson, "email")
     merchant["contact"] = getKeyFromToken(decodedJwtPayloadJson, "custom:ContactNo")
 
-    MyDialog(
-        showDialog = showTransactionStatus,
-        title = "Transaction Status",
-        text = transactionDetailsText,
-        acceptButtonText = "Ok",
-        showCancelButton = false,
-        onAcceptFn = {
-            showTransactionStatus = false
-            turnoffStartTapToPay()
-        },
-        onDismissFn = {
-            showTransactionStatus = false
-            turnoffStartTapToPay()
-        },
-    )
-
     val launcher = rememberLauncherForActivityResult(
         HeadlessActivity.contract(ClientHeadlessImpl::class.java)
     ) {
+        paymentLoader = false
 
         var completedSaleTranId: String? = ""
         var completedSalePosReference: String? = ""
         var completedSaleRequestId: String? = ""
 
-//            viewModel.resetRandomPosReference()
-//            viewModel.writeMessage("ActivityResult: $it")
+        fun createPaymentRequest(transaction: Transaction): PaymentStatusRequest {
+            return PaymentStatusRequest(
+                tranId = transaction.posReference.toString(), //it.value.tranId,
+                cvmPerformed = transaction.cvmPerformed.toString(),
+                tsi = transaction.tsi.toString(),
+                mcc = transaction.mcc,
+                merchantName = transaction.merchantName,
+                tranStatus = transaction.tranStatus.toString(),
+                tranType = transaction.tranType.toString(),
+                atc = transaction.atc.toString(),
+                createdAt = transaction.createdAt.toEpochMilliseconds().toString(),
+                updatedAt = transaction.updatedAt?.toEpochMilliseconds().toString(),
+                trace = transaction.trace,
+                callbackUrl = transaction.callbackUrl.toString(),
+                entryMode = transaction.entryMode.toString(),
+                amount = "{\"currency\":\"${transaction.amount.currency}\",\"value\":${transaction.amount.value.toFloat()}",
+                batchNo = transaction.batchNo.toString(),
+                appName = transaction.appName.toString(),
+                linkedTranId = transaction.posReference.toString(),
+                merchantAddr = transaction.merchantAddr.toString(),
+                rrn = transaction.rrn.toString(),
+                tc = transaction.tc.toString(),
+                tvr = transaction.tvr.toString(),
+                accountMasked = transaction.accountMasked.toString(),
+                sdkId = transaction.sdkId.toString(),
+                paymentMethod = transaction.paymentMethod.toString(),
+                hostMessageFormat = transaction.hostMessageFormat.toString(),
+                aid = transaction.aid.toString(),
+                acquirerResponse = Json.encodeToString(transaction),
+//                                    acqMid = transaction.,
+//                                    acqTid = transaction.,
+//                                    notifyId = transaction.
+            )
+        }
+
         when (it) {
             is WrappedResult.Success -> {
                 if (it.value.tranType == TranType.SALE) {
@@ -267,77 +347,42 @@ fun Tap_ChargeMoney(
                 println("inThis Launcher success ---->")
                 transactionDetailsText =
                     "Transaction of $$amountToCharge was successful. POS Reference Transaction ID returned by MineSec is: $completedSalePosReference."
-                showTransactionStatus = true
+//                showTransactionStatus = true
                 println(
                     "completedSaleTranId: $completedSaleTranId | completedSalePosReference: $completedSalePosReference | completedSaleRequestId: $completedSaleRequestId | it: ${it.value}"
                 )
 
                 rawInput = ""
-//                    if (it.value.tranType == TranType.REFUND) {
-//                        completedRefundTranId = it.value.tranId
-//                    }
 
-                val paymentStatusRequest = PaymentStatusRequest(
-                    tranId = it.value.posReference.toString(), //it.value.tranId,
-                    cvmPerformed = it.value.cvmPerformed.toString(),
-                    tsi = it.value.tsi.toString(),
-                    mcc = it.value.mcc.toString(),
-                    merchantName = it.value.merchantName.toString(),
-                    tranStatus = it.value.tranStatus.toString(),
-                    tranType = it.value.tranType.toString(),
-                    atc = it.value.atc.toString(),
-                    createdAt = it.value.createdAt.toEpochMilliseconds().toString(),
-                    updatedAt = it.value.updatedAt?.toEpochMilliseconds().toString(),
-                    trace = it.value.trace.toString(),
-                    callbackUrl = it.value.callbackUrl.toString(),
-                    entryMode = it.value.entryMode.toString(),
-                    amount = "{\"currency\":\"JPY\",\"value\":1500}",
-//                            Json.encodeToString(
-//                        PaymentStatusAmount(
-//                            currency = it.value.amount.currency.toString(),
-//                            value = it.value.amount.value.toFloat()
-//                        )
-//                    ),
-                    batchNo = it.value.batchNo.toString(),
-                    appName = it.value.appName.toString(),
-                    linkedTranId = it.value.posReference.toString(),
-                    merchantAddr = it.value.merchantAddr.toString(),
-                    rrn = it.value.rrn.toString(),
-                    tc = it.value.tc.toString(),
-                    tvr = it.value.tvr.toString(),
-                    accountMasked = it.value.accountMasked.toString(),
-                    sdkId = it.value.sdkId.toString(),
-                    paymentMethod = it.value.paymentMethod.toString(),
-                    hostMessageFormat = it.value.hostMessageFormat.toString(),
-                    aid = it.value.aid.toString(),
-//                    acqMid = it.value,
-//                    acqTid = it.value,
-//                    notifyId = it.value,
-//                    acquirerResponse = Json.encodeToString(it.value)
-                )
+                val paymentStatusRequest = createPaymentRequest(it.value)
 
                 scope.launch {
+                    showProcessingScreen = true
                     try {
-                        paymentStatus(context = context, request = paymentStatusRequest)
+                        val paymentStatusResponse =
+                            paymentStatus(context = context, request = paymentStatusRequest)
+
+                        showProcessingScreen = false
+                        if (paymentStatusResponse) {
+                            updateLatestTransaction(paymentStatusRequest.tranId.toString())
+                            onLoader { onSuccessUpdateFlowStage() }
+
+                        }
                     } catch (e: Exception) {
-                        println("inThis paymentStatus error: ${e.toString()}")
+                        showProcessingScreen = false
+                        updateLatestTransaction(paymentStatusRequest.tranId.toString())
+                        onLoader {
+                            onFailureUpdateFlowStage()
+                        }
                     }
                 }
             }
 
             is WrappedResult.Failure -> {
-//                    viewModel.writeMessage("Failed")
-                println("inThis Launcher failure ---->")
-                Toast.makeText(
-                    context, "Transaction of $$amountToCharge was failed", Toast.LENGTH_LONG
-                ).show()
+                println("inThis Launcher failure ---->: $it")
             }
         }
     }
-
-
-    val uuid: UUID = UUID.randomUUID()
-    uuid.toString()
 
     val paymentReturnUrl = PaymentReturnUrl(
         webhook_url = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454%22",
@@ -355,77 +400,29 @@ fun Tap_ChargeMoney(
         postal_code = "100001"
     )
 
-    val shippingAddress = Address(
-        country = "IN",
-        email = merchant["email"]!!,
-        address1 = "Chiyoda1-1",
-        phone_number = merchant["contact"]!!,
-        city = "Minatoku",
-        state = "Tokyoto",
-        postal_code = "100001"
-    )
-
-    val paymentMethod = com.paymentoptions.pos.services.apiService.PaymentMethod(
-        type = "daspay"
-    )
+    val paymentMethod = com.paymentoptions.pos.services.apiService.PaymentMethod(type = "daspay")
 
     val paymentRequest = PaymentRequest(
-        amount = amountToCharge.toString(),
+        amount = amountToCharge,
         currency = currency,
         merchant_txn_ref = "TEST00989012878787878787878787",
         customer_ip = getDeviceIpAddress(),
         merchant_id = merchant["dasmid"]!!,
         return_url = paymentReturnUrl,
         billing_address = billingAddress,
-        shipping_address = shippingAddress,
+        shipping_address = billingAddress,
         payment_method = paymentMethod,
         time_zone = getDeviceTimeZone()
     )
 
-    /**scope.launch {
-        paymentLoader = true
+    MyAlertDialog(
+        showDialog = paymentLoader,
+        text = "Loading Tap to Pay...Please wait a moment.",
+        actionButtonText = "Try Again",
+        type = AlertDialogType.LOADER,
+        showActionButton = false,
+        onActionFn = {})
 
-        try {
-            val paymentResponse: PaymentResponse? = payment(context, paymentRequest)
-            println("paymentResponse: $paymentResponse")
-
-            if (paymentResponse == null) {
-                Toast.makeText(
-                    context, "Token invalid! Please login again.", Toast.LENGTH_LONG
-                ).show()
-                navController.navigate(Screens.SignIn.route) {
-                    popUpTo(0) { inclusive = true }
-                }
-            }
-
-            paymentResponse?.let {
-                if (it.success) {
-                    println("inThis PaymentResponse ---->")
-
-                    launcher.launch(
-                        PoiRequest.ActionNew(
-                            tranType = TranType.SALE,
-                            amount = Amount(
-                                BigDecimal(amountToCharge),
-                                Currency.getInstance(currency),
-                            ),
-                            profileId = "prof_01K36002RM7DMMPHG0QEX3E9BR",
-                            posReference = it.transaction_details.id
-                        )
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            SharedPreferences.clearSharedPreferences(context)
-            navController.navigate(Screens.SignIn.route) {
-                popUpTo(0) { inclusive = true }
-            }
-
-            println("Error: ${e.toString()}")
-        } finally {
-            paymentLoader = false
-        }
-    }**/
     if (!hasLaunchedPayment) {
         hasLaunchedPayment = true
 
@@ -436,12 +433,14 @@ fun Tap_ChargeMoney(
                 println("paymentResponse: $paymentResponse")
                 if (paymentResponse == null) {
                     Toast.makeText(
-                        context, "Token invalid! Please login again.", Toast.LENGTH_LONG
+                        context,
+                        "Your session has expired. Please log in again to continue.",
+                        Toast.LENGTH_LONG
                     ).show()
-                    navController.navigate(Screens.SignIn.route) {
+                    SharedPreferences.clearSharedPreferences(context)
+                    navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
                     }
-                    return@launch
                 }
 
                 paymentResponse?.let {
@@ -462,7 +461,7 @@ fun Tap_ChargeMoney(
                 }
             } catch (e: Exception) {
                 SharedPreferences.clearSharedPreferences(context)
-                navController.navigate(Screens.SignIn.route) {
+                navController.navigate(Screens.AuthCheck.route) {
                     popUpTo(0) { inclusive = true }
                 }
                 println("Error: ${e.toString()}")

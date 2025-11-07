@@ -39,8 +39,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.screenRatioToDp
+import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
+import com.paymentoptions.pos.ui.composables._components.ZigZagContainer2
 import com.paymentoptions.pos.ui.composables._components.buttons.ReceiveMoneyFAB
 import com.paymentoptions.pos.ui.composables._components.buttons.ToggleBottomNavigationBarButton
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
@@ -79,12 +80,13 @@ fun SectionedLayout(
     },
     enableScrollingOfBottomSectionContent: Boolean = true,
     blurTopSection: Boolean = false,
+    enableZigZagContainerForBottomSection: Boolean = false,
     bottomSectionContent: @Composable () -> Unit = {},
 ) {
     var bottomBarContentState by remember { mutableStateOf(bottomBarContent) }
 
-    val bottomSectionMinHeightDp = screenRatioToDp(bottomSectionMinHeightRatio)
-    var bottomSectionMaxHeightDp = screenRatioToDp(bottomSectionMaxHeightRatio)
+    val bottomSectionMinHeightDp = ScreenRatioToDp(bottomSectionMinHeightRatio)
+    var bottomSectionMaxHeightDp = ScreenRatioToDp(bottomSectionMaxHeightRatio)
 
     var showMoreItems by remember { mutableStateOf(false) }
 
@@ -148,11 +150,13 @@ fun SectionedLayout(
                     .heightIn(bottomSectionMinHeightDp, bottomSectionMaxHeightDp)
                     .align(alignment = Alignment.BottomCenter)
                     .zIndex(2f)
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = borderRadiusInDp, topEnd = borderRadiusInDp
+                    .conditional(!enableZigZagContainerForBottomSection) {
+                        clip(
+                            RoundedCornerShape(
+                                topStart = borderRadiusInDp, topEnd = borderRadiusInDp
+                            )
                         )
-                    )
+                    }
                     .background(color = Color.White)
                     .drawBehind {
                         // fade bottom 5.dp to transparent
@@ -174,29 +178,36 @@ fun SectionedLayout(
                     ),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f)
-                        .padding(
-                            start = bottomSectionPaddingInDp,
-                            top = bottomSectionPaddingInDp,
-                            end = bottomSectionPaddingInDp,
-                            bottom = when (bottomBarContentState) {
-                                BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp.plus(10.dp)
-                                BottomBarContent.TOGGLE_BUTTON -> 20.dp
-                                BottomBarContent.NOTHING -> 20.dp
-                            }
-                        )
-                        .conditional(enableScrollingOfBottomSectionContent) {
-                            verticalScroll(scrollState)
-                        }) {
-                    bottomSectionContent()
+                ZigZagContainer2(enabled = enableZigZagContainerForBottomSection)
+                {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(1f)
+                            .padding(
+                                start = if (enableZigZagContainerForBottomSection) 0.dp else bottomSectionPaddingInDp,
+                                top = bottomSectionPaddingInDp,
+                                end = if (enableZigZagContainerForBottomSection) 0.dp else bottomSectionPaddingInDp,
+                                bottom = when (bottomBarContentState) {
+                                    BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp.plus(
+                                        15.dp
+                                    )
+
+                                    BottomBarContent.TOGGLE_BUTTON -> 20.dp
+                                    BottomBarContent.NOTHING -> 20.dp
+                                }
+                            )
+                            .conditional(enableScrollingOfBottomSectionContent) {
+                                verticalScroll(scrollState)
+                            }) {
+                        bottomSectionContent()
+                    }
                 }
 
                 if (bottomBarContentState === BottomBarContent.TOGGLE_BUTTON) ToggleBottomNavigationBarButton(
                     onClick = { bottomBarContentState = BottomBarContent.NAVIGATION_BAR })
             }
+//            }
 
             //Just an overlay
             Box(
@@ -204,6 +215,22 @@ fun SectionedLayout(
                     .fillMaxSize()
                     .background(overlayColor)
                     .zIndex(3f)
+            )
+        }
+
+        if (showMoreItems) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = BOTTOM_NAVIGATION_HEIGHT_IN_DP) // Important it leaves the bottom nav bar uncovered.
+                    //.background(Color.Black.copy(alpha = 0.05f))
+                    .zIndex(3f)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        showMoreItems = false
+                    }
             )
         }
 

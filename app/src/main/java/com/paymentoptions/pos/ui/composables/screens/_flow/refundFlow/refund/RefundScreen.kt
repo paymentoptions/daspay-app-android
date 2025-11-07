@@ -13,7 +13,8 @@ fun RefundScreen(navController: NavController) {
     SectionedLayout(
         navController = navController,
         bottomSectionPaddingInDp = 0.dp,
-        bottomSectionMinHeightRatio = 0.8f,
+        bottomSectionMinHeightRatio = 0.9f,
+        bottomSectionMaxHeightRatio = 0.9f,
         bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
     ) {

@@ -8,30 +8,40 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
+import co.yml.charts.common.extensions.isNotNull
 import coil3.compose.AsyncImage
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayout
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 
 @Composable
 fun SplashScreen(navController: NavController) {
-    Handler().postDelayed({
-        navController.navigate(Screens.AuthCheck.route)
-    }, 4000)
+    val context = LocalContext.current
+    val signInResponse = SharedPreferences.getAuthDetails(context = context)
 
-    SimpleLayout {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            AsyncImage(
-                model = R.drawable.daspay_loader_transparent,
-                contentDescription = "Loading Animation",
-                contentScale = ContentScale.Fit,
+    if (signInResponse.isNotNull())
+        navController.navigate(Screens.Dashboard.route)
+    else {
+        Handler().postDelayed({
+            navController.navigate(Screens.AuthCheck.route)
+        }, 4000)
+
+        SimpleLayout {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxSize()
-            )
+            ) {
+                AsyncImage(
+                    model = R.drawable.daspay_loader_transparent,
+                    contentDescription = "Loading Animation",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }

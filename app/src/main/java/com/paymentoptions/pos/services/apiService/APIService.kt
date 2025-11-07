@@ -12,6 +12,8 @@ import retrofit2.http.HeaderMap
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import java.util.concurrent.TimeUnit
 
 const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/"
@@ -84,7 +86,7 @@ interface ApiService {
     suspend fun paymentStatus(
         @HeaderMap headers: Map<String, String>,
         @Body request: PaymentStatusRequest,
-    ): PaymentResponse
+    ): String
 
     @GET("entities/merchant/catalog/all-categories/{merchantId}")
     suspend fun categoryList(
@@ -103,7 +105,7 @@ interface ApiService {
         @HeaderMap headers: Map<String, String>,
         @Query("deviceNumber") deviceNumber: String = "12345678kg1",
         @Query("uniqueCode") uniqueCode: String = "213fsdHJ51MOBILEKG1",
-        @Query("TimeZone") timeZone: String = "undefined",
+//        @Query("TimeZone") timeZone: String = "undefined",
         @Query("startDate") startDate: String = "undefined",
         @Query("endDate") endDate: String = "undefined",
         @Query("take") take: Int,
@@ -114,6 +116,20 @@ interface ApiService {
         @HeaderMap headers: Map<String, String>,
         @Body request: StatsV2Request,
     ): StatsV2Response
+
+    @GET("transactions/{paymentId}")
+    suspend fun paymentDetails(
+        @HeaderMap headers: Map<String, String>,
+        @Path("paymentId") paymentId: String,
+    ): PaymentDetailsResponse
+
+    @FormUrlEncoded
+    @POST("entities/minesec/generate-image")
+    suspend fun uploadSignature(
+        @HeaderMap headers: Map<String, String>,
+        @Field("signature") signature: String,
+        @Field("TransactionID") TransactionID: String,
+    ): UploadSignatureResponse
 }
 
 var gson = GsonBuilder()

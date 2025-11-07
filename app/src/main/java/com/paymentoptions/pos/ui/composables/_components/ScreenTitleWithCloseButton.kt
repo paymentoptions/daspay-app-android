@@ -27,7 +27,6 @@ fun ScreenTitleWithCloseButton(
     fontSize: TextUnit = 36.sp,
     onClose: () -> Unit = { navController.popBackStack() },
 ) {
-
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -44,9 +43,8 @@ fun ScreenTitleWithCloseButton(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
     }
-
 }

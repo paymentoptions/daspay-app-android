@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.paymentoptions.pos"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.paymentoptions.pos"
         minSdk = 29
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -114,8 +114,11 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     // QR Code Generation (ZXing)
-    implementation("com.google.zxing:core:3.5.3")
+    implementation(libs.core)
 
     // For logging API requests and responses
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation(libs.logging.interceptor)
+
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
 }
