@@ -356,6 +356,7 @@ data class PayByLinkRequestProduct(
     val Quantity: Int,
     val Price: Float,
     val TotalPrice: String,
+    val RequireImage: Boolean = true
 )
 
 data class PayByLinkRequest(
@@ -484,6 +485,7 @@ data class ExternalConfigurationResponse(
 data class ExternalConfigData(
     val deviceInfo: DeviceInfo,
     val paymentMethod: List<DevicePaymentMethod>,
+    val merchantTimeZone: String?= null,
 )
 
 @Serializable

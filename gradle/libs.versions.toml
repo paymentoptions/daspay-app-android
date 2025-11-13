@@ -1,7 +1,6 @@
 [versions]
 accompanistSystemuicontroller = "0.27.0"
 agp = "8.6.1"
-androidxComposeBom = "2025.01.00"
 biometric = "1.2.0-alpha05"
 coilCompose = "3.2.0"
 coilNetworkOkhttp = "3.2.0"
@@ -35,7 +34,6 @@ vico = "1.16.1"
 [libraries]
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
 androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
-androidx-compose-bom-v20250100 = { module = "androidx.compose:compose-bom", version.ref = "androidxComposeBom" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "foundation" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }

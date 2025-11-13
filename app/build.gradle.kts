@@ -91,7 +91,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-
 //    Minesec
 //    releaseImplementation("com.theminesec.sdk:headless:1.0.17")
     debugImplementation(libs.headless.stage)

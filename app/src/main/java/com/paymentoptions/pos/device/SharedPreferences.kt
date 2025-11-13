@@ -6,6 +6,7 @@ import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Apms
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Schemes
 import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
 import com.paymentoptions.pos.services.apiService.SignInResponse
+import com.paymentoptions.pos.services.apiService.endpoints.getExternalDeviceConfiguration
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
@@ -295,4 +296,14 @@ fun getDeviceId(context: Context): String? {
         deviceId = it.data.deviceInfo.DeviceID
     }
     return deviceId
+}
+
+fun getMerchantTimeZone(context: Context): String? {
+    val externalConfiguration = SharedPreferences.getDeviceConfiguration(context)
+    var merchantTimeZone: String? = null
+
+    externalConfiguration?.let {
+        merchantTimeZone = it.data.merchantTimeZone
+    }
+    return merchantTimeZone
 }
