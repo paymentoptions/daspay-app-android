@@ -684,6 +684,7 @@ fun FoodOrderFlow(
                                             Quantity = it.cartQuantity,
                                             Price = it.item.ProductPrice,
                                             TotalPrice = (it.cartQuantity * it.item.ProductPrice).formatToPrecisionString(),
+                                            RequireImage = true
                                         )
 
                                         temp
@@ -695,6 +696,7 @@ fun FoodOrderFlow(
                                             Price = cartState.calculateServiceCharge(),
                                             TotalPrice = cartState.calculateServiceCharge()
                                                 .formatToPrecisionString(),
+                                            RequireImage = false
                                         )
                                     ).plus(
                                         PayByLinkRequestProduct(
@@ -704,6 +706,7 @@ fun FoodOrderFlow(
                                             Price = cartState.calculateGstCharge(),
                                             TotalPrice = cartState.calculateGstCharge()
                                                 .formatToPrecisionString(),
+                                            RequireImage = false
                                         )
                                     ).plus(
                                         PayByLinkRequestProduct(
@@ -712,6 +715,7 @@ fun FoodOrderFlow(
                                             Quantity = 1,
                                             Price = cartState.additionalCharge,
                                             TotalPrice = cartState.additionalCharge.formatToPrecisionString(),
+                                            RequireImage = false
                                         )
                                     )
                                 )

@@ -2,6 +2,7 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.getMerchantTimeZone
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
 import com.paymentoptions.pos.services.apiService.TransactionListV2Request
@@ -26,13 +27,17 @@ suspend fun transactionListV2(
         val idToken = authDetails?.data?.token?.idToken
         val requestHeaders = generateRequestHeader(idToken ?: "")
 
+        val timezone = getMerchantTimeZone(context) ?: "Indian/Mahe"
+
         val request = TransactionListV2Request(
             take = take,
             skip = skip,
             filter = filter,
-            totalRequired = true
+            totalRequired = true,
+            TimeZone = timezone
         )
         val transactionListResponse = RetrofitClient.api.transactionListV2(requestHeaders, request)
+
 
         return transactionListResponse
     } catch (e: Exception) {
