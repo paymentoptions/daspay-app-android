@@ -1,3 +1,7 @@
+import java.io.FileInputStream
+import java.time.LocalDate
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,6 +9,17 @@ plugins {
 
     kotlin("plugin.serialization") version "2.0.21"
     id("com.google.gms.google-services")
+}
+
+
+val keystoreProperties = Properties().apply {
+    // Use the correct relative path to your keystore.properties file
+    val keystoreFile = rootProject.file(".sign/keystore.properties") // Change path if your file is elsewhere
+    if (keystoreFile.exists()) {
+        load(FileInputStream(keystoreFile))
+    } else {
+        println("WARNING: keystore.properties file not found at: ${keystoreFile.absolutePath}")
+    }
 }
 
 android {
@@ -16,13 +31,26 @@ android {
         minSdk = 29
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "2.0"
 
+
+        val appName = "Daspay"
+        base.archivesName.set("$appName-${versionName}-${versionCode}-${LocalDate.now()}")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+            storePassword = keystoreProperties["storePassword"] as String?
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+        }
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -94,6 +122,8 @@ dependencies {
 
 //    Minesec
 //    releaseImplementation("com.theminesec.sdk:headless:1.0.17")
+    releaseImplementation(libs.headless.stage)
+    // we need to replace with Production SDK, using stage for release build also
     debugImplementation(libs.headless.stage)
 
     //Firebase
