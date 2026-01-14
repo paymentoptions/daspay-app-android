@@ -20,7 +20,6 @@ import androidx.compose.ui.zIndex
 import coil3.compose.AsyncImage
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.ui.theme.borderThin
-import com.paymentoptions.pos.ui.theme.red500
 
 
 @Composable
@@ -55,7 +54,7 @@ fun FoodImage(
                     tint = Color.Unspecified
                 )
             }
-        } else Box(
+        } /*else Box(
             modifier = Modifier
                 .size(16.dp)
                 .background(Color.White, shape = RoundedCornerShape(8.dp))
@@ -75,6 +74,6 @@ fun FoodImage(
                     .clip(RoundedCornerShape(50))
             ) {}
 
-        }
+        }*/
     }
 }

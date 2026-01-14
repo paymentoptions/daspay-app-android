@@ -1,6 +1,7 @@
 package com.paymentoptions.pos
 
 import android.content.Context
+import android.content.res.Configuration
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.AbsoluteSizeSpan
@@ -34,9 +35,14 @@ class CustomUiProvider(
                 val text = "Total Amount\nHK\$ ${amount.value}"
                 val spannable = SpannableString(text)
 
-                // "Total Amount" → Gray, 20sp
+
+                // Determine color based on theme
+                val isDarkTheme = (context.resources.configuration.uiMode and
+                        Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+                val labelColor = if (isDarkTheme) Color.White else Color.Black
+                // "Total Amount" → Gray (light) or White (dark), 20sp
                 spannable.setSpan(
-                    ForegroundColorSpan(Color.Gray.toArgb()),
+                    ForegroundColorSpan(labelColor.toArgb()),
                     0,
                     "Total Amount".length,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -50,7 +56,7 @@ class CustomUiProvider(
 
                 // "HK $ value" → Black, 34sp
                 spannable.setSpan(
-                    ForegroundColorSpan(Color.Black.toArgb()),
+                    ForegroundColorSpan(labelColor.toArgb()),
                     "Total Amount\n".length,
                     text.length,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE

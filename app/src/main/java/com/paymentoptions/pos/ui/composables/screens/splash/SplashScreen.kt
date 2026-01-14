@@ -23,7 +23,9 @@ fun SplashScreen(navController: NavController) {
     val signInResponse = SharedPreferences.getAuthDetails(context = context)
 
     if (signInResponse.isNotNull())
-        navController.navigate(Screens.Dashboard.route)
+        navController.navigate(Screens.Dashboard.route){
+            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+        }
     else {
         Handler().postDelayed({
             navController.navigate(Screens.AuthCheck.route)

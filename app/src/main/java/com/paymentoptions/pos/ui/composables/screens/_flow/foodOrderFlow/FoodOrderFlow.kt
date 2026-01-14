@@ -379,7 +379,7 @@ fun FoodOrderFlow(
     when (foodOrderFlowStage) {
         FoodOrderFlowStage.MENU -> SectionedLayout(
             navController = navController,
-            bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+            bottomBarContent = BottomBarContent.NAVIGATION_BAR,
             bottomSectionPaddingInDp = 0.dp,
             bottomSectionMinHeightRatio = 0.9f,
             enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
@@ -402,7 +402,7 @@ fun FoodOrderFlow(
         FoodOrderFlowStage.REVIEW_CART -> {
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
                 bottomSectionMinHeightRatio = 0.9f,
                 enableScrollingOfBottomSectionContent = enableScrollingInsideBottomSectionContent
@@ -422,7 +422,7 @@ fun FoodOrderFlow(
             SectionedLayout(
                 navController = navController,
                 bottomSectionMaxHeightRatio = 0.95f,
-                bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
                 enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
             ) {
@@ -440,7 +440,7 @@ fun FoodOrderFlow(
             SectionedLayout(
                 navController = navController,
                 bottomSectionMinHeightRatio = 0.25f,
-                bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
                 enableScrollingOfBottomSectionContent = false,
                 imageBelowLogo = {
@@ -1037,7 +1037,7 @@ fun FoodOrderFlow(
         FoodOrderFlowStage.DIGITAL_SIGNATURE -> {
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.NOTHING,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,//NOTHING
                 bottomSectionPaddingInDp = 0.dp,
                 bottomSectionMinHeightRatio = 0.95f,
                 bottomSectionMaxHeightRatio = 0.95f,

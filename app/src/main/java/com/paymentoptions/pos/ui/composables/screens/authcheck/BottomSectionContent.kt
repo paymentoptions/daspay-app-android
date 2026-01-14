@@ -71,8 +71,9 @@ fun BottomSectionContent(navController: NavController) {
         }
         else FingerprintScanScreen(
             navController = navController, onAuthSuccess = {
-                navController.navigate(Screens.Dashboard.route) {
-                    popUpTo(Screens.AuthCheck.route) { inclusive = true }
+                navController.navigate(Screens.Dashboard.route)
+                {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
                 }
             }, onAuthFailed = {
                 Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
