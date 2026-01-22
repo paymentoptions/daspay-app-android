@@ -34,16 +34,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
-import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.bannerBgColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import com.paymentoptions.pos.utils.modifiers.conditional
 import kotlin.math.ceil
 
@@ -148,12 +148,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             if (e.toString().contains("HTTP 401")) {
                 Toast.makeText(
                     context,
-                    "Your session has expired. Please log in again to continue.",
+                    context.getString(R.string.session_expired),
                     Toast.LENGTH_SHORT
                 ).show()
-
-                SharedPreferences.clearSharedPreferences(context)
-                navController.navigate(Screens.AuthCheck.route) {
+                navController.navigate(Screens.FingerprintScan.route){
+                    // Clear back stack to prevent going back to authenticated screens
                     popUpTo(0) { inclusive = true }
                 }
             }
@@ -194,7 +193,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
 
-            if (!apiResponseAvailable) MyCircularProgressIndicator()
+            if (!apiResponseAvailable) TransactionListShimmer(itemCount = 5)
             else {
                 if (transactions.isEmpty()) NoData(text = "No notifications")
                 else {

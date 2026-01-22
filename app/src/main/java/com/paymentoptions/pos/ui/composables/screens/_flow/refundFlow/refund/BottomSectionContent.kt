@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
@@ -30,6 +31,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SEC
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
 import com.paymentoptions.pos.utils.isScrolledToTheEnd
+import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import kotlin.math.ceil
 
 @Composable
@@ -74,12 +76,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             if (e.toString().contains("HTTP 401")) {
                 Toast.makeText(
                     context,
-                    "Your session has expired. Please log in again to continue.",
+                    context.getString(R.string.session_expired),
                     Toast.LENGTH_SHORT
                 ).show()
-
-                SharedPreferences.clearSharedPreferences(context)
-                navController.navigate(Screens.AuthCheck.route) {
+                navController.navigate(Screens.FingerprintScan.route){
+                    // Clear back stack to prevent going back to authenticated screens
                     popUpTo(0) { inclusive = true }
                 }
             }
@@ -109,7 +110,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         Spacer(modifier = Modifier.height(10.dp))
 
         if (!firstPageFetch && !apiResponseAvailable) {
-            MyCircularProgressIndicator()
+            TransactionListShimmer(
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                itemCount = 5
+            )
         } else Column(modifier = Modifier.fillMaxWidth())
         {
             Transactions(

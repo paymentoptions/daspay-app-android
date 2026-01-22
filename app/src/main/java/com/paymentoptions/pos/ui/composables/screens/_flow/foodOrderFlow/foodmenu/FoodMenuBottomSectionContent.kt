@@ -29,7 +29,6 @@ import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
-import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables._components.ZigZagContainer1
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -41,6 +40,8 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrd
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.modifiers.FoodCategoryShimmer
+import com.paymentoptions.pos.utils.modifiers.FoodItemListShimmer
 import com.paymentoptions.pos.utils.modifiers.conditional
 
 fun searchLogic(foodItem: ProductListDataRecord, searchTerm: String): Boolean {
@@ -106,7 +107,12 @@ fun FoodMenuBottomSectionContent(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        if (!foodCategoriesAvailable) MyCircularProgressIndicator(text = "Loading food categories...")
+        if (!foodCategoriesAvailable) FoodCategoryShimmer(
+            modifier = Modifier
+                .padding(start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .fillMaxWidth()
+                .height(40.dp)
+        )
         else if (foodCategories.isEmpty()) NoData(text = "No food categories available") else FoodCategories(
             foodCategories = foodCategories,
             selectedFoodCategory = selectedFoodCategory,
@@ -140,7 +146,10 @@ fun FoodMenuBottomSectionContent(
                 )
             }
 
-            if (!foodItemsAvailable) MyCircularProgressIndicator() else if (filteredFoodItems.isEmpty()) NoData(
+            if (!foodItemsAvailable) FoodItemListShimmer(
+                modifier = Modifier.padding(vertical = 8.dp),
+                itemCount = 4
+            ) else if (filteredFoodItems.isEmpty()) NoData(
                 text = if (foodItemsInCategory.isEmpty()) "No food items found in this category" else "No food items found matching your search"
             )
             else filteredFoodItems.forEachIndexed { index, foodItem ->

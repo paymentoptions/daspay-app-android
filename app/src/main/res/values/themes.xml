@@ -2,6 +2,16 @@
 <resources>
 
     <style name="Theme.PaymentOptionsPOS" parent="android:Theme.Material.Light.NoActionBar">
+
+<!--        <item name="android:windowIsTranslucent">true</item>-->
+
+<!--        <item name="android:windowFullscreen">false</item>-->
+
+<!--        <item name="android:windowDrawsSystemBarBackgrounds">true</item>-->
+
+<!--        <item name="android:fitsSystemWindows">true</item>-->
+
+<!--        <item name="android:windowSoftInputMode">adjustResize</item>-->
     </style>
 
 </resources>

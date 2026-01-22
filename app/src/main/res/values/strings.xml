@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">DASPay</string>
     <string name="minesec_profile_id">prof_01K36002RM7DMMPHG0QEX3E9BR</string>
+    <string name="session_expired">Your authenticate has expired, Please sign in again</string>
 </resources>
