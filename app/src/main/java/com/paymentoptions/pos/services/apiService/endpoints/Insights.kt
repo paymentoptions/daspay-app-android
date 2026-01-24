@@ -4,8 +4,8 @@ import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.InsightsResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
+import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generateRequestHeader
-import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 import com.paymentoptions.pos.utils.getDeviceIdentifier
 import com.paymentoptions.pos.utils.getDeviceTimeZone
 
@@ -16,15 +16,11 @@ suspend fun insights(
     take: Int = -1,
 ): InsightsResponse? {
     try {
-        var authDetails = SharedPreferences.getAuthDetails(context)
-        val username = authDetails?.data?.email ?: ""
-        val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
+        val tokenRepository = TokenRepository.getInstance(context)
+        val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
 
-        if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
-
-        val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generateRequestHeader(idToken ?: "")
+        val idToken = authDetails.data.token.idToken
+        val requestHeaders = generateRequestHeader(idToken)
 
         val deviceNumber = getDeviceIdentifier(context)
         val timeZone = getDeviceTimeZone()
@@ -32,7 +28,7 @@ suspend fun insights(
 
         println("insights request: deviceNumber = $deviceNumber | uniqueCode = $tokenCode | timeZone = $timeZone | startDate = $startDate | endDate = $endDate | take = $take")
 
-        val response = RetrofitClient.api.insights(
+        val response = RetrofitClient.getApi(context).insights(
             headers = requestHeaders,
             deviceNumber = deviceNumber,
             uniqueCode = tokenCode,

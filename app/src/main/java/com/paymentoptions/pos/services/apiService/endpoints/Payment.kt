@@ -1,30 +1,25 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
-import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.PaymentRequest
 import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
+import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generatePaymentRequestHeader
-import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun payment(
     context: Context,
     paymentRequest: PaymentRequest,
 ): PaymentResponse? {
     try {
-        var authDetails = SharedPreferences.getAuthDetails(context)
-        val username = authDetails?.data?.email ?: ""
-        val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
+        val tokenRepository = TokenRepository.getInstance(context)
+        val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
 
-        if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
-
-        val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generatePaymentRequestHeader(idToken ?: "")
+        val idToken = authDetails.data.token.idToken
+        val requestHeaders = generatePaymentRequestHeader(idToken)
 
         var paymentResponse: PaymentResponse =
-            RetrofitClient.api.payment(headers = requestHeaders, request = paymentRequest)
+            RetrofitClient.getApi(context).payment(headers = requestHeaders, request = paymentRequest)
 
         return paymentResponse
     } catch (e: Exception) {

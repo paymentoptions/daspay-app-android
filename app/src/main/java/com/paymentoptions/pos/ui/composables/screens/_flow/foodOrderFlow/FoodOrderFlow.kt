@@ -275,12 +275,11 @@ fun FoodOrderFlow(
             if (e.toString().contains("HTTP 401")) {
                 Toast.makeText(
                     context,
-                    "Your session has expired. Please log in again to continue.",
+                    context.getString(R.string.session_expired),
                     Toast.LENGTH_SHORT
                 ).show()
-
-                SharedPreferences.clearSharedPreferences(context)
-                navController.navigate(Screens.AuthCheck.route) {
+                navController.navigate(Screens.FingerprintScan.route){
+                    // Clear back stack to prevent going back to authenticated screens
                     popUpTo(0) { inclusive = true }
                 }
             }
@@ -313,12 +312,11 @@ fun FoodOrderFlow(
                 if (e.toString().contains("HTTP 401")) {
                     Toast.makeText(
                         context,
-                        "Your session has expired. Please log in again to continue.",
+                        context.getString(R.string.session_expired),
                         Toast.LENGTH_SHORT
                     ).show()
-
-                    SharedPreferences.clearSharedPreferences(context)
-                    navController.navigate(Screens.AuthCheck.route) {
+                    navController.navigate(Screens.FingerprintScan.route){
+                        // Clear back stack to prevent going back to authenticated screens
                         popUpTo(0) { inclusive = true }
                     }
                 }
@@ -411,7 +409,13 @@ fun FoodOrderFlow(
                     navController,
                     enableScrolling = !enableScrollingInsideBottomSectionContent,
                     cartState = cartState,
-                    updateCartSate = { cartState = it.copy() },
+                    updateCartSate = {
+                        cartState = it.copy()
+                        if (cartState.itemQuantity == 0) {
+                            Toast.makeText(context, "Cart is empty", Toast.LENGTH_SHORT).show()
+                            navController.popBackStack() // Exit the screen if the cart is empty
+                        }
+                    },
                     updateFlowStage = { updateFlowStage(it) },
                     createToast = { toastData.setToast(it) },
                     setShowToast = { setShowToast(it) })
@@ -606,12 +610,11 @@ fun FoodOrderFlow(
                                         if (e.toString().contains("HTTP 401")) {
                                             Toast.makeText(
                                                 context,
-                                                "Your session has expired. Please log in again to continue.",
+                                                context.getString(R.string.session_expired),
                                                 Toast.LENGTH_SHORT
                                             ).show()
-
-                                            SharedPreferences.clearSharedPreferences(context)
-                                            navController.navigate(Screens.AuthCheck.route) {
+                                            navController.navigate(Screens.FingerprintScan.route){
+                                                // Clear back stack to prevent going back to authenticated screens
                                                 popUpTo(0) { inclusive = true }
                                             }
                                         }

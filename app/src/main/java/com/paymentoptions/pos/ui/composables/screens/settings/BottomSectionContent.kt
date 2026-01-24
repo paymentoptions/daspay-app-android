@@ -29,6 +29,7 @@ import androidx.navigation.NavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.SignOutResponse
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
 import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
 import com.paymentoptions.pos.ui.composables._components.MySwitch
@@ -81,6 +82,9 @@ fun BottomSectionContent(navController: NavController) {
                 } catch (e: Exception) {
                     println("Error: ${e.toString()}")
                 } finally {
+                    // Stop token auto refresh on sign out
+                    TokenAutoRefresher.getInstance(context).onUserSignedOut()
+
                     SharedPreferences.clearSharedPreferences(context)
                     navController.navigate(Screens.Splash.route) {
                         popUpTo(0) { inclusive = true }

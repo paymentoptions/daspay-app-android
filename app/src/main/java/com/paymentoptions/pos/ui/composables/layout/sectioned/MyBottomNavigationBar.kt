@@ -53,6 +53,7 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.SignOutResponse
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
@@ -161,6 +162,7 @@ fun MyBottomNavigationBar(
                     println("signOutResponse: $signOutResponse")
 
                     if (signOutResponse == null) {
+                        TokenAutoRefresher.getInstance(context).onUserSignedOut()
                         SharedPreferences.clearSharedPreferences(context)
                         navController.navigate(Screens.AuthCheck.route) {
                             popUpTo(0) { inclusive = true }
@@ -169,6 +171,7 @@ fun MyBottomNavigationBar(
 
                     signOutResponse?.let {
                         if (it.success) {
+                            TokenAutoRefresher.getInstance(context).onUserSignedOut()
                             SharedPreferences.clearSharedPreferences(context)
                             navController.navigate(Screens.AuthCheck.route) {
                                 popUpTo(0) { inclusive = true }
@@ -176,6 +179,7 @@ fun MyBottomNavigationBar(
                         }
                     }
                 } catch (e: Exception) {
+                    TokenAutoRefresher.getInstance(context).onUserSignedOut()
                     SharedPreferences.clearSharedPreferences(context)
                     navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }

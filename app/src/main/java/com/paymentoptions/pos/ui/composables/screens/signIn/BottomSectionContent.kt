@@ -32,6 +32,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.SharedPreferences.Companion.saveFcmToken
 import com.paymentoptions.pos.services.apiService.SignInResponse
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signIn
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
@@ -67,7 +68,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
     val credentialModel = if (inProduction) CredentialModel.Empty else CredentialModel.Robowah
 
-    val (savedEmail, savedPassword) = remember { SharedPreferences.getSavedCredentials(context) }
+    val (savedEmail, savedPassword, otp) = remember { SharedPreferences.getSavedCredentials(context) }
 
     val emailState = rememberTextFieldState(initialText = savedEmail ?: credentialModel.email)
     var emailError by remember { mutableStateOf(false) }
@@ -165,7 +166,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                     try {
                         signInResponse =
-                            signIn(emailState.text.toString(), passwordState.text.toString())
+                            signIn(context, emailState.text.toString(), passwordState.text.toString())
                         println("signInResponse: $signInResponse")
 
                         if (signInResponse == null) {
@@ -193,6 +194,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 }
 
                                 SharedPreferences.saveAuthDetails(context, signInResponse)
+
+                                // Start token auto refresh after successful sign-in
+                                TokenAutoRefresher.getInstance(context).onUserSignedIn()
+
                                 navController.navigate(Screens.Token.route)
                             }
                         }

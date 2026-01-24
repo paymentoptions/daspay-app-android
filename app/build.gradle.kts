@@ -101,6 +101,7 @@ dependencies {
     implementation(libs.androidx.material3.lint)
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.androidx.runtime)
+    implementation(libs.androidx.lifecycle.process)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -140,18 +140,30 @@ val logging = HttpLoggingInterceptor().apply {
     setLevel(HttpLoggingInterceptor.Level.BODY)
 }
 
-var okHttpClient = OkHttpClient.Builder()
-    .addInterceptor(logging)
-    .connectTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to establish the connection
-    .readTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to wait for the server to send data
-    .writeTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to send data to the server
-    .build()
+fun provideOkHttpClient(context: android.content.Context): OkHttpClient {
+    return OkHttpClient.Builder()
+        .addInterceptor(logging)
+        .authenticator(TokenAuthenticator(context))
+        .connectTimeout(retrofitTimeout, TimeUnit.SECONDS)
+        .readTimeout(retrofitTimeout, TimeUnit.SECONDS)
+        .writeTimeout(retrofitTimeout, TimeUnit.SECONDS)
+        .build()
+}
 
 object RetrofitClient {
-    val api: ApiService by lazy {
-        Retrofit.Builder().baseUrl(baseUrl).client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(gson)).build()
-            .create(ApiService::class.java)
+    @Volatile
+    private var apiService: ApiService? = null
+
+    fun getApi(context: android.content.Context): ApiService {
+        return apiService ?: synchronized(this) {
+            apiService ?: Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(provideOkHttpClient(context.applicationContext))
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build()
+                .create(ApiService::class.java)
+                .also { apiService = it }
+        }
     }
 }
 

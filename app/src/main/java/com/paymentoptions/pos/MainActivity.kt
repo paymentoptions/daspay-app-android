@@ -13,6 +13,8 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.paymentoptions.pos.device.LockScreenOrientation
 import com.paymentoptions.pos.device.NetworkStatusComposable
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
+import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.theminesec.sdk.headless.HeadlessSetup
 import kotlinx.coroutines.launch
@@ -39,6 +41,8 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         immersiveMode()
+        TokenRepository.getInstance(this.application)
+        TokenAutoRefresher.getInstance(this.application)
 //        setup()
 
         setContent {

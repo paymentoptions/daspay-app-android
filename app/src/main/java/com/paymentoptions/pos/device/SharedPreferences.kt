@@ -89,6 +89,22 @@ class SharedPreferences {
             }
         }
 
+        fun saveOtp(context: Context, otp: String){
+            val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            with(sharedPref.edit()) {
+                putString("saved_otp", otp)
+                apply()
+            }
+        }
+
+        fun getOtp(context: Context): String?{
+            val sharedPreferences =
+                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val otp = sharedPreferences.getString("saved_otp", null)
+            return otp
+        }
+
+
         fun saveFcmToken(context: Context, token: String) {
             val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             with(sharedPref.edit()) {
@@ -173,12 +189,13 @@ class SharedPreferences {
             }
         }
 
-        fun getSavedCredentials(context: Context): Pair<String?, String?> {
+        fun getSavedCredentials(context: Context): Triple<String?, String?, String?> {
             val sharedPreferences =
                 context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             val email = sharedPreferences.getString("saved_email", null)
             val password = sharedPreferences.getString("saved_password", null)
-            return Pair(email, password)
+            val otp = sharedPreferences.getString("saved_otp", null)
+            return Triple(email, password, otp)
         }
     }
 }
