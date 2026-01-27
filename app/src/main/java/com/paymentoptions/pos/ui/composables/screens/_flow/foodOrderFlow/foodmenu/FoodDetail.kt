@@ -8,12 +8,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodItem
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.ui.theme.productDescription
 import com.paymentoptions.pos.utils.formatToPrecisionString
 
 @Composable
@@ -44,6 +46,15 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
                 fontWeight = FontWeight(980),
                 color = primary500,
                 maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                foodItem.item.ProductDesc,
+                fontSize = 11.sp,
+                fontWeight = FontWeight(480),
+                fontStyle = FontStyle.Italic,
+                color = productDescription,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
         }

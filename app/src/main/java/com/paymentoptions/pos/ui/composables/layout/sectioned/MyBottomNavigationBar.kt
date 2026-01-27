@@ -265,10 +265,19 @@ fun MyBottomNavigationBar(
                 selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
-//                    if (selectedBottomNavigationBarItem !== home) {
+                    val currentRoute =
+                        navController.currentBackStackEntry?.destination?.route
+
+                    if(currentRoute != home.route) {
                     selectedBottomNavigationBarItem = home
-                    navController.navigate(selectedBottomNavigationBarItem.route)
-//                    }
+                    navController.navigate(selectedBottomNavigationBarItem.route){
+                        launchSingleTop = true
+                        restoreState = true
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                    }
+                   }
                 })
 
             Item(
@@ -276,10 +285,19 @@ fun MyBottomNavigationBar(
                 selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
-//                    if (selectedBottomNavigationBarItem !== foodMenu) {
+                    val currentRoute =
+                        navController.currentBackStackEntry?.destination?.route
+
+                    if(currentRoute != foodMenu.route){
                     selectedBottomNavigationBarItem = foodMenu
-                    navController.navigate(selectedBottomNavigationBarItem.route)
-//                    }
+                    navController.navigate(selectedBottomNavigationBarItem.route){
+                        launchSingleTop = true
+                        restoreState = true
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                    }
+                   }
                 })
 
             Item(
@@ -287,10 +305,19 @@ fun MyBottomNavigationBar(
                 selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1.5f),
                 onSelected = {
-//                    if (selectedBottomNavigationBarItem !== receiveMoney) {
+                    val currentRoute =
+                        navController.currentBackStackEntry?.destination?.route
+
+                    if(currentRoute != receiveMoney.route){
                     selectedBottomNavigationBarItem = receiveMoney
-                    navController.navigate(selectedBottomNavigationBarItem.route)
-//                    }
+                    navController.navigate(selectedBottomNavigationBarItem.route){
+                        launchSingleTop = true
+                        restoreState = true
+                        popUpTo(navController.graph.startDestinationId) {
+                            saveState = true
+                        }
+                    }
+                   }
                 })
 
             Item(
@@ -298,8 +325,19 @@ fun MyBottomNavigationBar(
                 selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
-                    selectedBottomNavigationBarItem = refund
-                    navController.navigate(selectedBottomNavigationBarItem.route)
+                    val currentRoute =
+                        navController.currentBackStackEntry?.destination?.route
+
+                    if(currentRoute != refund.route) {
+                        selectedBottomNavigationBarItem = refund
+                        navController.navigate(selectedBottomNavigationBarItem.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                        }
+                    }
                 })
 
             Item(
@@ -307,8 +345,13 @@ fun MyBottomNavigationBar(
                 selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
-                    selectedBottomNavigationBarItem = more
-                    onClickShowMoreItems()
+                    val currentRoute =
+                        navController.currentBackStackEntry?.destination?.route
+
+                    if(currentRoute != more.route) {
+                        selectedBottomNavigationBarItem = more
+                        onClickShowMoreItems()
+                    }
                 })
         }
     }

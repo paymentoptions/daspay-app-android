@@ -29,7 +29,7 @@ fun RefundTransactionScreen(navController: NavController) {
         null -> {
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
                 imageBelowLogo = { },
                 enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
