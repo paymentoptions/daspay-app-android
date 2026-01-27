@@ -1,6 +1,9 @@
 package com.paymentoptions.pos.ui.composables.screens.fingerprintscan
 
+import android.app.KeyguardManager
+import android.app.ProgressDialog
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.biometric.BiometricManager
@@ -35,10 +38,12 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.coroutineScope
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.AuthEventManager
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
@@ -52,34 +57,21 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_TOP_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.red500
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
 
 @Composable
 fun FingerprintAutoLoginScreen(
     navController: NavController
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    var hasPrompted by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
-    var scope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-
-        if (!hasPrompted) {
-            hasPrompted = true
-
-            authenticateUser(
-                scope = scope,
-                navController = navController,
-                context = context,
-                lifecycleOwner = lifecycleOwner
-            )
-        }
+        authenticateUser(
+            scope = scope,
+            navController = navController,
+            context = context
+        )
     }
 
     // Use the branded background layout
@@ -157,194 +149,245 @@ fun FingerprintAutoLoginScreen(
 fun authenticateUser(
     scope: CoroutineScope,
     navController: NavController,
-    context: Context,
-    lifecycleOwner: LifecycleOwner,
+    context: Context
 ) {
-    val biometricManager = BiometricManager.from(context)
+
     val activity = context as FragmentActivity
+    val biometricManager = BiometricManager.from(context)
+    val keyguardManager =
+        context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 
-    if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) != BiometricManager.BIOMETRIC_SUCCESS) {
-        // onAuthFailed("Biometric not available")
-        return
+    val hasBiometric =
+        biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)== BiometricManager.BIOMETRIC_SUCCESS
+
+    val hasDeviceCredential = keyguardManager.isDeviceSecure
+
+    println("hasBiometric: $hasBiometric, hasDeviceCredential: $hasDeviceCredential")
+
+
+    if (hasBiometric || hasDeviceCredential) {
+
+        val executor = ContextCompat.getMainExecutor(context)
+        val biometricPrompt = BiometricPrompt(
+            activity,
+            executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    onAuthSuccess(scope, context, navController)
+                }
+
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    // Optional: handle cancel / lockout
+                    onAuthFailed(context,"Auth failed : $errString")
+                }
+
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                    onAuthFailed(context, "Auth failed")
+                }
+            }
+        )
+
+        val promptInfoBuilder = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Authenticate")
+            .setSubtitle("Verify your identity to proceed")
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            promptInfoBuilder.setAllowedAuthenticators(
+                if (hasBiometric)
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG
+                else
+                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            )
+        } else {
+            if (hasBiometric) {
+                promptInfoBuilder.setNegativeButtonText("Cancel")
+            } else {
+                promptInfoBuilder.setDeviceCredentialAllowed(true)
+            }
+        }
+
+        biometricPrompt.authenticate(promptInfoBuilder.build())
+
+    } else {
+        // 🚨 No security configured
+        Toast.makeText(context, com.paymentoptions.pos.R.string.device_credential_missing, Toast.LENGTH_SHORT).show()
+        navController.navigate(Screens.Token.route) {
+            popUpTo(Screens.AuthCheck.route) { inclusive = true }
+        }
     }
+}
 
-    val executor = ContextCompat.getMainExecutor(context)
+private fun onAuthFailed(context: Context, string: String) {
+    Toast.makeText(context, string, Toast.LENGTH_SHORT).show()
+}
 
-    val biometricPrompt = BiometricPrompt(
-        activity, executor, object : BiometricPrompt.AuthenticationCallback() {
+private fun onAuthSuccess(
+    scope: CoroutineScope,
+    context: FragmentActivity,
+    navController: NavController
+) {
+    scope.launch(Dispatchers.IO) {
+        // Use a modern progress indicator in production; suppress deprecated warning for now
+        val progressDialog = withContext(Dispatchers.Main) {
+            @Suppress("DEPRECATION")
+            ProgressDialog(context).apply {
+                setMessage("Signing in...")
+                setCancelable(false)
+                show()
+            }
+        }
+        try {
+            val authCredentials = autoSignIn(context) // Remove redundant semicolon
+            if (authCredentials != null) {
+                val authDetails = SharedPreferences.getSavedCredentials(context)
+                val otp = authDetails.third
+                var errorMessage = ""
 
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                super.onAuthenticationSucceeded(result)
+                Log.d(
+                    "DEBUG_TOKEN",
+                    "Step 1: Button clicked. Starting process. otp: $otp"
+                )
 
-                scope.launch(Dispatchers.IO) {
-                    // Show a progress dialog before API call starts
-                    val progressDialog = android.app.ProgressDialog(context)
-                    withContext(Dispatchers.Main) {
-                        progressDialog.setMessage("Signing in...")
-                        progressDialog.setCancelable(false)
-                        progressDialog.show()
-                    }
-                    try {
-                        val authCredentials = autoSignIn(context);
-                        if (authCredentials != null) {
-                            val authDetails = SharedPreferences.getSavedCredentials(context)
-                            val otp = authDetails.third
-                            var errorMessage = ""
+                // --- First API Call ---
+                if (otp == null) return@launch
+                completeDeviceRegistration(context, otp).onSuccess { response ->
+                    Log.d(
+                        "DEBUG_TOKEN",
+                        "Step 2: completeDeviceRegistration SUCCEEDED. Response: $response"
+                    )
+                    if (response.success || response.message.contains("Device already registered")) {
 
+                        // --- Second API Call ---
+                        Log.d(
+                            "DEBUG_TOKEN",
+                            "Step 3: Proceeding to get external device configuration."
+                        )
+
+                        SharedPreferences.saveTokenStatus(
+                            context = context, tokenCode = otp, isVerified = true
+                        )
+
+                        getExternalDeviceConfiguration(
+                            context, otp
+                        ).onSuccess { configResponse ->
                             Log.d(
                                 "DEBUG_TOKEN",
-                                "Step 1: Button clicked. Starting process. otp: $otp"
+                                "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                             )
+                            SharedPreferences.saveDeviceConfiguration(
+                                context, configResponse
+                            )
+                        }.onFailure { exception ->
+                            Log.e(
+                                "DEBUG_TOKEN",
+                                "Step 4 FAILED: getExternalDeviceConfiguration.",
+                                exception
+                            )
+                            errorMessage =
+                                exception.message ?: "Failed to fetch configuration"
+                        }
+                    } else {
+                        Log.w(
+                            "DEBUG_TOKEN",
+                            "Step 2 WARNING: API reported not successful. Message: ${response.message}"
+                        )
+                        errorMessage = response.message
+                    }
+                }.onFailure { exception ->
+                    //if (json)
+                    try {
+                        val jsonPart = exception.message?.substringAfter(":")?.trim()
+                        val jsonObject =
+                            if (jsonPart != null) JSONObject(jsonPart) else null // Fix type mismatch
+                        val exceptionMessage = jsonObject?.getString("message") ?: ""
 
-                            // --- First API Call ---
-                            if (otp == null) return@launch
-                            completeDeviceRegistration(context, otp).onSuccess { response ->
+                        Log.e(
+                            "Step 2 FAILED: completeDeviceRegistration.",
+                            exceptionMessage
+                        )
+                        if (exceptionMessage == "Device already registered") {
+                            getExternalDeviceConfiguration(
+                                context, otp
+                            ).onSuccess { configResponse ->
+
+                                SharedPreferences.saveTokenStatus(
+                                    context = context,
+                                    tokenCode = otp,
+                                    isVerified = true
+                                )
+
                                 Log.d(
                                     "DEBUG_TOKEN",
-                                    "Step 2: completeDeviceRegistration SUCCEEDED. Response: $response"
+                                    "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                                 )
-                                if (response.success || response.message.contains("Device already registered")) {
-
-                                    // --- Second API Call ---
-                                    Log.d(
-                                        "DEBUG_TOKEN",
-                                        "Step 3: Proceeding to get external device configuration."
-                                    )
-
-                                    SharedPreferences.saveTokenStatus(
-                                        context = context, tokenCode = otp, isVerified = true
-                                    )
-
-                                    getExternalDeviceConfiguration(
-                                        context, otp
-                                    ).onSuccess { configResponse ->
-                                        Log.d(
-                                            "DEBUG_TOKEN",
-                                            "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
-                                        )
-                                        SharedPreferences.saveDeviceConfiguration(
-                                            context, configResponse
-                                        )
-                                    }.onFailure { exception ->
-                                        Log.e(
-                                            "DEBUG_TOKEN",
-                                            "Step 4 FAILED: getExternalDeviceConfiguration.",
-                                            exception
-                                        )
-                                        errorMessage =
-                                            exception.message ?: "Failed to fetch configuration"
-                                    }
-                                } else {
-                                    Log.w(
-                                        "DEBUG_TOKEN",
-                                        "Step 2 WARNING: API reported not successful. Message: ${response.message}"
-                                    )
-                                    errorMessage = response.message
-                                }
+                                SharedPreferences.saveDeviceConfiguration(
+                                    context, configResponse
+                                )
                             }.onFailure { exception ->
-                                //if (json)
-                                try {
-                                    val jsonPart = exception.message?.substringAfter(":")?.trim()
-                                    val jsonObject = JSONObject(jsonPart)
-                                    val exceptionMessage = jsonObject.getString("message")
-
-                                    Log.e(
-                                        "Step 2 FAILED: completeDeviceRegistration.",
-                                        exceptionMessage
-                                    )
-                                    if (exceptionMessage == "Device already registered") {
-                                        getExternalDeviceConfiguration(
-                                            context, otp
-                                        ).onSuccess { configResponse ->
-
-                                            SharedPreferences.saveTokenStatus(
-                                                context = context,
-                                                tokenCode = otp,
-                                                isVerified = true
-                                            )
-
-                                            Log.d(
-                                                "DEBUG_TOKEN",
-                                                "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
-                                            )
-                                            SharedPreferences.saveDeviceConfiguration(
-                                                context, configResponse
-                                            )
-                                        }.onFailure { exception ->
-                                            Log.e(
-                                                "DEBUG_TOKEN",
-                                                "Step 4 FAILED: getExternalDeviceConfiguration.",
-                                                exception
-                                            )
-                                            errorMessage =
-                                                exception.message ?: "Failed to fetch configuration"
-                                        }
-                                    } else if (exceptionMessage.lowercase()
-                                            .contains("unauthorized")
-                                    ) {
-                                        println("Auto login failing, fatal exception")
-                                        withContext(Dispatchers.Main) {
-                                            autoSignInFailed(context, navController)
-                                        }
-                                    } else {
-                                        errorMessage =
-                                            exceptionMessage ?: "An unknown error occurred"
-                                    }
-                                } catch (e: Exception) {
-                                    errorMessage = e.message.toString()
-                                }
+                                Log.e(
+                                    "DEBUG_TOKEN",
+                                    "Step 4 FAILED: getExternalDeviceConfiguration.",
+                                    exception
+                                )
+                                errorMessage =
+                                    exception.message ?: "Failed to fetch configuration"
                             }
-                            Log.d("DEBUG_TOKEN", "Step 5: Process finished.")
-
-                            Log.d("DEBUG_TOKEN", "Error message: $errorMessage")
-
-
-                            // go to home screen if auto sign-in was successful
-                            if (errorMessage.isEmpty()) {
-                                // Start token auto refresh after successful auto sign-in
-                                TokenAutoRefresher.getInstance(context).onUserSignedIn()
-                                withContext(Dispatchers.Main) {
-                                    navController.navigate(Screens.Dashboard.route) {
-                                        popUpTo(Screens.AuthCheck.route) { inclusive = true }
-                                    }
-                                }
-                            } else {
-                                withContext(Dispatchers.Main) {
-                                    autoSignInFailed(context, navController)
-                                }
-                            }
-                        } else {
+                        } else if (exceptionMessage.lowercase()
+                                .contains("unauthorized")
+                        ) {
+                            println("Auto login failing, fatal exception")
                             withContext(Dispatchers.Main) {
                                 autoSignInFailed(context, navController)
                             }
+                        } else {
+                            errorMessage =
+                                exceptionMessage ?: "An unknown error occurred"
                         }
                     } catch (e: Exception) {
-                        println("Auto login failing, fatal exception")
-                    } finally {
-                        withContext(Dispatchers.Main) {
-                            progressDialog.dismiss()
-                        }
+                        errorMessage = e.message.toString()
                     }
                 }
+                Log.d("DEBUG_TOKEN", "Step 5: Process finished.")
 
+                Log.d("DEBUG_TOKEN", "Error message: $errorMessage")
+
+
+                // go to home screen if auto sign-in was successful
+                if (errorMessage.isEmpty()) {
+                    // Start token auto refresh after successful auto sign-in
+                    TokenAutoRefresher.getInstance(context).onUserSignedIn()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Auto sign-in successful", Toast.LENGTH_SHORT)
+                            .show()
+                        navController.navigate(Screens.Dashboard.route) {
+                            popUpTo(Screens.AuthCheck.route) { inclusive = true }
+                        }
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        autoSignInFailed(context, navController)
+                    }
+                }
+            } else {
+                withContext(Dispatchers.Main) {
+                    autoSignInFailed(context, navController)
+                }
             }
-
-            override fun onAuthenticationFailed() {
-                super.onAuthenticationFailed()
-                //onAuthFailed("Auth failed")
+        } catch (e: Exception) {
+            println("Auto login failing, fatal exception $e")
+            withContext(Dispatchers.Main) {
+                autoSignInFailed(context, navController)
             }
-
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                super.onAuthenticationError(errorCode, errString)
-                //onAuthFailed("Error: $errString")
+        } finally {
+            withContext(Dispatchers.Main) {
+                progressDialog.dismiss()
             }
-
-        })
-
-    val promptInfo = BiometricPrompt.PromptInfo.Builder().setTitle("Authenticate")
-        .setSubtitle("Verify your identity to proceed").setNegativeButtonText("Cancel").build()
-
-    biometricPrompt.authenticate(promptInfo)
+        }
+    }
 }
 
 private fun autoSignInFailed(
@@ -352,6 +395,7 @@ private fun autoSignInFailed(
     navController: NavController
 ) {
     // Auto sign-in failed - notify the system
+    Toast.makeText(context, "Auto sign-in failed", Toast.LENGTH_SHORT).show()
     AuthEventManager.onAutoSignInFailed()
     SharedPreferences.clearSharedPreferences(context)
     navController.navigate(Screens.AuthCheck.route) {
