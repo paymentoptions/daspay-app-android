@@ -38,9 +38,12 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.gson.Gson
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
+import com.paymentoptions.pos.services.apiService.toTransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
@@ -135,7 +138,10 @@ fun TransactionSummary(
                         offsetX += dragAmount
                     })
                 }
-                .combinedClickable(onClick = {}, onLongClick = {
+                .combinedClickable(onClick = {
+                    val transactionJson = Gson().toJson(transaction.toTransactionListDataRecord())
+                    navController.navigate(Screens.TransactionDetails.createRoute(transactionJson))
+                }, onLongClick = {
 //                    onLongClick(transaction.uuid.toString())
                 })
                 .weight(if (isLongClicked) 8f else 1f)

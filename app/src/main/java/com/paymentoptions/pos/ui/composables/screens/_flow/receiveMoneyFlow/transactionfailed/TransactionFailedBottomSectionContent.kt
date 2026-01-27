@@ -111,7 +111,9 @@ fun TransactionFailedBottomSectionContent(
         ScreenTitleWithCloseButton(
             navController = navController,
             fontSize = 8.sp,
-            onClose = { navController.navigate(Screens.Dashboard) })
+            onClose = { navController.navigate(Screens.Dashboard.route) {
+                popUpTo(Screens.AuthCheck.route) { inclusive = true }
+            } })
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -81,6 +82,7 @@ import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
+import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.utils.topdf.ComposePdfExporter
 import com.paymentoptions.pos.utils.topdf.PageSize
 import com.paymentoptions.pos.utils.topdf.PdfExportProgress
@@ -109,6 +111,7 @@ fun ReceiptBottomSectionContent(
     val clipboardManager = LocalClipboardManager.current
     var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
+    var isLoading by remember { mutableStateOf(true) }
 
     val dateFormatted = try {
         val dateString = paymentDetailsLatestResponse?.data?.Date.toString()
@@ -146,6 +149,7 @@ fun ReceiptBottomSectionContent(
     }
 
     LaunchedEffect(Unit) {
+        isLoading = true
         paymentDetailsLatestResponse = try {
             paymentDetails(
                 context = context,
@@ -154,6 +158,7 @@ fun ReceiptBottomSectionContent(
         } catch (e: Exception) {
             null
         }
+        isLoading = false
     }
 
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
@@ -230,16 +235,20 @@ fun ReceiptBottomSectionContent(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-            .verticalScroll(state = rememberScrollState(), enabled = enableScrolling),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
-    ) {
-
-        //Section 1
+    // Show shimmer loading while API is loading
+    if (isLoading) {
+        ReceiptShimmerLoading()
+    } else {
         Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .verticalScroll(state = rememberScrollState(), enabled = enableScrolling),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+
+            //Section 1
+            Column(
             modifier = Modifier
                 .background(Color.White)
                 .fillMaxWidth()
@@ -852,6 +861,7 @@ fun ReceiptBottomSectionContent(
             )
         }
     }
+    }
 }
 
 @Composable
@@ -1310,6 +1320,237 @@ private fun ReceiptContentForPDF(
                             .height(110.dp)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReceiptShimmerLoading() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        // Section 1 - Transaction Info shimmer
+        Column(
+            modifier = Modifier
+                .background(Color.White)
+                .fillMaxWidth()
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Transaction ID shimmer
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(16.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
+
+            // Merchant name shimmer
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(24.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
+
+            // Address shimmer
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.9f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Payment row shimmer
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .height(18.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmerEffect()
+                )
+                Box(
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(18.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .shimmerEffect()
+                )
+            }
+
+            // Status shimmer
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.3f)
+                    .height(18.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
+
+            // Date shimmer
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.5f)
+                    .height(14.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
+
+            // Card number shimmer
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .height(24.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
+        }
+
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.LightGray.copy(alpha = 0.2f)
+        )
+
+        // Section 2 - Total shimmer
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(60.dp)
+                    .height(24.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
+            Box(
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(32.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
+        }
+
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.LightGray.copy(alpha = 0.2f)
+        )
+
+        // Section 3 - Details shimmer
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            repeat(6) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(100.dp)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .shimmerEffect()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .width(80.dp)
+                            .height(14.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .shimmerEffect()
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.LightGray.copy(alpha = 0.2f)
+        )
+
+        // Section 4 - Signature shimmer
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(150.dp)
+                    .height(18.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .shimmerEffect()
+            )
+        }
+
+        // Section 5 - Share buttons shimmer
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(130.dp)
+                    .height(18.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .shimmerEffect()
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .shimmerEffect()
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .shimmerEffect()
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(60.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .shimmerEffect()
+                )
             }
         }
     }
