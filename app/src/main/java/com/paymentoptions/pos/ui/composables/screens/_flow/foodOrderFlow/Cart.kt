@@ -48,13 +48,29 @@ class Cart(
                 removeFoodItemQuantity(foodItem, context)
             }
         }
+        additionalCharge = 0f
+        additionalAmountNote = ""
+        save(context, this)
     }
 
     fun removeFoodItemQuantity(foodItem: FoodItem, context: Context) {
-        foodItem.cartQuantity = 0
-        this.itemQuantity = 0
-        this.itemTotal = 0.0f
-        save(context, this)
+        if (foodItem.cartQuantity > 0) {
+            val previousSize = foodItem.cartQuantity
+            foodItem.deleteQuantity()
+            val newSize = itemQuantity - previousSize
+            if(newSize > 0){
+                this.itemQuantity = newSize
+            } else {
+                this.itemQuantity = 0
+            }
+            val newTotal = this.itemTotal - (foodItem.item.ProductPrice * previousSize)
+            if(newTotal > 0){
+                this.itemTotal = newTotal
+            } else {
+                this.itemTotal = 0f
+            }
+            save(context, this)
+        }
     }
 
     fun decreaseFoodItemQuantity(foodItem: FoodItem, context: Context) {

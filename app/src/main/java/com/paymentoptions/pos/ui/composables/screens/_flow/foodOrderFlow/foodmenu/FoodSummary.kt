@@ -46,23 +46,44 @@ fun FoodSummary(
 ) {
     val context = LocalContext.current
 
-    fun removeQuantity() {
-        if (foodItem.cartQuantity > 0) {
-            cartState.decreaseFoodItemQuantity(foodItem, context)
-            updateCartSate(cartState)
+    fun deleteQuantity() {
+        cartState.removeFoodItemQuantity(foodItem, context)
+        updateCartSate(cartState)
 
-            createToast(
-                ToastData(
-                    type = ToastType.ERROR,
-                    text = foodItem.item.ProductName + " removed",
-                    cartCount = foodItem.cartQuantity
-                )
+        createToast(
+            ToastData(
+                type = ToastType.ERROR,
+                text = foodItem.item.ProductName + " is deleted from Cart",
+                cartCount = foodItem.cartQuantity
             )
-            setShowToast(true)
+        )
+        setShowToast(true)
 
-            Handler().postDelayed({
-                setShowToast(false)
-            }, 1000)
+        Handler().postDelayed({
+            setShowToast(false)
+        }, 1000)
+    }
+
+    fun removeQuantity() {
+        if(foodItem.cartQuantity == 1){
+            deleteQuantity()
+        } else {
+            if (foodItem.cartQuantity > 0) {
+                cartState.decreaseFoodItemQuantity(foodItem, context)
+                updateCartSate(cartState)
+                createToast(
+                    ToastData(
+                        type = ToastType.ERROR,
+                        text = foodItem.item.ProductName + " removed",
+                        cartCount = foodItem.cartQuantity
+                    )
+                )
+                setShowToast(true)
+
+                Handler().postDelayed({
+                    setShowToast(false)
+                }, 1000)
+            }
         }
     }
 

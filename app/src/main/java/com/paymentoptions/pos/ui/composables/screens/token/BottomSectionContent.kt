@@ -78,7 +78,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         openFingerprintScan = false
 
     }, onAuthFailed = {
-        Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, com.paymentoptions.pos.R.string.device_credential_missing, Toast.LENGTH_LONG).show()
         openFingerprintScan = false
     })
 
@@ -103,13 +103,13 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             })
 
         Text(
-            text = "Enter Token", style = AppTheme.typography.screenTitle
+            text = "Register Device", style = AppTheme.typography.screenTitle
         )
 
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Enter the Token sent by Payment Options",
+            text = "Enter the token provided by admin to register this device",
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = purple50
@@ -173,28 +173,28 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier.align(alignment = Alignment.End),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Didn't receive the code?",
-                color = purple50,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                "Resend Code",
-                fontSize = 12.sp,
-                textDecoration = TextDecoration.Underline,
-                color = linkColor
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
+//        Row(
+//            modifier = Modifier.align(alignment = Alignment.End),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            Text(
+//                "Didn't receive the code?",
+//                color = purple50,
+//                fontSize = 12.sp,
+//                fontWeight = FontWeight.Medium
+//            )
+//            Spacer(modifier = Modifier.width(4.dp))
+//            Text(
+//                "Resend Code",
+//                fontSize = 12.sp,
+//                textDecoration = TextDecoration.Underline,
+//                color = linkColor
+//            )
+//        }
+//
+//        Spacer(modifier = Modifier.height(24.dp))
 
         Column(
             modifier = Modifier
@@ -565,7 +565,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(59.dp),
-                text = "Confirm",
+                text = "Register Device",
                 disabled = otp.value.length < 6 || isLoading,
                 onClick = {
                     // special version for debugging

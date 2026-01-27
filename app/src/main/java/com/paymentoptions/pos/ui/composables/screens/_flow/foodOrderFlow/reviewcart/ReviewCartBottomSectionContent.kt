@@ -339,7 +339,7 @@ fun ReviewCartBottomSectionContent(
             onClick = { updateFlowStage(FoodOrderFlowStage.CHARGE_MONEY) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP, vertical = 10.dp)
                 .height(59.dp)
         )
     }

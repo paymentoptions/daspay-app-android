@@ -104,7 +104,7 @@ fun BottomSectionContent(navController: NavController) {
         }, onAuthFailed = {
             //SharedPreferences.saveBiometricsStatus(context, false)
             showBiometricScreen = false
-        }, bypassBiometric = false
+        },
     )
     else
 

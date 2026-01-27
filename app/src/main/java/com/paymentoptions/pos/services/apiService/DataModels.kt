@@ -106,7 +106,7 @@ data class TransactionListDataRecord(
     val ResponseCode: String,
     val TransactionID: Int,
     val IntegrationType: String,
-    val PaymentType: String,
+    val PaymentType: String?,
 )
 
 data class TransactionListData(
@@ -689,6 +689,7 @@ data class AquirerResponse(
     val accountBin: String = "",
     val accountLast4: String = "",
     val issCountryCode: String = "",
+    val cvmPerformed: String? = null,
     val aid: String = "",
     val appName: String = "",
     val tc: String = "",
@@ -765,3 +766,47 @@ data class UploadSignatureResponse(
     val messageCode: String,
     val success: Boolean,
 )
+
+fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDataRecord {
+    return TransactionListDataRecord(
+        uuid = this.uuid,
+        V2UUID = this.uuid,
+
+        TransactionType = this.TransactionType,
+        amount = this.amount.toString(),
+        CurrencyCode = this.CurrencyCode,
+        status = this.status,
+
+        PaymentType = this.paymentMethod,
+        ProductType = this.event,
+
+        Date = this.TransactionDate,
+        UpdatedDate = this.TransactionDate,
+
+        TerminalId = this.TerminalID,
+        TerminalName = this.TerminalID, // best available fallback
+
+        TransactionID = this.ID.toIntOrNull() ?: 0,
+
+        // ---- Fields not available → defaults ----
+        MerchantRefID = "",
+        LegalName = "",
+        LegalNameInEnglish = "",
+        DASMID = "",
+        trackID = "",
+        AcquirerMID = "",
+        Scheme = "",
+        CardNumber = "",
+        AcquirerCode = "",
+        AuthCode = "",
+        SubscriptionId = "",
+        PBLLinkName = "",
+        GatewayResponse = "",
+        ResponseCode = "",
+        IntegrationType = "",
+
+        has3DS = false,
+        Isrecurring = false,
+        IsWhitelisted = false
+    )
+}

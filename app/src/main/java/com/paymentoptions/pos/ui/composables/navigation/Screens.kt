@@ -22,6 +22,9 @@ sealed class Screens(val route: String) {
 
     // More Menu Items ------------------------------------------------
     object TransactionHistory : Screens(route = "TransactionHistory")
+    object TransactionDetails : Screens(route = "TransactionDetails/{transactionJson}") {
+        fun createRoute(transactionJson: String) = "TransactionDetails/${java.net.URLEncoder.encode(transactionJson, "UTF-8")}"
+    }
 
     //------------------------------------------------------------------
     object Refund : Screens(route = "Refund")

@@ -411,10 +411,6 @@ fun FoodOrderFlow(
                     cartState = cartState,
                     updateCartSate = {
                         cartState = it.copy()
-                        if (cartState.itemQuantity == 0) {
-                            Toast.makeText(context, "Cart is empty", Toast.LENGTH_SHORT).show()
-                            navController.popBackStack() // Exit the screen if the cart is empty
-                        }
                     },
                     updateFlowStage = { updateFlowStage(it) },
                     createToast = { toastData.setToast(it) },
@@ -504,7 +500,7 @@ fun FoodOrderFlow(
                                     modifier = Modifier
                                         .padding(horizontal = 20.dp)
                                         .fillMaxWidth()
-                                        .height(230.dp)
+                                        .height(180.dp)
                                         .clip(shape = RoundedCornerShape(16.dp))
                                         .clickable {
                                             if (DeveloperOptions.isEnabled(context)) {
@@ -847,7 +843,7 @@ fun FoodOrderFlow(
                                             modifier = Modifier
                                                 .padding(horizontal = 20.dp)
                                                 .fillMaxWidth()
-                                                .height(110.dp)
+                                                .height(70.dp)
                                                 .clip(shape = RoundedCornerShape(16.dp))
                                         )
 
