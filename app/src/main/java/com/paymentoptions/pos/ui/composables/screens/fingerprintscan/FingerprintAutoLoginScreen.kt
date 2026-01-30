@@ -202,11 +202,16 @@ fun authenticateUser(
                 else
                     BiometricManager.Authenticators.DEVICE_CREDENTIAL
             )
+            // Only set negative button text if device credential is NOT allowed
+            if (hasBiometric) {
+                promptInfoBuilder.setNegativeButtonText("Cancel")
+            }
         } else {
             if (hasBiometric) {
                 promptInfoBuilder.setNegativeButtonText("Cancel")
             } else {
                 promptInfoBuilder.setDeviceCredentialAllowed(true)
+                // Do NOT set negative button text if device credential is allowed
             }
         }
 
@@ -361,7 +366,7 @@ private fun onAuthSuccess(
                     // Start token auto refresh after successful auto sign-in
                     TokenAutoRefresher.getInstance(context).onUserSignedIn()
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Auto sign-in successful", Toast.LENGTH_SHORT)
+                        Toast.makeText(context, "Auto sign-in is successful", Toast.LENGTH_SHORT)
                             .show()
                         navController.navigate(Screens.Dashboard.route) {
                             popUpTo(Screens.AuthCheck.route) { inclusive = true }
@@ -395,7 +400,7 @@ private fun autoSignInFailed(
     navController: NavController
 ) {
     // Auto sign-in failed - notify the system
-    Toast.makeText(context, "Auto sign-in failed", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, "Auto sign-in has failed, Please enter credentials again", Toast.LENGTH_SHORT).show()
     AuthEventManager.onAutoSignInFailed()
     SharedPreferences.clearSharedPreferences(context)
     navController.navigate(Screens.AuthCheck.route) {

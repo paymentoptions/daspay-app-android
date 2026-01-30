@@ -6,7 +6,6 @@ import android.os.Build
 import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
-import androidx.biometric.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -131,11 +130,16 @@ fun authenticateUser(
                 else
                     BiometricManager.Authenticators.DEVICE_CREDENTIAL
             )
+            // Only set negative button text if device credential is NOT allowed
+            if (hasBiometric) {
+                promptInfoBuilder.setNegativeButtonText("Cancel")
+            }
         } else {
             if (hasBiometric) {
                 promptInfoBuilder.setNegativeButtonText("Cancel")
             } else {
                 promptInfoBuilder.setDeviceCredentialAllowed(true)
+                // Do NOT set negative button text if device credential is allowed
             }
         }
         biometricPrompt.authenticate(promptInfoBuilder.build())
