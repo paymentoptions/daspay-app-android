@@ -14,6 +14,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
+import retrofit2.http.PUT
 import java.util.concurrent.TimeUnit
 
 const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/"
@@ -57,7 +58,7 @@ interface ApiService {
         @Query("skip") skip: Int,
     ): TransactionListResponse
 
-    @POST("transactions/listv2")
+    @POST("transactions/daspay-list")
     suspend fun transactionListV2(
         @HeaderMap headers: Map<String, String>,
         @Body request: TransactionListV2Request,
@@ -130,6 +131,27 @@ interface ApiService {
         @Field("signature") signature: String,
         @Field("TransactionID") TransactionID: String,
     ): UploadSignatureResponse
+
+
+    @POST("entities/merchant/catalog/products")
+    suspend fun addProduct(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: ProductRequest,
+    ): ProductResponse
+
+    @PUT("entities/merchant/catalog/products/{productId}")
+    suspend fun editProduct(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: ProductRequest,
+        @Path("productId") productId: String,
+    ): ProductResponse
+
+    @POST("entities/merchant/catalog/upload-products-images")
+    suspend fun uploadProductImage(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: ProductImageRequest,
+    ): UploadImageResponse
+
 }
 
 var gson = GsonBuilder()

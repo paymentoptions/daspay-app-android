@@ -23,10 +23,15 @@ data class SignInData(
     val appLevel: String,
     val contactNo: String,
     val referralCode: String,
-    val accessLevel: String,
+    val accessLevel: AccessLevel,
     val signInAsMerchant: Boolean,
     val passwordExpiry: String,
 )
+
+@Serializable
+enum class AccessLevel{
+    ADMIN, STAFF
+}
 
 data class SignInRequest(
     val username: String,
@@ -103,17 +108,25 @@ data class TransactionListDataRecord(
     val PBLLinkName: String,
     val IsWhitelisted: Boolean,
     val GatewayResponse: String,
-    val ResponseCode: String,
+    val ResponseCode: String?,   // ✅ nullable
     val TransactionID: Int,
     val IntegrationType: String,
-    val PaymentType: String?,
+    val PaymentType: String?
 )
+
 
 data class TransactionListData(
     val total_count: Int,
-    val total_amount: Double,
-    val records: List<TransactionListDataRecord>,
+    val total_amount: String,     // ✅ was Double
+    val records: List<TransactionListDataRecord?>,
+
+    // Optional but useful
+    val total_sales: String? = null,
+    val total_refund: String? = null,
+    val approval_ratio: String? = null,
+    val decline_count: String? = null
 )
+
 
 data class TransactionListResponse(
     val statusCode: Int,
@@ -448,6 +461,21 @@ data class ProductListDataRecord(
     val DeletedBy: String?,
 )
 
+@Serializable
+data class ProductRequest (
+    val ProductName: String?,
+    val ProductDesc: String?,
+    val ProductPrice: Float?,
+    val ProductFoodType: String?,
+    val ProductSize: String?,
+    val ProductCode: String?,
+    val ProductStatus: Boolean?,
+    val ProductStock: Long?,
+    val Currency: String?,
+    val MerchantID: String?,
+    val CategoryID: String?
+)
+
 data class ProductListResponseData(
     val total_count: Int,
     val records: List<ProductListDataRecord>,
@@ -765,6 +793,33 @@ data class UploadSignatureResponse(
     val message: String,
     val messageCode: String,
     val success: Boolean,
+)
+@Serializable
+data class ProductImageRequest(
+    val ProductID: String,
+    val fileName: String,
+)
+
+data class UploadImageResponse (
+    val statusCode: Long,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: UploadImageData
+)
+
+data class UploadImageData (
+    val signedUrl: String,
+    val fileName: String
+)
+
+
+data class ProductResponse (
+    val statusCode: Long,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: ProductListDataRecord
 )
 
 fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDataRecord {

@@ -65,7 +65,6 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.ScreenRatioToDp
-import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getApms
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
@@ -96,9 +95,11 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.additionalcharge.AdditionalChargeBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.product.AddProductSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu.FoodMenuBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu.ToastData
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu.ToastType
+import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.product.EditProductSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.reviewcart.ReviewCartBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.TakeDigitalSignatureBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.chargemoney.ChargeMoneyBottomSectionContent
@@ -159,6 +160,7 @@ fun FoodOrderFlow(
     var signatureBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var signatureDate by remember { mutableStateOf(Date()) }
     var signaturePath by remember { mutableStateOf(Path()) }
+    var foodItemSelected by remember { mutableStateOf<FoodItem?>(null) }
 
     latestTransactionId?.let {
         LaunchedEffect(latestTransactionId) {
@@ -249,6 +251,11 @@ fun FoodOrderFlow(
 
     fun updateFlowStage(newFoodOrderFlowStage: FoodOrderFlowStage) {
         foodOrderFlowStage = newFoodOrderFlowStage
+    }
+
+    fun openEditPage(it: FoodItem) {
+        foodItemSelected = it
+        foodOrderFlowStage = FoodOrderFlowStage.EDIT_PRODUCT
     }
     /*
     if (!nfcStatusPair.first) {
@@ -394,7 +401,8 @@ fun FoodOrderFlow(
                 updateCartSate = { cartState = it.copy() },
                 updateFlowStage = { updateFlowStage(it) },
                 createToast = { toastData.setToast(it) },
-                setShowToast = { setShowToast(it) })
+                setShowToast = { setShowToast(it) },
+                editProduct = {openEditPage(it)})
         }
 
         FoodOrderFlowStage.REVIEW_CART -> {
@@ -1080,6 +1088,37 @@ fun FoodOrderFlow(
                     transactionId = latestTransactionId.toString(),
                     signatureBitmap = signatureBitmap,
                     signatureDate = signatureDate,
+                )
+            }
+        }
+
+        FoodOrderFlowStage.ADD_PRODUCT -> {
+            SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.9f,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+                ) {
+                AddProductSectionContent(
+                    selectedFoodCategory,
+                    updateFlowToMenu = { updateFlowStage(FoodOrderFlowStage.MENU) }
+                )
+            }
+        }
+
+        FoodOrderFlowStage.EDIT_PRODUCT -> {
+            SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.9f,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+
+            ) {
+                EditProductSectionContent(
+                    selectedFoodItem = foodItemSelected!!,
+                    updateFlowToMenu = { updateFlowStage(FoodOrderFlowStage.MENU) }
                 )
             }
         }

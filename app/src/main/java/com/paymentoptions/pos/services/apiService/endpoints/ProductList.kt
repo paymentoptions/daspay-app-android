@@ -19,7 +19,7 @@ suspend fun productList(context: Context, categoryId: String): ProductListRespon
 
         return productListResponse
     } catch (e: Exception) {
-        println("transactionListError: $e")
+        println("Product List Error: $e")
         throw e
     }
 }

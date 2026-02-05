@@ -24,7 +24,7 @@ suspend fun categoryList(context: Context): CategoryListResponse? {
 
         return categoryListResponse
     } catch (e: Exception) {
-        println("transactionListError: $e")
+        println("categoryList Error: $e")
         throw e
     }
 }

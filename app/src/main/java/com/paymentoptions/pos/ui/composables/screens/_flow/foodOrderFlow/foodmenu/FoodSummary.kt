@@ -4,6 +4,7 @@ import android.os.Handler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +44,7 @@ fun FoodSummary(
     updateCartSate: (Cart) -> Unit,
     createToast: (ToastData) -> Unit,
     setShowToast: (Boolean) -> Unit,
+    editProduct: (FoodItem) -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -108,7 +110,14 @@ fun FoodSummary(
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().combinedClickable(
+            onLongClick = {
+                editProduct(foodItem)
+            },
+            onClick = {
+
+            }
+        ),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
