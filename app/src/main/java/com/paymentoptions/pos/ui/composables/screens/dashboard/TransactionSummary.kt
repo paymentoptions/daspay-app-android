@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.gson.Gson
+import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -52,8 +54,15 @@ import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.timeAgo
+import com.theminesec.lib.dto.common.Amount
+import com.theminesec.lib.dto.poi.PoiRequest
+import com.theminesec.lib.dto.transaction.TranType
+import com.theminesec.sdk.headless.HeadlessActivity
+import com.theminesec.sdk.headless.model.WrappedResult
+import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
+import java.util.Currency
 import java.util.Date
 
 var TRANSACTION_TO_BE_REFUNDED: TransactionListDataRecord? = null
@@ -230,6 +239,43 @@ fun TransactionSummary(
         }
 
 
+        val launcher = rememberLauncherForActivityResult(
+            HeadlessActivity.contract(ClientHeadlessImpl::class.java)
+        ) {
+            when (it) {
+                is WrappedResult.Success -> {
+                    println("inThis Launche response: ${it.toString()}")
+                }
+
+                is WrappedResult.Failure -> {
+                    println("inThis Launcher failure ---->: $it")
+                }
+            }
+        }
+
+
+
+        fun doVoid(transaction: TransactionListDataRecord){
+            println("full transaction object: $transaction")
+            launcher.launch(input = PoiRequest.ActionVoid(transaction.uuid))
+        }
+
+        fun doRefund(transaction: TransactionListDataRecord ){
+            println("full transaction object: $transaction")
+            launcher.launch(input = PoiRequest.ActionNew(
+                tranType = TranType.REFUND,
+                amount = Amount(
+                    BigDecimal(transaction.amount.toInt()),
+                    Currency.getInstance(transaction.CurrencyCode),
+                ),
+                profileId = "prof_01K36002RM7DMMPHG0QEX3E9BR",
+                linkedTranId = transaction.uuid,
+                posReference= "REFUND_20260202_002"
+            ))
+        }
+
+
+
         if (isLongClicked) Column(
             modifier = Modifier
                 .padding(end = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
@@ -238,10 +284,10 @@ fun TransactionSummary(
                 )
                 .padding(6.dp)
                 .weight(2f)
-                .clickable {
-                    navController.navigate(Screens.RefundTransaction.route)
-                    TRANSACTION_TO_BE_REFUNDED = transaction
-                },
+                .clickable(onClick = {
+                    doVoid(transaction)
+                })
+            ,
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {

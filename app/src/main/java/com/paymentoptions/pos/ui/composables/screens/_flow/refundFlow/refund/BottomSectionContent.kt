@@ -68,7 +68,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 totalTransactionCount = transactionListFromAPI.data.total_count
 
                 //Logic to filter in transactions that can be refunded
-                transactions = transactions.plus(transactionListFromAPI.data.records.filter {
+                transactions = transactions.plus(transactionListFromAPI.data.records.filterNotNull().filter {
                     it.status == "SUCCESSFUL" && it.TransactionType == "PURCHASE"
                 })
             }

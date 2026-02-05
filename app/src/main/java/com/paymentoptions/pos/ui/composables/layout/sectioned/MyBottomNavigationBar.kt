@@ -123,9 +123,15 @@ val helpAndSupport = BottomNavigationBarItem(
     title = "Help & Support", icon = Icons.Outlined.Info, route = Screens.HelpAndSupport.route
 )
 
-val itemsInMore = listOf<BottomNavigationBarItem>(
+val itemsInMoreAdmin = listOf<BottomNavigationBarItem>(
     transactionHistory,
 //    notifications,
+    settlement,
+    settings,
+    helpAndSupport,
+)
+
+val itemsInMoreStaff = listOf<BottomNavigationBarItem>(
     settlement,
     settings,
     helpAndSupport,
@@ -216,19 +222,37 @@ fun MyBottomNavigationBar(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(16.dp)
             ) {
-                items(itemsInMore.size) {
+                if (SharedPreferences.isAdmin(context)) {
+                    items(itemsInMoreAdmin.size) {
 
-                    MyElevatedCard {
-                        Item(
-                            itemsInMore[it],
-                            onSelected = { navController.navigate(itemsInMore[it].route) },
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            minLines = 2,
-                            maxLines = 2,
-                            inMore = true
-                        )
+                        MyElevatedCard {
+                            Item(
+                                itemsInMoreAdmin[it],
+                                onSelected = { navController.navigate(itemsInMoreAdmin[it].route) },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                minLines = 2,
+                                maxLines = 2,
+                                inMore = true
+                            )
+                        }
+                    }
+                } else {
+                    items(itemsInMoreStaff.size) {
+
+                        MyElevatedCard {
+                            Item(
+                                itemsInMoreStaff[it],
+                                onSelected = { navController.navigate(itemsInMoreStaff[it].route) },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                minLines = 2,
+                                maxLines = 2,
+                                inMore = true
+                            )
+                        }
                     }
                 }
 

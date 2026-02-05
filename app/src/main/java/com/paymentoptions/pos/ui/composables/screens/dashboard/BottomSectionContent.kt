@@ -92,7 +92,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                 totalTransactionCount = transactionListFromAPI.data.total_count
 
-                transactions = transactions.plus(transactionListFromAPI.data.records)
+                transactions = transactions.plus(transactionListFromAPI.data.records.filterNotNull())
 
                 //set receival amount from API total_amount field (rounded to two decimal place)
                 receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
@@ -152,17 +152,18 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            FilledButton(
-                text = "View Insights",
-                onClick = { navController.navigate(Screens.TransactionHistory.route) },
-                modifier = Modifier
-                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                    .width(160.dp)
-                    .height(35.dp)
-                    .scale(0.8f),
-            )
-
-            Spacer(Modifier.height(20.dp))
+            if(SharedPreferences.isAdmin(context)) {
+                FilledButton(
+                    text = "View Insights",
+                    onClick = { navController.navigate(Screens.TransactionHistory.route) },
+                    modifier = Modifier
+                        .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                        .width(160.dp)
+                        .height(35.dp)
+                        .scale(0.8f),
+                )
+                Spacer(Modifier.height(20.dp))
+            }
 
             Row(
                 Modifier

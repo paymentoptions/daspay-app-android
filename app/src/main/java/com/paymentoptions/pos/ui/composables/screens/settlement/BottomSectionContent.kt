@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getSettlementCurrency
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -602,11 +603,16 @@ fun BottomSectionContent(
         }
 
         Spacer(modifier = Modifier.height(20.dp))
-
-        FilledButton(
-            text = "Settle All", disabled = !showCurrent, isLoading = loader, modifier = Modifier
+        if(SharedPreferences.isAdmin(context)) {
+            FilledButton(
+                text = "Settle All",
+                disabled = !showCurrent,
+                isLoading = loader,
+                modifier = Modifier
 //                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                .fillMaxWidth()
-                .height(59.dp), onClick = {})
+                    .fillMaxWidth()
+                    .height(59.dp),
+                onClick = {})
+        }
     }
 }

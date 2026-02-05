@@ -125,7 +125,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 maxPage =
                     ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
 
-                transactionListFromAPI.data.records.filter { transaction ->
+                transactionListFromAPI.data.records.filterNotNull().filter { transaction ->
 
                     tabs[0] = Tab(tabs[0].text, tabs[0].matchText, tabs[0].newCount + 1)
 
@@ -142,7 +142,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     true
                 }
 
-                transactions = transactions.plus(transactionListFromAPI.data.records)
+                transactions = transactions.plus(transactionListFromAPI.data.records.filterNotNull())
             }
         } catch (e: Exception) {
             if (e.toString().contains("HTTP 401")) {

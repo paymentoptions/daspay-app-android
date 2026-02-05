@@ -1,7 +1,9 @@
 package com.paymentoptions.pos.ui.composables.screens.transactionshistory
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +57,15 @@ import com.paymentoptions.pos.utils.timeAgo
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
+import com.paymentoptions.pos.ClientHeadlessImpl
+import com.theminesec.lib.dto.common.Amount
+import com.theminesec.lib.dto.poi.PoiRequest
+import com.theminesec.lib.dto.transaction.TranType
+import com.theminesec.sdk.headless.HeadlessActivity
+import com.theminesec.sdk.headless.model.WrappedResult
+import androidx.compose.runtime.remember
+import java.math.BigDecimal
+import java.util.Currency
 
 @Composable
 fun TransactionSummary(
@@ -83,6 +95,8 @@ fun TransactionSummary(
         transaction.status.uppercase() == "SUCCESSFUL" -> Color(0xFF22C55E)  // Green
         else -> Color(0xFFD52121)  // Red
     }
+
+
 
     val dateStr = buildAnnotatedString {
         withStyle(
@@ -206,6 +220,47 @@ fun TransactionSummary(
             }
         }
 
+        val launcher = rememberLauncherForActivityResult(
+            HeadlessActivity.contract(ClientHeadlessImpl::class.java)
+        ) {
+            when (it) {
+                is WrappedResult.Success -> {
+                    println("inThis Launche response: ${it.toString()}")
+                }
+
+                is WrappedResult.Failure -> {
+                    println("inThis Launcher failure ---->: $it")
+                }
+            }
+        }
+
+
+
+        fun doVoid(transaction: InsightsResponseDataRecord){
+            println("full transaction object: $transaction")
+            //launcher.launch(input = PoiRequest.ActionVoid("tran_01KGKT044SGRKQM9SS9K6146TD"))
+            launcher.launch(input = PoiRequest.ActionLinkedRefund("tran_01KGQ1YSD90MRKW9FH3D5ME2GW"))
+        }
+
+
+//        {"tranId":"tran_01KGKT044SGRKQM9SS9K6146TD","tranType":"SALE","tranStatus":"APPROVED","amount":{"v
+//            alue":"9.00","currency":"HKD"},
+
+        fun doRefund(transaction: InsightsResponseDataRecord ){
+            println("full transaction object: $transaction")
+            launcher.launch(input = PoiRequest.ActionNew(
+                tranType = TranType.REFUND,
+                amount = Amount(
+                    BigDecimal(transaction.amount.toInt()),
+                    Currency.getInstance(transaction.CurrencyCode),
+                ),
+                profileId = "prof_01K36002RM7DMMPHG0QEX3E9BR",
+                linkedTranId = transaction.uuid,
+                posReference= "REFUND_20260202_002"
+            ))
+        }
+
+
 
         if (isLongClicked) Column(
             modifier = Modifier
@@ -214,7 +269,11 @@ fun TransactionSummary(
                     red300.copy(alpha = 0.2f), shape = RoundedCornerShape(8.dp)
                 )
                 .padding(6.dp)
-                .weight(2f),
+                .weight(2f)
+                .clickable(onClick = {
+                    doVoid(transaction)
+                })
+            ,
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
