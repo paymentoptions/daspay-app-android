@@ -1,9 +1,9 @@
 package com.paymentoptions.pos
 
 import android.app.Application
-import android.util.Log
-import androidx.lifecycle.lifecycleScope
-import com.paymentoptions.pos.MainActivity
+import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.logger.Config
+import com.paymentoptions.pos.logger.LogConfig
 import com.theminesec.sdk.headless.HeadlessSetup
 import com.theminesec.sdk.headless.model.WrappedResult
 import com.theminesec.sdk.headless.model.setup.SdkInitResp
@@ -11,8 +11,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
+import java.io.File
 
-//import com.theminesec.minehades.config.MhdConfig
 
 class ClientApp : Application() {
     private val appScope = CoroutineScope(Dispatchers.Main)
@@ -22,15 +22,34 @@ class ClientApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        initAppLogger()
+
         appScope.launch {
             val clientAppInitRes =
                 HeadlessSetup.initSoftPos(this@ClientApp, "payment-options.license")
-            Log.d("ClientApp ->", "Application init: $clientAppInitRes")
+            AppLogger.debug("Application init: $clientAppInitRes")
             val res = HeadlessSetup.initialSetup(this@ClientApp)
-            Log.d("Inital Setup--->", res.toString())
+            AppLogger.debug("Inital Setup---> ${res}")
             _sdkInitStatus.emit(clientAppInitRes)
         }
 
+    }
+
+    private fun initAppLogger() {
+        AppLogger.init(
+            context = this.applicationContext,
+            config = getConfig(),
+            appVersion = "Version 2.0",
+            onThrowError = {
+                // A callback if we need to integrate Sentry or other error platforms
+            },
+        )
+    }
+
+    private fun getConfig(): Config {
+        val logFolderPath = "${cacheDir.absolutePath}${File.separator}daspay"
+        val logConfig = LogConfig("", logFolderPath)
+        return Config(logConfig = logConfig)
     }
 
 
