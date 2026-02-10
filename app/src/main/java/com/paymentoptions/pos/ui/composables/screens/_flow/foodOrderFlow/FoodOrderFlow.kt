@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow
 
 import MyDialog
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Handler
@@ -125,6 +126,10 @@ import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.paymentoptions.pos.utils.viaLinkPaymentMethod
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -300,34 +305,7 @@ fun FoodOrderFlow(
         foodItemListAvailable = false
 
         if (selectedFoodCategory.isNotNull()) {
-            try {
-                val foodItemListFromAPI = productList(context, selectedFoodCategory!!.CategoryID)
-
-                if (foodItemListFromAPI != null) {
-                    val newFoodItems = foodItemListFromAPI.data.records.map { record ->
-                        FoodItem(item = record)
-                    }
-
-                    cartState.replaceFoodCategory(
-                        categoryId = selectedFoodCategory!!.CategoryID, newFoodItems, context
-                    )
-                } else cartState.replaceFoodCategory(
-                    selectedFoodCategory!!.CategoryID, listOf<FoodItem>(), context
-                )
-            } catch (e: Exception) {
-
-                if (e.toString().contains("HTTP 401")) {
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.session_expired),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    navController.navigate(Screens.FingerprintScan.route){
-                        // Clear back stack to prevent going back to authenticated screens
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            }
+            getProductsPerCategory(context, selectedFoodCategory, cartState, navController)
         }
         foodItemListAvailable = true
     }
@@ -1102,7 +1080,17 @@ fun FoodOrderFlow(
                 ) {
                 AddProductSectionContent(
                     selectedFoodCategory,
-                    updateFlowToMenu = { updateFlowStage(FoodOrderFlowStage.MENU) }
+                    updateFlowToMenu = {
+
+                        if (selectedFoodCategory.isNotNull()) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                getProductsPerCategory(context, selectedFoodCategory, cartState, navController)
+                                withContext(Dispatchers.Main){
+                                    updateFlowStage(FoodOrderFlowStage.MENU)
+                                }
+                            }
+                         }
+                    }
                 )
             }
         }
@@ -1118,10 +1106,55 @@ fun FoodOrderFlow(
             ) {
                 EditProductSectionContent(
                     selectedFoodItem = foodItemSelected!!,
-                    updateFlowToMenu = { updateFlowStage(FoodOrderFlowStage.MENU) }
+                    updateFlowToMenu = {
+                        if (selectedFoodCategory.isNotNull()) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                getProductsPerCategory(context, selectedFoodCategory, cartState, navController)
+                                withContext(Dispatchers.Main){
+                                    updateFlowStage(FoodOrderFlowStage.MENU)
+                                }
+                            }
+                        }
+                    }
                 )
             }
         }
 
+    }
+}
+
+private suspend fun getProductsPerCategory(
+    context: Context,
+    selectedFoodCategory: CategoryListDataRecord?,
+    cartState: Cart,
+    navController: NavController
+) {
+    try {
+        val foodItemListFromAPI = productList(context, selectedFoodCategory!!.CategoryID)
+
+        if (foodItemListFromAPI != null) {
+            val newFoodItems = foodItemListFromAPI.data.records.map { record ->
+                FoodItem(item = record)
+            }
+
+            cartState.replaceFoodCategory(
+                categoryId = selectedFoodCategory!!.CategoryID, newFoodItems, context
+            )
+        } else cartState.replaceFoodCategory(
+            selectedFoodCategory!!.CategoryID, listOf<FoodItem>(), context
+        )
+    } catch (e: Exception) {
+
+        if (e.toString().contains("HTTP 401")) {
+//            Toast.makeText(
+//                context,
+//                context.getString(R.string.session_expired),
+//                Toast.LENGTH_SHORT
+//            ).show()
+//            navController.navigate(Screens.FingerprintScan.route) {
+//                // Clear back stack to prevent going back to authenticated screens
+//                popUpTo(0) { inclusive = true }
+//            }
+        }
     }
 }

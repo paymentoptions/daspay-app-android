@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.product
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -15,6 +16,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material3.*
@@ -46,6 +48,7 @@ import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import coil3.compose.AsyncImage
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.endpoints.editProduct
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
@@ -96,7 +99,7 @@ fun EditProductSectionContent(
     // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
         // Handle camera result (imageUri should be set before launching)
-        println("It is called with tempCameraUri:$tempCameraUri and success : $success")
+        AppLogger.debug("It is called with tempCameraUri:$tempCameraUri and success : $success")
         if(success) {
             imageUri = tempCameraUri
         }
@@ -142,8 +145,7 @@ fun EditProductSectionContent(
             // Top bar
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -167,7 +169,7 @@ fun EditProductSectionContent(
 
             Spacer(modifier = Modifier.height(18.dp))
             // Product Name
-            BasicTextInput(
+            OutlinedTextInput(
                 state = productName,
                 placeholder = "",
                 modifier = Modifier.fillMaxWidth(),
@@ -301,7 +303,7 @@ fun EditProductSectionContent(
                         ) {
                             IconButton(
                                 onClick = { if (productStock > 1) productStock-- },
-                                modifier = Modifier.size(27.dp)
+                                modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(Icons.Default.Remove,
                                     contentDescription = "Decrease",
@@ -318,7 +320,7 @@ fun EditProductSectionContent(
 
                             IconButton(
                                 onClick = { productStock++ },
-                                modifier = Modifier.size(27.dp)
+                                modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(Icons.Default.Add,
                                     contentDescription = "Increase",
@@ -390,12 +392,22 @@ fun EditProductSectionContent(
                                         ,
                                     )
                                 } else {
-                                    Icon(
-                                        Icons.Filled.PhotoCamera,
-                                        contentDescription = "Pick Image",
-                                        tint = Color(0xFF1976D2),
-                                        modifier = Modifier.size(50.dp)
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(70.dp)
+                                            .background(
+                                                brush = enabledFilledButtonGradientBrush,
+                                                shape = RoundedCornerShape(6.dp)
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.PhotoCamera,
+                                            contentDescription = "Pick Image",
+                                            tint = Color.White, // 👈 visible icon
+                                            modifier = Modifier.size(50.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -435,7 +447,7 @@ fun EditProductSectionContent(
                                     )
                                     val tempUri = FileProvider.getUriForFile(
                                         context,
-                                        context.packageName + ".provider",
+                                        context.packageName + ".fileprovider",
                                         tempFile
                                     )
                                     launchCameraWithPermissionCheck(tempUri)
@@ -530,26 +542,24 @@ fun EditProductSectionContent(
                         val result = try {
                             val addFoodResponse = editProduct(
                                 context = context,
-                                request = ProductRequest(
-                                    ProductName = productName.text.toString(),
-                                    ProductDesc = productDescription.text.toString(),
-                                    ProductPrice = finalPrice,
-                                    ProductFoodType = productType,
-                                    ProductSize = productSize,
-                                    ProductCode = productCode.text.toString(),
-                                    ProductStock = productStock.toLong(),
-                                    ProductStatus = true,
-                                    Currency = "HKD",
-                                    MerchantID = selectedFoodItem.item.MerchantID,
-                                    CategoryID = selectedFoodItem.item.CategoryID,
+                                request = getProductRequest(
+                                    context,
+                                    productName,
+                                    productDescription,
+                                    finalPrice,
+                                    productType,
+                                    productSize,
+                                    productCode,
+                                    productStock,
+                                    selectedFoodItem
                                 ),
                                 foodItem = selectedFoodItem,
                                 selectedFile = uriToTempFile(context, imageUri),
-
                                 )
                             addFoodResponse?.statusCode == 200L || addFoodResponse?.statusCode == 201L // success
                         } catch (e: Exception) {
                             errorMessage = e.message ?: "Failed to add product."
+                            AppLogger.error(e)
                             false
                         }
                         isLoading = false
@@ -569,6 +579,51 @@ fun EditProductSectionContent(
         }
     }
 }
+
+private fun getProductRequest(
+    context: Context,
+    productName: TextFieldState,
+    productDescription: TextFieldState,
+    finalPrice: Float,
+    productType: String,
+    productSize: String,
+    productCode: TextFieldState,
+    productStock: Int,
+    selectedFoodItem: FoodItem
+): ProductRequest {
+    if (SharedPreferences.isAdmin(context)) return ProductRequest(
+        ProductName = productName.text.toString(),
+        ProductDesc = productDescription.text.toString(),
+        ProductPrice = finalPrice,
+        ProductFoodType = productType,
+        ProductSize = productSize,
+        ProductCode = productCode.text.toString(),
+        ProductStock = productStock.toLong(),
+        ProductStatus = true,
+        Currency = "HKD",
+        MerchantID = selectedFoodItem.item.MerchantID,
+        CategoryID = selectedFoodItem.item.CategoryID,
+    ) else {
+        return ProductRequest(
+            ProductName = productName.text.toString(),
+            ProductDesc = productDescription.text.toString(),
+            ProductFoodType = productType,
+            ProductSize = productSize,
+            ProductStock = productStock.toLong(),
+            ProductStatus = true,
+            Currency = "HKD",
+            MerchantID = selectedFoodItem.item.MerchantID,
+            CategoryID = selectedFoodItem.item.CategoryID,
+            ProductPrice = null,
+            ProductCode = null,
+        )
+
+    }
+}
+
+
+
+
 
 
 

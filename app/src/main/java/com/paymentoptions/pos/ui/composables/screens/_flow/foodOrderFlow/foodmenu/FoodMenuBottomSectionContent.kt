@@ -46,6 +46,7 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodItem
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlowStage
 import androidx.compose.material.icons.filled.Add
+import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.utils.formatToPrecisionString
@@ -177,12 +178,16 @@ fun FoodMenuBottomSectionContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
-            // Add new food add button
-            AddProductItemButton(
-                onClick = { updateFlowStage(FoodOrderFlowStage.ADD_PRODUCT) },
-            )
+            if(SharedPreferences.isAdmin(context)) {
+                // Add new food add button
+                AddProductItemButton(
+                    onClick = {
+                        updateFlowStage(FoodOrderFlowStage.ADD_PRODUCT)
+                    },
+                )
+            }
 
         }
 

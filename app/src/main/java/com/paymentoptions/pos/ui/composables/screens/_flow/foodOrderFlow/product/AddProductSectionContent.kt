@@ -46,6 +46,10 @@ import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -63,9 +67,15 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import androidx.core.content.FileProvider
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.disabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
+import com.paymentoptions.pos.ui.theme.innerShadow
+import com.paymentoptions.pos.ui.theme.shadowColor
+import com.paymentoptions.pos.ui.theme.shadowColor2
+import com.paymentoptions.pos.utils.modifiers.innerShadow
 import java.util.Locale
 
 @OptIn(
@@ -102,7 +112,7 @@ fun AddProductSectionContent(
     val cameraLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
             // Handle camera result (imageUri should be set before launching)
-            println("It is called with tempCameraUri:$tempCameraUri and success : $success")
+            AppLogger.debug("It is called with tempCameraUri:$tempCameraUri and success : $success")
             if (success) {
                 imageUri = tempCameraUri
             }
@@ -155,8 +165,7 @@ fun AddProductSectionContent(
             // Top bar
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -180,7 +189,7 @@ fun AddProductSectionContent(
 
             Spacer(modifier = Modifier.height(18.dp))
             // Product Name
-            BasicTextInput(
+            OutlinedTextInput(
                 state = productName,
                 placeholder = "Enter Name",
                 modifier = Modifier.fillMaxWidth(),
@@ -308,11 +317,11 @@ fun AddProductSectionContent(
                                     shape = RoundedCornerShape(20.dp),
                                     width = 1.dp,
                                     color = Color.Blue
-                                ).padding(horizontal = 20.dp, vertical = 8.dp)
+                                )
                         ) {
                             IconButton(
                                 onClick = { if (productStock > 1) productStock-- },
-                                modifier = Modifier.size(27.dp)
+                                modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(Icons.Default.Remove,
                                     contentDescription = "Decrease",
@@ -329,7 +338,7 @@ fun AddProductSectionContent(
 
                             IconButton(
                                 onClick = { productStock++ },
-                                modifier = Modifier.size(27.dp)
+                                modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(Icons.Default.Add,
                                     contentDescription = "Increase",
@@ -389,12 +398,22 @@ fun AddProductSectionContent(
                                     )
                                 }
                             } else {
-                                Icon(
-                                    Icons.Filled.PhotoCamera,
-                                    contentDescription = "Pick Image",
-                                    tint = Color.Blue,
-                                    modifier = Modifier.size(70.dp)
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(70.dp)
+                                        .background(
+                                            brush = enabledFilledButtonGradientBrush,
+                                            shape = RoundedCornerShape(6.dp)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.PhotoCamera,
+                                        contentDescription = "Pick Image",
+                                        tint = Color.White, // 👈 visible icon
+                                        modifier = Modifier.size(50.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -433,7 +452,7 @@ fun AddProductSectionContent(
                                     )
                                     val tempUri = FileProvider.getUriForFile(
                                         context,
-                                        context.packageName + ".provider",
+                                        context.packageName + ".fileprovider",
                                         tempFile
                                     )
                                     launchCameraWithPermissionCheck(tempUri)
@@ -527,7 +546,7 @@ fun AddProductSectionContent(
 
 
                         val result = try {
-                            println("categorySelected id: $categorySelected")
+                            AppLogger.debug("categorySelected id: $categorySelected")
 
                             val addFoodResponse = addProduct(
                                 context = context, request = ProductRequest(
@@ -626,7 +645,8 @@ fun RectangularDropdownMenu(
 
     val borderColor = Color(0xFF90CAF9)
 
-    Box(modifier = modifier) {
+    Box(modifier = modifier
+    ) {
 
         // 🔹 Dropdown button
         OutlinedButton(
@@ -634,9 +654,10 @@ fun RectangularDropdownMenu(
             shape = RoundedCornerShape(4.dp),
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
             border = BorderStroke(1.dp, borderColor.copy(alpha = 0.5f)),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.onSurface
-            ),
+
+//            colors = ButtonDefaults.outlinedButtonColors(
+//                contentColor = MaterialTheme.colorScheme.onSurface
+//            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .onSizeChanged { buttonWidth = it.width }
@@ -646,7 +667,7 @@ fun RectangularDropdownMenu(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = selected)
+                Text(text = selected, color = purple50)
                 Icon(
                     imageVector = Icons.Default.ArrowDropDown,
                     contentDescription = null,
@@ -663,16 +684,38 @@ fun RectangularDropdownMenu(
             modifier = Modifier
                 .width(with(LocalDensity.current) { buttonWidth.toDp() })
                 .border(1.dp, borderColor, RoundedCornerShape(4.dp))
-                .background(MaterialTheme.colorScheme.surface)
+//                .background(shadowColor2.copy(alpha = 0.5f))
+                .background(color = Color.White)
+                .drawBehind {
+                    // fade bottom 5.dp to transparent
+                    drawRect(
+                        color = Color.White,
+                        topLeft = Offset(0f, size.height - 25.dp.toPx()),
+                        size = Size(size.width, 10.dp.toPx()),
+                        blendMode = BlendMode.Darken // clears pixels, making them transparent
+                    )
+                }
+                .innerShadow(
+                    color = innerShadow,
+                    blur = 10.dp,
+                    spread = 5.dp,
+                    cornersRadius = 0.dp,
+                    offsetX = 0.dp,
+                    offsetY = 0.dp,
+                    showBottom = false
+                ),
         ) {
             options.forEachIndexed { index, option ->
 
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { Text(option, color = primary500) },
                     onClick = {
                         onSelected(option)
                         expanded = false
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)
                 )
 
                 // 🔹 Divider between items (except last)
@@ -686,4 +729,3 @@ fun RectangularDropdownMenu(
         }
     }
 }
-
