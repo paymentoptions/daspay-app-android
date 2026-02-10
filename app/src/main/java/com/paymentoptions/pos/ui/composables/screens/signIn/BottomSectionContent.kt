@@ -1,14 +1,12 @@
 package com.paymentoptions.pos.ui.composables.screens.signIn
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -23,10 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.device.SharedPreferences
@@ -39,10 +34,8 @@ import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
-import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.inProduction
 import com.paymentoptions.pos.utils.validation.validateEmail
-import com.paymentoptions.pos.utils.validation.validateOtp
 import com.paymentoptions.pos.utils.validation.validatePassword
 import kotlinx.coroutines.launch
 
@@ -212,6 +205,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             modifier = Modifier
                 .fillMaxWidth()
                 .height(59.dp)
+                .padding(bottom = 25.dp)
         )
     }
 }

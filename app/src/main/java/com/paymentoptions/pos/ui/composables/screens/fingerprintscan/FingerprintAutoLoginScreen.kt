@@ -126,6 +126,22 @@ fun FingerprintAutoLoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Added this button if pop is dismissed by system or user
+            // it will be hidden behind pop up if pop up is showing
+            FilledButton(
+                text = "Authenticate",
+                onClick = { authenticateUser(
+                    scope = scope,
+                    navController = navController,
+                    context = context
+                ) },
+                modifier = Modifier
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                    .width(160.dp)
+                    .height(35.dp)
+                    .scale(0.8f),
+            )
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "Authentication Required",
                 fontSize = 20.sp,
