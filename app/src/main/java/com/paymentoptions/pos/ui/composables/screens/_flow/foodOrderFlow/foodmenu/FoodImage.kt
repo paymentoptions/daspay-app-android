@@ -1,12 +1,10 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -14,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -33,10 +32,11 @@ fun FoodImage(
         AsyncImage(
             model = imageUrl,
             contentDescription = name,
+            contentScale = ContentScale.Crop, // 🔥 IMPORTANT
             modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(50))
-                .border(borderThin, shape = RoundedCornerShape(50))
+                .fillMaxSize()                  // 🔥 MUST be square
+                .clip(CircleShape)            // 🔥 Clip AFTER size
+                .border(borderThin, CircleShape)
                 .zIndex(1f)
         )
 

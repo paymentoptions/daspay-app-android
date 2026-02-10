@@ -1,22 +1,17 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
-import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.CategoryListResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
+import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generateRequestHeader
-import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getMerchantIdFromToken
 
 suspend fun categoryList(context: Context): CategoryListResponse? {
     try {
-        var authDetails = SharedPreferences.getAuthDetails(context)
-        val username = authDetails?.data?.email ?: ""
-        val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
-
-        if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
+        val tokenRepository = TokenRepository.getInstance(context)
+        val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
 
         val idToken = authDetails?.data?.token?.idToken
         val requestHeaders = generateRequestHeader(idToken ?: "")
@@ -25,11 +20,11 @@ suspend fun categoryList(context: Context): CategoryListResponse? {
         val merchantId = getMerchantIdFromToken(decodedJwtPayloadJson)
 
         val categoryListResponse =
-            RetrofitClient.api.categoryList(headers = requestHeaders, merchantId = merchantId)
+            RetrofitClient.getApi(context).categoryList(headers = requestHeaders, merchantId = merchantId)
 
         return categoryListResponse
     } catch (e: Exception) {
-        println("transactionListError: $e")
+        println("categoryList Error: $e")
         throw e
     }
 }

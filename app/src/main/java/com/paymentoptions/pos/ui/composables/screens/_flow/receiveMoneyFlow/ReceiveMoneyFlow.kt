@@ -431,12 +431,11 @@ fun ReceiveMoneyFlow(
                                             if (e.toString().contains("HTTP 401")) {
                                                 Toast.makeText(
                                                     context,
-                                                    "Your session has expired. Please log in again to continue.",
+                                                    context.getString(R.string.session_expired),
                                                     Toast.LENGTH_SHORT
                                                 ).show()
-
-                                                SharedPreferences.clearSharedPreferences(context)
-                                                navController.navigate(Screens.AuthCheck.route) {
+                                                navController.navigate(Screens.FingerprintScan.route){
+                                                    // Clear back stack to prevent going back to authenticated screens
                                                     popUpTo(0) { inclusive = true }
                                                 }
                                             }

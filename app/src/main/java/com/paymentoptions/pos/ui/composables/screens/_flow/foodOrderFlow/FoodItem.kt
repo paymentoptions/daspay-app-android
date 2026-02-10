@@ -13,6 +13,10 @@ class FoodItem(
         this.cartQuantity--
     }
 
+    fun deleteQuantity() {
+        this.cartQuantity = 0
+    }
+
     fun increaseQuantity() {
         this.cartQuantity++
     }

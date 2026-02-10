@@ -53,6 +53,7 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.SignOutResponse
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
@@ -122,9 +123,15 @@ val helpAndSupport = BottomNavigationBarItem(
     title = "Help & Support", icon = Icons.Outlined.Info, route = Screens.HelpAndSupport.route
 )
 
-val itemsInMore = listOf<BottomNavigationBarItem>(
+val itemsInMoreAdmin = listOf<BottomNavigationBarItem>(
     transactionHistory,
 //    notifications,
+    settlement,
+    settings,
+    helpAndSupport,
+)
+
+val itemsInMoreStaff = listOf<BottomNavigationBarItem>(
     settlement,
     settings,
     helpAndSupport,
@@ -161,6 +168,7 @@ fun MyBottomNavigationBar(
                     println("signOutResponse: $signOutResponse")
 
                     if (signOutResponse == null) {
+                        TokenAutoRefresher.getInstance(context).onUserSignedOut()
                         SharedPreferences.clearSharedPreferences(context)
                         navController.navigate(Screens.AuthCheck.route) {
                             popUpTo(0) { inclusive = true }
@@ -169,6 +177,7 @@ fun MyBottomNavigationBar(
 
                     signOutResponse?.let {
                         if (it.success) {
+                            TokenAutoRefresher.getInstance(context).onUserSignedOut()
                             SharedPreferences.clearSharedPreferences(context)
                             navController.navigate(Screens.AuthCheck.route) {
                                 popUpTo(0) { inclusive = true }
@@ -176,6 +185,7 @@ fun MyBottomNavigationBar(
                         }
                     }
                 } catch (e: Exception) {
+                    TokenAutoRefresher.getInstance(context).onUserSignedOut()
                     SharedPreferences.clearSharedPreferences(context)
                     navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
@@ -212,20 +222,37 @@ fun MyBottomNavigationBar(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(16.dp)
             ) {
-                items(itemsInMore.size) {
+                if (SharedPreferences.isAdmin(context)) {
+                    items(itemsInMoreAdmin.size) {
 
-                    MyElevatedCard {
-                        Item(
-                            itemsInMore[it],
-                            more,
-                            onSelected = { navController.navigate(itemsInMore[it].route) },
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            minLines = 2,
-                            maxLines = 2,
-                            inMore = true
-                        )
+                        MyElevatedCard {
+                            Item(
+                                itemsInMoreAdmin[it],
+                                onSelected = { navController.navigate(itemsInMoreAdmin[it].route) },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                minLines = 2,
+                                maxLines = 2,
+                                inMore = true
+                            )
+                        }
+                    }
+                } else {
+                    items(itemsInMoreStaff.size) {
+
+                        MyElevatedCard {
+                            Item(
+                                itemsInMoreStaff[it],
+                                onSelected = { navController.navigate(itemsInMoreStaff[it].route) },
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(16.dp),
+                                minLines = 2,
+                                maxLines = 2,
+                                inMore = true
+                            )
+                        }
                     }
                 }
 
@@ -237,7 +264,6 @@ fun MyBottomNavigationBar(
                                 icon = Icons.AutoMirrored.Outlined.Logout,
                                 route = "Dummy"
                             ),
-                            more,
                             onSelected = { showSignOutConfirmationDialog = true },
                             modifier = Modifier
                                 .fillMaxSize()
@@ -262,73 +288,76 @@ fun MyBottomNavigationBar(
 
             Item(
                 home,
-                selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
-                    if(currentRoute != home.route) {
-                    selectedBottomNavigationBarItem = home
-                    navController.navigate(selectedBottomNavigationBarItem.route){
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+                    if (currentRoute != home.route) {
+                        selectedBottomNavigationBarItem = home
+                        navController.navigate(selectedBottomNavigationBarItem.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
                         }
                     }
-                   }
                 })
 
             Item(
                 foodMenu,
-                selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
-                    if(currentRoute != foodMenu.route){
-                    selectedBottomNavigationBarItem = foodMenu
-                    navController.navigate(selectedBottomNavigationBarItem.route){
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+                    if (currentRoute != foodMenu.route) {
+                        selectedBottomNavigationBarItem = foodMenu
+                        navController.navigate(selectedBottomNavigationBarItem.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                        }
+                    } else {
+                        // User is already on food menu - reset to initial stage
+                        selectedBottomNavigationBarItem = foodMenu
+                        navController.navigate(foodMenu.route) {
+                            launchSingleTop = true
+                            popUpTo(foodMenu.route) { inclusive = true }
                         }
                     }
-                   }
                 })
 
             Item(
                 receiveMoney,
-                selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1.5f),
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
-                    if(currentRoute != receiveMoney.route){
-                    selectedBottomNavigationBarItem = receiveMoney
-                    navController.navigate(selectedBottomNavigationBarItem.route){
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+                    if (currentRoute != receiveMoney.route) {
+                        selectedBottomNavigationBarItem = receiveMoney
+                        navController.navigate(selectedBottomNavigationBarItem.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
                         }
                     }
-                   }
                 })
 
             Item(
                 refund,
-                selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
-                    if(currentRoute != refund.route) {
+                    if (currentRoute != refund.route) {
                         selectedBottomNavigationBarItem = refund
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
@@ -342,13 +371,12 @@ fun MyBottomNavigationBar(
 
             Item(
                 more,
-                selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
-                    if(currentRoute != more.route) {
+                    if (currentRoute != more.route) {
                         selectedBottomNavigationBarItem = more
                         onClickShowMoreItems()
                     }
@@ -360,7 +388,6 @@ fun MyBottomNavigationBar(
 @Composable
 fun Item(
     item: BottomNavigationBarItem,
-    selected: BottomNavigationBarItem,
     onSelected: () -> Unit,
     modifier: Modifier = Modifier,
     minLines: Int = 1,

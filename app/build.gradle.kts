@@ -101,6 +101,8 @@ dependencies {
     implementation(libs.androidx.material3.lint)
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.androidx.runtime)
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.androidx.compose.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -151,4 +153,8 @@ dependencies {
 
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
+
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
 }

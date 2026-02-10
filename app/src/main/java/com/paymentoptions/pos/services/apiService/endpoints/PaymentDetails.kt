@@ -4,6 +4,7 @@ import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
+import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generateRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
@@ -12,18 +13,14 @@ suspend fun paymentDetails(
     paymentId: String,
 ): PaymentDetailsResponse? {
     try {
-        var authDetails = SharedPreferences.getAuthDetails(context)
-        val username = authDetails?.data?.email ?: ""
-        val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
+        val tokenRepository = TokenRepository.getInstance(context)
+        val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
 
-        if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
-
-        val idToken = authDetails?.data?.token?.idToken ?: ""
+        val idToken = authDetails.data.token.idToken
         val requestHeaders = generateRequestHeader(authToken = idToken)
 
         val response: PaymentDetailsResponse =
-            RetrofitClient.api.paymentDetails(headers = requestHeaders, paymentId = paymentId)
+            RetrofitClient.getApi(context).paymentDetails(headers = requestHeaders, paymentId = paymentId)
 
         println("PaymentDetails: $response")
 

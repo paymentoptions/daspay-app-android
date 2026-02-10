@@ -14,6 +14,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
+import retrofit2.http.PUT
 import java.util.concurrent.TimeUnit
 
 const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/"
@@ -57,7 +58,7 @@ interface ApiService {
         @Query("skip") skip: Int,
     ): TransactionListResponse
 
-    @POST("transactions/listv2")
+    @POST("transactions/daspay-list")
     suspend fun transactionListV2(
         @HeaderMap headers: Map<String, String>,
         @Body request: TransactionListV2Request,
@@ -130,6 +131,27 @@ interface ApiService {
         @Field("signature") signature: String,
         @Field("TransactionID") TransactionID: String,
     ): UploadSignatureResponse
+
+
+    @POST("entities/merchant/catalog/products")
+    suspend fun addProduct(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: ProductRequest,
+    ): ProductResponse
+
+    @PUT("entities/merchant/catalog/products/{productId}")
+    suspend fun editProduct(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: ProductRequest,
+        @Path("productId") productId: String,
+    ): ProductResponse
+
+    @POST("entities/merchant/catalog/upload-products-images")
+    suspend fun uploadProductImage(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: ProductImageRequest,
+    ): UploadImageResponse
+
 }
 
 var gson = GsonBuilder()
@@ -140,18 +162,30 @@ val logging = HttpLoggingInterceptor().apply {
     setLevel(HttpLoggingInterceptor.Level.BODY)
 }
 
-var okHttpClient = OkHttpClient.Builder()
-    .addInterceptor(logging)
-    .connectTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to establish the connection
-    .readTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to wait for the server to send data
-    .writeTimeout(retrofitTimeout, TimeUnit.SECONDS) // Time to send data to the server
-    .build()
+fun provideOkHttpClient(context: android.content.Context): OkHttpClient {
+    return OkHttpClient.Builder()
+        .addInterceptor(logging)
+        .authenticator(TokenAuthenticator(context))
+        .connectTimeout(retrofitTimeout, TimeUnit.SECONDS)
+        .readTimeout(retrofitTimeout, TimeUnit.SECONDS)
+        .writeTimeout(retrofitTimeout, TimeUnit.SECONDS)
+        .build()
+}
 
 object RetrofitClient {
-    val api: ApiService by lazy {
-        Retrofit.Builder().baseUrl(baseUrl).client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create(gson)).build()
-            .create(ApiService::class.java)
+    @Volatile
+    private var apiService: ApiService? = null
+
+    fun getApi(context: android.content.Context): ApiService {
+        return apiService ?: synchronized(this) {
+            apiService ?: Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .client(provideOkHttpClient(context.applicationContext))
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build()
+                .create(ApiService::class.java)
+                .also { apiService = it }
+        }
     }
 }
 

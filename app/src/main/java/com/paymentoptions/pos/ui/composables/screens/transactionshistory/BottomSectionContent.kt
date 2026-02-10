@@ -39,19 +39,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
-import android.widget.Toast
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.insights
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
-import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.modifiers.DashboardStatsShimmer
+import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import java.text.SimpleDateFormat
@@ -72,13 +72,15 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var transactions by remember { mutableStateOf<List<InsightsResponseDataRecord>>(listOf()) }
     val scrollState = rememberScrollState()
 
-//    var showInsights by remember { mutableStateOf(true) }
-    var showInsights by remember { mutableStateOf(false) }
+    var showBarChart by remember { mutableStateOf(false) }
     var fromDateCustomFilter by remember { mutableStateOf<Long?>(null) }
     var toDateCustomFilter by remember { mutableStateOf<Long?>(null) }
 
     var receivalForText by remember { mutableStateOf("Receival for the day") }
     var receivalForTimePeriodText by remember { mutableStateOf("") }
+
+    var startDate by remember { mutableStateOf(OffsetDateTime.now())}
+    var endDate by remember { mutableStateOf( OffsetDateTime.now())}
 
     val filters = mapOf<String, String>(
         "Today" to "Today",
@@ -113,18 +115,18 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     }
 
     LaunchedEffect(selectedFilter, fromDateCustomFilter, toDateCustomFilter) {
-        var startDate = OffsetDateTime.now()
-        var endDate = OffsetDateTime.now()
 
         when (selectedFilter.key) {
             "Today" -> {
                 apiResponseAvailable = false
+                val today = OffsetDateTime.now()
 
                 receivalForText = "Receival for the day"
                 receivalForTimePeriodText = SimpleDateFormat("dd MMMM, YYYY").format(Date())
                 receivalAmount = 0.0f
 
-                startDate = endDate
+                startDate = today
+                endDate = today
             }
 
             "Week" -> {
@@ -142,6 +144,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 receivalAmount = 0.0f
 
                 startDate = aWeekAgo
+                endDate = today
             }
 
             "Month" -> {
@@ -162,6 +165,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 receivalAmount = 0.0f
 
                 startDate = aMonthAgo
+                endDate = today
             }
 
             "Custom" -> {
@@ -214,9 +218,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 .fillMaxSize()
                 .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
-            MyCircularProgressIndicator()
+            DashboardStatsShimmer()
+            Spacer(modifier = Modifier.height(20.dp))
+            TransactionListShimmer(itemCount = 5)
         }
     } else {
         Column(
@@ -271,7 +277,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             offsetX = 0.dp,
                             offsetY = 0.dp
                         )
-//                        .clickable(onClick = { showInsights = !showInsights })
                         .zIndex(1f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -280,25 +285,21 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         imageVector = Icons.Default.Menu,
                         contentDescription = "Show list",
                         modifier = Modifier
+                            .clickable { showBarChart = false }
                             .padding(6.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(if (!showInsights) Color.White else Color.Transparent)
+                            .background(if (!showBarChart) Color.White else Color.Transparent)
                             .padding(4.dp)
-                            .zIndex(2f)
-                            .clickable { showInsights = false }
                     )
                     Icon(
                         imageVector = Icons.Default.BarChart,
                         contentDescription = "Show bar graph",
                         modifier = Modifier
+                            .clickable { showBarChart = true }
                             .padding(6.dp)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(if (showInsights) Color.White else Color.Transparent)
+                            .background(if (showBarChart) Color.White else Color.Transparent)
                             .padding(4.dp)
-                            .zIndex(2f)
-                            .clickable {
-                                Toast.makeText(context, "In Progress", Toast.LENGTH_SHORT).show()
-                            }
                     )
                 }
             }
@@ -307,7 +308,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             Column(
                 modifier = Modifier
-                    .padding(horizontal = if (showInsights) DEFAULT_BOTTOM_SECTION_PADDING_IN_DP else 0.dp)
+                    .padding(horizontal = if (showBarChart) DEFAULT_BOTTOM_SECTION_PADDING_IN_DP else 0.dp)
                     .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -339,10 +340,18 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         .fillMaxSize()
                         .conditional(enableScrolling) { verticalScroll(scrollState) }) {
 
-                    if (showInsights) Insights(
-                        transactions = transactions, currency = currency, updateReceivalAmount = {
+                    if (showBarChart) TransactionsGroupedBarChart(
+                        navController = navController,
+                        transactions = transactions,
+                        startDate = startDate,
+                        endDate = endDate,
+                        currency = currency,
+                        updateReceivalAmount = {
                             updateReceivalAmount(it)
-                        }) else Transactions(
+                        }
+//                      Insights(transactions = transactions, currency = currency, updateReceivalAmount = {
+//                            updateReceivalAmount(it) })
+                    ) else Transactions(
                         navController, transactions = transactions, updateReceivalAmount = {
                             updateReceivalAmount(it)
                         })

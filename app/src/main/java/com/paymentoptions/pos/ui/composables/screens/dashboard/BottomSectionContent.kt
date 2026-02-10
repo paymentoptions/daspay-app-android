@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
@@ -44,6 +45,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.isScrolledToTheEnd
+import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import kotlin.math.ceil
 
 @Composable
@@ -90,7 +92,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                 totalTransactionCount = transactionListFromAPI.data.total_count
 
-                transactions = transactions.plus(transactionListFromAPI.data.records)
+                transactions = transactions.plus(transactionListFromAPI.data.records.filterNotNull())
 
                 //set receival amount from API total_amount field (rounded to two decimal place)
                 receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
@@ -101,13 +103,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             if (e.toString().contains("HTTP 401")) {
                 Toast.makeText(
                     context,
-                    "Your session has expired. Please log in again to continue.",
+                    context.getString(R.string.session_expired),
                     Toast.LENGTH_SHORT
                 ).show()
-
-                println("signInResponse: test")
-                SharedPreferences.clearSharedPreferences(context)
-                navController.navigate(Screens.AuthCheck.route) {
+                navController.navigate(Screens.FingerprintScan.route){
+                    // Clear back stack to prevent going back to authenticated screens
                     popUpTo(0) { inclusive = true }
                 }
             }
@@ -152,17 +152,18 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            FilledButton(
-                text = "View Insights",
-                onClick = { navController.navigate(Screens.TransactionHistory.route) },
-                modifier = Modifier
-                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                    .width(160.dp)
-                    .height(35.dp)
-                    .scale(0.8f),
-            )
-
-            Spacer(Modifier.height(20.dp))
+            if(SharedPreferences.isAdmin(context)) {
+                FilledButton(
+                    text = "View Insights",
+                    onClick = { navController.navigate(Screens.TransactionHistory.route) },
+                    modifier = Modifier
+                        .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                        .width(160.dp)
+                        .height(35.dp)
+                        .scale(0.8f),
+                )
+                Spacer(Modifier.height(20.dp))
+            }
 
             Row(
                 Modifier
@@ -190,7 +191,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         }
 
         if (!firstPageFetch && !apiResponseAvailable) {
-            MyCircularProgressIndicator()
+            TransactionListShimmer(
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                itemCount = 5
+            )
         } else Column(modifier = Modifier.fillMaxWidth()) {
             Transactions(
                 navController,

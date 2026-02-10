@@ -15,6 +15,7 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
+        maven { url = uri("https://jitpack.io") }
         mavenCentral()
 
         // MineSec's maven registry
@@ -50,4 +51,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Payment Options POS"
 include(":app")
- 
+include(":shared")

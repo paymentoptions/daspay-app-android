@@ -1,12 +1,11 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
-import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
+import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generateRequestHeader
-import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun payByLink(
     context: Context,
@@ -14,18 +13,14 @@ suspend fun payByLink(
     dasmid: String,
 ): PayByLinkResponse? {
     try {
-        var authDetails = SharedPreferences.getAuthDetails(context)
-        val username = authDetails?.data?.email ?: ""
-        val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
+        val tokenRepository = TokenRepository.getInstance(context)
+        val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
 
-        if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
-
-        val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generateRequestHeader(idToken ?: "")
+        val idToken = authDetails.data.token.idToken
+        val requestHeaders = generateRequestHeader(idToken)
 
 //      val dasmid = getPayByLinkDasmid(context)
-        var response: PayByLinkResponse = RetrofitClient.api.payByLink(
+        var response: PayByLinkResponse = RetrofitClient.getApi(context).payByLink(
             headers = requestHeaders,
             dasmid = dasmid,
             request = payByLinkRequest

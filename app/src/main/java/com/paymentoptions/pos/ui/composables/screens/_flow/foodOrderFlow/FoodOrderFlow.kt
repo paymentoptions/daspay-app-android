@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow
 
 import MyDialog
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Handler
@@ -65,7 +66,6 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.ScreenRatioToDp
-import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.getApms
 import com.paymentoptions.pos.device.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
@@ -96,9 +96,11 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.additionalcharge.AdditionalChargeBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.product.AddProductSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu.FoodMenuBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu.ToastData
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu.ToastType
+import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.product.EditProductSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.reviewcart.ReviewCartBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.TakeDigitalSignatureBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.chargemoney.ChargeMoneyBottomSectionContent
@@ -124,6 +126,10 @@ import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.paymentoptions.pos.utils.viaLinkPaymentMethod
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -159,6 +165,7 @@ fun FoodOrderFlow(
     var signatureBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var signatureDate by remember { mutableStateOf(Date()) }
     var signaturePath by remember { mutableStateOf(Path()) }
+    var foodItemSelected by remember { mutableStateOf<FoodItem?>(null) }
 
     latestTransactionId?.let {
         LaunchedEffect(latestTransactionId) {
@@ -250,6 +257,11 @@ fun FoodOrderFlow(
     fun updateFlowStage(newFoodOrderFlowStage: FoodOrderFlowStage) {
         foodOrderFlowStage = newFoodOrderFlowStage
     }
+
+    fun openEditPage(it: FoodItem) {
+        foodItemSelected = it
+        foodOrderFlowStage = FoodOrderFlowStage.EDIT_PRODUCT
+    }
     /*
     if (!nfcStatusPair.first) {
         tapPaymentMethod.setIsEnabled(false)
@@ -275,12 +287,11 @@ fun FoodOrderFlow(
             if (e.toString().contains("HTTP 401")) {
                 Toast.makeText(
                     context,
-                    "Your session has expired. Please log in again to continue.",
+                    context.getString(R.string.session_expired),
                     Toast.LENGTH_SHORT
                 ).show()
-
-                SharedPreferences.clearSharedPreferences(context)
-                navController.navigate(Screens.AuthCheck.route) {
+                navController.navigate(Screens.FingerprintScan.route){
+                    // Clear back stack to prevent going back to authenticated screens
                     popUpTo(0) { inclusive = true }
                 }
             }
@@ -294,35 +305,7 @@ fun FoodOrderFlow(
         foodItemListAvailable = false
 
         if (selectedFoodCategory.isNotNull()) {
-            try {
-                val foodItemListFromAPI = productList(context, selectedFoodCategory!!.CategoryID)
-
-                if (foodItemListFromAPI != null) {
-                    val newFoodItems = foodItemListFromAPI.data.records.map { record ->
-                        FoodItem(item = record)
-                    }
-
-                    cartState.replaceFoodCategory(
-                        categoryId = selectedFoodCategory!!.CategoryID, newFoodItems, context
-                    )
-                } else cartState.replaceFoodCategory(
-                    selectedFoodCategory!!.CategoryID, listOf<FoodItem>(), context
-                )
-            } catch (e: Exception) {
-
-                if (e.toString().contains("HTTP 401")) {
-                    Toast.makeText(
-                        context,
-                        "Your session has expired. Please log in again to continue.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    SharedPreferences.clearSharedPreferences(context)
-                    navController.navigate(Screens.AuthCheck.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            }
+            getProductsPerCategory(context, selectedFoodCategory, cartState, navController)
         }
         foodItemListAvailable = true
     }
@@ -396,7 +379,8 @@ fun FoodOrderFlow(
                 updateCartSate = { cartState = it.copy() },
                 updateFlowStage = { updateFlowStage(it) },
                 createToast = { toastData.setToast(it) },
-                setShowToast = { setShowToast(it) })
+                setShowToast = { setShowToast(it) },
+                editProduct = {openEditPage(it)})
         }
 
         FoodOrderFlowStage.REVIEW_CART -> {
@@ -411,7 +395,9 @@ fun FoodOrderFlow(
                     navController,
                     enableScrolling = !enableScrollingInsideBottomSectionContent,
                     cartState = cartState,
-                    updateCartSate = { cartState = it.copy() },
+                    updateCartSate = {
+                        cartState = it.copy()
+                    },
                     updateFlowStage = { updateFlowStage(it) },
                     createToast = { toastData.setToast(it) },
                     setShowToast = { setShowToast(it) })
@@ -500,7 +486,7 @@ fun FoodOrderFlow(
                                     modifier = Modifier
                                         .padding(horizontal = 20.dp)
                                         .fillMaxWidth()
-                                        .height(230.dp)
+                                        .height(180.dp)
                                         .clip(shape = RoundedCornerShape(16.dp))
                                         .clickable {
                                             if (DeveloperOptions.isEnabled(context)) {
@@ -606,12 +592,11 @@ fun FoodOrderFlow(
                                         if (e.toString().contains("HTTP 401")) {
                                             Toast.makeText(
                                                 context,
-                                                "Your session has expired. Please log in again to continue.",
+                                                context.getString(R.string.session_expired),
                                                 Toast.LENGTH_SHORT
                                             ).show()
-
-                                            SharedPreferences.clearSharedPreferences(context)
-                                            navController.navigate(Screens.AuthCheck.route) {
+                                            navController.navigate(Screens.FingerprintScan.route){
+                                                // Clear back stack to prevent going back to authenticated screens
                                                 popUpTo(0) { inclusive = true }
                                             }
                                         }
@@ -844,7 +829,7 @@ fun FoodOrderFlow(
                                             modifier = Modifier
                                                 .padding(horizontal = 20.dp)
                                                 .fillMaxWidth()
-                                                .height(110.dp)
+                                                .height(70.dp)
                                                 .clip(shape = RoundedCornerShape(16.dp))
                                         )
 
@@ -1085,5 +1070,91 @@ fun FoodOrderFlow(
             }
         }
 
+        FoodOrderFlowStage.ADD_PRODUCT -> {
+            SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.9f,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+                ) {
+                AddProductSectionContent(
+                    selectedFoodCategory,
+                    updateFlowToMenu = {
+
+                        if (selectedFoodCategory.isNotNull()) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                getProductsPerCategory(context, selectedFoodCategory, cartState, navController)
+                                withContext(Dispatchers.Main){
+                                    updateFlowStage(FoodOrderFlowStage.MENU)
+                                }
+                            }
+                         }
+                    }
+                )
+            }
+        }
+
+        FoodOrderFlowStage.EDIT_PRODUCT -> {
+            SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.9f,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+
+            ) {
+                EditProductSectionContent(
+                    selectedFoodItem = foodItemSelected!!,
+                    updateFlowToMenu = {
+                        if (selectedFoodCategory.isNotNull()) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                getProductsPerCategory(context, selectedFoodCategory, cartState, navController)
+                                withContext(Dispatchers.Main){
+                                    updateFlowStage(FoodOrderFlowStage.MENU)
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
+    }
+}
+
+private suspend fun getProductsPerCategory(
+    context: Context,
+    selectedFoodCategory: CategoryListDataRecord?,
+    cartState: Cart,
+    navController: NavController
+) {
+    try {
+        val foodItemListFromAPI = productList(context, selectedFoodCategory!!.CategoryID)
+
+        if (foodItemListFromAPI != null) {
+            val newFoodItems = foodItemListFromAPI.data.records.map { record ->
+                FoodItem(item = record)
+            }
+
+            cartState.replaceFoodCategory(
+                categoryId = selectedFoodCategory!!.CategoryID, newFoodItems, context
+            )
+        } else cartState.replaceFoodCategory(
+            selectedFoodCategory!!.CategoryID, listOf<FoodItem>(), context
+        )
+    } catch (e: Exception) {
+
+        if (e.toString().contains("HTTP 401")) {
+//            Toast.makeText(
+//                context,
+//                context.getString(R.string.session_expired),
+//                Toast.LENGTH_SHORT
+//            ).show()
+//            navController.navigate(Screens.FingerprintScan.route) {
+//                // Clear back stack to prevent going back to authenticated screens
+//                popUpTo(0) { inclusive = true }
+//            }
+        }
     }
 }

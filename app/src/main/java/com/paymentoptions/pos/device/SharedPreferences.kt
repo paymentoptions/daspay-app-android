@@ -2,6 +2,7 @@ package com.paymentoptions.pos.device
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import com.paymentoptions.pos.services.apiService.AccessLevel
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Apms
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Schemes
 import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
@@ -15,6 +16,7 @@ const val sharedPreferencesLabel: String = "my_prefs"
 
 class SharedPreferences {
     companion object {
+        private var accessLevel : AccessLevel? = null
         fun saveBoolean(context: Context, key: String, value: Boolean) = runBlocking {
             val sharedPreferences =
                 context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
@@ -59,6 +61,7 @@ class SharedPreferences {
         fun saveAuthDetails(context: Context, authDetails: SignInResponse) = runBlocking {
             val authDetailsString = Json.encodeToString(authDetails)
             saveKeyValue(context, "auth_details", authDetailsString)
+            accessLevel = authDetails.data.accessLevel
         }
 
         fun getAuthDetails(context: Context): SignInResponse? {
@@ -70,6 +73,25 @@ class SharedPreferences {
 
             return authDetailsJson
         }
+
+        fun isAdmin(context: Context) : Boolean {
+            if(accessLevel == null) {
+                val authDetails = getAuthDetails(context)
+                return authDetails?.data?.accessLevel == AccessLevel.ADMIN
+            } else {
+                return accessLevel == AccessLevel.ADMIN
+            }
+        }
+
+        fun isStaff(context: Context) : Boolean {
+            if(accessLevel == null) {
+                val authDetails = getAuthDetails(context)
+                return authDetails?.data?.accessLevel == AccessLevel.STAFF
+            } else {
+                return accessLevel == AccessLevel.STAFF
+            }
+        }
+
 
         /**fun clearSharedPreferences(context: Context) = runBlocking {
         val sharedPreferences =
@@ -87,7 +109,25 @@ class SharedPreferences {
                 remove("auth_details")
                 apply()
             }
+            accessLevel = null
+
         }
+
+        fun saveOtp(context: Context, otp: String){
+            val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            with(sharedPref.edit()) {
+                putString("saved_otp", otp)
+                apply()
+            }
+        }
+
+        fun getOtp(context: Context): String?{
+            val sharedPreferences =
+                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val otp = sharedPreferences.getString("saved_otp", null)
+            return otp
+        }
+
 
         fun saveFcmToken(context: Context, token: String) {
             val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
@@ -173,12 +213,13 @@ class SharedPreferences {
             }
         }
 
-        fun getSavedCredentials(context: Context): Pair<String?, String?> {
+        fun getSavedCredentials(context: Context): Triple<String?, String?, String?> {
             val sharedPreferences =
                 context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
             val email = sharedPreferences.getString("saved_email", null)
             val password = sharedPreferences.getString("saved_password", null)
-            return Pair(email, password)
+            val otp = sharedPreferences.getString("saved_otp", null)
+            return Triple(email, password, otp)
         }
     }
 }

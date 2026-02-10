@@ -32,6 +32,7 @@ import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.SharedPreferences.Companion.saveFcmToken
 import com.paymentoptions.pos.services.apiService.SignInResponse
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signIn
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
@@ -67,7 +68,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
     val credentialModel = if (inProduction) CredentialModel.Empty else CredentialModel.Robowah
 
-    val (savedEmail, savedPassword) = remember { SharedPreferences.getSavedCredentials(context) }
+    val (savedEmail, savedPassword, otp) = remember { SharedPreferences.getSavedCredentials(context) }
 
     val emailState = rememberTextFieldState(initialText = savedEmail ?: credentialModel.email)
     var emailError by remember { mutableStateOf(false) }
@@ -76,9 +77,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         rememberTextFieldState(initialText = savedPassword ?: credentialModel.password)
     var passwordError by remember { mutableStateOf(false) }
 
-    val otpState =
-        rememberTextFieldState(initialText = if (inProduction) "" else credentialModel.otp)
-    var otpError by remember { mutableStateOf(false) }
+//    val otpState =
+//        rememberTextFieldState(initialText = if (inProduction) "" else credentialModel.otp)
+   // var otpError by remember { mutableStateOf(false) }
 
     LaunchedEffect(emailState.text) {
         emailError = !validateEmail(emailState.text.toString())
@@ -88,9 +89,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         passwordError = !validatePassword(passwordState.text.toString())
     }
 
-    LaunchedEffect(otpState.text) {
-        otpError = !validateOtp(otpState.text.toString())
-    }
+//    LaunchedEffect(otpState.text) {
+//        otpError = !validateOtp(otpState.text.toString())
+//    }
 
     Column(
         modifier = Modifier
@@ -125,38 +126,38 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             maxLength = 32
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        BasicTextInput(
-            state = otpState,
-            label = "Enter the 6-digit code sent on your registered email",
-            placeholder = "Enter OTP",
-            modifier = Modifier.fillMaxWidth(),
-            isSecure = true,
-            maxLength = 6
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Didn't receive the code?",
-                color = purple50,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("Resend Code", textDecoration = TextDecoration.Underline, fontSize = 12.sp)
-        }
-
         Spacer(modifier = Modifier.height(12.dp))
+
+//        BasicTextInput(
+//            state = otpState,
+//            label = "Enter the 6-digit code sent on your registered email",
+//            placeholder = "Enter OTP",
+//            modifier = Modifier.fillMaxWidth(),
+//            isSecure = true,
+//            maxLength = 6
+//        )
+//
+//        Spacer(modifier = Modifier.height(8.dp))
+
+//        Row(
+//            horizontalArrangement = Arrangement.Center,
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            Text(
+//                "Didn't receive the code?",
+//                color = purple50,
+//                fontSize = 12.sp,
+//                fontWeight = FontWeight.Medium
+//            )
+//            Spacer(modifier = Modifier.width(4.dp))
+//            Text("Resend Code", textDecoration = TextDecoration.Underline, fontSize = 12.sp)
+//        }
+//
+//        Spacer(modifier = Modifier.height(12.dp))
 
         FilledButton(
             text = "Proceed",
-            disabled = emailError || passwordError || otpError,
+            disabled = emailError || passwordError,
             isLoading = isLoading,
             onClick = {
                 scope.launch {
@@ -165,7 +166,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                     try {
                         signInResponse =
-                            signIn(emailState.text.toString(), passwordState.text.toString())
+                            signIn(context, emailState.text.toString(), passwordState.text.toString())
                         println("signInResponse: $signInResponse")
 
                         if (signInResponse == null) {
@@ -193,6 +194,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 }
 
                                 SharedPreferences.saveAuthDetails(context, signInResponse)
+
+                                // Start token auto refresh after successful sign-in
+                                TokenAutoRefresher.getInstance(context).onUserSignedIn()
+
                                 navController.navigate(Screens.Token.route)
                             }
                         }

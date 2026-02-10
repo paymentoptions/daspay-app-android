@@ -6,27 +6,25 @@ import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SignOutRequest
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.Token
+import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generateRequestHeader
 import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun signOut(context: Context): SignOutResponse? {
     try {
-        var authDetails = SharedPreferences.getAuthDetails(context)
-        val username = authDetails?.data?.email ?: ""
-        var refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
-
-        if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
+        val tokenRepository = TokenRepository.getInstance(context)
+        val authDetails = tokenRepository.refreshTokenIfNeeded()
 
         val accessToken = authDetails?.data?.token?.accessToken ?: ""
         val idToken = authDetails?.data?.token?.idToken ?: ""
-        refreshToken = authDetails?.data?.token?.refreshToken ?: ""
+        val username = authDetails?.data?.email ?: ""
+        val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
 
         val requestHeaders = generateRequestHeader()
         val token = Token(accessToken, idToken, refreshToken)
         val signOutRequest = SignOutRequest(username, token)
 
-        val signOutResponse = RetrofitClient.api.signOut(requestHeaders, signOutRequest)
+        val signOutResponse = RetrofitClient.getApi(context).signOut(requestHeaders, signOutRequest)
         return signOutResponse
     } catch (e: Exception) {
         println("SignOutError: $e")
