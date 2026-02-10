@@ -34,6 +34,9 @@ sealed class Screens(val route: String) {
     object Settings : Screens(route = "Settings")
     object HelpAndSupport : Screens(route = "HelpAndSupport")
     object Settlement : Screens(route = "Settlement")
+    object SendLogs : Screens(route = "SendLogs")
+    //------------------------------------------------------------------
+
 
     //Misc
     object Splash : Screens(route = "Splash")

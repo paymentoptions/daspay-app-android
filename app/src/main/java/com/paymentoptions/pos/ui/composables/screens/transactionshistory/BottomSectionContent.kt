@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.insights
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
@@ -204,9 +205,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             if (insightsResponse != null) transactions = insightsResponse.data.records
 
-            println("insights Response -->: $insightsResponse")
+            AppLogger.debug("insights Response -->: $insightsResponse")
         } catch (e: Exception) {
-            println("insights Error -->: $e")
+            AppLogger.debug("insights Error -->: $e")
         } finally {
             apiResponseAvailable = true
         }

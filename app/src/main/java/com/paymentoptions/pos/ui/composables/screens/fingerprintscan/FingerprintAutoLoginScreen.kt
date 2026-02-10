@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -45,14 +47,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AuthEventManager
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.autoSignIn
 import com.paymentoptions.pos.services.apiService.endpoints.completeDeviceRegistration
 import com.paymentoptions.pos.services.apiService.endpoints.getExternalDeviceConfiguration
+import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
 import com.paymentoptions.pos.ui.composables._components.images.TapToPayImage
+import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_TOP_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -344,7 +349,7 @@ private fun onAuthSuccess(
                         } else if (exceptionMessage.lowercase()
                                 .contains("unauthorized")
                         ) {
-                            println("Auto login failing, fatal exception")
+                            AppLogger.debug("Auto login failing, fatal exception")
                             withContext(Dispatchers.Main) {
                                 autoSignInFailed(context, navController)
                             }
@@ -383,7 +388,7 @@ private fun onAuthSuccess(
                 }
             }
         } catch (e: Exception) {
-            println("Auto login failing, fatal exception $e")
+            AppLogger.error("Auto login failing, fatal exception $e")
             withContext(Dispatchers.Main) {
                 autoSignInFailed(context, navController)
             }

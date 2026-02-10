@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.SharedPreferences.Companion.saveFcmToken
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SignInRequest
 import com.paymentoptions.pos.services.apiService.SignInResponse
@@ -20,7 +21,7 @@ suspend fun autoSignIn(context: Context): SignInResponse? {
         val signInRequest = SignInRequest(username!!, password!!)
         val signInResponse = RetrofitClient.getApi(context).signIn(requestHeaders, signInRequest)
 
-        println("signInResponse: $signInResponse")
+        AppLogger.debug("signInResponse: $signInResponse")
 
 
         signInResponse.let {
@@ -30,9 +31,9 @@ suspend fun autoSignIn(context: Context): SignInResponse? {
                     if (task.isSuccessful) {
                         val token = task.result
                         saveFcmToken(context, token)
-                           println("mainActivity token --> $token")
+                        AppLogger.debug("mainActivity token --> $token")
                     } else {
-                        println("mainActivity token fetching failed ${task.exception}")
+                        AppLogger.debug("mainActivity token fetching failed ${task.exception}")
                     }
                 }
 

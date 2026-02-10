@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService
 
 import com.google.gson.GsonBuilder
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.utils.retrofitTimeout
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -158,9 +159,8 @@ var gson = GsonBuilder()
     .setLenient()
     .create()
 
-val logging = HttpLoggingInterceptor().apply {
-    setLevel(HttpLoggingInterceptor.Level.BODY)
-}
+val logging = HttpLoggingInterceptor { message -> AppLogger.info(message) }
+.apply { level = HttpLoggingInterceptor.Level.BODY }
 
 fun provideOkHttpClient(context: android.content.Context): OkHttpClient {
     return OkHttpClient.Builder()

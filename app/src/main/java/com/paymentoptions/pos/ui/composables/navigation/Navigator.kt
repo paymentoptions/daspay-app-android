@@ -8,6 +8,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.google.gson.Gson
+import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.logger.SendLogsScreen
 import com.paymentoptions.pos.services.apiService.AuthEventManager
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlow
@@ -19,7 +21,6 @@ import com.paymentoptions.pos.ui.composables.screens._test.fcmtoken.FcmTokenScre
 import com.paymentoptions.pos.ui.composables.screens.authcheck.AuthCheckScreen
 import com.paymentoptions.pos.ui.composables.screens.dashboard.DashboardScreen
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintAutoLoginScreen
-import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.composables.screens.helpandsupport.HelpAndSupportScreen
 import com.paymentoptions.pos.ui.composables.screens.notifications.NotificationsScreen
 import com.paymentoptions.pos.ui.composables.screens.settings.SettingsScreen
@@ -44,7 +45,7 @@ fun Navigator() {
             when (event) {
                 is AuthEventManager.AuthEvent.RequireReAuthentication -> {
                     // Navigate to fingerprint scan for auto sign-in
-                    println("Navigator: Received RequireReAuthentication event, navigating to FingerprintScan")
+                    AppLogger.debug("Navigator: Received RequireReAuthentication event, navigating to FingerprintScan")
                     navController.navigate(Screens.FingerprintScan.route) {
                         // Clear back stack to prevent going back to authenticated screens
                         popUpTo(0) { inclusive = true }
@@ -52,7 +53,7 @@ fun Navigator() {
                 }
                 is AuthEventManager.AuthEvent.RequireManualSignIn -> {
                     // Navigate to sign-in screen for manual authentication
-                    println("Navigator: Received RequireManualSignIn event, navigating to SignIn")
+                    AppLogger.debug("Navigator: Received RequireManualSignIn event, navigating to SignIn")
                     navController.navigate(Screens.SignIn.route) {
                         // Clear back stack to prevent going back to authenticated screens
                         popUpTo(0) { inclusive = true }
@@ -105,6 +106,9 @@ fun Navigator() {
         //------------------------------------------------------------------
 
         composable(Screens.Refund.route) { RefundScreen(navController) }
+
+        composable(Screens.SendLogs.route) { SendLogsScreen(navController) }
+
         composable(Screens.RefundTransaction.route) { RefundTransactionScreen(navController) }
         composable(Screens.RefundInitiated.route) { RefundInitiatedScreen(navController) }
         //------------------------------------------------------------------

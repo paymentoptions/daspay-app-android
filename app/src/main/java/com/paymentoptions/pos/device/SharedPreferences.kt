@@ -2,6 +2,7 @@ package com.paymentoptions.pos.device
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AccessLevel
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Apms
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Schemes
@@ -166,10 +167,10 @@ class SharedPreferences {
                 edit().remove("cart")
             }
 
-            println("cart cleared ->")
+            AppLogger.debug("cart cleared ->")
 
             val cart = getCart(context)
-            println("cart: $cart")
+            AppLogger.debug("cart: $cart")
         }
 
         fun saveDeviceConfiguration(context: Context, config: ExternalConfigurationResponse) {

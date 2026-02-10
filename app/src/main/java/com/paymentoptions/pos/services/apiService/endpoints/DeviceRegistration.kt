@@ -2,6 +2,7 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.CompleteDeviceRegistrationRequest
 import com.paymentoptions.pos.services.apiService.CompleteDeviceRegistrationResponse
 import com.paymentoptions.pos.services.apiService.DeviceMetadata
@@ -75,7 +76,7 @@ suspend fun getExternalDeviceConfiguration(
         val response = RetrofitClient.getApi(context).getDeviceConfiguration(requestHeaders, deviceNumber, uniqueCode)
         Result.success(response)
     } catch (e: Exception) {
-        println("GetExternalDeviceConfigurationError: ${e.message}")
+        AppLogger.error("GetExternalDeviceConfigurationError: ${e.message}")
         Result.failure(e)
     }
 }

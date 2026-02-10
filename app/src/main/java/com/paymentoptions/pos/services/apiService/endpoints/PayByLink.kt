@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
@@ -28,7 +29,7 @@ suspend fun payByLink(
 
         return response
     } catch (e: Exception) {
-        println("payByLinkError: $e")
+        AppLogger.error("payByLinkError: $e")
         throw e
     }
 }

@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.PaymentRequest
 import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
@@ -23,7 +24,7 @@ suspend fun payment(
 
         return paymentResponse
     } catch (e: Exception) {
-        println("paymentError: $e")
+        AppLogger.error("paymentError: $e")
         throw e
     }
 }

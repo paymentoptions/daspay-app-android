@@ -45,6 +45,7 @@ import androidx.navigation.NavController
 import com.google.gson.Gson
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -244,11 +245,11 @@ fun TransactionSummary(
         ) {
             when (it) {
                 is WrappedResult.Success -> {
-                    println("inThis Launche response: ${it.toString()}")
+                    AppLogger.debug("inThis Launche response: ${it.toString()}")
                 }
 
                 is WrappedResult.Failure -> {
-                    println("inThis Launcher failure ---->: $it")
+                    AppLogger.error("inThis Launcher failure ---->: $it")
                 }
             }
         }
@@ -256,12 +257,12 @@ fun TransactionSummary(
 
 
         fun doVoid(transaction: TransactionListDataRecord){
-            println("full transaction object: $transaction")
+            AppLogger.debug("full transaction object: $transaction")
             launcher.launch(input = PoiRequest.ActionVoid(transaction.uuid))
         }
 
         fun doRefund(transaction: TransactionListDataRecord ){
-            println("full transaction object: $transaction")
+            AppLogger.debug("full transaction object: $transaction")
             launcher.launch(input = PoiRequest.ActionNew(
                 tranType = TranType.REFUND,
                 amount = Amount(

@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RefundRequest
 import com.paymentoptions.pos.services.apiService.RefundResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
@@ -19,14 +20,14 @@ suspend fun refund(
         val idToken = authDetails.data.token.idToken
         val requestHeaders = generateRefundRequestHeader(idToken)
 
-        println("refund request: $refundRequest | $authDetails")
+        AppLogger.debug("refund request: $refundRequest | $authDetails")
         val refundResponse: RefundResponse =
             RetrofitClient.getApi(context).refund(headers = requestHeaders, request = refundRequest)
 
-        println("refund response: $refundResponse")
+        AppLogger.debug("refund response: $refundResponse")
         return refundResponse
     } catch (e: Exception) {
-        println("refund error: $e")
+        AppLogger.error("refund error: $e")
         throw e
     }
 }

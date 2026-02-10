@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.core.graphics.scale
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.ProductImageRequest
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -44,7 +45,7 @@ suspend fun uploadMediaToProduct(
             signedUrl = signedUrl
         )
     } else {
-        println("No signed URL returned for S3 upload")
+        AppLogger.debug("No signed URL returned for S3 upload")
     }
 }
 
@@ -109,7 +110,7 @@ fun resizeAndCompressFile(
     bitmap.recycle()
     resizedBitmap.recycle()
 
-    println("resizeAndCompressFile outFile: $outFile")
+    AppLogger.debug("resizeAndCompressFile outFile: $outFile")
 
     return outFile
 }

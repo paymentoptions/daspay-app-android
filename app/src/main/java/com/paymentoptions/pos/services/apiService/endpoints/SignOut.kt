@@ -2,6 +2,7 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SignOutRequest
 import com.paymentoptions.pos.services.apiService.SignOutResponse
@@ -27,7 +28,7 @@ suspend fun signOut(context: Context): SignOutResponse? {
         val signOutResponse = RetrofitClient.getApi(context).signOut(requestHeaders, signOutRequest)
         return signOutResponse
     } catch (e: Exception) {
-        println("SignOutError: $e")
+        AppLogger.debug("SignOutError: $e")
         throw e
     }
 }

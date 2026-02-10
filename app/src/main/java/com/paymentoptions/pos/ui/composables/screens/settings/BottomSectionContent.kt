@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
@@ -80,7 +81,7 @@ fun BottomSectionContent(navController: NavController) {
                 try {
                     signOutResponse = signOut(context)
                 } catch (e: Exception) {
-                    println("Error: ${e.toString()}")
+                    AppLogger.error("Error: ${e.toString()}")
                 } finally {
                     // Stop token auto refresh on sign out
                     TokenAutoRefresher.getInstance(context).onUserSignedOut()

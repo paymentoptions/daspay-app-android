@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.PaymentStatusRequest
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TokenRepository
@@ -13,15 +14,15 @@ suspend fun paymentStatus(
     try {
         val requestHeaders = generatePaymentStatusHeader()
 
-        println("inThis PaymentStatus request -->: $request")
+        AppLogger.debug("inThis PaymentStatus request -->: $request")
         val response: String =
             RetrofitClient.getApi(context).paymentStatus(headers = requestHeaders, request = request)
 
-        println("inThis PaymentStatus response -->: $response")
+        AppLogger.debug("inThis PaymentStatus response -->: $response")
 
         return response.uppercase() == "SUCCESS"
     } catch (e: Exception) {
-        println("paymentStatusError: ${e.stackTrace}")
+        AppLogger.debug("paymentStatusError: ${e.stackTrace}")
         throw e
     }
 }

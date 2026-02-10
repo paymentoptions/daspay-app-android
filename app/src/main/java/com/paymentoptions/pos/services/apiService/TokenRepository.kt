@@ -3,6 +3,7 @@ package com.paymentoptions.pos.services.apiService
 import android.content.Context
 import com.google.gson.Gson
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import retrofit2.HttpException
 
 /**
@@ -31,7 +32,7 @@ class TokenRepository private constructor(
 //        }
 
         try {
-            println("TokenRepository refreshing token 4, renewCount $renewCount")
+            AppLogger.debug("TokenRepository refreshing token 4, renewCount $renewCount")
             isRefreshing = true
             renewCount ++
             val username = authDetails.data.email
@@ -44,25 +45,25 @@ class TokenRepository private constructor(
             isRefreshing = false
             return refreshTokenResponse
         } catch (e: HttpException) {
-            println("TokenRepository refresh failed with HTTP error: ${e.code()}")
+            AppLogger.debug("TokenRepository refresh failed with HTTP error: ${e.code()}")
             isRefreshing = false
 
             // Try to parse error response
             val errorBody = e.response()?.errorBody()?.string()
-            println("TokenRepository error body: $errorBody")
+            AppLogger.debug("TokenRepository error body: $errorBody")
 
             try {
                 val errorResponse = Gson().fromJson(errorBody, ApiErrorResponse::class.java)
                 if (errorResponse?.messageCode == "ERR_AUTH_0003") {
                     // Refresh token expired - need to re-authenticate
-                    println("TokenRepository: Refresh token expired (ERR_AUTH_0003), triggering re-authentication")
+                    AppLogger.debug("TokenRepository: Refresh token expired (ERR_AUTH_0003), triggering re-authentication")
                     AuthEventManager.onRefreshTokenExpired()
                 }
             } catch (parseException: Exception) {
-                println("TokenRepository: Failed to parse error response: ${parseException.message}")
+                AppLogger.error("TokenRepository: Failed to parse error response: ${parseException.message}")
             }
         } catch (e: Exception) {
-            println("TokenRepository refresh failed: $e")
+            AppLogger.error("TokenRepository refresh failed: $e")
             isRefreshing = false
 
         }
@@ -72,7 +73,7 @@ class TokenRepository private constructor(
     suspend fun refreshTokenIfNeeded(): SignInResponse? {
         val authDetails = getAuthToken()
         if(authDetails == null || !shouldRefreshToken(authDetails?.data?.exp)){
-            println("TokenRepository going with existing token 1")
+            AppLogger.debug("TokenRepository going with existing token 1")
             return authDetails
         }
         return doRefreshToken(authDetails)

@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
@@ -80,7 +81,7 @@ fun BottomSectionContent(
     transaction: TransactionListDataRecord?,
     updateDetailsScreenType: (TransactionDetailsScreenType) -> Unit,
 ) {
-    println("transaction to display : $transaction")
+    AppLogger.debug("transaction to display : $transaction")
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
     val scrollState = rememberScrollState()

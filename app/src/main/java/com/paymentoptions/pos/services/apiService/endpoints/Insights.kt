@@ -2,6 +2,7 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.InsightsResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TokenRepository
@@ -26,7 +27,7 @@ suspend fun insights(
         val timeZone = getDeviceTimeZone()
         val tokenCode = SharedPreferences.getTokenStatus(context = context).second
 
-        println("insights request: deviceNumber = $deviceNumber | uniqueCode = $tokenCode | timeZone = $timeZone | startDate = $startDate | endDate = $endDate | take = $take")
+        AppLogger.debug("insights request: deviceNumber = $deviceNumber | uniqueCode = $tokenCode | timeZone = $timeZone | startDate = $startDate | endDate = $endDate | take = $take")
 
         val response = RetrofitClient.getApi(context).insights(
             headers = requestHeaders,
@@ -38,11 +39,11 @@ suspend fun insights(
             take = take,
         )
 
-        println("insights response : $response")
+        AppLogger.debug("insights response : $response")
 
         return response
     } catch (e: Exception) {
-        println("insightsError: $e")
+        AppLogger.debug("insightsError: $e")
         throw e
     }
 }

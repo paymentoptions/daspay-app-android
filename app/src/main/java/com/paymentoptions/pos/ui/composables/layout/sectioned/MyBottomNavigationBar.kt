@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
@@ -123,6 +124,10 @@ val helpAndSupport = BottomNavigationBarItem(
     title = "Help & Support", icon = Icons.Outlined.Info, route = Screens.HelpAndSupport.route
 )
 
+val sendLogs = BottomNavigationBarItem(
+    title = "Send Logs", icon = Icons.Outlined.Info, route = Screens.SendLogs.route
+)
+
 val itemsInMoreAdmin = listOf<BottomNavigationBarItem>(
     transactionHistory,
 //    notifications,
@@ -153,6 +158,16 @@ fun MyBottomNavigationBar(
     var signOutLoader by remember { mutableStateOf(false) }
     var signOutResponse: SignOutResponse? = null
 //    var selected by remember { mutableStateOf<BottomNavigationBarItem>(home) }
+
+    val moreList : ArrayList<BottomNavigationBarItem> = arrayListOf()
+    if (SharedPreferences.isAdmin(context)) {
+        moreList.addAll(itemsInMoreAdmin)
+    } else {
+        moreList.addAll(itemsInMoreStaff)
+    }
+    if(AppLogger.IS_DEBUG_ENABLED){
+        moreList.add(sendLogs)
+    }
 
     MyDialog(
         showDialog = showSignOutConfirmationDialog,
@@ -222,37 +237,18 @@ fun MyBottomNavigationBar(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(16.dp)
             ) {
-                if (SharedPreferences.isAdmin(context)) {
-                    items(itemsInMoreAdmin.size) {
-
-                        MyElevatedCard {
-                            Item(
-                                itemsInMoreAdmin[it],
-                                onSelected = { navController.navigate(itemsInMoreAdmin[it].route) },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                minLines = 2,
-                                maxLines = 2,
-                                inMore = true
-                            )
-                        }
-                    }
-                } else {
-                    items(itemsInMoreStaff.size) {
-
-                        MyElevatedCard {
-                            Item(
-                                itemsInMoreStaff[it],
-                                onSelected = { navController.navigate(itemsInMoreStaff[it].route) },
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                minLines = 2,
-                                maxLines = 2,
-                                inMore = true
-                            )
-                        }
+                items(moreList.size) {
+                    MyElevatedCard {
+                        Item(
+                            moreList[it],
+                            onSelected = { navController.navigate(moreList[it].route) },
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            minLines = 2,
+                            maxLines = 2,
+                            inMore = true
+                        )
                     }
                 }
 

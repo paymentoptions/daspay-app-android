@@ -172,7 +172,7 @@ object ComposePdfExporter {
             onProgress(
                 PdfExportProgress.Success(
                     FileProvider.getUriForFile(
-                        context, "${context.packageName}.provider", outputFile
+                        context, "${context.packageName}.fileprovider", outputFile
                     )
                 )
             )

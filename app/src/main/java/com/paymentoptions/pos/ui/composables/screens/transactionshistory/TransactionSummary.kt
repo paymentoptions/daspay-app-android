@@ -64,6 +64,7 @@ import com.theminesec.lib.dto.transaction.TranType
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
 import androidx.compose.runtime.remember
+import com.paymentoptions.pos.logger.AppLogger
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -225,11 +226,11 @@ fun TransactionSummary(
         ) {
             when (it) {
                 is WrappedResult.Success -> {
-                    println("inThis Launche response: ${it.toString()}")
+                    AppLogger.debug("inThis Launche response: ${it.toString()}")
                 }
 
                 is WrappedResult.Failure -> {
-                    println("inThis Launcher failure ---->: $it")
+                    AppLogger.error("inThis Launcher failure ---->: $it")
                 }
             }
         }
@@ -237,7 +238,7 @@ fun TransactionSummary(
 
 
         fun doVoid(transaction: InsightsResponseDataRecord){
-            println("full transaction object: $transaction")
+            AppLogger.debug("full transaction object: $transaction")
             //launcher.launch(input = PoiRequest.ActionVoid("tran_01KGKT044SGRKQM9SS9K6146TD"))
             launcher.launch(input = PoiRequest.ActionLinkedRefund("tran_01KGQ1YSD90MRKW9FH3D5ME2GW"))
         }
@@ -247,7 +248,7 @@ fun TransactionSummary(
 //            alue":"9.00","currency":"HKD"},
 
         fun doRefund(transaction: InsightsResponseDataRecord ){
-            println("full transaction object: $transaction")
+            AppLogger.debug("full transaction object: $transaction")
             launcher.launch(input = PoiRequest.ActionNew(
                 tranType = TranType.REFUND,
                 amount = Amount(

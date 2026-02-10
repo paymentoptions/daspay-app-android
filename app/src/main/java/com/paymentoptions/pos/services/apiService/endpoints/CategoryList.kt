@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.CategoryListResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TokenRepository
@@ -24,7 +25,7 @@ suspend fun categoryList(context: Context): CategoryListResponse? {
 
         return categoryListResponse
     } catch (e: Exception) {
-        println("categoryList Error: $e")
+        AppLogger.error("categoryList Error: $e")
         throw e
     }
 }

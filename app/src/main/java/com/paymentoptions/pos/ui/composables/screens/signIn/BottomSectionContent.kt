@@ -31,6 +31,7 @@ import androidx.navigation.NavController
 import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.device.SharedPreferences.Companion.saveFcmToken
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signIn
@@ -167,7 +168,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     try {
                         signInResponse =
                             signIn(context, emailState.text.toString(), passwordState.text.toString())
-                        println("signInResponse: $signInResponse")
+                        AppLogger.debug("signInResponse: $signInResponse")
 
                         if (signInResponse == null) {
                             Toast.makeText(
@@ -187,9 +188,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                     if (task.isSuccessful) {
                                         val token = task.result
                                         saveFcmToken(context, token)
-                                        println("mainActivity token --> $token")
+                                        AppLogger.debug("mainActivity token --> $token")
                                     } else {
-                                        println("mainActivity token fetching failed ${task.exception}")
+                                        AppLogger.error("mainActivity token fetching failed ${task.exception}")
                                     }
                                 }
 
