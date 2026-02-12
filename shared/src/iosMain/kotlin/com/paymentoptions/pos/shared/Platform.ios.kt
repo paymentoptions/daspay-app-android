@@ -1,3 +1,3 @@
 package com.paymentoptions.pos.shared
 
-actual fun platform() = "iOS"
+actual fun platform() = "iOS Daspay"
