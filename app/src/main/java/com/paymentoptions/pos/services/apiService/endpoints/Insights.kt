@@ -1,7 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.InsightsResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
@@ -25,7 +25,7 @@ suspend fun insights(
 
         val deviceNumber = getDeviceIdentifier(context)
         val timeZone = getDeviceTimeZone()
-        val tokenCode = SharedPreferences.getTokenStatus(context = context).second
+        val tokenCode = DPSharedPreferences.getTokenStatus(context = context).second
 
         AppLogger.debug("insights request: deviceNumber = $deviceNumber | uniqueCode = $tokenCode | timeZone = $timeZone | startDate = $startDate | endDate = $endDate | take = $take")
 

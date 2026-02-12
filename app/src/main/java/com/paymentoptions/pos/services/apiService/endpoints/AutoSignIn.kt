@@ -3,8 +3,8 @@ package com.paymentoptions.pos.services.apiService.endpoints
 import android.content.Context
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
-import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.device.SharedPreferences.Companion.saveFcmToken
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences.saveFcmToken
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SignInRequest
@@ -13,7 +13,7 @@ import com.paymentoptions.pos.services.apiService.generateRequestHeader
 
 suspend fun autoSignIn(context: Context): SignInResponse? {
     try {
-        val authDetails = SharedPreferences.getSavedCredentials(context)
+        val authDetails = DPSharedPreferences.getSavedCredentials(context)
         val username = authDetails.first
         val password = authDetails.second
 
@@ -37,7 +37,7 @@ suspend fun autoSignIn(context: Context): SignInResponse? {
                     }
                 }
 
-                SharedPreferences.saveAuthDetails(context, signInResponse)
+                DPSharedPreferences.saveAuthDetails(context, signInResponse)
                 //TokenRepository.getInstance(context).scheduleTokenRefresh(signInResponse.data.exp)
             }
         }

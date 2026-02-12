@@ -46,7 +46,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AuthEventManager
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
@@ -269,7 +269,7 @@ private fun onAuthSuccess(
         try {
             val authCredentials = autoSignIn(context) // Remove redundant semicolon
             if (authCredentials != null) {
-                val authDetails = SharedPreferences.getSavedCredentials(context)
+                val authDetails = DPSharedPreferences.getSavedCredentials(context)
                 val otp = authDetails.third
                 var errorMessage = ""
 
@@ -293,7 +293,7 @@ private fun onAuthSuccess(
                             "Step 3: Proceeding to get external device configuration."
                         )
 
-                        SharedPreferences.saveTokenStatus(
+                        DPSharedPreferences.saveTokenStatus(
                             context = context, tokenCode = otp, isVerified = true
                         )
 
@@ -304,7 +304,7 @@ private fun onAuthSuccess(
                                 "DEBUG_TOKEN",
                                 "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                             )
-                            SharedPreferences.saveDeviceConfiguration(
+                            DPSharedPreferences.saveDeviceConfiguration(
                                 context, configResponse
                             )
                         }.onFailure { exception ->
@@ -340,7 +340,7 @@ private fun onAuthSuccess(
                                 context, otp
                             ).onSuccess { configResponse ->
 
-                                SharedPreferences.saveTokenStatus(
+                                DPSharedPreferences.saveTokenStatus(
                                     context = context,
                                     tokenCode = otp,
                                     isVerified = true
@@ -350,7 +350,7 @@ private fun onAuthSuccess(
                                     "DEBUG_TOKEN",
                                     "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                                 )
-                                SharedPreferences.saveDeviceConfiguration(
+                                DPSharedPreferences.saveDeviceConfiguration(
                                     context, configResponse
                                 )
                             }.onFailure { exception ->
@@ -423,7 +423,7 @@ private fun autoSignInFailed(
     // Auto sign-in failed - notify the system
     Toast.makeText(context, "Auto sign-in has failed, Please enter credentials again", Toast.LENGTH_SHORT).show()
     AuthEventManager.onAutoSignInFailed()
-    SharedPreferences.clearSharedPreferences(context)
+    DPSharedPreferences.clearSharedPreferences(context)
     navController.navigate(Screens.AuthCheck.route) {
         popUpTo(0) { inclusive = true }
     }

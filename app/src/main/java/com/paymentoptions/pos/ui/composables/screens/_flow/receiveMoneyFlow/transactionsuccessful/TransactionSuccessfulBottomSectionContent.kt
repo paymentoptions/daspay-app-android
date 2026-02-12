@@ -53,7 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails

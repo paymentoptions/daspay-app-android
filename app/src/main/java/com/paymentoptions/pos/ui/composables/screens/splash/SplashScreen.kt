@@ -13,14 +13,14 @@ import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import coil3.compose.AsyncImage
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayout
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 
 @Composable
 fun SplashScreen(navController: NavController) {
     val context = LocalContext.current
-    val signInResponse = SharedPreferences.getAuthDetails(context = context)
+    val signInResponse = DPSharedPreferences.getAuthDetails(context = context)
 
     if (signInResponse.isNotNull())
         navController.navigate(Screens.Dashboard.route){

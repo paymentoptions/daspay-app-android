@@ -51,7 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
@@ -160,7 +160,7 @@ fun MyBottomNavigationBar(
 //    var selected by remember { mutableStateOf<BottomNavigationBarItem>(home) }
 
     val moreList : ArrayList<BottomNavigationBarItem> = arrayListOf()
-    if (SharedPreferences.isAdmin(context)) {
+    if (DPSharedPreferences.isAdmin(context)) {
         moreList.addAll(itemsInMoreAdmin)
     } else {
         moreList.addAll(itemsInMoreStaff)
@@ -184,7 +184,7 @@ fun MyBottomNavigationBar(
 
                     if (signOutResponse == null) {
                         TokenAutoRefresher.getInstance(context).onUserSignedOut()
-                        SharedPreferences.clearSharedPreferences(context)
+                        DPSharedPreferences.clearSharedPreferences(context)
                         navController.navigate(Screens.AuthCheck.route) {
                             popUpTo(0) { inclusive = true }
                         }
@@ -193,7 +193,7 @@ fun MyBottomNavigationBar(
                     signOutResponse?.let {
                         if (it.success) {
                             TokenAutoRefresher.getInstance(context).onUserSignedOut()
-                            SharedPreferences.clearSharedPreferences(context)
+                            DPSharedPreferences.clearSharedPreferences(context)
                             navController.navigate(Screens.AuthCheck.route) {
                                 popUpTo(0) { inclusive = true }
                             }
@@ -201,7 +201,7 @@ fun MyBottomNavigationBar(
                     }
                 } catch (e: Exception) {
                     TokenAutoRefresher.getInstance(context).onUserSignedOut()
-                    SharedPreferences.clearSharedPreferences(context)
+                    DPSharedPreferences.clearSharedPreferences(context)
                     navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
                     }

@@ -66,8 +66,9 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.ScreenRatioToDp
-import com.paymentoptions.pos.device.getApms
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences.getApms
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
@@ -715,7 +716,7 @@ fun FoodOrderFlow(
                                     try {
                                         payByLinkApiResponseLoading = true
                                         val dasmid =
-                                            com.paymentoptions.pos.device.getPayByLinkDasmid(context)
+                                           DPSharedPreferences.getPayByLinkDasmid(context)
 
                                         payByLinkResponse =
                                             payByLink(context, payByLinkRequest, dasmid)

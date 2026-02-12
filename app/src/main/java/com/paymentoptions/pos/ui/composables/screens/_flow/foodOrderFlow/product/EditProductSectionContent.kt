@@ -39,19 +39,16 @@ import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.core.net.toUri
 import coil3.compose.AsyncImage
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.endpoints.editProduct
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
-import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodItem
@@ -197,7 +194,7 @@ fun EditProductSectionContent(
                         label = "Product Price *",
                         placeholder = "HKD",
                         onlyDigits = true,
-                        disabled = SharedPreferences.isStaff(context),
+                        disabled = DPSharedPreferences.isStaff(context),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -232,7 +229,7 @@ fun EditProductSectionContent(
                         state = productCode,
                         label = "Product Code * (Unique)",
                         placeholder = "Ex. SKU-000",
-                        disabled = SharedPreferences.isStaff(context),
+                        disabled = DPSharedPreferences.isStaff(context),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -591,7 +588,7 @@ private fun getProductRequest(
     productStock: Int,
     selectedFoodItem: FoodItem
 ): ProductRequest {
-    if (SharedPreferences.isAdmin(context)) return ProductRequest(
+    if (DPSharedPreferences.isAdmin(context)) return ProductRequest(
         ProductName = productName.text.toString(),
         ProductDesc = productDescription.text.toString(),
         ProductPrice = finalPrice,

@@ -21,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.theme.primary100
@@ -37,7 +37,7 @@ fun BottomSectionContent(navController: NavController) {
 
     LaunchedEffect(Unit) {
         loaderState = true
-        fcmToken = SharedPreferences.getFcmToken(context)
+        fcmToken = DPSharedPreferences.getFcmToken(context)
         loaderState = false
     }
 

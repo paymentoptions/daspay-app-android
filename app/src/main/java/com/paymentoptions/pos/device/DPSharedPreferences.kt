@@ -2,6 +2,8 @@ package com.paymentoptions.pos.device
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AccessLevel
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Apms
@@ -13,11 +15,27 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-const val sharedPreferencesLabel: String = "my_prefs"
 
-class SharedPreferences {
-    companion object {
-        private var accessLevel : AccessLevel? = null
+object DPSharedPreferences {
+        private var accessLevel: AccessLevel? = null
+
+        const val sharedPreferencesLabel: String = "my_prefs"
+
+        private fun getSecurePrefs(context: Context): android.content.SharedPreferences {
+
+            val masterKey = MasterKey.Builder(context)
+                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+                .build()
+            println("secure prefs called with master key: $masterKey")
+            return EncryptedSharedPreferences.create(
+                context,
+                sharedPreferencesLabel,
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        }
+
         fun saveBoolean(context: Context, key: String, value: Boolean) = runBlocking {
             val sharedPreferences =
                 context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
@@ -59,24 +77,9 @@ class SharedPreferences {
             saveBoolean(context, "immersive", status)
         }
 
-        fun saveAuthDetails(context: Context, authDetails: SignInResponse) = runBlocking {
-            val authDetailsString = Json.encodeToString(authDetails)
-            saveKeyValue(context, "auth_details", authDetailsString)
-            accessLevel = authDetails.data.accessLevel
-        }
 
-        fun getAuthDetails(context: Context): SignInResponse? {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
-            val authDetailsString = sharedPreferences.getString("auth_details", null)
-            val authDetailsJson =
-                authDetailsString?.let { Json.decodeFromString<SignInResponse>(it) }
-
-            return authDetailsJson
-        }
-
-        fun isAdmin(context: Context) : Boolean {
-            if(accessLevel == null) {
+        fun isAdmin(context: Context): Boolean {
+            if (accessLevel == null) {
                 val authDetails = getAuthDetails(context)
                 return authDetails?.data?.accessLevel == AccessLevel.ADMIN
             } else {
@@ -84,8 +87,8 @@ class SharedPreferences {
             }
         }
 
-        fun isStaff(context: Context) : Boolean {
-            if(accessLevel == null) {
+        fun isStaff(context: Context): Boolean {
+            if (accessLevel == null) {
                 val authDetails = getAuthDetails(context)
                 return authDetails?.data?.accessLevel == AccessLevel.STAFF
             } else {
@@ -93,15 +96,6 @@ class SharedPreferences {
             }
         }
 
-
-        /**fun clearSharedPreferences(context: Context) = runBlocking {
-        val sharedPreferences =
-        context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
-
-        with(sharedPreferences.edit()) {
-        clear().apply()
-        }
-        }**/
         fun clearSharedPreferences(context: Context) = runBlocking {
             val sharedPreferences =
                 context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
@@ -113,22 +107,6 @@ class SharedPreferences {
             accessLevel = null
 
         }
-
-        fun saveOtp(context: Context, otp: String){
-            val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
-            with(sharedPref.edit()) {
-                putString("saved_otp", otp)
-                apply()
-            }
-        }
-
-        fun getOtp(context: Context): String?{
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
-            val otp = sharedPreferences.getString("saved_otp", null)
-            return otp
-        }
-
 
         fun saveFcmToken(context: Context, token: String) {
             val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
@@ -205,136 +183,160 @@ class SharedPreferences {
         }
 
         fun saveCredentials(context: Context, email: String, password: String) {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
-            with(sharedPreferences.edit()) {
+            val securePrefs = getSecurePrefs(context)
+            with(securePrefs.edit()) {
                 putString("saved_email", email)
-                putString("saved_password", password) // Saving plain text password as requested
+                putString("saved_password", password)
                 apply()
             }
         }
 
         fun getSavedCredentials(context: Context): Triple<String?, String?, String?> {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
-            val email = sharedPreferences.getString("saved_email", null)
-            val password = sharedPreferences.getString("saved_password", null)
-            val otp = sharedPreferences.getString("saved_otp", null)
+            val securePrefs = getSecurePrefs(context)
+            val email = securePrefs.getString("saved_email", null)
+            val password = securePrefs.getString("saved_password", null)
+            val otp = securePrefs.getString("saved_otp", null)
             return Triple(email, password, otp)
         }
-    }
-}
 
-fun getTransactionCurrency(context: Context): String {
-    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
-    var transactionCurrency = ""
-
-    externalDeviceConfiguration?.let {
-        transactionCurrency =
-            it.data.paymentMethod.firstOrNull()?.TransactionCCY?.firstOrNull() ?: ""
-
-    }
-
-    return transactionCurrency
-}
-
-fun getSettlementCurrency(context: Context): String {
-    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
-    var settlementCurrency = ""
-
-    externalDeviceConfiguration?.let {
-        settlementCurrency = it.data.paymentMethod.firstOrNull()?.SettlementCCY ?: ""
-    }
-    return settlementCurrency
-}
-
-//SOFTPOS DASMID
-fun getTapPayDasmid(context: Context): String {
-    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
-    var dasmid = ""
-
-    externalDeviceConfiguration?.let {
-        for (paymentMethod in it.data.paymentMethod) {
-            if (paymentMethod.Type == "SOFTPOS") {
-                dasmid = paymentMethod.DASMID
-                break
+        fun saveOtp(context: Context, otp: String) {
+            val securePrefs = getSecurePrefs(context)
+            with(securePrefs.edit()) {
+                putString("saved_otp", otp)
+                apply()
             }
         }
+
+        fun saveAuthDetails(context: Context, authDetails: SignInResponse) = runBlocking {
+            val authDetailsString = Json.encodeToString(authDetails)
+            val securePrefs = getSecurePrefs(context)
+            with(securePrefs.edit()) {
+                putString("auth_details", authDetailsString)
+                apply()
+            }
+            accessLevel = authDetails.data.accessLevel
+        }
+
+        fun getAuthDetails(context: Context): SignInResponse? {
+            val securePrefs = getSecurePrefs(context)
+            val authDetailsString = securePrefs.getString("auth_details", null)
+            val authDetailsJson =
+                authDetailsString?.let { Json.decodeFromString<SignInResponse>(it) }
+
+            return authDetailsJson
+        }
+
+    fun getTransactionCurrency(context: Context): String {
+        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        var transactionCurrency = ""
+
+        externalDeviceConfiguration?.let {
+            transactionCurrency =
+                it.data.paymentMethod.firstOrNull()?.TransactionCCY?.firstOrNull() ?: ""
+
+        }
+
+        return transactionCurrency
     }
-    return dasmid
-}
 
-//QP DASMID
-fun getQRDasmid(context: Context): String {
-    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
-    var dasmid = ""
+    fun getSettlementCurrency(context: Context): String {
+        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        var settlementCurrency = ""
 
-    externalDeviceConfiguration?.let {
-        for (paymentMethod in it.data.paymentMethod) {
-            if (paymentMethod.Type == "QR") {
-                dasmid = paymentMethod.DASMID
-                break
+        externalDeviceConfiguration?.let {
+            settlementCurrency = it.data.paymentMethod.firstOrNull()?.SettlementCCY ?: ""
+        }
+        return settlementCurrency
+    }
+
+    //SOFTPOS DASMID
+    fun getTapPayDasmid(context: Context): String {
+        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        var dasmid = ""
+
+        externalDeviceConfiguration?.let {
+            for (paymentMethod in it.data.paymentMethod) {
+                if (paymentMethod.Type == "SOFTPOS") {
+                    dasmid = paymentMethod.DASMID
+                    break
+                }
             }
         }
+        return dasmid
     }
-    return dasmid
-}
 
-//PBl DASMID
-fun getPayByLinkDasmid(context: Context): String {
-    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
-    var dasmid = ""
+    //QP DASMID
+    fun getQRDasmid(context: Context): String {
+        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        var dasmid = ""
 
-    externalDeviceConfiguration?.let {
-        for (paymentMethod in it.data.paymentMethod) {
-            if (paymentMethod.Type == "PBL") {
-                dasmid = paymentMethod.DASMID
-                break
+        externalDeviceConfiguration?.let {
+            for (paymentMethod in it.data.paymentMethod) {
+                if (paymentMethod.Type == "QR") {
+                    dasmid = paymentMethod.DASMID
+                    break
+                }
             }
         }
+        return dasmid
     }
-    return dasmid
-}
 
-//this function will extract schemes from the external device configuration in which the payment method type is SOFTPOS
-fun getSchemes(context: Context): DevicePaymentMethod_Schemes {
-    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
-    var schemes = DevicePaymentMethod_Schemes()
+    //PBl DASMID
+    fun getPayByLinkDasmid(context: Context): String {
+        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        var dasmid = ""
 
-    externalDeviceConfiguration?.let {
-        for (paymentMethod in it.data.paymentMethod) {
-            if (paymentMethod.Type == "SOFTPOS") {
-                schemes = paymentMethod.schemes
-                break
+        externalDeviceConfiguration?.let {
+            for (paymentMethod in it.data.paymentMethod) {
+                if (paymentMethod.Type == "PBL") {
+                    dasmid = paymentMethod.DASMID
+                    break
+                }
             }
         }
+        return dasmid
     }
-    return schemes
-}
 
-//this function will extract apms from the external device configuration in which the payment method type is QR
-fun getApms(context: Context): DevicePaymentMethod_Apms {
-    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
-    var apms = DevicePaymentMethod_Apms()
+    //this function will extract schemes from the external device configuration in which the payment method type is SOFTPOS
+    fun getSchemes(context: Context): DevicePaymentMethod_Schemes {
+        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        var schemes = DevicePaymentMethod_Schemes()
 
-    externalDeviceConfiguration?.let {
-        for (paymentMethod in it.data.paymentMethod) {
-            if (paymentMethod.Type == "QR") {
-                apms = paymentMethod.apms
-                break
+        externalDeviceConfiguration?.let {
+            for (paymentMethod in it.data.paymentMethod) {
+                if (paymentMethod.Type == "SOFTPOS") {
+                    schemes = paymentMethod.schemes
+                    break
+                }
             }
         }
-        //apms = it.data.paymentMethod.firstOrNull()?.apms ?: DevicePaymentMethod_Apms()
+        return schemes
     }
-    return apms
-}
 
-fun getDeviceId(context: Context): String? {
-    val externalDeviceConfiguration = SharedPreferences.getDeviceConfiguration(context)
-    var deviceId: String? = null
+    //this function will extract apms from the external device configuration in which the payment method type is QR
+    fun getApms(context: Context): DevicePaymentMethod_Apms {
+        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        var apms = DevicePaymentMethod_Apms()
 
-    externalDeviceConfiguration?.let {
-        deviceId = it.data.deviceInfo.DeviceID
+        externalDeviceConfiguration?.let {
+            for (paymentMethod in it.data.paymentMethod) {
+                if (paymentMethod.Type == "QR") {
+                    apms = paymentMethod.apms
+                    break
+                }
+            }
+            //apms = it.data.paymentMethod.firstOrNull()?.apms ?: DevicePaymentMethod_Apms()
+        }
+        return apms
     }
-    return deviceId
+
+    fun getDeviceId(context: Context): String? {
+        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        var deviceId: String? = null
+
+        externalDeviceConfiguration?.let {
+            deviceId = it.data.deviceInfo.DeviceID
+        }
+        return deviceId
+    }
 }

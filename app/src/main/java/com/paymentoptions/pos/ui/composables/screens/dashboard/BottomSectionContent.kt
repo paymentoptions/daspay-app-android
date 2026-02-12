@@ -31,12 +31,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
-import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -152,7 +151,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if(SharedPreferences.isAdmin(context)) {
+            if(DPSharedPreferences.isAdmin(context)) {
                 FilledButton(
                     text = "View Insights",
                     onClick = { navController.navigate(Screens.TransactionHistory.route) },

@@ -1,7 +1,6 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
-import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SignOutRequest
@@ -9,7 +8,6 @@ import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.Token
 import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generateRequestHeader
-import com.paymentoptions.pos.services.apiService.shouldRefreshToken
 
 suspend fun signOut(context: Context): SignOutResponse? {
     try {

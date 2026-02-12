@@ -2,7 +2,7 @@ package com.paymentoptions.pos.services.apiService
 
 import android.content.Context
 import com.google.gson.Gson
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import retrofit2.HttpException
 
@@ -41,7 +41,7 @@ class TokenRepository private constructor(
             val refreshTokenRequest = RefreshTokenRequest(username, refreshToken)
             val refreshTokenResponse =
                 RetrofitClient.getApi(context).refreshToken(requestHeaders, refreshTokenRequest)
-            SharedPreferences.saveAuthDetails(context, refreshTokenResponse)
+            DPSharedPreferences.saveAuthDetails(context, refreshTokenResponse)
             isRefreshing = false
             return refreshTokenResponse
         } catch (e: HttpException) {
@@ -79,7 +79,7 @@ class TokenRepository private constructor(
         return doRefreshToken(authDetails)
     }
 
-    fun getAuthToken(): SignInResponse? = SharedPreferences.getAuthDetails(context)
+    fun getAuthToken(): SignInResponse? = DPSharedPreferences.getAuthDetails(context)
 
     companion object {
         const val REFRESH_JOB = "token_refresh"

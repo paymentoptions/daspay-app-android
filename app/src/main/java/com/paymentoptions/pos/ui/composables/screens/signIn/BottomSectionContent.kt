@@ -24,8 +24,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.messaging.FirebaseMessaging
-import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.device.SharedPreferences.Companion.saveFcmToken
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences.saveFcmToken
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
@@ -62,7 +62,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
     val credentialModel = if (inProduction) CredentialModel.Empty else CredentialModel.Robowah
 
-    val (savedEmail, savedPassword, otp) = remember { SharedPreferences.getSavedCredentials(context) }
+    val (savedEmail, savedPassword, otp) = remember { DPSharedPreferences.getSavedCredentials(context) }
 
     val emailState = rememberTextFieldState(initialText = savedEmail ?: credentialModel.email)
     var emailError by remember { mutableStateOf(false) }
@@ -171,7 +171,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                         signInResponse?.let {
                             if (signInResponse.success) {
-                                SharedPreferences.saveCredentials(
+                                DPSharedPreferences.saveCredentials(
                                     context,
                                     emailState.text.toString(),
                                     passwordState.text.toString()
@@ -187,7 +187,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                     }
                                 }
 
-                                SharedPreferences.saveAuthDetails(context, signInResponse)
+                                DPSharedPreferences.saveAuthDetails(context, signInResponse)
 
                                 // Start token auto refresh after successful sign-in
                                 TokenAutoRefresher.getInstance(context).onUserSignedIn()

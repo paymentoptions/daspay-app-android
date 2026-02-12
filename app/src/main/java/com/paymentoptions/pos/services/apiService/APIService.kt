@@ -153,6 +153,10 @@ interface ApiService {
         @Body request: ProductImageRequest,
     ): UploadImageResponse
 
+
+    @GET("dasconfig/daspay-configuration?appenv=DEV")
+    suspend fun getDaspayConfiguration()
+
 }
 
 var gson = GsonBuilder()

@@ -37,11 +37,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.services.apiService.endpoints.completeDeviceRegistration
 import com.paymentoptions.pos.services.apiService.endpoints.getExternalDeviceConfiguration
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
@@ -608,7 +607,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                     "Step 3: Proceeding to get external device configuration."
                                 )
 
-                                SharedPreferences.saveTokenStatus(
+                                DPSharedPreferences.saveTokenStatus(
                                     context = context, tokenCode = otp.value, isVerified = true
                                 )
 
@@ -619,7 +618,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                         "DEBUG_TOKEN",
                                         "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                                     )
-                                    SharedPreferences.saveDeviceConfiguration(
+                                    DPSharedPreferences.saveDeviceConfiguration(
                                         context, configResponse
                                     )
                                     openFingerprintScan = true
@@ -654,7 +653,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                         context, otp.value
                                     ).onSuccess { configResponse ->
 
-                                        SharedPreferences.saveTokenStatus(
+                                        DPSharedPreferences.saveTokenStatus(
                                             context = context,
                                             tokenCode = otp.value,
                                             isVerified = true
@@ -664,7 +663,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                             "DEBUG_TOKEN",
                                             "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                                         )
-                                        SharedPreferences.saveDeviceConfiguration(
+                                        DPSharedPreferences.saveDeviceConfiguration(
                                             context, configResponse
                                         )
                                         openFingerprintScan = true
@@ -683,7 +682,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                         "Token expired. Please sign in again.",
                                         Toast.LENGTH_SHORT
                                     ).show()
-                                    SharedPreferences.clearSharedPreferences(context)
+                                    DPSharedPreferences.clearSharedPreferences(context)
                                     navController.navigate(Screens.AuthCheck.route) {
                                         popUpTo(Screens.AuthCheck.route) { inclusive = true }
                                     }

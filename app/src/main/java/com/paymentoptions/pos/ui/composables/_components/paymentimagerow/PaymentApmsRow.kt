@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.paymentoptions.pos.device.getApms
+import com.paymentoptions.pos.device.DPSharedPreferences.getApms
 import com.paymentoptions.pos.ui.composables._components.images.apms.AliPayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.ApplePayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.DinersClubPayImage

@@ -155,10 +155,10 @@ dependencies {
     implementation(libs.vico.compose.m3)
 
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     implementation(platform(libs.log4j.bom))
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
 }
