@@ -23,8 +23,12 @@ suspend fun payment(
             RetrofitClient.getApi(context).payment(headers = requestHeaders, request = paymentRequest)
 
         return paymentResponse
+    } catch (e: retrofit2.HttpException) {
+        val errorBody = e.response()?.errorBody()?.string()
+        AppLogger.error("payment HTTP error ${e.code()}: $errorBody")
+        return null
     } catch (e: Exception) {
         AppLogger.error("paymentError: $e")
-        throw e
+        return null
     }
 }

@@ -15,11 +15,11 @@ import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlow
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlow
 import com.paymentoptions.pos.ui.composables.screens._flow.refundFlow.refund.RefundScreen
-import com.paymentoptions.pos.ui.composables.screens._flow.refundFlow.refundTransaction.RefundTransactionScreen
 import com.paymentoptions.pos.ui.composables.screens._flow.refundFlow.refundinitiated.RefundInitiatedScreen
 import com.paymentoptions.pos.ui.composables.screens._test.fcmtoken.FcmTokenScreen
 import com.paymentoptions.pos.ui.composables.screens.authcheck.AuthCheckScreen
 import com.paymentoptions.pos.ui.composables.screens.dashboard.DashboardScreen
+import com.paymentoptions.pos.ui.composables.screens.dashboard.TransactionActionScreen
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintAutoLoginScreen
 import com.paymentoptions.pos.ui.composables.screens.helpandsupport.HelpAndSupportScreen
 import com.paymentoptions.pos.ui.composables.screens.notifications.NotificationsScreen
@@ -29,7 +29,9 @@ import com.paymentoptions.pos.ui.composables.screens.signIn.SignInScreen
 import com.paymentoptions.pos.ui.composables.screens.splash.SplashScreen
 import com.paymentoptions.pos.ui.composables.screens.token.TokenScreen
 import com.paymentoptions.pos.ui.composables.screens.transactiondetails.TransactionDetailsScreen
+import com.paymentoptions.pos.ui.composables.screens.transactiondetails.TransactionStatusScreen
 import com.paymentoptions.pos.ui.composables.screens.transactionshistory.TransactionHistoryScreen
+import com.paymentoptions.pos.utils.TransactionAction
 import kotlinx.coroutines.flow.collectLatest
 import java.net.URLDecoder
 
@@ -83,6 +85,59 @@ fun Navigator() {
         // More Menu Items ------------------------------------------------
         composable(Screens.TransactionHistory.route) { TransactionHistoryScreen(navController) }
         composable(
+            route = "${Screens.TransactionReceipt.route}?transactionId={transactionId}&title={title}",
+            arguments = listOf(
+                navArgument("transactionId") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument("title") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                }
+            )
+        ) { backStackEntry ->
+            TransactionStatusScreen(
+                navController = navController,
+                transactionUUid = backStackEntry.arguments?.getString("transactionId") ?: "",
+                title = backStackEntry.arguments?.getString("title") ?: ""
+            )
+        }
+        composable(
+            route = Screens.TransactionAction.route,
+            arguments = listOf(
+                navArgument("transactionJson") {
+                    type = NavType.StringType
+                },
+                navArgument("action") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+            val transactionJson = backStackEntry.arguments?.getString("transactionJson") ?: ""
+            val actionString = backStackEntry.arguments?.getString("action") ?: "VOID"
+            val decodedJson = URLDecoder.decode(transactionJson, "UTF-8")
+
+            // Parse transaction
+            val transaction = try {
+                Gson().fromJson(decodedJson, TransactionListDataRecord::class.java)
+            } catch (e: Exception) {
+                null
+            }
+
+            val targetAction = when (actionString) {
+                "REFUND" -> TransactionAction.REFUND
+                "VOID" -> TransactionAction.VOID
+                else -> TransactionAction.VOID
+            }
+
+            TransactionActionScreen(
+                navController = navController,
+                transaction = transaction!!,
+                targetAction = targetAction
+            )
+        }
+        composable(
             route = Screens.TransactionDetails.route,
             arguments = listOf(navArgument("transactionJson") { type = NavType.StringType })
         ) { backStackEntry ->
@@ -109,7 +164,7 @@ fun Navigator() {
 
         composable(Screens.SendLogs.route) { SendLogsScreen(navController) }
 
-        composable(Screens.RefundTransaction.route) { RefundTransactionScreen(navController) }
+        //composable(Screens.RefundTransaction.route) { RefundTransactionScreen(navController) }
         composable(Screens.RefundInitiated.route) { RefundInitiatedScreen(navController) }
         //------------------------------------------------------------------
         composable(Screens.Settings.route) { SettingsScreen(navController) }

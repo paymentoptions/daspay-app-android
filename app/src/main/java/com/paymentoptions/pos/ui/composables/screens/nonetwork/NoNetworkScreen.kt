@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.nonetwork
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,13 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayout
 
 
 @Composable
-fun NoNetworkScreen() {
+fun NoNetworkScreen(context: Context) {
     SimpleLayout {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -42,7 +44,7 @@ fun NoNetworkScreen() {
             )
             Spacer(modifier = Modifier.height(20.dp))
             Text(
-                text = "Device not connected to the Internet. Checking internet connectivity status in the background.",
+                text = context.getString(R.string.no_network),
                 color = Color.White,
                 textAlign = TextAlign.Center
             )

@@ -24,6 +24,9 @@ class ClientApp : Application() {
 
         initAppLogger()
 
+        // Log the current environment
+        AppLogger.info("App started - Build variant: ${BuildConfig.BUILD_TYPE}, Flavor: ${BuildConfig.FLAVOR}")
+
         appScope.launch {
             val clientAppInitRes =
                 HeadlessSetup.initSoftPos(this@ClientApp, "payment-options.license")

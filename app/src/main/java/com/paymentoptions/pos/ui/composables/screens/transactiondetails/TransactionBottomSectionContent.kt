@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.gson.Gson
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
@@ -60,14 +61,22 @@ import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
 import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.generateQrCode
+import com.paymentoptions.pos.utils.getAmountSign
+import com.paymentoptions.pos.utils.getAvailableAction
+import com.paymentoptions.pos.utils.getStatusColor
+import com.paymentoptions.pos.utils.getTransactionIcon
+import com.paymentoptions.pos.utils.getTransactionTypeLabel
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -76,9 +85,9 @@ import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSectionContent(
+fun TransactionBottomSectionContent(
     navController: NavController,
-    transaction: TransactionListDataRecord?,
+    transaction: TransactionListDataRecord,
     updateDetailsScreenType: (TransactionDetailsScreenType) -> Unit,
 ) {
     AppLogger.debug("transaction to display : $transaction")
@@ -86,7 +95,6 @@ fun BottomSectionContent(
     val currency = getTransactionCurrency(context)
     val scrollState = rememberScrollState()
     val amountValue = transaction?.amount?.toDoubleOrNull() ?: 0.0
-    val formattedAmount = String.format(Locale.US,"%.2f", amountValue)
 
     val transactionUuid = transaction?.uuid
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
@@ -108,25 +116,47 @@ fun BottomSectionContent(
     val transactionType =
         transaction?.TransactionType /*?: paymentDetailsLatestResponse?.data?.TransactionType*/
             ?: ""
-    val transactionAmount =
-        transaction?.amount?.toDoubleOrNull() /*?: paymentDetailsLatestResponse?.data?.Amount*/
-            ?: 0.0
-    val transactionCurrencyCode =
-        transaction?.CurrencyCode /*?: paymentDetailsLatestResponse?.data?.CurrencyCode */
-            ?: currency
-    val transactionRefId =
-        transaction?.uuid /*?: paymentDetailsLatestResponse?.data?.TransactionRefID.toString()*/
+//    val transactionAmount =
+//        transaction?.amount?.toDoubleOrNull() /*?: paymentDetailsLatestResponse?.data?.Amount*/
+//            ?: 0.0
+//    val transactionCurrencyCode =
+//        transaction?.CurrencyCode /*?: paymentDetailsLatestResponse?.data?.CurrencyCode */
+//            ?: currency
+//    val transactionRefId =
+//        transaction?.uuid /*?: paymentDetailsLatestResponse?.data?.TransactionRefID.toString()*/
 
-    val statusColor = when {
-        transactionType.uppercase() == "REFUND" -> Color(0xFFFC8D3E)  // Orange
-        transactionStatus.uppercase() == "SUCCESSFUL" -> green500  // Green
-        else -> red500  // Red
+    val statusColor = getStatusColor(transaction)
+    val amountSign = getAmountSign(transaction)
+    val availableAction = getAvailableAction(transaction)
+    val transactionTypeLabel = getTransactionTypeLabel(transaction)
+
+    AppLogger.debug("TransactionSummary availableAction: $availableAction, amountSignIn :"
+            + "$amountSign , transactionTypeLabel: $transactionTypeLabel, statusColor: $statusColor")
+
+    // Format the amount with sign
+    val formattedAmount = when {
+        amountSign == "+" -> "+${transaction.amount}"
+        amountSign == "-" -> "-${transaction.amount}"
+        else -> transaction.amount
     }
 
     val statusText = when {
-        transactionType.uppercase() == "REFUND" -> "Refunded"
+        transactionType.uppercase() == "REFUNDED" -> "Refunded"
+        transactionType.uppercase() == "VOIDED" -> "Voided"
         transactionStatus.uppercase() == "SUCCESSFUL" -> "Transaction Successful"
         else -> "Transaction Failed"
+    }
+
+    fun navigateToVoidAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Gson().toJson(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "VOID"))
+    }
+
+    fun navigateToRefundAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Gson().toJson(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "REFUND"))
     }
 
     var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
@@ -231,13 +261,22 @@ fun BottomSectionContent(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedButton(
-                    text = "Refund",
-                    onClick = { },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
+                if(availableAction != TransactionAction.NONE){
+                    OutlinedButton(
+                        text = if(availableAction == TransactionAction.REFUND)"Refund" else "VOID",
+                        onClick = {
+                            when(availableAction){
+                                TransactionAction.REFUND -> navigateToVoidAction(transaction)
+                                TransactionAction.VOID -> navigateToRefundAction(transaction)
+                                else ->{}
+                            }
+                        },
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                    )
+                }
+
 
                 Spacer(modifier = Modifier.width(10.dp))
 
@@ -270,11 +309,12 @@ fun BottomSectionContent(
                     .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                if(transaction?.TransactionID != 0)
+                if(transaction?.TransactionID != 0){
                 TransactionDetailRow(
                     label = "Transaction ID",
                     value = transaction?.TransactionID.toString()
                 )
+                    }
 
                 TransactionDetailRow(
                     label = "Date",
@@ -294,7 +334,7 @@ fun BottomSectionContent(
 
                 TransactionDetailRow(
                     label = "Transaction Type",
-                    value = transactionType
+                    value = transactionTypeLabel
                 )
 
 //                    TransactionDetailRow(

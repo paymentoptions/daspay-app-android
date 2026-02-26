@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,8 +17,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +33,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -43,60 +45,63 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.gson.Gson
-import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.utils.TransactionAction
+import com.paymentoptions.pos.utils.TransactionColors
+import com.paymentoptions.pos.utils.getAmountSign
+import com.paymentoptions.pos.utils.getAvailableAction
+import com.paymentoptions.pos.utils.getStatusColor
+import com.paymentoptions.pos.utils.getTransactionIcon
+import com.paymentoptions.pos.utils.getTransactionTypeLabel
 import com.paymentoptions.pos.utils.timeAgo
-import com.theminesec.lib.dto.common.Amount
-import com.theminesec.lib.dto.poi.PoiRequest
-import com.theminesec.lib.dto.transaction.TranType
-import com.theminesec.sdk.headless.HeadlessActivity
-import com.theminesec.sdk.headless.model.WrappedResult
-import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
-import java.util.Currency
 import java.util.Date
 
 var TRANSACTION_TO_BE_REFUNDED: TransactionListDataRecord? = null
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionSummary(
     navController: NavController,
     transaction: TransactionListDataRecord,
-    longClickedTransactionId: String = "",
-    onLongClick: (String) -> Unit = {},
-    onSwipeLeft: (String) -> Unit = {},
-    onSwipeRight: (String) -> Unit = {},
 ) {
-    transaction.status == "SUCCESSFUL"
-    val transactionAmount = transaction.amount.toFloat()
-    val isTransactionAmountPositive = transactionAmount > 0
-    val isCardTransaction = transaction.PaymentType == "CARDPAYMENT"
+    val context = LocalContext.current
     val dateString = transaction.Date   //"2025-04-23T03:38:57.349+00:00"
     val dateTime = OffsetDateTime.parse(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted = SimpleDateFormat("dd MMMM, YYYY").format(date)
     val timeAgoString = dateTime.toInstant().toEpochMilli().timeAgo()
-    var isLongClicked = longClickedTransactionId == transaction.TransactionID.toString()
+    var showAvailableAction by remember { mutableStateOf(false) }
 
     val hourPart = SimpleDateFormat("hh:mm:ss a").format(date)
     val borderRadius = 20.dp
     val haptics = LocalHapticFeedback.current
     var offsetX by remember { mutableStateOf(0f) }
 
-    val statusColor = when {
-        transaction.TransactionType.uppercase() == "REFUND" -> Color(0xFFFC8D3E)  // Orange
-        transaction.status.uppercase() == "SUCCESSFUL" -> Color(0xFF22C55E)  // Green
-        else -> Color(0xFFD52121)  // Red
+    val statusColor = getStatusColor(transaction)
+    val amountSign = getAmountSign(transaction)
+    val transactionIcon = getTransactionIcon(transaction)
+    val availableAction = getAvailableAction(transaction)
+    val transactionTypeLabel = getTransactionTypeLabel(transaction)
+
+    AppLogger.debug("TransactionSummary availableAction: $availableAction, amountSignIn :"
+            + "$amountSign , transactionTypeLabel: $transactionTypeLabel, statusColor: $statusColor, "
+            + "transactionIcon: $transactionIcon")
+
+    // Format the amount with sign
+    val formattedAmount = when {
+        amountSign == "+" -> "+${transaction.amount}"
+        amountSign == "-" -> "-${transaction.amount}"
+        else -> transaction.amount
     }
 
     val dateStr = buildAnnotatedString {
@@ -115,10 +120,22 @@ fun TransactionSummary(
         ) { append(if (timeAgoString.endsWith("seconds ago")) timeAgoString else hourPart) }
     }
 
+    fun navigateToVoidAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Gson().toJson(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "VOID"))
+    }
+
+    fun navigateToRefundAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Gson().toJson(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "REFUND"))
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = if (isLongClicked) 0.dp else DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
         horizontalArrangement = Arrangement.Absolute.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -126,9 +143,9 @@ fun TransactionSummary(
             colors = CardDefaults.cardColors(containerColor = Color.White),
             border = BorderStroke(0.5.dp, Color.Black.copy(alpha = 0.1f)),
             shape = RoundedCornerShape(
-                topStart = if (isLongClicked) 0.dp else borderRadius,
+                topStart = borderRadius,
                 topEnd = borderRadius,
-                bottomStart = if (isLongClicked) 0.dp else borderRadius,
+                bottomStart =  borderRadius,
                 bottomEnd = borderRadius
             ),
             modifier = Modifier
@@ -142,18 +159,34 @@ fun TransactionSummary(
                     detectHorizontalDragGestures(
                         onDragEnd = {
                             if (offsetX > 200f) {
-                                // Swiped
-
-                                onSwipeRight(transaction.TransactionID.toString())
+                                // Prevent right swipe - do nothing
+                                showAvailableAction = false
+                                offsetX = 0f
                             } else if (offsetX < -200f) {
-                                // Swiped Left
-
-                                onSwipeLeft(transaction.TransactionID.toString())
+                                // Left swipe - check if action is available
+                                if (availableAction != TransactionAction.NONE) {
+                                    showAvailableAction = true
+                                } else {
+                                    // Show toast that no action is available
+                                    Toast.makeText(
+                                        context,
+                                        "No action available for this transaction",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                             offsetX = 0f // reset position
                         },
                         onHorizontalDrag = { _, dragAmount ->
-                            offsetX += dragAmount
+                            // Only allow left swipe (negative drag)
+                            if (availableAction != TransactionAction.NONE) {
+                                // Allow both directions for visual feedback, but only left swipe triggers action
+                                offsetX += dragAmount
+                            } else if (dragAmount < 0) {
+                                // Allow left drag for triggering toast
+                                offsetX += dragAmount
+                            }
+                            // Prevent right swipe by not updating offsetX when dragAmount > 0 and no action
                         }
                     )
                 }
@@ -162,37 +195,27 @@ fun TransactionSummary(
                     val transactionJson = Gson().toJson(transaction)
                     navController.navigate(Screens.TransactionDetails.createRoute(transactionJson))
                 }, onLongClick = {
-                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onLongClick(transaction.TransactionID.toString())
+//                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+//                    onLongClick(transaction.TransactionID.toString())
                 })
-                .weight(if (isLongClicked) 8f else 1f)
+                .weight(if (showAvailableAction) 8.5f else 1f)
         ) {
             Row(
-                modifier = Modifier.padding(12.dp),
+                modifier = Modifier.padding(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                /**if (!isLongClicked) Box(
-                modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(iconBackgroundColor), contentAlignment = Alignment.Center
-                ) {
-                Icon(
-                painter = painterResource(if (isCardTransaction) R.drawable.icon_card else R.drawable.icon_money),
-                contentDescription = "Icon",
-                tint = purple50
-                )
-                }**/
-                if (!isLongClicked) Box(
+                // Transaction Icon with status-based color
+                if (!showAvailableAction) Box(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(iconBackgroundColor), contentAlignment = Alignment.Center
+                        .background(statusColor.copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painter = painterResource(if (isCardTransaction) R.drawable.icon_card else R.drawable.icon_money),
-                        contentDescription = "Icon",
+                        painter = painterResource(transactionIcon),
+                        contentDescription = "Transaction Icon",
                         tint = statusColor
                     )
                 }
@@ -202,11 +225,14 @@ fun TransactionSummary(
                 Column(
                     modifier = Modifier.weight(8f), verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
+                    // Date and time row
                     Text(
                         dateStr, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = purple50
                     )
+
+                    // Transaction Type - ID (e.g., "SALE - 54268" or "REFUND - 52345")
                     Text(
-                        text = "Txn Id - ${transaction.TransactionID}",
+                        text = "${transactionTypeLabel.uppercase()} - ${transaction.TransactionID}",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = primary500
@@ -215,6 +241,7 @@ fun TransactionSummary(
 
                 Spacer(modifier = Modifier.width(4.dp))
 
+                // Amount Column
                 Column(
                     horizontalAlignment = Alignment.End,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -229,7 +256,7 @@ fun TransactionSummary(
                     )
 
                     Text(
-                        text = if (isTransactionAmountPositive) "+${transaction.amount}" else transaction.amount,
+                        text = formattedAmount,
                         color = statusColor,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp,
@@ -240,67 +267,63 @@ fun TransactionSummary(
         }
 
 
-        val launcher = rememberLauncherForActivityResult(
-            HeadlessActivity.contract(ClientHeadlessImpl::class.java)
-        ) {
-            when (it) {
-                is WrappedResult.Success -> {
-                    AppLogger.debug("inThis Launche response: ${it.toString()}")
-                }
 
-                is WrappedResult.Failure -> {
-                    AppLogger.error("inThis Launcher failure ---->: $it")
-                }
+        // Action Button - Show based on available action (REFUND or VOID)
+        if (showAvailableAction && availableAction != TransactionAction.NONE) {
+            val actionColor = when (availableAction) {
+                TransactionAction.VOID -> TransactionColors.Yellow
+                TransactionAction.REFUND -> red500
+                else -> red500
             }
-        }
+            val actionBackgroundColor = when (availableAction) {
+                TransactionAction.VOID -> TransactionColors.Yellow.copy(alpha = 0.2f)
+                TransactionAction.REFUND -> red300.copy(alpha = 0.1f)
+                else -> red300.copy(alpha = 0.2f)
+            }
+            val actionLabel = when (availableAction) {
+                TransactionAction.VOID -> "Void"
+                TransactionAction.REFUND -> "Refund"
+                else -> ""
+            }
+            val actionIcon = when (availableAction) {
+                TransactionAction.VOID -> R.drawable.void_icon
+                TransactionAction.REFUND -> R.drawable.refund_icon
+                else -> R.drawable.refund
+            }
 
-
-
-        fun doVoid(transaction: TransactionListDataRecord){
-            AppLogger.debug("full transaction object: $transaction")
-            launcher.launch(input = PoiRequest.ActionVoid(transaction.uuid))
-        }
-
-        fun doRefund(transaction: TransactionListDataRecord ){
-            AppLogger.debug("full transaction object: $transaction")
-            launcher.launch(input = PoiRequest.ActionNew(
-                tranType = TranType.REFUND,
-                amount = Amount(
-                    BigDecimal(transaction.amount.toInt()),
-                    Currency.getInstance(transaction.CurrencyCode),
-                ),
-                profileId = "prof_01K36002RM7DMMPHG0QEX3E9BR",
-                linkedTranId = transaction.uuid,
-                posReference= "REFUND_20260202_002"
-            ))
-        }
-
-
-
-        if (isLongClicked) Column(
-            modifier = Modifier
-                .padding(end = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                .background(
-                    red300.copy(alpha = 0.2f), shape = RoundedCornerShape(8.dp)
+            Column(
+                modifier = Modifier
+                    .background(actionBackgroundColor, shape = RoundedCornerShape(8.dp))
+                    .weight(2f)
+                    .padding(10.dp)
+                    .clickable(onClick = {
+                        showAvailableAction = false
+                        when(availableAction){
+                            TransactionAction.VOID -> {
+                                navigateToVoidAction(transaction)
+                            }
+                            TransactionAction.REFUND -> {
+                                navigateToRefundAction(transaction)
+                            }
+                            else -> {}
+                        }
+                    }),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Icon(
+                    painter = painterResource(actionIcon),
+                    tint = actionColor,
+                    contentDescription = actionLabel,
+                    modifier = Modifier.size(20.dp)
                 )
-                .padding(6.dp)
-                .weight(2f)
-                .clickable(onClick = {
-                    doVoid(transaction)
-                })
-            ,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.refund),
-                tint = red500,
-                contentDescription = "Refund",
-                modifier = Modifier.size(20.dp)
-            )
-            Text(
-                text = "Refund", color = red500, fontSize = 11.sp, fontWeight = FontWeight.Medium
-            )
+                Text(
+                    text = actionLabel,
+                    color = actionColor,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }

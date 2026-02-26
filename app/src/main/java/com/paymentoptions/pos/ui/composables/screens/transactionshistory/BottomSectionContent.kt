@@ -353,9 +353,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 //                      Insights(transactions = transactions, currency = currency, updateReceivalAmount = {
 //                            updateReceivalAmount(it) })
                     ) else Transactions(
-                        navController, transactions = transactions, updateReceivalAmount = {
+                        navController, transactions = transactions,
+                        updateReceivalAmount = {
                             updateReceivalAmount(it)
-                        })
+                        }
+                    )
                 }
 
             }

@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens.transactiondetails
 
+
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,21 +13,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
 import java.util.Date
 
-enum class TransactionDetailsScreenType {
-    DETAILS_SCREEN, RECEIPT_SCREEN
-}
 
 @Composable
-fun TransactionDetailsScreen(
+fun TransactionStatusScreen(
     navController: NavController,
-    transaction: TransactionListDataRecord? = null,
+    transactionUUid: String,
+    title : String
 ) {
+
     val enableScrollingInsideBottomSectionContent = true
 
     var transactionDetailsScreenType by remember {
@@ -54,7 +53,7 @@ fun TransactionDetailsScreen(
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,
-                    transactionId = transaction?.uuid ?:"",
+                    transactionId = transactionUUid ?:"",
                     signatureBitmap = null,
                     signatureDate = Date(),
                 )
@@ -63,21 +62,22 @@ fun TransactionDetailsScreen(
         TransactionDetailsScreenType.DETAILS_SCREEN ->
             SectionedLayout(
                 navController = navController,
-                bottomSectionMinHeightRatio = 0.9f,
-                bottomSectionMaxHeightRatio = 0.9f,
-                bottomSectionPaddingInDp = 0.dp,
                 bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.9f,
                 enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
-                blurTopSection = true
-            ) {
-                TransactionBottomSectionContent(
-                    navController = navController,
-                    transaction = transaction!!,
-                    updateDetailsScreenType = {
-                        transactionDetailsScreenType = it
-                    }
+                ) {
+                StatusBottomSectionContent(
+                    navController,
+                    transactionId = transactionUUid,
+                    signatureBitmap = null,
+                    signatureDate = Date(),
+                    enableScrolling = true,
+                    title = title,
+                    updateDetailsScreenType = { transactionDetailsScreenType = it }
                 )
             }
     }
+
 }
 

@@ -79,6 +79,7 @@ import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
+import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -131,7 +132,7 @@ fun TransactionSuccessfulBottomSectionContent(
     val dateString =
         paymentDetailsLatestResponse?.data?.Date ?: OffsetDateTime.now()
             .toString()
-    val dateTime = OffsetDateTime.parse(dateString)
+    val dateTime = safeParseOffsetDateTime(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
 
