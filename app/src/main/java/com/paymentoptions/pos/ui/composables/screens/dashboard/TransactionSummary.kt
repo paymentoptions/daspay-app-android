@@ -54,6 +54,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.ui.theme.refundColor
 import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.TransactionColors
 import com.paymentoptions.pos.utils.getAmountSign
@@ -272,12 +273,12 @@ fun TransactionSummary(
         if (showAvailableAction && availableAction != TransactionAction.NONE) {
             val actionColor = when (availableAction) {
                 TransactionAction.VOID -> TransactionColors.Yellow
-                TransactionAction.REFUND -> red500
+                TransactionAction.REFUND -> refundColor
                 else -> red500
             }
             val actionBackgroundColor = when (availableAction) {
                 TransactionAction.VOID -> TransactionColors.Yellow.copy(alpha = 0.2f)
-                TransactionAction.REFUND -> red300.copy(alpha = 0.1f)
+                TransactionAction.REFUND -> refundColor.copy(alpha = 0.1f)
                 else -> red300.copy(alpha = 0.2f)
             }
             val actionLabel = when (availableAction) {

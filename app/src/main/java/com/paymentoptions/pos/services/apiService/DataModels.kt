@@ -118,7 +118,9 @@ data class TransactionListDataRecord(
     val BatchID: String?,
     val BatchNo: String?,
     val SettledAt: String?,
-    val AcquirerTransactionID: String?
+    val AcquirerTransactionID: String?,
+    val IsVoided: Boolean?,
+    val IsRefunded: Boolean?,
 )
 
 
@@ -126,13 +128,14 @@ data class TransactionRequest(
     val transactionId: String,
     val merchant_id: String,
     val amount: String? = null,
+    val notes: String? = null,
     val daspay_res: Transaction? = null,
 )
 
 
 data class TransactionListData(
     val total_count: Int,
-    val total_amount: String,     // ✅ was Double
+    val total_amount: String,
     val records: List<TransactionListDataRecord?>,
 
     // Optional but useful
@@ -627,7 +630,9 @@ data class InsightsResponseDataRecord(
     val BatchNo: String?,
     val SettleStatus: String?,
     val UpdatedAt: String?,
-    val ProductType: String?
+    val ProductType: String?,
+    val IsVoided: Boolean?,
+    val IsRefunded: Boolean?,
 )
 // -------------------------------------------------------
 
@@ -822,6 +827,13 @@ data class ProductImageRequest(
     val fileName: String,
 )
 
+
+@Serializable
+data class SettleBatchRequest(
+    val batchId: String,
+)
+
+
 data class UploadImageResponse (
     val statusCode: Long,
     val message: String,
@@ -860,6 +872,46 @@ data class AppConfig (
     val RegistryToken: String
 )
 
+data class SettlementListResponse (
+    val statusCode: Long,
+    val success: Boolean,
+    val message: String,
+    val data: SettlementData
+)
+
+data class SettlementData (
+    val totalCount: Long,
+    val take: Long,
+    val skip: Long,
+    val records: List<SettlementRecord>
+)
+
+data class SettlementRecord (
+    val ID: Long,
+    val uuid: String,
+    val BatchID: String,
+    val BatchNo: String,
+    val SettleStatus: String,
+    val CreatedAt: String,
+    val UpdatedAt: String? = null,
+    val SettledAt: String? = null,
+    val Capture: Long,
+    val CaptureAmount: Double,
+    val Sale: Long,
+    val SaleAmount: Double,
+    val Refund: Long,
+    val RefundAmount: Double,
+    val Voided: Long,
+    val VoidedAmount: Double
+)
+
+data class SettleBatchResponse (
+    val status_code: Long,
+    val BatchID: String,
+    val SettleStatus: String,
+    val SettlementRes: String
+)
+
 fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDataRecord {
     return TransactionListDataRecord(
         uuid = this.uuid,
@@ -887,6 +939,8 @@ fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDat
         BatchNo = this.BatchNo,
         AcquirerTransactionID = this.AcquirerTransactionID,
         DASMID = this.DASMID ?: "",
+        IsVoided = this.IsVoided,
+        IsRefunded = this.IsRefunded,
 
         // ---- Fields not available → defaults ----
         Isrecurring = false,

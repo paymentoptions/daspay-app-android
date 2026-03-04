@@ -1,6 +1,8 @@
 package com.paymentoptions.pos.services.apiService
 
 import com.google.gson.GsonBuilder
+import com.paymentoptions.pos.BuildConfig
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.utils.retrofitTimeout
 import okhttp3.OkHttpClient
@@ -18,7 +20,8 @@ import retrofit2.http.FormUrlEncoded
 import retrofit2.http.PUT
 import java.util.concurrent.TimeUnit
 
-const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/"
+// Default base URL from BuildConfig (for config endpoint)
+//const val baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/"
 
 interface ApiService {
     @POST("auth/signIn/")
@@ -72,10 +75,16 @@ interface ApiService {
         @Body request: PayByLinkRequest,
     ): PayByLinkResponse
 
-    @POST("transactions/refund")
+    @POST("daspay/refund")
     suspend fun refund(
         @HeaderMap headers: Map<String, String>,
-        @Body request: RefundRequest,
+        @Body request: TransactionRequest,
+    ): RefundResponse
+
+    @POST("daspay/void")
+    suspend fun void(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: TransactionRequest,
     ): RefundResponse
 
     @POST("server-to-server-interface/daspay/payment")
@@ -154,8 +163,24 @@ interface ApiService {
     ): UploadImageResponse
 
 
-    @GET("dasconfig/daspay-configuration?appenv=DEV")
-    suspend fun getDaspayConfiguration()
+    @GET("dasconfig/daspay-configuration?")
+    suspend fun getAppConfiguration(
+        @Query("appenv") flavourName: String
+    ): AppConfigResponse
+
+
+    @GET("daspay/master/batch/list?")
+    suspend fun getSettlementList(
+        @HeaderMap headers: Map<String, String>,
+        @Query("deviceNumber") deviceNumber: String,
+        @Query("uniqueCode") uniqueCode: String
+    ): SettlementListResponse
+
+    @POST("daspay/settle")
+    suspend fun settleBatch(
+        @HeaderMap headers: Map<String, String>,
+        @Body request: SettleBatchRequest
+    ): SettleBatchResponse
 
 }
 
@@ -180,15 +205,43 @@ object RetrofitClient {
     @Volatile
     private var apiService: ApiService? = null
 
+    @Volatile
+    private var currentBaseUrl: String? = null
+
     fun getApi(context: android.content.Context): ApiService {
-        return apiService ?: synchronized(this) {
-            apiService ?: Retrofit.Builder()
-                .baseUrl(baseUrl)
-                .client(provideOkHttpClient(context.applicationContext))
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .build()
-                .create(ApiService::class.java)
-                .also { apiService = it }
+        val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+
+        val effectiveBaseUrl = if (!savedBaseUrl.isNullOrEmpty()) {
+            "$savedBaseUrl/"
+        } else {
+            AppLogger.debug("savedBaseUrl null: $savedBaseUrl")
+            BuildConfig.CONFIG_BASE_URL
+        }
+
+        // Recreate service if base URL changed
+        if (apiService == null || currentBaseUrl != effectiveBaseUrl) {
+            synchronized(this) {
+                if (apiService == null || currentBaseUrl != effectiveBaseUrl) {
+                    currentBaseUrl = effectiveBaseUrl
+                    AppLogger.debug("Creating Retrofit instance with base URL: $effectiveBaseUrl")
+                    apiService = Retrofit.Builder()
+                        .baseUrl(effectiveBaseUrl)
+                        .client(provideOkHttpClient(context.applicationContext))
+                        .addConverterFactory(GsonConverterFactory.create(gson))
+                        .build()
+                        .create(ApiService::class.java)
+                }
+            }
+        }
+
+        return apiService!!
+    }
+
+    // Method to force recreation of API service (useful after config download)
+    fun reset() {
+        synchronized(this) {
+            apiService = null
+            currentBaseUrl = null
         }
     }
 }

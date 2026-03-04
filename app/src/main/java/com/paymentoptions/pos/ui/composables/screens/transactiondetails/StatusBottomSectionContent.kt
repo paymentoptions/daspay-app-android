@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
@@ -70,10 +71,12 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.TransactionColors
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
+import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -86,12 +89,15 @@ import java.util.Locale
 fun StatusBottomSectionContent(
     navController: NavController,
     transactionId: String,
-    signatureBitmap: Bitmap?,
-    signatureDate: Date,
     enableScrolling: Boolean = false,
     updateDetailsScreenType: (TransactionDetailsScreenType) -> Unit,
     title: String,
+    amount: String,
+    dateString: String,
+    referenceId: String,
+    aggregator : String
 ) {
+    AppLogger.debug("StatusBottomSectionContent is called with amount = $amount, dateString = $dateString, referenceId = $referenceId, aggregator = $aggregator")
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
@@ -114,7 +120,6 @@ fun StatusBottomSectionContent(
         isLoading = false
     }
 
-    val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
 
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
@@ -124,10 +129,7 @@ fun StatusBottomSectionContent(
                 )
             }
 
-    val transactionDetailUrl = if (transactionUuid != null) {
-        "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
-    } else
-        null
+    val transactionDetailUrl = "https://dev.paymentoptions.com/daspay-transaction-details/$transactionId"
 
     if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),
@@ -192,17 +194,8 @@ fun StatusBottomSectionContent(
     if (isLoading) {
         ReceiptShimmerLoading()
     } else {
-        val transactionStatus = paymentDetailsLatestResponse?.data?.Status ?: ""
-        val transactionType = paymentDetailsLatestResponse?.data?.TransactionType ?: ""
-        val transactionAmount = paymentDetailsLatestResponse?.data?.Amount ?: 0.0
-        val formattedAmount = String.format(Locale.US, "%.2f", transactionAmount)
-        val currency = paymentDetailsLatestResponse?.data?.CurrencyCode ?: ""
-
-        val statusColor = when {
-            transactionType.uppercase() == "REFUND" -> Color(0xFFFC8D3E)  // Orange
-            transactionStatus.uppercase() == "SUCCESSFUL" -> green500  // Green
-            else -> com.paymentoptions.pos.ui.theme.red500  // Red
-        }
+        val formattedAmount = String.format(Locale.US, "%.2f", amount.toDoubleOrNull() ?: 0.0)
+        val currency = paymentDetailsLatestResponse?.data?.CurrencyCode ?: "HKD"
 
         Column(
             modifier = Modifier
@@ -221,113 +214,13 @@ fun StatusBottomSectionContent(
                     text = title,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = statusColor,
+                    color = TransactionColors.Green,
                 )
 
                 CurrencyText(
                     currency = currency,
                     amount = formattedAmount
                 )
-
-//                Row(
-//                    modifier = Modifier.scale(0.7f),
-//                    horizontalArrangement = Arrangement.Center,
-//                    verticalAlignment = Alignment.CenterVertically
-//                ) {
-//                    com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton(
-//                        text = "Print Receipt",
-//                        onClick = {
-//                            scope.launch {
-//                                try {
-//                                    ComposePdfExporter.export(
-//                                        context = context,
-//                                        fileName = "Receipt_${paymentDetailsLatestResponse?.data?.TransactionID}",
-//                                        pageSize = PageSize.A4,
-//                                        composable = { state ->
-//                                            LazyColumn(
-//                                                state = state,
-//                                                modifier = Modifier
-//                                                    .fillMaxWidth()
-//                                                    .background(Color.White)
-//                                            ) {
-//                                                item {
-//                                                    ReceiptContentForPDF(
-//                                                        paymentDetailsLatestResponse = paymentDetailsLatestResponse,
-//                                                        signatureBitmap = signatureBitmap,
-//                                                        signatureDate = signatureDate
-//                                                    )
-//                                                }
-//                                            }
-//                                        },
-//                                        onProgress = { result ->
-//                                            scope.launch(Dispatchers.Main) {
-//                                                when (result) {
-//                                                    is PdfExportProgress.Success -> {
-//                                                        try {
-//                                                            val printIntent =
-//                                                                Intent(Intent.ACTION_VIEW).apply {
-//                                                                    setDataAndType(
-//                                                                        result.output,
-//                                                                        "application/pdf"
-//                                                                    )
-//                                                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-//                                                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-//                                                                }
-//                                                            context.startActivity(printIntent)
-//                                                            Toast.makeText(
-//                                                                context,
-//                                                                "PDF created - Opening...",
-//                                                                Toast.LENGTH_SHORT
-//                                                            ).show()
-//                                                        } catch (e: Exception) {
-//                                                            Toast.makeText(
-//                                                                context,
-//                                                                "Error opening PDF: ${e.message}",
-//                                                                Toast.LENGTH_LONG
-//                                                            ).show()
-//                                                        }
-//                                                    }
-//
-//                                                    is PdfExportProgress.Error -> {
-//                                                        android.util.Log.e(
-//                                                            "PDF_ERROR",
-//                                                            "Error creating PDF",
-//                                                            result.exception
-//                                                        )
-//                                                        Toast.makeText(
-//                                                            context,
-//                                                            "Error: ${result.exception.message ?: "Unknown error"}",
-//                                                            Toast.LENGTH_LONG
-//                                                        ).show()
-//                                                    }
-//
-//                                                    else -> {}
-//                                                }
-//                                            }
-//                                        }
-//                                    )
-//                                } catch (e: Exception) {
-//                                    android.util.Log.e("PDF_ERROR", "Caught exception", e)
-//                                    Toast.makeText(context, "Exception: ${e.message}", Toast.LENGTH_LONG)
-//                                        .show()
-//                                }
-//                            }
-//                        },
-//                        fontSize = 16.sp,
-//                        fontWeight = FontWeight.SemiBold,
-//                        modifier = Modifier
-//                    )
-//
-//                    Spacer(modifier = Modifier.width(10.dp))
-//
-//                    FilledButton(
-//                        text = "View Full Receipt",
-//                        onClick = { updateDetailsScreenType(TransactionDetailsScreenType.RECEIPT_SCREEN) },
-//                        fontSize = 16.sp,
-//                        fontWeight = FontWeight.SemiBold,
-//                        modifier = Modifier
-//                    )
-//                }
            }
 
             // Transaction Details Card
@@ -350,18 +243,15 @@ fun StatusBottomSectionContent(
                         .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    if (paymentDetailsLatestResponse?.data?.TransactionID != null) {
-                        TransactionDetailRow(
-                            label = "Transaction ID",
-                            value = paymentDetailsLatestResponse?.data?.TransactionID.toString()
-                        )
-                    }
+                    TransactionDetailRow(
+                        label = "Reference No",
+                        value = referenceId
+                    )
 
                     TransactionDetailRow(
                         label = "Date",
                         value = try {
-                            val dateString = paymentDetailsLatestResponse?.data?.Date.toString()
-                            val utcDateTime = java.time.OffsetDateTime.parse(dateString)
+                            val utcDateTime = safeParseOffsetDateTime(dateString)
                             val formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMMM yyyy")
                             utcDateTime.format(formatter)
                         } catch (e: Exception) {
@@ -370,46 +260,8 @@ fun StatusBottomSectionContent(
                     )
 
                     TransactionDetailRow(
-                        label = "Time",
-                        value = try {
-                            val dateString = paymentDetailsLatestResponse?.data?.Date.toString()
-                            val utcDateTime = java.time.OffsetDateTime.parse(dateString)
-                            val formatter = java.time.format.DateTimeFormatter.ofPattern("hh:mm:ss a")
-                            utcDateTime.format(formatter)
-                        } catch (e: Exception) {
-                            "N/A"
-                        }
-                    )
-
-                    TransactionDetailRow(
-                        label = "Status",
-                        value = transactionStatus,
-                        valueColor = statusColor
-                    )
-
-                    TransactionDetailRow(
-                        label = "Transaction Type",
-                        value = transactionType
-                    )
-
-                    TransactionDetailRow(
-                        label = "Trace",
-                        value = transactionAquirerResponse?.trace.toString()
-                    )
-
-                    TransactionDetailRow(
-                        label = "Approval Code",
-                        value = transactionAquirerResponse?.approvalCode.toString()
-                    )
-
-                    TransactionDetailRow(
-                        label = "Payment Method",
-                        value = transactionAquirerResponse?.paymentMethod.toString()
-                    )
-
-                    TransactionDetailRow(
-                        label = "Currency",
-                        value = currency
+                        label = "Aggregator",
+                        value = aggregator
                     )
                 }
 
@@ -1199,7 +1051,7 @@ private fun TransactionDetailRow(
             text = label,
             style = AppTheme.typography.footnote.copy(
                 fontWeight = FontWeight.Normal,
-                fontSize = 14.sp
+                fontSize = 12.sp
             ),
             modifier = Modifier.padding(end = 8.dp)
         )
@@ -1208,10 +1060,9 @@ private fun TransactionDetailRow(
             text = value,
             textAlign = androidx.compose.ui.text.style.TextAlign.End,
             modifier = Modifier.weight(1f),
-            fontSize = 14.sp,
+            fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
             color = valueColor
         )
     }
 }
-

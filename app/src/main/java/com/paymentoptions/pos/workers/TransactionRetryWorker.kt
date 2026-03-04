@@ -103,8 +103,9 @@ class TransactionRetryWorker(
                 context = applicationContext,
                 transactionId = transaction.uuid,
                 merchantId = transaction.DASMID,
+                amount = transaction.amount,
                 transaction = sdkTransaction,
-                amount = transaction.amount
+                notes = ""
             )
             response != null
         } catch (e: Exception) {

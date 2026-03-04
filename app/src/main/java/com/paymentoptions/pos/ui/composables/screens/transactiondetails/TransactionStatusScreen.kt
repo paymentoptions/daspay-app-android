@@ -23,7 +23,11 @@ import java.util.Date
 fun TransactionStatusScreen(
     navController: NavController,
     transactionUUid: String,
-    title : String
+    title : String,
+    amount : String,
+    dateString : String,
+    referenceId : String,
+    aggregator: String
 ) {
 
     val enableScrollingInsideBottomSectionContent = true
@@ -38,8 +42,8 @@ fun TransactionStatusScreen(
                 navController = navController,
                 bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMinHeightRatio = 0.75f,
-                bottomSectionMaxHeightRatio = 0.75f,
+                bottomSectionMinHeightRatio = 0.45f,
+                bottomSectionMaxHeightRatio = 0.45f,
                 enableScrollingOfBottomSectionContent = false,
                 enableZigZagContainerForBottomSection = true,
                 imageBelowLogo = {
@@ -64,16 +68,19 @@ fun TransactionStatusScreen(
                 navController = navController,
                 bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMinHeightRatio = 0.9f,
+                bottomSectionMinHeightRatio = 0.55f,
+                bottomSectionMaxHeightRatio = 0.55f,
                 enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
                 ) {
                 StatusBottomSectionContent(
                     navController,
                     transactionId = transactionUUid,
-                    signatureBitmap = null,
-                    signatureDate = Date(),
                     enableScrolling = true,
                     title = title,
+                    amount = amount,
+                    dateString = dateString,
+                    referenceId = referenceId,
+                    aggregator = aggregator,
                     updateDetailsScreenType = { transactionDetailsScreenType = it }
                 )
             }

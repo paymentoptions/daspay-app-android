@@ -1,9 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens.dashboard
 
-import android.os.Handler
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
@@ -28,7 +28,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,42 +35,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.refund
 import com.paymentoptions.pos.services.apiService.endpoints.void
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
+import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
-import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayout
+import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_TOP_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
-import com.paymentoptions.pos.ui.theme.disabledFilledButtonGradientBrush
-import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.primary300
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
-import com.paymentoptions.pos.ui.theme.red300
-import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.TransactionAction
-import com.paymentoptions.pos.utils.TransactionColors
-import com.paymentoptions.pos.utils.getAmountSign
-import com.paymentoptions.pos.utils.getAvailableAction
-import com.paymentoptions.pos.utils.getStatusColor
-import com.paymentoptions.pos.utils.getTransactionIcon
-import com.paymentoptions.pos.utils.getTransactionTypeLabel
-import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.workers.TransactionRetryScheduler
 import com.paymentoptions.pos.workers.TransactionRetryWorker
@@ -82,11 +72,11 @@ import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
-import java.time.OffsetDateTime
 import java.util.Currency
 import java.util.Date
 
@@ -111,12 +101,7 @@ fun TransactionActionScreen(
     val dateTime = safeParseOffsetDateTime(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted = SimpleDateFormat("dd MMMM, YYYY").format(date)
-
-
-    val statusColor = getStatusColor(transaction)
-//    val amountSign = getAmountSign(transaction)
-//    val transactionIcon = getTransactionIcon(transaction)
-//    val transactionTypeLabel = getTransactionTypeLabel(transaction)
+    val notesInput = remember { TextFieldState() }
 
     fun showTransactionFailure() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -159,12 +144,6 @@ fun TransactionActionScreen(
                     currentAttempt++
                     AppLogger.debug("Refund attempt $currentAttempt of $maxRetries")
 
-                    // Update message to show retry attempt
-                    if (currentAttempt > 1) {
-//                        withContext(Dispatchers.Main) {
-//                            processingMessage = "Processing Refund... (Attempt $currentAttempt/$maxRetries)"
-//                        }
-                    }
 
                     // Call API
                     response = refund(
@@ -172,7 +151,8 @@ fun TransactionActionScreen(
                         transactionId = transaction.uuid,
                         merchantId = transaction.DASMID,
                         transaction = sdkTransaction,
-                        amount = transaction.amount
+                        amount = transaction.amount,
+                        notes = notesInput.text.toString()
                     )
 
                     if (response != null) {
@@ -215,7 +195,10 @@ fun TransactionActionScreen(
                 // Navigate to Transaction Receipt screen
                 withContext(Dispatchers.Main) {
                     navController.navigate(
-                        "${Screens.TransactionReceipt.route}?transactionId=${response.transaction_details.id}&title=Your transaction is Refunded"
+                        navController.navigate(
+                            "${Screens.TransactionReceipt.route}?transactionId=${response.transaction_details.id}" +
+                                    "&title=Your transaction is Voided&amount=${transaction.amount}&refrenceId=${response.transaction_details.id}" +
+                                    "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}")
                     ) {
                         popUpTo(Screens.TransactionAction.route) { inclusive = true }
                     }
@@ -268,12 +251,6 @@ fun TransactionActionScreen(
                     currentAttempt++
                     AppLogger.debug("Void attempt $currentAttempt of $maxRetries")
 
-                    // Update message to show retry attempt
-                    if (currentAttempt > 1) {
-//                        withContext(Dispatchers.Main) {
-//                            processingMessage = "Processing Void... (Attempt $currentAttempt/$maxRetries)"
-//                        }
-                    }
 
                     // Call API
                     response = void(
@@ -322,7 +299,9 @@ fun TransactionActionScreen(
                 // Navigate to Transaction Receipt screen
                 withContext(Dispatchers.Main) {
                     navController.navigate(
-                        "${Screens.TransactionReceipt.route}?transactionId=${response.transaction_details.id}&title=Your transaction is Voided"
+                        "${Screens.TransactionReceipt.route}?transactionId=${response.transaction_details.id}" +
+                                "&title=Your transaction is Voided&amount=${transaction.amount}&refrenceId=${response.transaction_details.id}" +
+                                "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}"
                     ) {
                         popUpTo(Screens.TransactionAction.route) { inclusive = true }
                     }
@@ -405,7 +384,25 @@ fun TransactionActionScreen(
 
     // Bottom Sheet for Refund/Void Operations
     if (showBottomSheet) {
-        SimpleLayout {}
+
+        Box(modifier = Modifier
+            .fillMaxSize()
+        ) {
+            BackgroundImage(modifier = Modifier.fillMaxSize())
+            Box(
+                contentAlignment = Alignment.TopCenter,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = LOGO_TOP_PADDING_IN_DP)
+            ) {
+                LogoImage(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(LOGO_HEIGHT_IN_DP)
+                )
+
+            }
+        }
 
         ModalBottomSheet(
             modifier = Modifier.fillMaxWidth(),
@@ -421,16 +418,17 @@ fun TransactionActionScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp),
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Header with close button
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(end = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.Top
                 ) {
-
                     IconButton(onClick = {
                         showBottomSheet = false
                         navController.popBackStack()
@@ -438,53 +436,60 @@ fun TransactionActionScreen(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = primary500
+                            tint = primary900
                         )
                     }
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Text(
-                        text = when (targetAction) {
-                            TransactionAction.VOID -> "Void Transaction"
-                            TransactionAction.REFUND -> "Refund Transaction"
-                            else -> "Transaction Action"
-                        },
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = primary900,
-                    )
-                }
+                // Title
+                Text(
+                    text = when (targetAction) {
+                        TransactionAction.VOID -> "Void Transaction"
+                        TransactionAction.REFUND -> "Refund Transaction"
+                        else -> "Transaction Action"
+                    },
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primary900,
+                    modifier = Modifier.padding(top = 0.dp)
+                )
 
+                // Amount in large blue text
                 CurrencyText(
                     currency = transaction.CurrencyCode,
                     amount = transaction.amount
                 )
 
+                // A notes can be sent along with refund
+                if(targetAction == TransactionAction.REFUND){
+                    BasicTextInput(
+                        state = notesInput,
+                        placeholder = "Notes",
+                    )
+                }
+
                 // Transaction Details
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(horizontal = 0.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Reference No:",
+                            text = "Reference No.",
                             fontSize = 12.sp,
                             color = purple50,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Normal
                         )
                         Text(
                             text = transaction.uuid,
                             fontSize = 12.sp,
                             color = primary500,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 
@@ -493,16 +498,16 @@ fun TransactionActionScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Date:",
+                            text = "Date",
                             fontSize = 12.sp,
                             color = purple50,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Normal
                         )
                         Text(
                             text = dateStringFormatted,
                             fontSize = 12.sp,
                             color = primary500,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
 
@@ -511,10 +516,10 @@ fun TransactionActionScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Aggegator:",
+                            text = "Aggregator",
                             fontSize = 12.sp,
                             color = purple50,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Normal
                         )
                         Text(
                             text = transaction.Scheme,
@@ -525,28 +530,47 @@ fun TransactionActionScreen(
                     }
                 }
 
-                // Warning message
-                val warningMessage = when (targetAction) {
-                    TransactionAction.VOID -> "Are you sure you want to void this transaction?\nThis action cannot be undone."
-                    TransactionAction.REFUND -> "Are you sure you want to refund this transaction?\nThis action cannot be undone."
-                    else -> ""
-                }
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = warningMessage,
-                    fontSize = 14.sp,
-                    color = TransactionColors.Yellow,
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.Medium,
+                // Warning message with icon
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(Color(0xFFF5F5F5), shape = RoundedCornerShape(8.dp))
-                        .padding(vertical = 8.dp, horizontal = 12.dp)
-                )
+                        .background(
+                            color = Color.LightGray.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                       .padding(6.dp),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    // Warning icon
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_warning),
+                        contentDescription = "Warning",
+                        tint = Color(0xFFFFA726),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = when (targetAction) {
+                            TransactionAction.VOID -> "Are you sure you want to void this transaction? This process can not be undone."
+                            TransactionAction.REFUND -> "Are you sure you want to refund this transaction? This process can not be undone."
+                            else -> ""
+                        },
+                        fontSize = 13.sp,
+                        color = Color.Red.copy(alpha = 0.7f),
+                        fontWeight = FontWeight.Medium,
+                        lineHeight = 18.sp
+                    )
+                }
 
-                // Action Buttons
+                //Spacer(modifier = Modifier.height(8.dp))
+
+                // Action Buttons - Two buttons side by side
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                    ,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     // Cancel Button
@@ -557,26 +581,28 @@ fun TransactionActionScreen(
                                 showBottomSheet = false
                                 navController.popBackStack()
                             },
-                        colors = CardDefaults.cardColors(containerColor = Color.Gray),
-                        border = BorderStroke(1.dp, primary500),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFFBDBDBD)
+                        ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(vertical = 16.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Cancel",
+                                text = "CANCEL",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = Color.White,
+                                letterSpacing = 1.sp
                             )
                         }
                     }
 
-                    // Confirm Button
+                    // Void/Refund Button
                     Card(
                         modifier = Modifier
                             .weight(1f)
@@ -587,42 +613,35 @@ fun TransactionActionScreen(
                                     else -> {}
                                 }
                                 showBottomSheet = false
-                            }
-                        ,
+                            },
                         colors = CardDefaults.cardColors(
-                            containerColor = when (targetAction) {
-                                TransactionAction.VOID -> primary300
-                                TransactionAction.REFUND -> primary300
-                                else -> red500
-                            }
+                            containerColor = primary500
                         ),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
+                                .padding(vertical = 16.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = when (targetAction) {
-                                    TransactionAction.VOID -> "Void"
-                                    TransactionAction.REFUND -> "Refund"
-                                    else -> "Confirm"
+                                    TransactionAction.VOID -> "VOID"
+                                    TransactionAction.REFUND -> "REFUND"
+                                    else -> "CONFIRM"
                                 },
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = Color.White,
+                                letterSpacing = 1.sp
                             )
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     } else {
-
         // Processing/Success/Error Screen Overlay using StatusScreen
         val dataMessage = MessageForStatusScreen(
             text = processingMessage,

@@ -42,8 +42,8 @@ fun getStatusColor(transaction: TransactionListDataRecord): Color {
 
         // Unsettled Sale - Pending (Yellow)
         settleStatus == "PENDING" && productType == "SOFTPOS" -> TransactionColors.Yellow
-        settleStatus == "PENDING" && productType == "QR" -> TransactionColors.Yellow
-        settleStatus == "PENDING" && productType == "PBL" -> TransactionColors.Yellow
+        status == "PENDING" && productType == "QR" -> TransactionColors.Yellow
+        status == "PENDING" && productType == "PBL" -> TransactionColors.Yellow
 
         // Successful & Settled (Green)
         status == "SUCCESSFUL" && settleStatus == "SETTLED" -> TransactionColors.Green
@@ -117,6 +117,9 @@ fun getTransactionIcon(transaction: TransactionListDataRecord): Int {
  * Determines which action button to show (REFUND, VOID, or NONE)
  */
 fun getAvailableAction(transaction: TransactionListDataRecord): TransactionAction {
+    if(transaction.IsVoided == true) return TransactionAction.NONE
+    if(transaction.IsRefunded == true) return TransactionAction.NONE
+
     val transactionType = transaction.TransactionType.uppercase()
     val settleStatus = transaction.SettleStatus?.uppercase() ?: ""
     val productType = transaction.ProductType?.uppercase() ?: ""

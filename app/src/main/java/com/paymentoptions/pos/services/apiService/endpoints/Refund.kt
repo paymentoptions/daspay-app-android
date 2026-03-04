@@ -2,18 +2,19 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.RefundRequest
 import com.paymentoptions.pos.services.apiService.RefundResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generateRefundRequestHeader
+import com.theminesec.lib.dto.transaction.Transaction
 
 suspend fun refund(
     context: Context,
     transactionId: String,
     merchantId: String,
     amount: String,
-    transaction: com.theminesec.lib.dto.transaction.Transaction?,
+    transaction: Transaction?,
+    notes: String?,
 ): RefundResponse? {
 
         val tokenRepository = TokenRepository.getInstance(context)
@@ -30,7 +31,8 @@ suspend fun refund(
                     transactionId = transactionId,
                     merchant_id = merchantId,
                     daspay_res = transaction,
-                    amount = amount
+                    amount = amount,
+                    notes = notes
                 )
             )
 

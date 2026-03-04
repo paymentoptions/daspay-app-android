@@ -85,7 +85,7 @@ fun Navigator() {
         // More Menu Items ------------------------------------------------
         composable(Screens.TransactionHistory.route) { TransactionHistoryScreen(navController) }
         composable(
-            route = "${Screens.TransactionReceipt.route}?transactionId={transactionId}&title={title}",
+            route = "${Screens.TransactionReceipt.route}?transactionId={transactionId}&title={title}&amount={amount}&refrenceId={refrenceId}&aggregator={aggregator}&dateString={dateString}",
             arguments = listOf(
                 navArgument("transactionId") {
                     type = NavType.StringType
@@ -94,13 +94,33 @@ fun Navigator() {
                 navArgument("title") {
                     type = NavType.StringType
                     defaultValue = ""
+                },
+                navArgument("amount") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument("refrenceId") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument("aggregator") {
+                    type = NavType.StringType
+                    defaultValue = ""
+                },
+                navArgument("dateString") {
+                    type = NavType.StringType
+                    defaultValue = ""
                 }
             )
         ) { backStackEntry ->
             TransactionStatusScreen(
                 navController = navController,
                 transactionUUid = backStackEntry.arguments?.getString("transactionId") ?: "",
-                title = backStackEntry.arguments?.getString("title") ?: ""
+                title = backStackEntry.arguments?.getString("title") ?: "",
+                amount = backStackEntry.arguments?.getString("amount") ?: "",
+                dateString = backStackEntry.arguments?.getString("dateString") ?: "",
+                referenceId = backStackEntry.arguments?.getString("refrenceId") ?: "",
+                aggregator = backStackEntry.arguments?.getString("aggregator") ?: ""
             )
         }
         composable(
