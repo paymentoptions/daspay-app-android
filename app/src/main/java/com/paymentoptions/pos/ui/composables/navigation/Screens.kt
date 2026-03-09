@@ -31,7 +31,7 @@ sealed class Screens(val route: String) {
     }
 
     //------------------------------------------------------------------
-    object Refund : Screens(route = "Refund")
+    object QueryScreen : Screens(route = "Query")
     //object RefundTransaction : Screens(route = "RefundTransaction")
     object RefundInitiated : Screens(route = "RefundInitiated")
     //------------------------------------------------------------------

@@ -14,6 +14,10 @@ suspend fun insights(
     context: Context,
     startDate: String,
     endDate: String,
+    amount: String? = null,
+    id: String? = null,
+    transactionType: String? = null,
+    dasmid: String? = null,
     take: Int = -1,
 ): InsightsResponse? {
     try {
@@ -33,10 +37,13 @@ suspend fun insights(
             headers = requestHeaders,
             deviceNumber = deviceNumber,
             uniqueCode = tokenCode,
-//            timeZone = timeZone,
             startDate = startDate,
             endDate = endDate,
             take = take,
+            amount = amount,
+            id = id,
+            transactionType = transactionType,
+            dasmid = dasmid
         )
 
         AppLogger.debug("insights response : $response")

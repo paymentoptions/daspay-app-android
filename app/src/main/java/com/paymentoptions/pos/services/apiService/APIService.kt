@@ -114,12 +114,15 @@ interface ApiService {
     @GET("daspay/transactions/list")
     suspend fun insights(
         @HeaderMap headers: Map<String, String>,
-        @Query("deviceNumber") deviceNumber: String = "12345678kg1",
-        @Query("uniqueCode") uniqueCode: String = "213fsdHJ51MOBILEKG1",
-//        @Query("TimeZone") timeZone: String = "undefined",
-        @Query("startDate") startDate: String = "undefined",
-        @Query("endDate") endDate: String = "undefined",
+        @Query("deviceNumber") deviceNumber: String? = "12345678kg1",
+        @Query("uniqueCode") uniqueCode: String? = "213fsdHJ51MOBILEKG1",
+        @Query("startDate") startDate: String? = null,
+        @Query("endDate") endDate: String? = null,
         @Query("take") take: Int,
+        @Query("amount") amount: String? = null,
+        @Query("id") id: String? = null,
+        @Query("TransactionType") transactionType: String? = null,
+        @Query("DASMID") dasmid: String? = null
     ): InsightsResponse
 
     @POST("transactions/stats")

@@ -39,6 +39,30 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+            buildConfigField("String", "CURRENCY", "\"SGD\"")
+            buildConfigField("String", "ENVIRONMENT", "\"DEV\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-dev.paymentoptions.com/api/v1/\"")
+            versionNameSuffix = "-dev"
+        }
+        create("staging") {
+            dimension = "environment"
+            buildConfigField("String", "CURRENCY", "\"SGD\"")
+            buildConfigField("String", "ENVIRONMENT", "\"STAGING\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-staging.paymentoptions.com/api/v1/\"")
+            versionNameSuffix = "-staging"
+        }
+        create("production") {
+            dimension = "environment"
+            buildConfigField("String", "CURRENCY", "\"SGD\"")
+            buildConfigField("String", "ENVIRONMENT", "\"PROD\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api.paymentoptions.com/api/v1/\"")
+        }
+    }
+
     signingConfigs {
         create("release") {
             storeFile = keystoreProperties["storeFile"]?.let { file(it) }
@@ -67,6 +91,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -160,5 +185,8 @@ dependencies {
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+    // WorkManager for background task scheduling
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
 }

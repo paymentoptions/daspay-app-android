@@ -14,12 +14,12 @@ import com.paymentoptions.pos.services.apiService.AuthEventManager
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlow
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlow
-import com.paymentoptions.pos.ui.composables.screens._flow.refundFlow.refund.RefundScreen
 import com.paymentoptions.pos.ui.composables.screens._flow.refundFlow.refundinitiated.RefundInitiatedScreen
 import com.paymentoptions.pos.ui.composables.screens._test.fcmtoken.FcmTokenScreen
 import com.paymentoptions.pos.ui.composables.screens.authcheck.AuthCheckScreen
 import com.paymentoptions.pos.ui.composables.screens.dashboard.DashboardScreen
 import com.paymentoptions.pos.ui.composables.screens.dashboard.TransactionActionScreen
+import com.paymentoptions.pos.ui.composables.screens.filter.TransactionFilter
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintAutoLoginScreen
 import com.paymentoptions.pos.ui.composables.screens.helpandsupport.HelpAndSupportScreen
 import com.paymentoptions.pos.ui.composables.screens.notifications.NotificationsScreen
@@ -180,7 +180,7 @@ fun Navigator() {
         }
         //------------------------------------------------------------------
 
-        composable(Screens.Refund.route) { RefundScreen(navController) }
+        composable(Screens.QueryScreen.route) { TransactionFilter(navController) }
 
         composable(Screens.SendLogs.route) { SendLogsScreen(navController) }
 

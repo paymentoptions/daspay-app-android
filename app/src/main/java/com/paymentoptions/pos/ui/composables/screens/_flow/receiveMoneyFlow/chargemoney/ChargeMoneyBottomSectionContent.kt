@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
@@ -451,9 +452,9 @@ fun Tap_ChargeMoney(
                                 tranType = TranType.SALE,
                                 amount = Amount(
                                     BigDecimal(amountToCharge),
-                                    Currency.getInstance(currency),
+                                    Currency.getInstance(BuildConfig.CURRENCY),
                                 ),
-                                profileId = "prof_01K36002RM7DMMPHG0QEX3E9BR",
+                                profileId = "prof_01KH8NQC4PVFKRNH31ZPC2QJNN",
                                 posReference = it.transaction_details.id
                             )
                         )

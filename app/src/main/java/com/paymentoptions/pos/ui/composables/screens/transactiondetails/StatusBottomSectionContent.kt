@@ -51,6 +51,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AquirerResponse
@@ -77,6 +78,7 @@ import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.AppJson
 import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -124,7 +126,7 @@ fun StatusBottomSectionContent(
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
             paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                Json.decodeFromString<AquirerResponse>(
+                AppJson.decodeFromString<AquirerResponse>(
                     it
                 )
             }
@@ -195,7 +197,7 @@ fun StatusBottomSectionContent(
         ReceiptShimmerLoading()
     } else {
         val formattedAmount = String.format(Locale.US, "%.2f", amount.toDoubleOrNull() ?: 0.0)
-        val currency = paymentDetailsLatestResponse?.data?.CurrencyCode ?: "HKD"
+        val currency = paymentDetailsLatestResponse?.data?.CurrencyCode ?: BuildConfig.CURRENCY
 
         Column(
             modifier = Modifier
@@ -216,6 +218,8 @@ fun StatusBottomSectionContent(
                     fontWeight = FontWeight.Bold,
                     color = TransactionColors.Green,
                 )
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 CurrencyText(
                     currency = currency,
@@ -390,7 +394,7 @@ private fun ReceiptContentForPDF(
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
             paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()?.let {
-                Json.decodeFromString<AquirerResponse>(
+                AppJson.decodeFromString<AquirerResponse>(
                     it
                 )
             }

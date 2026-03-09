@@ -50,7 +50,7 @@ import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
-import kotlinx.serialization.json.Json
+import com.paymentoptions.pos.utils.AppJson
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -81,7 +81,7 @@ fun TransactionFailedBottomSectionContent(
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
             paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                Json.decodeFromString<AquirerResponse>(
+                AppJson.decodeFromString<AquirerResponse>(
                     it
                 )
             }

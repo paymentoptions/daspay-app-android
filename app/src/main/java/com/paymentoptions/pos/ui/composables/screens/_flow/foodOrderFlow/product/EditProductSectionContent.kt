@@ -45,6 +45,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil3.compose.AsyncImage
+import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.endpoints.editProduct
@@ -192,7 +193,7 @@ fun EditProductSectionContent(
                     OutlinedTextInput(
                         state = productPrice,
                         label = "Product Price *",
-                        placeholder = "HKD",
+                        placeholder = BuildConfig.CURRENCY,
                         onlyDigits = true,
                         disabled = DPSharedPreferences.isStaff(context),
                         modifier = Modifier.fillMaxWidth()
@@ -597,7 +598,7 @@ private fun getProductRequest(
         ProductCode = productCode.text.toString(),
         ProductStock = productStock.toLong(),
         ProductStatus = true,
-        Currency = "HKD",
+        Currency = BuildConfig.CURRENCY,
         MerchantID = selectedFoodItem.item.MerchantID,
         CategoryID = selectedFoodItem.item.CategoryID,
     ) else {
@@ -608,7 +609,7 @@ private fun getProductRequest(
             ProductSize = productSize,
             ProductStock = productStock.toLong(),
             ProductStatus = true,
-            Currency = "HKD",
+            Currency = BuildConfig.CURRENCY,
             MerchantID = selectedFoodItem.item.MerchantID,
             CategoryID = selectedFoodItem.item.CategoryID,
             ProductPrice = null,

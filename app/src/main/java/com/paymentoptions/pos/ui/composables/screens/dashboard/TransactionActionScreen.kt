@@ -41,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.logger.AppLogger
@@ -371,7 +372,7 @@ fun TransactionActionScreen(
                 launcher.launch(
                     input = PoiRequest.ActionLinkedRefund(
                         transaction.AcquirerTransactionID!!,
-                        Amount(BigDecimal(transaction.amount), Currency.getInstance("HKD"))
+                        Amount(BigDecimal(transaction.amount), Currency.getInstance(BuildConfig.CURRENCY))
                     )
                 )
             }

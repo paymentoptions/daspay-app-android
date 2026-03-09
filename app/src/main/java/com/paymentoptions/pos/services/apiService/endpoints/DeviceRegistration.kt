@@ -18,7 +18,6 @@ suspend fun completeDeviceRegistration(
     otp: String
 ): Result<CompleteDeviceRegistrationResponse> {
     return try {
-        DPSharedPreferences.saveOtp(context, otp)
         val tokenRepository = TokenRepository.getInstance(context)
         val authDetails = tokenRepository.refreshTokenIfNeeded()
 

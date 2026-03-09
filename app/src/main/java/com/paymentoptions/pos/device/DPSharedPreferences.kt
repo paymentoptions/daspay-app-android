@@ -37,8 +37,7 @@ object DPSharedPreferences {
         }
 
         fun saveBoolean(context: Context, key: String, value: Boolean) = runBlocking {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences = getSecurePrefs(context)
             with(sharedPreferences.edit()) {
                 putBoolean(key, value)
                 apply()
@@ -46,15 +45,13 @@ object DPSharedPreferences {
         }
 
         fun getBoolean(context: Context, key: String): Boolean {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences = getSecurePrefs(context)
             val biometricsEnabled = sharedPreferences.getBoolean(key, false)
             return biometricsEnabled
         }
 
         fun saveKeyValue(context: Context, key: String, value: String) {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences = getSecurePrefs(context)
             with(sharedPreferences.edit()) {
                 putString(key, value)
                 apply()
@@ -97,8 +94,7 @@ object DPSharedPreferences {
         }
 
         fun clearSharedPreferences(context: Context) = runBlocking {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences = getSecurePrefs(context)
 
             with(sharedPreferences.edit()) {
                 remove("auth_details")
@@ -109,7 +105,7 @@ object DPSharedPreferences {
         }
 
         fun saveFcmToken(context: Context, token: String) {
-            val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPref = getSecurePrefs(context)
             with(sharedPref.edit()) {
                 putString("fcm_token", token)
                 apply()
@@ -117,16 +113,14 @@ object DPSharedPreferences {
         }
 
         fun getFcmToken(context: Context): String? {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences = getSecurePrefs(context)
             val fcmToken = sharedPreferences.getString("fcm_token", null)
 
             return fcmToken
         }
 
         fun getCart(context: Context): Cart? {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences = getSecurePrefs(context)
 
             val cartJsonString = sharedPreferences.getString("cart", "{}")
 
@@ -141,7 +135,7 @@ object DPSharedPreferences {
         }
 
         fun clearSavedCart(context: Context) {
-            context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE).apply {
+            getSecurePrefs(context).apply {
                 edit().remove("cart")
             }
 
@@ -157,14 +151,13 @@ object DPSharedPreferences {
         }
 
         fun getDeviceConfiguration(context: Context): ExternalConfigurationResponse? {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences = getSecurePrefs(context)
             val configJsonString = sharedPreferences.getString("device_config", null)
             return configJsonString?.let { Json.decodeFromString<ExternalConfigurationResponse>(it) }
         }
 
         fun saveTokenStatus(context: Context, tokenCode: String, isVerified: Boolean) {
-            val sharedPref = context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPref = getSecurePrefs(context)
 
             with(sharedPref.edit()) {
                 putBoolean("token_verified", isVerified)
@@ -174,8 +167,7 @@ object DPSharedPreferences {
         }
 
         fun getTokenStatus(context: Context): Pair<Boolean, String> {
-            val sharedPreferences =
-                context.getSharedPreferences(sharedPreferencesLabel, MODE_PRIVATE)
+            val sharedPreferences = getSecurePrefs(context)
             val isVerified = sharedPreferences.getBoolean("token_verified", false)
             val tokenCode = sharedPreferences.getString("token_code", null)
 
@@ -195,17 +187,10 @@ object DPSharedPreferences {
             val securePrefs = getSecurePrefs(context)
             val email = securePrefs.getString("saved_email", null)
             val password = securePrefs.getString("saved_password", null)
-            val otp = securePrefs.getString("saved_otp", null)
+            val otp = getTokenStatus(context).second
             return Triple(email, password, otp)
         }
 
-        fun saveOtp(context: Context, otp: String) {
-            val securePrefs = getSecurePrefs(context)
-            with(securePrefs.edit()) {
-                putString("saved_otp", otp)
-                apply()
-            }
-        }
 
         fun saveAuthDetails(context: Context, authDetails: SignInResponse) = runBlocking {
             val authDetailsString = Json.encodeToString(authDetails)
@@ -339,4 +324,18 @@ object DPSharedPreferences {
         }
         return deviceId
     }
+
+    fun storeBaseUrl(context: Context, baseAPIURL: String) = runBlocking{
+        val sharedPreferences = getSecurePrefs(context)
+        with(sharedPreferences.edit()) {
+            putString("base_api_url", baseAPIURL)
+            apply()
+        }
+    }
+
+    fun getBaseUrl(context: Context): String?{
+        val sharedPreferences = getSecurePrefs(context)
+        return  sharedPreferences.getString("base_api_url", "")
+    }
+
 }

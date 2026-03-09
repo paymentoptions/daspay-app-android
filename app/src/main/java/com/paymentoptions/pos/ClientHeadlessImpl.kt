@@ -32,7 +32,7 @@ class CustomUiProvider(
             description: String?
         ): View {
             return TextView(context).apply {
-                val text = "Total Amount\nHK\$ ${amount.value}"
+                val text = "Total Amount\n${BuildConfig.CURRENCY.replace("D", "$")} ${amount.value}"
                 val spannable = SpannableString(text)
 
 
