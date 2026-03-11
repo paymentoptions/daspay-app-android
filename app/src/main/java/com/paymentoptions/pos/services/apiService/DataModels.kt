@@ -1,7 +1,9 @@
 package com.paymentoptions.pos.services.apiService
 
+import com.theminesec.lib.dto.transaction.Transaction
 import kotlinx.serialization.Serializable
 import org.json.JSONObject
+import kotlin.String
 
 @Serializable
 data class Token(
@@ -84,9 +86,9 @@ data class TransactionListDataRecord(
     val uuid: String,
     val MerchantRefID: String,
     val LegalName: String,
-    val LegalNameInEnglish: String,
+    val LegalNameInEnglish: String?,
     val DASMID: String,
-    val trackID: String,
+    val trackID: String?,
     val AcquirerMID: String,
     val TransactionType: String,
     val Scheme: String,
@@ -96,28 +98,44 @@ data class TransactionListDataRecord(
     val CardNumber: String,
     val AcquirerCode: String,
     val has3DS: Boolean,
-    val AuthCode: String,
+    val AuthCode: String?,
     val Isrecurring: Boolean,
     val Date: String,
-    val V2UUID: String,
+    val V2UUID: String?,
     val ProductType: String,
-    val SubscriptionId: String,
+    val SubscriptionId: String?,
     val UpdatedDate: String,
     val TerminalId: String,
     val TerminalName: String,
-    val PBLLinkName: String,
+    val PBLLinkName: String?,
     val IsWhitelisted: Boolean,
-    val GatewayResponse: String,
-    val ResponseCode: String?,   // ✅ nullable
+    val GatewayResponse: String?,
+    val ResponseCode: String?,
     val TransactionID: Int,
     val IntegrationType: String,
-    val PaymentType: String?
+    val PaymentType: String?,
+    val SettleStatus: String?,
+    val BatchID: String?,
+    val BatchNo: String?,
+    val SettledAt: String?,
+    val AcquirerTransactionID: String?,
+    val IsVoided: Boolean?,
+    val IsRefunded: Boolean?,
+)
+
+
+data class TransactionRequest(
+    val transactionId: String,
+    val merchant_id: String,
+    val amount: String? = null,
+    val notes: String? = null,
+    val daspay_res: Transaction? = null,
 )
 
 
 data class TransactionListData(
     val total_count: Int,
-    val total_amount: String,     // ✅ was Double
+    val total_amount: String,
     val records: List<TransactionListDataRecord?>,
 
     // Optional but useful
@@ -215,7 +233,7 @@ data class Refund_TransactionDetails(
     val merchant_txn_ref: String,
 )
 
-data class RefundResponse(
+data class RefundResponse (
     val success: Boolean,
     val status_code: Int,
     val is_live: Boolean,
@@ -606,6 +624,15 @@ data class InsightsResponseDataRecord(
     val paymentMethod: String,
     val event: String,
     val TransactionType: String,
+    val DASMID: String?,
+    val AcquirerTransactionID: String?,
+    val BatchID: String?,
+    val BatchNo: String?,
+    val SettleStatus: String?,
+    val UpdatedAt: String?,
+    val ProductType: String?,
+    val IsVoided: Boolean?,
+    val IsRefunded: Boolean?,
 )
 // -------------------------------------------------------
 
@@ -720,6 +747,7 @@ data class AquirerResponse(
     val cvmPerformed: String? = null,
     val aid: String = "",
     val appName: String = "",
+    val hostRespMessage: String = "",
     val tc: String = "",
     val tvr: String = "",
     val tsi: String = "",
@@ -766,6 +794,7 @@ data class AquirerResponseAction(
     val tranId: String = "",
     val reason: String = "",
     val hostRespCode: String = "",
+    val hostRespMessage: String = "",
     val posReference: String = "",
     val extraData: String = "",
     val createdAt: String = "",
@@ -800,6 +829,13 @@ data class ProductImageRequest(
     val fileName: String,
 )
 
+
+@Serializable
+data class SettleBatchRequest(
+    val batchId: String,
+)
+
+
 data class UploadImageResponse (
     val statusCode: Long,
     val message: String,
@@ -822,6 +858,62 @@ data class ProductResponse (
     val data: ProductListDataRecord
 )
 
+data class AppConfigResponse (
+    val statusCode: Long,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: List<AppConfig>
+)
+
+data class AppConfig (
+    val ID: Long,
+    val AppENV: String,
+    val BaseAPIURL: String,
+    val RegistryLogin: String,
+    val RegistryToken: String
+)
+
+data class SettlementListResponse (
+    val statusCode: Long,
+    val success: Boolean,
+    val message: String,
+    val data: SettlementData
+)
+
+data class SettlementData (
+    val totalCount: Long,
+    val take: Long,
+    val skip: Long,
+    val records: List<SettlementRecord>
+)
+
+data class SettlementRecord (
+    val ID: Long,
+    val uuid: String,
+    val BatchID: String,
+    val BatchNo: String,
+    val SettleStatus: String,
+    val CreatedAt: String,
+    val UpdatedAt: String? = null,
+    val SettledAt: String? = null,
+    val Capture: Long,
+    val CaptureAmount: Double,
+    val Sale: Long,
+    val SaleAmount: Double,
+    val Refund: Long,
+    val RefundAmount: Double,
+    val Voided: Long,
+    val VoidedAmount: Double
+)
+
+data class SettleBatchResponse (
+    val status_code: Long,
+    val BatchID: String,
+    val SettleStatus: String,
+    val SettlementRes: String
+)
+
 fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDataRecord {
     return TransactionListDataRecord(
         uuid = this.uuid,
@@ -833,35 +925,43 @@ fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDat
         status = this.status,
 
         PaymentType = this.paymentMethod,
-        ProductType = this.event,
+        ProductType = this.ProductType ?: "",
 
         Date = this.TransactionDate,
         UpdatedDate = this.TransactionDate,
 
         TerminalId = this.TerminalID,
-        TerminalName = this.TerminalID, // best available fallback
+        TerminalName = this.TerminalID,
 
         TransactionID = this.ID.toIntOrNull() ?: 0,
 
+        SettleStatus = this.SettleStatus,
+
+        BatchID = this.BatchID,
+        BatchNo = this.BatchNo,
+        AcquirerTransactionID = this.AcquirerTransactionID,
+        DASMID = this.DASMID ?: "",
+        IsVoided = this.IsVoided,
+        IsRefunded = this.IsRefunded,
+
         // ---- Fields not available → defaults ----
+        Isrecurring = false,
+        IsWhitelisted = false,
         MerchantRefID = "",
         LegalName = "",
         LegalNameInEnglish = "",
-        DASMID = "",
         trackID = "",
         AcquirerMID = "",
         Scheme = "",
         CardNumber = "",
         AcquirerCode = "",
         AuthCode = "",
+        SettledAt = "N/A",
         SubscriptionId = "",
-        PBLLinkName = "",
+        PBLLinkName = "N/A",
         GatewayResponse = "",
         ResponseCode = "",
         IntegrationType = "",
-
         has3DS = false,
-        Isrecurring = false,
-        IsWhitelisted = false
     )
 }

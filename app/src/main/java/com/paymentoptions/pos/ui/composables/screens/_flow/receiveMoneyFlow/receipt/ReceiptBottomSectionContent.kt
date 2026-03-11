@@ -83,9 +83,11 @@ import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
+import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.utils.topdf.ComposePdfExporter
 import com.paymentoptions.pos.utils.topdf.PageSize
 import com.paymentoptions.pos.utils.topdf.PdfExportProgress
+import com.paymentoptions.pos.utils.AppJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -117,7 +119,7 @@ fun ReceiptBottomSectionContent(
         val dateString = paymentDetailsLatestResponse?.data?.Date.toString()
         val timezoneId = paymentDetailsLatestResponse?.data?.TransactionTimezone.toString()
 
-        val utcDateTime = java.time.OffsetDateTime.parse(dateString)
+        val utcDateTime = safeParseOffsetDateTime(dateString)
         val transactionZoneId = java.time.ZoneId.of(timezoneId)
         val localDateTime = utcDateTime.atZoneSameInstant(transactionZoneId)
 
@@ -166,7 +168,7 @@ fun ReceiptBottomSectionContent(
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
             paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                Json.decodeFromString<AquirerResponse>(
+                AppJson.decodeFromString<AquirerResponse>(
                     it
                 )
             }
@@ -876,7 +878,7 @@ private fun ReceiptContentForPDF(
         val dateString = paymentDetailsLatestResponse?.data?.Date.toString()
         val timezoneId = paymentDetailsLatestResponse?.data?.TransactionTimezone.toString()
 
-        val utcDateTime = java.time.OffsetDateTime.parse(dateString)
+        val utcDateTime = safeParseOffsetDateTime(dateString)
         val transactionZoneId = java.time.ZoneId.of(timezoneId)
         val localDateTime = utcDateTime.atZoneSameInstant(transactionZoneId)
 
@@ -910,7 +912,7 @@ private fun ReceiptContentForPDF(
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
             paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()?.let {
-                Json.decodeFromString<AquirerResponse>(
+                AppJson.decodeFromString<AquirerResponse>(
                     it
                 )
             }

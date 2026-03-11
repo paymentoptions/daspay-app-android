@@ -21,7 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -35,12 +35,12 @@ fun BottomSectionContent(navController: NavController) {
     var authDetails by remember { mutableStateOf<SignInResponse?>(null) }
     var isTokenVerified by remember { mutableStateOf(false) }
     var isAuthenticated by remember { mutableStateOf(false) }
-    val biometricStatus = SharedPreferences.getBiometricsStatus(context)
+    val biometricStatus = DPSharedPreferences.getBiometricsStatus(context)
 
     LaunchedEffect(Unit) {
         isLoading = true
-        authDetails = SharedPreferences.getAuthDetails(context)
-        isTokenVerified = SharedPreferences.getTokenStatus(context = context).first
+        authDetails = DPSharedPreferences.getAuthDetails(context)
+        isTokenVerified = DPSharedPreferences.getTokenStatus(context = context).first
         isAuthenticated = authDetails?.success == true
         isLoading = false
     }
@@ -81,7 +81,7 @@ fun BottomSectionContent(navController: NavController) {
         )
     } else {
 //        Toast.makeText(context, "You are signed out. Please sign in.", Toast.LENGTH_SHORT).show()
-        SharedPreferences.clearSharedPreferences(context)
+        DPSharedPreferences.clearSharedPreferences(context)
         navController.navigate(Screens.SignIn.route) {
             popUpTo(0) { inclusive = true }
         }

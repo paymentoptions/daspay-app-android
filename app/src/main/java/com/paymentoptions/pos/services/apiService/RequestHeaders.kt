@@ -1,5 +1,7 @@
 package com.paymentoptions.pos.services.apiService
 
+import com.paymentoptions.pos.logger.AppLogger
+
 fun generateRequestHeader(authToken: String = ""): Map<String, String> {
     val headers = mapOf<String, String>(
         "accept" to "*/*",
@@ -23,7 +25,7 @@ fun generateRequestHeader(authToken: String = ""): Map<String, String> {
         "authorization" to authToken
     )
 
-    println("generateRequestHeaders: $headers")
+    AppLogger.debug("generateRequestHeaders: $headers")
     return headers
 }
 
@@ -51,7 +53,7 @@ fun generateRefundRequestHeader(authToken: String = ""): Map<String, String> {
         "authorization" to authToken
     )
 
-    println("generateRefundRequestHeaders: $headers")
+    AppLogger.debug("generateRefundRequestHeaders: $headers")
     return headers
 }
 
@@ -64,7 +66,7 @@ fun generatePaymentRequestHeader(authToken: String = ""): Map<String, String> {
         "Authorization" to authToken
     )
 
-    println("generatePaymentRequestHeaders: $headers")
+    AppLogger.debug("generatePaymentRequestHeaders: $headers")
     return headers
 }
 
@@ -74,7 +76,7 @@ fun generatePaymentStatusHeader(): Map<String, String> {
         "Cookie" to "reqid=undefined; reqid=undefined; reqid=undefined",
     )
 
-    println("generatePaymentStatusHeader: $headers")
+    AppLogger.debug("generatePaymentStatusHeader: $headers")
     return headers
 }
 
@@ -99,6 +101,6 @@ fun generateSignatureUploadHeader(authToken: String = ""): Map<String, String> {
         "authorization" to authToken
     )
 
-    println("generateSignatureUploadHeader: $headers")
+    AppLogger.debug("generateSignatureUploadHeader: $headers")
     return headers
 }

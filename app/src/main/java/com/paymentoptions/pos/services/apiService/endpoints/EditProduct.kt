@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.ProductRequest
 import com.paymentoptions.pos.services.apiService.ProductResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
@@ -31,7 +32,7 @@ suspend fun editProduct(context: Context, request: ProductRequest,foodItem: Food
         }
         return editProductResponse
     } catch (e: Exception) {
-        println("editProduct Error: $e")
+        AppLogger.error("editProduct Error: $e")
         throw e
     }
 }

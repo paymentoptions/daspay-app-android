@@ -6,7 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.ui.composables._components.NotificationPermission
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
@@ -18,7 +18,7 @@ fun DashboardScreen(navController: NavController) {
     val context = LocalContext.current
     var showOverlay by remember {
         mutableStateOf(
-            SharedPreferences.getBoolean(context = context, "dashboard_overlay_shown").not()
+            DPSharedPreferences.getBoolean(context = context, "dashboard_overlay_shown").not()
         )
     }
 

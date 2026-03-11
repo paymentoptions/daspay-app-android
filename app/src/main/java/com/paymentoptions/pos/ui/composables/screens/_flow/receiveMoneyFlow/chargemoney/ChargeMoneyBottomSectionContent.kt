@@ -36,12 +36,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
-import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.device.getTapPayDasmid
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences.getTapPayDasmid
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.Address
 import com.paymentoptions.pos.services.apiService.PaymentRequest
 import com.paymentoptions.pos.services.apiService.PaymentResponse
@@ -270,13 +271,13 @@ fun Tap_ChargeMoney(
     var showProcessingScreen by remember { mutableStateOf(false) }
     var transactionDetailsText by remember { mutableStateOf("") }
     var hasLaunchedPayment by remember { mutableStateOf(false) }
-    val authDetails = SharedPreferences.getAuthDetails(context)
+    val authDetails = DPSharedPreferences.getAuthDetails(context)
 
     if (authDetails == null) {
         Toast.makeText(
             context, "Your session has expired. Please log in again to continue.", Toast.LENGTH_LONG
         ).show()
-        SharedPreferences.clearSharedPreferences(context)
+        DPSharedPreferences.clearSharedPreferences(context)
         navController.navigate(Screens.AuthCheck.route) {
             popUpTo(0) { inclusive = true }
         }
@@ -437,7 +438,7 @@ fun Tap_ChargeMoney(
                         "Your session has expired. Please log in again to continue.",
                         Toast.LENGTH_LONG
                     ).show()
-                    SharedPreferences.clearSharedPreferences(context)
+                    DPSharedPreferences.clearSharedPreferences(context)
                     navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -451,16 +452,16 @@ fun Tap_ChargeMoney(
                                 tranType = TranType.SALE,
                                 amount = Amount(
                                     BigDecimal(amountToCharge),
-                                    Currency.getInstance(currency),
+                                    Currency.getInstance(BuildConfig.CURRENCY),
                                 ),
-                                profileId = "prof_01K36002RM7DMMPHG0QEX3E9BR",
+                                profileId = "prof_01KH8NQC4PVFKRNH31ZPC2QJNN",
                                 posReference = it.transaction_details.id
                             )
                         )
                     }
                 }
             } catch (e: Exception) {
-                SharedPreferences.clearSharedPreferences(context)
+                DPSharedPreferences.clearSharedPreferences(context)
                 navController.navigate(Screens.AuthCheck.route) {
                     popUpTo(0) { inclusive = true }
                 }

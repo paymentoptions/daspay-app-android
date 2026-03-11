@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
@@ -46,7 +46,6 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodItem
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlowStage
 import androidx.compose.material.icons.filled.Add
-import com.paymentoptions.pos.device.SharedPreferences
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.utils.formatToPrecisionString
@@ -180,14 +179,11 @@ fun FoodMenuBottomSectionContent(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            if(SharedPreferences.isAdmin(context)) {
-                // Add new food add button
-                AddProductItemButton(
-                    onClick = {
-                        updateFlowStage(FoodOrderFlowStage.ADD_PRODUCT)
-                    },
-                )
-            }
+            AddProductItemButton(
+                onClick = {
+                    updateFlowStage(FoodOrderFlowStage.ADD_PRODUCT)
+                },
+            )
 
         }
 

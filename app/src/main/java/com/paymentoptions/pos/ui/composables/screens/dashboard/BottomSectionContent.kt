@@ -31,12 +31,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
-import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -92,7 +92,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                 totalTransactionCount = transactionListFromAPI.data.total_count
 
-                transactions = transactions.plus(transactionListFromAPI.data.records.filterNotNull())
+                // For page 1, replace the list. For other pages, append
+                if (currentPage == 1) {
+                    transactions = transactionListFromAPI.data.records.filterNotNull()
+                    AppLogger.debug("Replaced transactions list with ${transactions.size} items")
+                } else {
+                    transactions = transactions.plus(transactionListFromAPI.data.records.filterNotNull())
+                    AppLogger.debug("Appended to transactions list, now ${transactions.size} items")
+                }
 
                 //set receival amount from API total_amount field (rounded to two decimal place)
                 receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
@@ -152,7 +159,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if(SharedPreferences.isAdmin(context)) {
+            if(DPSharedPreferences.isAdmin(context)) {
                 FilledButton(
                     text = "View Insights",
                     onClick = { navController.navigate(Screens.TransactionHistory.route) },

@@ -14,13 +14,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
+import com.paymentoptions.pos.services.apiService.toTransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
+import com.paymentoptions.pos.ui.composables.screens.dashboard.TransactionSummary
+import com.paymentoptions.pos.utils.getTransactionAmount
 
 @Composable
 fun Transactions(
     navController: NavController,
     transactions: List<InsightsResponseDataRecord>,
-    updateReceivalAmount: (Float) -> Unit,
+    updateReceivalAmount: (Float) -> Unit
 ) {
     var selectedFilterKey by remember { mutableStateOf("ALL") }
     var longClickedTransactionId by remember { mutableStateOf("") }
@@ -48,39 +51,43 @@ fun Transactions(
                 false
 
             if (!skip) {
-                if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") earningAmount += transaction.amount.toFloat()
+                val transactionListRecord = transaction.toTransactionListDataRecord()
+                //if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") earningAmount += transaction.amount.toFloat()
+                earningAmount = getTransactionAmount(transactionListRecord)
 
                 TransactionSummary(
                     navController,
-                    transaction,
-                    longClickedTransactionId,
-                    onLongClick = {
-
-                        if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
-                            longClickedTransactionId = if (longClickedTransactionId.isEmpty()) it
-                            else if (longClickedTransactionId == it) "" else it
-                        } else {
-//                            Toast.makeText(
-//                                context,
-//                                "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-                        }
-                    },
-                    onSwipeLeft = {
-                        if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
-                            longClickedTransactionId = it
-                        } else {
-//                            Toast.makeText(
-//                                context,
-//                                "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-                        }
-                    },
-                    onSwipeRight = {
-                        longClickedTransactionId = ""
-                    })
+                    transactionListRecord,
+//                    longClickedTransactionId,
+//                    onLongClick = {
+//
+//                        if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
+//                            longClickedTransactionId = if (longClickedTransactionId.isEmpty()) it
+//                            else if (longClickedTransactionId == it) "" else it
+//                        } else {
+////                            Toast.makeText(
+////                                context,
+////                                "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
+////                                Toast.LENGTH_SHORT
+////                            ).show()
+//                        }
+//                    },
+//                    onSwipeLeft = {
+//                        if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
+//                            longClickedTransactionId = it
+//                        } else {
+////                            Toast.makeText(
+////                                context,
+////                                "Txn details: ${transaction.status} | ${transaction.TransactionType}: refund not enabled",
+////                                Toast.LENGTH_SHORT
+////                            ).show()
+//                        }
+//                    },
+//                    onSwipeRight = {
+//                        longClickedTransactionId = ""
+//                    },
+//                    triggerListRefresh = { triggerListRefresh() }
+                )
             }
         }
         updateReceivalAmount(earningAmount)

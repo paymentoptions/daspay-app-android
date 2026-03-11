@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.TransactionListResponse
@@ -24,7 +25,7 @@ suspend fun transactionList(
 
         return transactionListResponse
     } catch (e: Exception) {
-        println("transactionListError: $e")
+        AppLogger.debug("transactionListError: $e")
         throw e
     }
 }

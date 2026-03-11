@@ -10,7 +10,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.paymentoptions.pos.MainActivity
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.SharedPreferences.Companion.saveFcmToken
+import com.paymentoptions.pos.device.DPSharedPreferences.saveFcmToken
 
 class FcmService : FirebaseMessagingService() {
 

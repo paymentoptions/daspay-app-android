@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
@@ -12,7 +13,7 @@ class TokenAuthenticator(private val context: Context) : Authenticator {
         if (responseCount(response) >= 2) return null
 
         // Synchronously refresh the token
-        println("TokenAuthenticator refreshing token")
+        AppLogger.debug("TokenAuthenticator refreshing token")
         val repository = TokenRepository.getInstance(context = context)
         val authDetails = repository.getAuthToken() ?: return null
         val newToken = kotlinx.coroutines.runBlocking { repository.doRefreshToken(authDetails) }

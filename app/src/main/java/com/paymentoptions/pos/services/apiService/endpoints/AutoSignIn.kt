@@ -3,8 +3,9 @@ package com.paymentoptions.pos.services.apiService.endpoints
 import android.content.Context
 import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
-import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.device.SharedPreferences.Companion.saveFcmToken
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences.saveFcmToken
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SignInRequest
 import com.paymentoptions.pos.services.apiService.SignInResponse
@@ -12,7 +13,7 @@ import com.paymentoptions.pos.services.apiService.generateRequestHeader
 
 suspend fun autoSignIn(context: Context): SignInResponse? {
     try {
-        val authDetails = SharedPreferences.getSavedCredentials(context)
+        val authDetails = DPSharedPreferences.getSavedCredentials(context)
         val username = authDetails.first
         val password = authDetails.second
 
@@ -20,7 +21,7 @@ suspend fun autoSignIn(context: Context): SignInResponse? {
         val signInRequest = SignInRequest(username!!, password!!)
         val signInResponse = RetrofitClient.getApi(context).signIn(requestHeaders, signInRequest)
 
-        println("signInResponse: $signInResponse")
+        AppLogger.debug("signInResponse: $signInResponse")
 
 
         signInResponse.let {
@@ -30,13 +31,13 @@ suspend fun autoSignIn(context: Context): SignInResponse? {
                     if (task.isSuccessful) {
                         val token = task.result
                         saveFcmToken(context, token)
-                           println("mainActivity token --> $token")
+                        AppLogger.debug("mainActivity token --> $token")
                     } else {
-                        println("mainActivity token fetching failed ${task.exception}")
+                        AppLogger.debug("mainActivity token fetching failed ${task.exception}")
                     }
                 }
 
-                SharedPreferences.saveAuthDetails(context, signInResponse)
+                DPSharedPreferences.saveAuthDetails(context, signInResponse)
                 //TokenRepository.getInstance(context).scheduleTokenRefresh(signInResponse.data.exp)
             }
         }

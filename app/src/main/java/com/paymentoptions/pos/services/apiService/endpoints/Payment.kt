@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.PaymentRequest
 import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
@@ -22,8 +23,12 @@ suspend fun payment(
             RetrofitClient.getApi(context).payment(headers = requestHeaders, request = paymentRequest)
 
         return paymentResponse
+    } catch (e: retrofit2.HttpException) {
+        val errorBody = e.response()?.errorBody()?.string()
+        AppLogger.error("payment HTTP error ${e.code()}: $errorBody")
+        return null
     } catch (e: Exception) {
-        println("paymentError: $e")
-        throw e
+        AppLogger.error("paymentError: $e")
+        return null
     }
 }

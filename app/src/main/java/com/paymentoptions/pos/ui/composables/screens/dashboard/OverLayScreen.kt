@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 
@@ -150,7 +150,7 @@ fun OverLayScreen(context: Context, onDismiss: () -> Unit) {
             .background(Color(0xCC000000))
             .clickable {
                 onDismiss()
-                SharedPreferences.saveBoolean(context, "dashboard_overlay_shown", true)
+                DPSharedPreferences.saveBoolean(context, "dashboard_overlay_shown", true)
             },
         contentAlignment = Alignment.TopCenter
     ) {

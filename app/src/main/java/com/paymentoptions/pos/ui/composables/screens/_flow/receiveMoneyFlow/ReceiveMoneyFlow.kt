@@ -66,9 +66,9 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.ScreenRatioToDp
-import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.device.getApms
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences.getApms
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
@@ -531,7 +531,7 @@ fun ReceiveMoneyFlow(
                                         try {
                                             payByLinkApiResponseLoading = true
                                             val dasmid =
-                                                com.paymentoptions.pos.device.getPayByLinkDasmid(
+                                                DPSharedPreferences.getPayByLinkDasmid(
                                                     context
                                                 )
                                             payByLinkResponse =

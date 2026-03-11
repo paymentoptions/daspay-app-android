@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
@@ -49,7 +49,8 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.formatToPrecisionString
-import kotlinx.serialization.json.Json
+import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.AppJson
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -80,7 +81,7 @@ fun TransactionFailedBottomSectionContent(
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
             paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                Json.decodeFromString<AquirerResponse>(
+                AppJson.decodeFromString<AquirerResponse>(
                     it
                 )
             }
@@ -88,7 +89,7 @@ fun TransactionFailedBottomSectionContent(
     val dateString =
         paymentDetailsLatestResponse?.data?.Date ?: OffsetDateTime.now()
             .toString()  //"2025-04-23T03:38:57.349+00:00"
-    val dateTime = OffsetDateTime.parse(dateString)
+    val dateTime = safeParseOffsetDateTime(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val formattedDate = SimpleDateFormat("dd MMMM YYYY").format(date)
 

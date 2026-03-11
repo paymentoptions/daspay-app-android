@@ -212,7 +212,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         filteredTransactions.forEachIndexed { index, transaction ->
 
                             var skip = true
-                            if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID] =
+                            if (transaction.trackID !== "N/A") transactionsWithTrackId[transaction.trackID!!] =
                                 true
 
                             if (!transactionsWithTrackId.contains(transaction.uuid)) {

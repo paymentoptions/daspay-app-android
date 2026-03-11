@@ -3,6 +3,7 @@ package com.paymentoptions.pos.services.apiService.endpoints
 import android.content.Context
 import android.graphics.Bitmap
 import android.util.Base64
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.UploadSignatureResponse
@@ -37,18 +38,18 @@ suspend fun uploadSignature(
         val signatureBase64 = bitmapToBase64(signatureBitmap)
         val signatureData = "data:image/png;base64,$signatureBase64"
 
-        println("Uploading Signature for TransactionID: $transactionId")
+        AppLogger.debug("Uploading Signature for TransactionID: $transactionId")
         val response = RetrofitClient.getApi(context).uploadSignature(
             headers = requestHeaders,
             signature = signatureData,
             TransactionID = transactionId
         )
 
-        println("UploadSignature Response: $response")
+        AppLogger.debug("UploadSignature Response: $response")
         return response
 
     } catch (e: Exception) {
-        println("UploadSignatureError: ${e.message}")
+        AppLogger.error("UploadSignatureError: ${e.message}")
         throw e
     }
 }

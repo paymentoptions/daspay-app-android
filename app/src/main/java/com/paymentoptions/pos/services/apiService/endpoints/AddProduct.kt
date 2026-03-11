@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.ProductRequest
 import com.paymentoptions.pos.services.apiService.ProductResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
@@ -13,7 +14,7 @@ import java.io.File
  */
 suspend fun addProduct(context: Context, request: ProductRequest, selectedFile : File?): ProductResponse? {
     try {
-        println("addProduct: $request and selectedfile: $selectedFile")
+        AppLogger.debug("addProduct: $request and selectedfile: $selectedFile")
         val tokenRepository = TokenRepository.getInstance(context)
         val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
 
@@ -27,7 +28,7 @@ suspend fun addProduct(context: Context, request: ProductRequest, selectedFile :
         }
         return addProductResponse
     } catch (e: Exception) {
-        println("addProductError: $e")
+        AppLogger.debug("addProductError: $e")
         throw e
     }
 }

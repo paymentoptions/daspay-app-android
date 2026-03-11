@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SignInRequest
 import com.paymentoptions.pos.services.apiService.SignInResponse
@@ -13,7 +14,7 @@ suspend fun signIn(context: Context, username: String, password: String): SignIn
         val signInResponse = RetrofitClient.getApi(context).signIn(requestHeaders, signInRequest)
         return signInResponse
     } catch (e: Exception) {
-        println("SignInError: ${e.message}")
+        AppLogger.debug("SignInError: ${e.message}")
         throw e
     }
 }

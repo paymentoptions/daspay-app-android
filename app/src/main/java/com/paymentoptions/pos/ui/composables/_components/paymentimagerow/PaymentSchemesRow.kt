@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.paymentoptions.pos.device.getSchemes
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.ui.composables._components.images.schemes.AmexImage
 import com.paymentoptions.pos.ui.composables._components.images.schemes.JcbImage
 import com.paymentoptions.pos.ui.composables._components.images.schemes.MastercardImage
@@ -28,7 +28,7 @@ import com.paymentoptions.pos.ui.composables._components.images.schemes.VisaImag
 @Composable
 fun PaymentSchemesRow(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    var schemes by remember { mutableStateOf(getSchemes(context)) }
+    var schemes by remember { mutableStateOf(DPSharedPreferences.getSchemes(context)) }
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),

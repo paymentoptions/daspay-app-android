@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.services.apiService
 
+import com.paymentoptions.pos.logger.AppLogger
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -30,7 +31,7 @@ object AuthEventManager {
      * Call this when refresh token expires (ERR_AUTH_0003)
      */
     fun onRefreshTokenExpired() {
-        println("AuthEventManager: Refresh token expired, requiring re-authentication")
+        AppLogger.debug("AuthEventManager: Refresh token expired, requiring re-authentication")
         _authEvents.tryEmit(AuthEvent.RequireReAuthentication)
     }
 
@@ -38,7 +39,7 @@ object AuthEventManager {
      * Call this when auto sign-in fails
      */
     fun onAutoSignInFailed() {
-        println("AuthEventManager: Auto sign-in failed, requiring manual sign-in")
+        AppLogger.debug("AuthEventManager: Auto sign-in failed, requiring manual sign-in")
         _authEvents.tryEmit(AuthEvent.RequireManualSignIn)
     }
 }

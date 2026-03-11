@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.StatsV2Request
 import com.paymentoptions.pos.services.apiService.StatsV2Response
@@ -22,10 +23,10 @@ suspend fun statsV2(
         val response: StatsV2Response =
             RetrofitClient.getApi(context).statsV2(headers = requestHeaders, request = request)
 
-        println("statsV2Response: $response")
+        AppLogger.debug("statsV2Response: $response")
         return response
     } catch (e: Exception) {
-        println("RefundError: $e")
+        AppLogger.error("RefundError: $e")
         throw e
     }
 }

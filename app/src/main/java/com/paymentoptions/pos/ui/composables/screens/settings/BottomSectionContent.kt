@@ -27,7 +27,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
@@ -52,10 +53,10 @@ fun BottomSectionContent(navController: NavController) {
     var signOutResponse: SignOutResponse? = null
     val scope = rememberCoroutineScope()
     var showBiometricScreen by remember { mutableStateOf(false) }
-    var biometricsEnabled by remember { mutableStateOf(SharedPreferences.getBiometricsStatus(context)) }
+    var biometricsEnabled by remember { mutableStateOf(DPSharedPreferences.getBiometricsStatus(context)) }
     val isBiometricsAvailable = isBiometricAvailable(context)
 
-    var authDetails = SharedPreferences.getAuthDetails(context)
+    var authDetails = DPSharedPreferences.getAuthDetails(context)
     val username = authDetails?.data?.name ?: ""
     val email = authDetails?.data?.email ?: ""
     rememberSystemUiController()
@@ -80,12 +81,12 @@ fun BottomSectionContent(navController: NavController) {
                 try {
                     signOutResponse = signOut(context)
                 } catch (e: Exception) {
-                    println("Error: ${e.toString()}")
+                    AppLogger.error("Error: ${e.toString()}")
                 } finally {
                     // Stop token auto refresh on sign out
                     TokenAutoRefresher.getInstance(context).onUserSignedOut()
 
-                    SharedPreferences.clearSharedPreferences(context)
+                    DPSharedPreferences.clearSharedPreferences(context)
                     navController.navigate(Screens.Splash.route) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -98,7 +99,7 @@ fun BottomSectionContent(navController: NavController) {
 
     if (showBiometricScreen) FingerprintScanScreen(
         navController = navController, onAuthSuccess = {
-            SharedPreferences.saveBiometricsStatus(context, !biometricsEnabled)
+            DPSharedPreferences.saveBiometricsStatus(context, !biometricsEnabled)
             biometricsEnabled = !biometricsEnabled
             showBiometricScreen = false
         }, onAuthFailed = {

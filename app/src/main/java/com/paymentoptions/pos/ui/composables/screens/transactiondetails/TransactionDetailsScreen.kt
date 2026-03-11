@@ -16,7 +16,6 @@ import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
-import okhttp3.internal.notify
 import java.util.Date
 
 enum class TransactionDetailsScreenType {
@@ -71,9 +70,9 @@ fun TransactionDetailsScreen(
                 enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
                 blurTopSection = true
             ) {
-                BottomSectionContent(
+                TransactionBottomSectionContent(
                     navController = navController,
-                    transaction = transaction,
+                    transaction = transaction!!,
                     updateDetailsScreenType = {
                         transactionDetailsScreenType = it
                     }

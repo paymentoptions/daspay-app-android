@@ -1,7 +1,8 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.InsightsResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TokenRepository
@@ -11,8 +12,12 @@ import com.paymentoptions.pos.utils.getDeviceTimeZone
 
 suspend fun insights(
     context: Context,
-    startDate: String,
-    endDate: String,
+    startDate: String?,
+    endDate: String?,
+    amount: String? = null,
+    id: String? = null,
+    transactionType: String? = null,
+    productType: String? = null,
     take: Int = -1,
 ): InsightsResponse? {
     try {
@@ -24,25 +29,28 @@ suspend fun insights(
 
         val deviceNumber = getDeviceIdentifier(context)
         val timeZone = getDeviceTimeZone()
-        val tokenCode = SharedPreferences.getTokenStatus(context = context).second
+        val tokenCode = DPSharedPreferences.getTokenStatus(context = context).second
 
-        println("insights request: deviceNumber = $deviceNumber | uniqueCode = $tokenCode | timeZone = $timeZone | startDate = $startDate | endDate = $endDate | take = $take")
+        AppLogger.debug("insights request: deviceNumber = $deviceNumber | uniqueCode = $tokenCode | timeZone = $timeZone | startDate = $startDate | endDate = $endDate | take = $take")
 
         val response = RetrofitClient.getApi(context).insights(
             headers = requestHeaders,
             deviceNumber = deviceNumber,
             uniqueCode = tokenCode,
-//            timeZone = timeZone,
             startDate = startDate,
             endDate = endDate,
             take = take,
+            amount = amount,
+            id = id,
+            transactionType = transactionType,
+            productType = productType
         )
 
-        println("insights response : $response")
+        AppLogger.debug("insights response : $response")
 
         return response
     } catch (e: Exception) {
-        println("insightsError: $e")
+        AppLogger.debug("insightsError: $e")
         throw e
     }
 }

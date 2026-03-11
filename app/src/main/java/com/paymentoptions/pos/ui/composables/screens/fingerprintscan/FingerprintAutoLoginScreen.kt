@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -44,15 +46,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AuthEventManager
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.autoSignIn
 import com.paymentoptions.pos.services.apiService.endpoints.completeDeviceRegistration
 import com.paymentoptions.pos.services.apiService.endpoints.getExternalDeviceConfiguration
+import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
 import com.paymentoptions.pos.ui.composables._components.images.TapToPayImage
+import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_TOP_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -121,6 +126,22 @@ fun FingerprintAutoLoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Added this button if pop is dismissed by system or user
+            // it will be hidden behind pop up if pop up is showing
+            FilledButton(
+                text = "Authenticate",
+                onClick = { authenticateUser(
+                    scope = scope,
+                    navController = navController,
+                    context = context
+                ) },
+                modifier = Modifier
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                    .width(160.dp)
+                    .height(35.dp)
+                    .scale(0.8f),
+            )
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "Authentication Required",
                 fontSize = 20.sp,
@@ -248,7 +269,7 @@ private fun onAuthSuccess(
         try {
             val authCredentials = autoSignIn(context) // Remove redundant semicolon
             if (authCredentials != null) {
-                val authDetails = SharedPreferences.getSavedCredentials(context)
+                val authDetails = DPSharedPreferences.getSavedCredentials(context)
                 val otp = authDetails.third
                 var errorMessage = ""
 
@@ -272,7 +293,7 @@ private fun onAuthSuccess(
                             "Step 3: Proceeding to get external device configuration."
                         )
 
-                        SharedPreferences.saveTokenStatus(
+                        DPSharedPreferences.saveTokenStatus(
                             context = context, tokenCode = otp, isVerified = true
                         )
 
@@ -283,7 +304,7 @@ private fun onAuthSuccess(
                                 "DEBUG_TOKEN",
                                 "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                             )
-                            SharedPreferences.saveDeviceConfiguration(
+                            DPSharedPreferences.saveDeviceConfiguration(
                                 context, configResponse
                             )
                         }.onFailure { exception ->
@@ -319,7 +340,7 @@ private fun onAuthSuccess(
                                 context, otp
                             ).onSuccess { configResponse ->
 
-                                SharedPreferences.saveTokenStatus(
+                                DPSharedPreferences.saveTokenStatus(
                                     context = context,
                                     tokenCode = otp,
                                     isVerified = true
@@ -329,7 +350,7 @@ private fun onAuthSuccess(
                                     "DEBUG_TOKEN",
                                     "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                                 )
-                                SharedPreferences.saveDeviceConfiguration(
+                                DPSharedPreferences.saveDeviceConfiguration(
                                     context, configResponse
                                 )
                             }.onFailure { exception ->
@@ -344,7 +365,7 @@ private fun onAuthSuccess(
                         } else if (exceptionMessage.lowercase()
                                 .contains("unauthorized")
                         ) {
-                            println("Auto login failing, fatal exception")
+                            AppLogger.debug("Auto login failing, fatal exception")
                             withContext(Dispatchers.Main) {
                                 autoSignInFailed(context, navController)
                             }
@@ -383,7 +404,7 @@ private fun onAuthSuccess(
                 }
             }
         } catch (e: Exception) {
-            println("Auto login failing, fatal exception $e")
+            AppLogger.error("Auto login failing, fatal exception $e")
             withContext(Dispatchers.Main) {
                 autoSignInFailed(context, navController)
             }
@@ -402,7 +423,7 @@ private fun autoSignInFailed(
     // Auto sign-in failed - notify the system
     Toast.makeText(context, "Auto sign-in has failed, Please enter credentials again", Toast.LENGTH_SHORT).show()
     AuthEventManager.onAutoSignInFailed()
-    SharedPreferences.clearSharedPreferences(context)
+    DPSharedPreferences.clearSharedPreferences(context)
     navController.navigate(Screens.AuthCheck.route) {
         popUpTo(0) { inclusive = true }
     }

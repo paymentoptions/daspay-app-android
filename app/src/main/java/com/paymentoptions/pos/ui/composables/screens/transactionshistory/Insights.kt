@@ -38,6 +38,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import java.time.OffsetDateTime
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
@@ -82,7 +83,7 @@ fun Insights(
 
                 if (index == 0) chartMaxValue = transaction.amount.toFloat()
 
-                val date = OffsetDateTime.parse(transaction.TransactionDate).toLocalDateTime()
+                val date = safeParseOffsetDateTime(transaction.TransactionDate).toLocalDateTime()
 
                 barData.add(
                     BarData(

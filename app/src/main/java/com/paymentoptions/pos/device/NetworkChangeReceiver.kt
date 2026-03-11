@@ -50,7 +50,7 @@ fun NetworkStatusComposable(
         onNetworkAvailable()
         Navigator()
     } else {
-        NoNetworkScreen()
+        NoNetworkScreen(context)
         onNetworkNotAvailable()
     }
 }

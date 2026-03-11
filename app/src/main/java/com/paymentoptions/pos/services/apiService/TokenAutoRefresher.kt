@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.paymentoptions.pos.logger.AppLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -43,9 +44,9 @@ class TokenAutoRefresher private constructor(
 
     override fun onStart(owner: LifecycleOwner) {
         // App came to foreground
-        println("TokenAutoRefresher: App in foreground")
+        AppLogger.debug("TokenAutoRefresher: App in foreground")
         isUserLoggedIn = TokenRepository.getInstance(context.applicationContext).getAuthToken() != null
-        println("TokenAutoRefresher: isUserLoggedIn: $isUserLoggedIn")
+        AppLogger.debug("TokenAutoRefresher: isUserLoggedIn: $isUserLoggedIn")
         if (isUserLoggedIn) {
             startRefreshJob()
         }
@@ -53,7 +54,7 @@ class TokenAutoRefresher private constructor(
 
     override fun onStop(owner: LifecycleOwner) {
         // App went to background
-        println("TokenAutoRefresher: App in background")
+        AppLogger.debug("TokenAutoRefresher: App in background")
         stopRefreshJob()
     }
 
@@ -65,23 +66,23 @@ class TokenAutoRefresher private constructor(
                 delay(6.minutes)
                 if (isUserLoggedIn) {
                     try {
-                        println("TokenAutoRefresher: Refreshing token...")
+                        AppLogger.debug("TokenAutoRefresher: Refreshing token...")
                         val tokenRepository = TokenRepository.getInstance(context)
                         tokenRepository.refreshTokenIfNeeded()
-                        println("TokenAutoRefresher: Token refresh completed")
+                        AppLogger.debug("TokenAutoRefresher: Token refresh completed")
                     } catch (e: Exception) {
-                        println("TokenAutoRefresher: Token refresh failed - ${e.message}")
+                        AppLogger.debug("TokenAutoRefresher: Token refresh failed - ${e.message}")
                     }
                 }
             }
         }
-        println("TokenAutoRefresher: Refresh job started")
+        AppLogger.debug("TokenAutoRefresher: Refresh job started")
     }
 
     private fun stopRefreshJob() {
         refreshJob?.cancel()
         refreshJob = null
-        println("TokenAutoRefresher: Refresh job stopped")
+        AppLogger.debug("TokenAutoRefresher: Refresh job stopped")
     }
 
     companion object {

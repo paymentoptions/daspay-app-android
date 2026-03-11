@@ -10,6 +10,7 @@ val primary500 = Color(0xFF0A307A)
 val primary600 = Color(0xFF234E7A)
 val primary900 = Color(0xFF031F68)
 val productDescription = Color(0xFF5E7999)
+val refundColor = Color(0XFF00AFF4)
 
 val purple50 = Color(0xFF7277A8)
 
