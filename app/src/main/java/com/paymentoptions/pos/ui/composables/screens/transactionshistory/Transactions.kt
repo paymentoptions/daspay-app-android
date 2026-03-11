@@ -17,6 +17,7 @@ import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.services.apiService.toTransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables.screens.dashboard.TransactionSummary
+import com.paymentoptions.pos.utils.getTransactionAmount
 
 @Composable
 fun Transactions(
@@ -50,11 +51,13 @@ fun Transactions(
                 false
 
             if (!skip) {
-                if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") earningAmount += transaction.amount.toFloat()
+                val transactionListRecord = transaction.toTransactionListDataRecord()
+                //if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") earningAmount += transaction.amount.toFloat()
+                earningAmount = getTransactionAmount(transactionListRecord)
 
                 TransactionSummary(
                     navController,
-                    transaction.toTransactionListDataRecord(),
+                    transactionListRecord,
 //                    longClickedTransactionId,
 //                    onLongClick = {
 //

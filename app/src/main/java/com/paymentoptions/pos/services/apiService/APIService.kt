@@ -122,7 +122,7 @@ interface ApiService {
         @Query("amount") amount: String? = null,
         @Query("id") id: String? = null,
         @Query("TransactionType") transactionType: String? = null,
-        @Query("DASMID") dasmid: String? = null
+        @Query("ProductType") productType: String? = null
     ): InsightsResponse
 
     @POST("transactions/stats")

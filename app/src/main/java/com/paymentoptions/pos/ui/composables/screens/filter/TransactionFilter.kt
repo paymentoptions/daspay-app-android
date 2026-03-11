@@ -1,7 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.filter
 
-import MyDropdown
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,23 +16,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.text.input.InputTransformation
-import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.maxLength
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -57,7 +50,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,7 +60,6 @@ import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.insights
-import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -84,7 +75,6 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red300
-import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.DashboardStatsShimmer
 import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import com.paymentoptions.pos.utils.modifiers.conditional
@@ -98,10 +88,10 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Date
 import java.util.Locale
 
 const val ALL = "All"
+const val PAY_BY_LINK = "Pay By Link"
 
 @Composable
 fun TransactionFilter(navController: NavController) {
@@ -131,16 +121,6 @@ fun TransactionFilter(navController: NavController) {
     var selectedPaymentType by remember { mutableStateOf(ALL) }
     var selectedTranxType by remember { mutableStateOf(ALL) }
 
-    fun  getPaymentType(paymentType: String): String? {
-        if(paymentType.equals(ALL)) return null;
-        when (paymentType) {
-            "Tap" -> return "SOFTPOS"
-            "QR" -> return "QR"
-            "PBL" -> return "PBL"
-            else -> return "SOFTPOS"
-        }
-    }
-
     // Date picker for custom date range
     if (dateFilterSelected) {
         if (fromDateCustomFilter == null) DateRangePickerModal(
@@ -167,9 +147,29 @@ fun TransactionFilter(navController: NavController) {
     fun resetFilter() {
         transactions = emptyList()
         showFilterQuery = true
-        receivalForTimePeriodText = ""
+        receivalForTimePeriodText = "Today"
         fromDateCustomFilter = null
         apiResponseAvailable = false
+    }
+
+    fun getTransactionType(transactionType: String): String? {
+        if (transactionType == ALL) return null;
+        when (transactionType) {
+            "SALE" -> return "AUTHORISATION"
+            "REFUND" -> return "REFUND"
+            "VOID" -> return "VOIDAUTHORISATION"
+        }
+        return null
+    }
+
+    fun getProductType(productType: String): String? {
+        if (productType == ALL) return null;
+        when (productType) {
+            "Tap" -> return "SOFTPOS"
+            "QR" -> return "QR"
+            PAY_BY_LINK -> return "PBL"
+        }
+        return null
     }
 
     LaunchedEffect(fromDateCustomFilter, toDateCustomFilter) {
@@ -193,7 +193,7 @@ fun TransactionFilter(navController: NavController) {
                 Instant.ofEpochMilli(toDateCustomFilter!!),
                 ZoneId.systemDefault()
             )
-        } else receivalForTimePeriodText = ""
+        } else receivalForTimePeriodText = "Today"
     }
 
     if (showFilterQuery) {
@@ -202,7 +202,7 @@ fun TransactionFilter(navController: NavController) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 30.dp, top = 200.dp)
+                    .padding(top = 200.dp)
             ) {
                 // Content area that scrolls
                 Box(
@@ -231,14 +231,15 @@ fun TransactionFilter(navController: NavController) {
                         ScreenTitleWithCloseButton(
                             navController = navController,
                             title = "Filter Options",
-                            fontSize = 24.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 21.sp,
                             onClose = { navController.popBackStack() }
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
 
                         // Date range field
-                        FilterTextField(
+                        FilterTextInputField(
                             label = "Date range :",
                             value = receivalForTimePeriodText,
                             onValueChange = { },
@@ -257,7 +258,7 @@ fun TransactionFilter(navController: NavController) {
                         )
 
                         // Amount field
-                        FilterTextField(
+                        FilterTextInputField(
                             label = "Amount :",
                             state = amountState,
                             onValueChange = { },
@@ -265,7 +266,7 @@ fun TransactionFilter(navController: NavController) {
                         )
 
                         // Tranx ID field
-                        FilterTextField(
+                        FilterTextInputField(
                             label = "Tranx ID :",
                             state = tranxIdState,
                             onValueChange = { },
@@ -277,7 +278,7 @@ fun TransactionFilter(navController: NavController) {
                             navController = navController,
                             label = "Payment Type :",
                             value = selectedPaymentType,
-                            options = listOf(ALL,"Tap", "QR", "PBL"),
+                            options = listOf(ALL, "Tap", "QR", PAY_BY_LINK),
                             onValueChange = { selectedPaymentType = it }
                         )
 
@@ -286,7 +287,7 @@ fun TransactionFilter(navController: NavController) {
                             navController = navController,
                             label = "Tranx Type :",
                             value = selectedTranxType,
-                            options = listOf(ALL,"SALE", "REFUND", "VOID"),
+                            options = listOf(ALL, "SALE", "REFUND", "VOID"),
                             onValueChange = { selectedTranxType = it }
                         )
 
@@ -299,28 +300,26 @@ fun TransactionFilter(navController: NavController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.White)
-                        .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                        .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP, vertical = 40.dp)
                 ) {
                     FilledButton(
                         text = "APPLY FILTERS",
                         onClick = {
-                            if(fromDateCustomFilter == null){
-                                Toast.makeText(context, "Please select date range", Toast.LENGTH_SHORT).show()
-                                return@FilledButton
-                            }
                             showFilterQuery = false
                             CoroutineScope(Dispatchers.IO).launch {
                                 try {
                                     val amount = amountState.text.toString()
                                     val tranxId = tranxIdState.text.toString()
-                                    val transctionType = if (selectedTranxType.equals(ALL)) null else selectedTranxType
+                                    val transctionType = getTransactionType(selectedTranxType)
                                     val insightsResponse = insights(
                                         context,
                                         startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
-                                            .replace('-', '/') + " 00:00:00",
+                                                .replace('-', '/') + " 00:00:00"
+                                        ,
                                         endDate = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
-                                            .replace('-', '/') + " 23:59:59",
+                                                .replace('-', '/') + " 23:59:59",
                                         transactionType = transctionType,
+                                        productType = getProductType(selectedPaymentType),
                                         //dasmid = if( productType == ALL) null else productType,
                                         id = tranxId.ifEmpty { null },
                                         amount = amount.ifEmpty { null }
@@ -349,13 +348,13 @@ fun TransactionFilter(navController: NavController) {
         }
     } else {
         // Show search results with insights
-        SimpleLayoutWithNavigation(navController) {
+        SimpleLayoutWithNavigation(navController, blurTopSection = true) {
             if (!apiResponseAvailable) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                        .padding(top = 200.dp),
+                       // .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                        .padding(top = 100.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ) {
@@ -419,7 +418,7 @@ fun SearchResultsContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(bottom = 30.dp, top = 200.dp)
+            .padding(top = 100.dp)
     ) {
         Box(
             modifier = Modifier
@@ -439,8 +438,8 @@ fun SearchResultsContent(
                         offsetX = 0.dp,
                         offsetY = 0.dp,
                         showBottom = false
-                    )
-                    .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                    ),
+                    //.padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
                 verticalArrangement = Arrangement.Top
             ) {
                 Spacer(modifier = Modifier.height(10.dp))
@@ -448,19 +447,22 @@ fun SearchResultsContent(
                 // Header with title and filter button
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                    ,
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "Search Results",
+                        color = primary500,
                         style = AppTheme.typography.titleNormal.copy(
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold
                         )
                     )
 
-                    // Filter button styled like in the image
+                    // Filter button
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -478,86 +480,86 @@ fun SearchResultsContent(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                //Spacer(modifier = Modifier.height(10.dp))
 
                 // Date filter and chart toggle
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(46.dp),
+//                    horizontalArrangement = Arrangement.SpaceBetween,
+//                    verticalAlignment = Alignment.CenterVertically
+//                ) {
 
-                    Row(
-                        Modifier
-                            .fillMaxHeight()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(iconBackgroundColor)
-                            .innerShadow(
-                                color = innerShadow,
-                                blur = 8.dp,
-                                spread = 5.dp,
-                                cornersRadius = 8.dp,
-                                offsetX = 0.dp,
-                                offsetY = 0.dp
-                            )
-                            .clickable(onClick = { showBarChart = !showBarChart })
-                            .zIndex(1f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Menu,
-                            contentDescription = "Show list",
-                            modifier = Modifier
-                                .padding(6.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(if (!showBarChart) Color.White else Color.Transparent)
-                                .padding(4.dp)
-                        )
-                        Icon(
-                            imageVector = Icons.Default.BarChart,
-                            contentDescription = "Show bar graph",
-                            modifier = Modifier
-                                .padding(6.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(if (showBarChart) Color.White else Color.Transparent)
-                                .padding(4.dp)
-                        )
-                    }
-                }
+//                    Row(
+//                        Modifier
+//                            .fillMaxHeight()
+//                            .clip(RoundedCornerShape(8.dp))
+//                            .background(iconBackgroundColor)
+//                            .innerShadow(
+//                                color = innerShadow,
+//                                blur = 8.dp,
+//                                spread = 5.dp,
+//                                cornersRadius = 8.dp,
+//                                offsetX = 0.dp,
+//                                offsetY = 0.dp
+//                            )
+//                            .clickable(onClick = { showBarChart = !showBarChart })
+//                            .zIndex(1f),
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.SpaceEvenly
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Default.Menu,
+//                            contentDescription = "Show list",
+//                            modifier = Modifier
+//                                .padding(6.dp)
+//                                .clip(RoundedCornerShape(4.dp))
+//                                .background(if (!showBarChart) Color.White else Color.Transparent)
+//                                .padding(4.dp)
+//                        )
+//                        Icon(
+//                            imageVector = Icons.Default.BarChart,
+//                            contentDescription = "Show bar graph",
+//                            modifier = Modifier
+//                                .padding(6.dp)
+//                                .clip(RoundedCornerShape(4.dp))
+//                                .background(if (showBarChart) Color.White else Color.Transparent)
+//                                .padding(4.dp)
+//                        )
+//                    }
+//                }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                //Spacer(modifier = Modifier.height(20.dp))
 
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = if (showBarChart) DEFAULT_BOTTOM_SECTION_PADDING_IN_DP else 0.dp)
+                       // .padding(horizontal = if (showBarChart) DEFAULT_BOTTOM_SECTION_PADDING_IN_DP else 0.dp)
                         .fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(
-                        text = receivalForText,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = primary900,
-                    )
+//                    Text(
+//                        text = receivalForText,
+//                        fontSize = 16.sp,
+//                        fontWeight = FontWeight.SemiBold,
+//                        color = primary900,
+//                    )
+//
+//                    Spacer(modifier = Modifier.height(4.dp))
+//
+//                    Text(
+//                        text = receivalForTimePeriodText,
+//                        style = AppTheme.typography.footnote,
+//                    )
+//
+//                    Spacer(modifier = Modifier.height(4.dp))
+//
+//                    CurrencyText(
+//                        currency = currency,
+//                        amount = receivalAmount.formatToPrecisionString(),
+//                        fontWeight = FontWeight(980)
+//                    )
 
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = receivalForTimePeriodText,
-                        style = AppTheme.typography.footnote,
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    CurrencyText(
-                        currency = currency,
-                        amount = receivalAmount.formatToPrecisionString(),
-                        fontWeight = FontWeight(980)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Column(
                         modifier = Modifier
@@ -587,7 +589,7 @@ fun SearchResultsContent(
 }
 
 @Composable
-fun FilterTextField(
+fun FilterTextInputField(
     label: String,
     value: String = "",
     state: TextFieldState? = null,
@@ -604,56 +606,19 @@ fun FilterTextField(
     ) {
         Text(
             text = label,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Normal,
-            color = primary900,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = primary500,
             modifier = Modifier.weight(0.35f)
         )
-
         if (trailingIcon != null) {
-
-            Box(
-                modifier = Modifier
-                    .weight(0.65f)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(iconBackgroundColor)
-                    .innerShadow(
-                        color = innerShadow,
-                        blur = 8.dp,
-                        spread = 5.dp,
-                        cornersRadius = 8.dp,
-                        offsetX = 0.dp,
-                        offsetY = 0.dp
-                    )
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(Modifier.weight(.9f)) {
-                        Text(
-                            text = if (value.isEmpty() && placeholder.isNotEmpty()) placeholder else value,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = if (value.isEmpty() && placeholder.isNotEmpty())
-                                primary500.copy(alpha = 0.3f)
-                            else
-                                primary500
-                        )
-                    }
-
-                    Box(Modifier.weight(.1f)) {
-                        trailingIcon()
-                    }
-                }
-            }
+            FilterTextField(value, placeholder, trailingIcon)
         } else {
-
             Box(
                 Modifier
                     .weight(0.65f)
+                    .background(Color.White, shape = RoundedCornerShape(8.dp))
+                    .border(1.dp, Color.Blue.copy(alpha = 0.5f),shape = RoundedCornerShape(8.dp))
             ) {
                 TextField(
                     state = state!!,
@@ -682,14 +647,14 @@ fun FilterTextField(
                     ),
                     modifier = Modifier
                         .height(textFieldHeight)
-                        .onFocusChanged { }
-                        .innerShadow(
-                            blur = 16.dp,
-                            color = innerShadow,
-                            cornersRadius = 6.dp,
-                            offsetX = 0.5.dp,
-                            offsetY = 0.5.dp
-                        ),
+                        .onFocusChanged { },
+//                        .innerShadow(
+//                            blur = 16.dp,
+//                            color = innerShadow,
+//                            cornersRadius = 6.dp,
+//                            offsetX = 0.5.dp,
+//                            offsetY = 0.5.dp
+//                        ),
                     lineLimits = TextFieldLineLimits.SingleLine,
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp))
 
@@ -697,6 +662,51 @@ fun FilterTextField(
         }
     }
 
+}
+
+@Composable
+private fun RowScope.FilterTextField(
+    value: String,
+    placeholder: String,
+    trailingIcon: @Composable (() -> Unit)
+) {
+    Box(
+        modifier = Modifier
+            .weight(0.65f)
+            .background(Color.White, shape = RoundedCornerShape(8.dp))
+            .border(1.dp, Color.Blue.copy(alpha = 0.5f),shape = RoundedCornerShape(8.dp))
+//            .innerShadow(
+//                color = innerShadow,
+//                blur = 8.dp,
+//                spread = 5.dp,
+//                cornersRadius = 8.dp,
+//                offsetX = 0.dp,
+//                offsetY = 0.dp
+//            )
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(Modifier.weight(.9f)) {
+                Text(
+                    text = if (value.isEmpty() && placeholder.isNotEmpty()) placeholder else value,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (value.isEmpty() && placeholder.isNotEmpty())
+                        primary500.copy(alpha = 0.3f)
+                    else
+                        primary500
+                )
+            }
+
+            Box(Modifier.weight(.1f)) {
+                trailingIcon()
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -728,16 +738,18 @@ fun FilterDropdownField(
         Box(
             modifier = Modifier
                 .weight(0.65f)
-                .clip(RoundedCornerShape(8.dp))
-                .background(iconBackgroundColor)
-                .innerShadow(
-                    color = innerShadow,
-                    blur = 8.dp,
-                    spread = 5.dp,
-                    cornersRadius = 8.dp,
-                    offsetX = 0.dp,
-                    offsetY = 0.dp
-                )
+                //.shape(RoundedCornerShape(8.dp))
+                .background(Color.White, shape = RoundedCornerShape(8.dp))
+                .border(1.dp, Color.Blue.copy(alpha = 0.5f),shape = RoundedCornerShape(8.dp))
+//                .background(iconBackgroundColor)
+//                .innerShadow(
+//                    color = innerShadow,
+//                    blur = 8.dp,
+//                    spread = 5.dp,
+//                    cornersRadius = 8.dp,
+//                    offsetX = 0.dp,
+//                    offsetY = 0.dp
+//                )
                 .clickable { expanded = true }
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {

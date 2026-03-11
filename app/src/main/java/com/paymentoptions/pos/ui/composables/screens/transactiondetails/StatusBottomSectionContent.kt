@@ -210,7 +210,7 @@ fun StatusBottomSectionContent(
             // Status and Amount Section
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 20.dp)
+                modifier = Modifier.padding(top = 30.dp, bottom = 20.dp)
             ) {
                 Text(
                     text = title,

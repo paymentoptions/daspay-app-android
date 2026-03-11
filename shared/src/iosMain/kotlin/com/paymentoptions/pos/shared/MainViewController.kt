@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalForeignApi::class, ExperimentalForeignApi::class)
+@file:OptIn(ExperimentalForeignApi::class)
 
 package com.paymentoptions.pos.shared
 
@@ -8,7 +8,6 @@ import platform.UIKit.UIColor
 import platform.CoreGraphics.CGRectMake
 import kotlinx.cinterop.ExperimentalForeignApi
 
-@OptIn(ExperimentalForeignApi::class)
 fun MainViewController(): UIViewController {
     return object : UIViewController(nibName = null, bundle = null) {
         override fun viewDidLoad() {

@@ -21,10 +21,10 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Fastfood
+import androidx.compose.material.icons.outlined.Filter
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Money
-import androidx.compose.material.icons.outlined.MoneyOff
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
@@ -99,11 +99,11 @@ val more = BottomNavigationBarItem(
     title = "More", icon = Icons.Outlined.MoreHoriz, route = "More"
 )
 
-val refund = BottomNavigationBarItem(
-    title = "Refund",
-    icon = Icons.Outlined.MoneyOff,
-    svgIcon = R.drawable.refund,
-    route = Screens.Refund.route
+val query = BottomNavigationBarItem(
+    title = "Query",
+    svgIcon = R.drawable.query_icon,
+    icon = Icons.Outlined.Filter,
+    route = Screens.QueryScreen.route
 )
 
 val transactionHistory = BottomNavigationBarItem(
@@ -347,14 +347,14 @@ fun MyBottomNavigationBar(
                 })
 
             Item(
-                refund,
+                query,
                 modifier = Modifier.weight(1f),
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
-                    if (currentRoute != refund.route) {
-                        selectedBottomNavigationBarItem = refund
+                    if (currentRoute != query.route) {
+                        selectedBottomNavigationBarItem = query
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
                             restoreState = true
@@ -404,7 +404,7 @@ fun Item(
             contentAlignment = Alignment.Center
         ) {
             if (!item.hideIcon) if (item.svgIcon != null) Icon(
-                painter = painterResource(R.drawable.refund),
+                painter = painterResource(R.drawable.query_icon),
                 contentDescription = item.title,
                 modifier = Modifier.size(24.dp),
                 tint = primary500

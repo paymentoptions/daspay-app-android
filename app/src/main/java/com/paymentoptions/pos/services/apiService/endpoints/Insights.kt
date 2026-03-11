@@ -12,12 +12,12 @@ import com.paymentoptions.pos.utils.getDeviceTimeZone
 
 suspend fun insights(
     context: Context,
-    startDate: String,
-    endDate: String,
+    startDate: String?,
+    endDate: String?,
     amount: String? = null,
     id: String? = null,
     transactionType: String? = null,
-    dasmid: String? = null,
+    productType: String? = null,
     take: Int = -1,
 ): InsightsResponse? {
     try {
@@ -43,7 +43,7 @@ suspend fun insights(
             amount = amount,
             id = id,
             transactionType = transactionType,
-            dasmid = dasmid
+            productType = productType
         )
 
         AppLogger.debug("insights response : $response")

@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.primary500
 
 @Composable
 fun ScreenTitleWithCloseButton(
@@ -25,6 +26,7 @@ fun ScreenTitleWithCloseButton(
     modifier: Modifier = Modifier,
     title: String = "",
     fontSize: TextUnit = 36.sp,
+    fontWeight: FontWeight = FontWeight.Bold,
     onClose: () -> Unit = { navController.popBackStack() },
 ) {
     Row(
@@ -35,7 +37,8 @@ fun ScreenTitleWithCloseButton(
 
         Text(
             text = title,
-            fontWeight = FontWeight.Bold,
+            fontWeight = fontWeight,
+            color = primary500,
             style = AppTheme.typography.screenTitle.copy(fontSize = fontSize),
         )
 
@@ -43,6 +46,7 @@ fun ScreenTitleWithCloseButton(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
+                tint = primary500,
                 modifier = Modifier.size(24.dp)
             )
         }

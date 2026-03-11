@@ -83,6 +83,30 @@ fun getAmountSign(transaction: TransactionListDataRecord): String {
     }
 }
 
+fun getTransactionAmount(transaction: TransactionListDataRecord): Float {
+    val status = transaction.status.uppercase()
+    val settleStatus = transaction.SettleStatus?.uppercase() ?: ""
+    val transactionType = transaction.TransactionType.uppercase()
+
+    when {
+        // Not Successful - No sign
+        status == "NOTSUCCESSFUL" || settleStatus == "FAILED" -> {return 0f}
+        // Voided transactions - Negative
+        transactionType == "VOID" || transactionType == "VOIDAUTHORISATION" -> {
+            return  -transaction.amount.toFloat()
+        }
+        // Refund transactions
+        transactionType == "REFUND" -> {
+            return -transaction.amount.toFloat()
+        }
+        // Money received (Sale) - Positive
+        status == "SUCCESSFUL" && (transactionType == "PURCHASE" || transactionType == "AUTHORISATION") -> {
+            return transaction.amount.toFloat()
+        }
+    }
+    return 0f
+}
+
 /**
  * Gets the appropriate icon resource based on product type and transaction type
  */
@@ -115,41 +139,53 @@ fun getTransactionIcon(transaction: TransactionListDataRecord): Int {
 
 /**
  * Determines which action button to show (REFUND, VOID, or NONE)
+ *
+ * ProductType	TransactionType	Payment Status	SettleStatus	Action
+ * SOFTPOS	    AUTHORISATION	SUCCESSFUL	    PENDING	        VOID
+ * SOFTPOS	    PURCHASE	    SUCCESSFUL	    SETTLED	        REFUND
+ * QR	        PURCHASE	    PENDING	        n/a	            n/a
+ * QR	        PURCHASE	    SUCCESSFUL	    n/a	            REFUND
+ * PBL	        PURCHASE	    SUCCESSFUL	    n/a	            REFUND
  */
 fun getAvailableAction(transaction: TransactionListDataRecord): TransactionAction {
+    // Already voided or refunded - no action available
     if(transaction.IsVoided == true) return TransactionAction.NONE
     if(transaction.IsRefunded == true) return TransactionAction.NONE
 
-    val transactionType = transaction.TransactionType.uppercase()
-    val settleStatus = transaction.SettleStatus?.uppercase() ?: ""
-    val productType = transaction.ProductType?.uppercase() ?: ""
+    val TransactionType = transaction.TransactionType.uppercase()
+    val SettleStatus = transaction.SettleStatus?.uppercase() ?: ""
+    val ProductType = transaction.ProductType?.uppercase() ?: ""
     val status = transaction.status.uppercase()
 
-    // Only successful transactions can have actions
-    if (status != "SUCCESSFUL") return TransactionAction.NONE
-
     return when {
-        // VOID: Unsettled SOFTPOS AUTHORISATION
-        transactionType == "AUTHORISATION" && settleStatus == "PENDING" && productType == "SOFTPOS" -> TransactionAction.VOID
+        // SOFTPOS + AUTHORISATION + SUCCESSFUL + PENDING → VOID
+        ProductType == "SOFTPOS" &&
+        TransactionType == "AUTHORISATION" &&
+        status == "SUCCESSFUL" &&
+        SettleStatus == "PENDING" -> TransactionAction.VOID
 
-        // VOID: Unsettled SOFTPOS AUTHORISATION
-        transactionType == "AUTHORISATION" && settleStatus == "PENDING" && productType == "QR" -> TransactionAction.VOID
+        // SOFTPOS + PURCHASE + SUCCESSFUL + SETTLED → REFUND
+        ProductType == "SOFTPOS" &&
+        TransactionType == "PURCHASE" &&
+        status == "SUCCESSFUL" &&
+        SettleStatus == "SETTLED" -> TransactionAction.REFUND
 
-        // VOID: Unsettled SOFTPOS AUTHORISATION
-        transactionType == "AUTHORISATION" && settleStatus == "PENDING" && productType == "PBL" -> TransactionAction.VOID
+        // QR + PURCHASE + PENDING → NONE
+        ProductType == "QR" &&
+        TransactionType == "PURCHASE" &&
+        status == "PENDING" -> TransactionAction.NONE
 
-        // REFUND: Settled SOFTPOS AUTHORISATION
-        transactionType == "AUTHORISATION" && settleStatus == "SETTLED" && productType == "SOFTPOS" -> TransactionAction.REFUND
+        // QR + PURCHASE + SUCCESSFUL → REFUND
+        ProductType == "QR" &&
+        TransactionType == "PURCHASE" &&
+        status == "SUCCESSFUL" -> TransactionAction.REFUND
 
-        transactionType == "PURCHASE" && settleStatus == "SETTLED" && productType == "SOFTPOS" -> TransactionAction.REFUND
+        // PBL + PURCHASE + SUCCESSFUL → REFUND
+        ProductType == "PBL" &&
+        TransactionType == "PURCHASE" &&
+        status == "SUCCESSFUL" -> TransactionAction.REFUND
 
-        // REFUND: PBL PURCHASE
-        transactionType == "PURCHASE" && productType == "PBL" -> TransactionAction.REFUND
-
-        // REFUND: QR PURCHASE
-        transactionType == "PURCHASE" && productType == "QR" -> TransactionAction.REFUND
-
-        // No action available
+        // No action available for any other combination
         else -> TransactionAction.NONE
     }
 }

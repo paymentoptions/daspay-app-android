@@ -128,7 +128,7 @@ fun TransactionActionScreen(
 
     fun updateRefundTransaction(sdkTransaction: com.theminesec.lib.dto.transaction.Transaction?) {
         CoroutineScope(Dispatchers.IO).launch {
-            val maxRetries = 5
+            val maxRetries = 2
             var currentAttempt = 0
             var lastError: Exception? = null
             var response: com.paymentoptions.pos.services.apiService.RefundResponse? = null
@@ -196,10 +196,9 @@ fun TransactionActionScreen(
                 // Navigate to Transaction Receipt screen
                 withContext(Dispatchers.Main) {
                     navController.navigate(
-                        navController.navigate(
-                            "${Screens.TransactionReceipt.route}?transactionId=${response.transaction_details.id}" +
-                                    "&title=Your transaction is Voided&amount=${transaction.amount}&refrenceId=${response.transaction_details.id}" +
-                                    "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}")
+                        "${Screens.TransactionReceipt.route}?transactionId=${response.transaction_details.id}" +
+                                "&title=Your transaction is Refunded&amount=${transaction.amount}&refrenceId=${response.transaction_details.id}" +
+                                "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}"
                     ) {
                         popUpTo(Screens.TransactionAction.route) { inclusive = true }
                     }
@@ -210,13 +209,13 @@ fun TransactionActionScreen(
                 AppLogger.error("Refund failed after $maxRetries attempts. Last error: ${lastError?.message}")
 
                 // Schedule hourly retries for 24 hours
-                AppLogger.debug("Scheduling hourly retries for refund over next 24 hours")
-                TransactionRetryScheduler.scheduleHourlyRetries(
-                    context = context,
-                    transaction = transaction,
-                    sdkTransaction = sdkTransaction,
-                    operationType = TransactionRetryWorker.OPERATION_REFUND
-                )
+//                AppLogger.debug("Scheduling hourly retries for refund over next 24 hours")
+//                TransactionRetryScheduler.scheduleHourlyRetries(
+//                    context = context,
+//                    transaction = transaction,
+//                    sdkTransaction = sdkTransaction,
+//                    operationType = TransactionRetryWorker.OPERATION_REFUND
+//                )
 
                 withContext(Dispatchers.Main) {
                     processingScreenType = StatusScreenType.ERROR
@@ -313,13 +312,13 @@ fun TransactionActionScreen(
                 AppLogger.error("Void failed after $maxRetries attempts. Last error: ${lastError?.message}")
 
                 // Schedule hourly retries for 24 hours
-                AppLogger.debug("Scheduling hourly retries for void over next 24 hours")
-                TransactionRetryScheduler.scheduleHourlyRetries(
-                    context = context,
-                    transaction = transaction,
-                    sdkTransaction = sdkTransaction,
-                    operationType = TransactionRetryWorker.OPERATION_VOID
-                )
+//                AppLogger.debug("Scheduling hourly retries for void over next 24 hours")
+//                TransactionRetryScheduler.scheduleHourlyRetries(
+//                    context = context,
+//                    transaction = transaction,
+//                    sdkTransaction = sdkTransaction,
+//                    operationType = TransactionRetryWorker.OPERATION_VOID
+//                )
 
                 withContext(Dispatchers.Main) {
                     processingScreenType = StatusScreenType.ERROR

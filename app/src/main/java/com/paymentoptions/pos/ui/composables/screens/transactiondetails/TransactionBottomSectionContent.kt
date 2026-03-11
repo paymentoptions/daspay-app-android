@@ -266,8 +266,8 @@ fun TransactionBottomSectionContent(
                         text = if(availableAction == TransactionAction.REFUND)"Refund" else "VOID",
                         onClick = {
                             when(availableAction){
-                                TransactionAction.REFUND -> navigateToVoidAction(transaction)
-                                TransactionAction.VOID -> navigateToRefundAction(transaction)
+                                TransactionAction.VOID -> navigateToVoidAction(transaction)
+                                TransactionAction.REFUND -> navigateToRefundAction(transaction)
                                 else ->{}
                             }
                         },
