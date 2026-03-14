@@ -58,14 +58,11 @@ import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
-import com.paymentoptions.pos.ui.theme.primary300
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
-import com.paymentoptions.pos.workers.TransactionRetryScheduler
-import com.paymentoptions.pos.workers.TransactionRetryWorker
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
@@ -80,6 +77,7 @@ import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.Currency
 import java.util.Date
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,7 +99,7 @@ fun TransactionActionScreen(
     val dateString = transaction.Date   //"2025-04-23T03:38:57.349+00:00"
     val dateTime = safeParseOffsetDateTime(dateString)
     val date: Date = Date.from(dateTime.toInstant())
-    val dateStringFormatted = SimpleDateFormat("dd MMMM, YYYY").format(date)
+    val dateStringFormatted = SimpleDateFormat("dd MMMM, YYYY", Locale.US).format(date)
     val notesInput = remember { TextFieldState() }
 
     fun showTransactionFailure() {
@@ -360,6 +358,8 @@ fun TransactionActionScreen(
 
     fun doVoid(transaction: TransactionListDataRecord) {
         AppLogger.debug("full transaction object: $transaction")
+        processingScreenType = StatusScreenType.PROCESSING
+        processingMessage = "Processing Void..."
         launcher.launch(input = PoiRequest.ActionVoid(transaction.AcquirerTransactionID!!))
     }
 
@@ -368,6 +368,8 @@ fun TransactionActionScreen(
 
         when (transaction.ProductType) {
             "SOFTPOS" -> {
+                processingScreenType = StatusScreenType.PROCESSING
+                processingMessage = "Processing Refund..."
                 launcher.launch(
                     input = PoiRequest.ActionLinkedRefund(
                         transaction.AcquirerTransactionID!!,
@@ -409,7 +411,7 @@ fun TransactionActionScreen(
             containerColor = Color.White,
             contentColor = primary500,
             onDismissRequest = {
-                showBottomSheet = false
+                showBottomSheet = !showBottomSheet
                 navController.popBackStack()
             },
             sheetState = sheetState,
@@ -607,12 +609,12 @@ fun TransactionActionScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clickable {
+                                showBottomSheet = !showBottomSheet
                                 when (targetAction) {
                                     TransactionAction.VOID -> doVoid(transaction)
                                     TransactionAction.REFUND -> doRefund(transaction)
                                     else -> {}
                                 }
-                                showBottomSheet = false
                             },
                         colors = CardDefaults.cardColors(
                             containerColor = primary500
