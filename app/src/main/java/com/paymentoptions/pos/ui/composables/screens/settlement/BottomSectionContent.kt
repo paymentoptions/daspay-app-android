@@ -61,8 +61,13 @@ import java.util.Locale
 import java.util.TimeZone
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.endpoints.settleBatch
+import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
+import com.paymentoptions.pos.ui.composables.screens.status.SettlementStatusScreen
+import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
+import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -85,6 +90,9 @@ fun BottomSectionContent(
     var settledBatches by remember { mutableStateOf<List<SettlementRecord>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var refreshList by remember { mutableStateOf(false) }
+    var processingScreenType by remember { mutableStateOf(StatusScreenType.PROCESSING) }
+    var processingMessage by remember { mutableStateOf("") }
+    val delayTime = 3000L
 
     // Fetch settlement data
     LaunchedEffect(refreshList) {
@@ -108,174 +116,218 @@ fun BottomSectionContent(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-            .conditional(enableScrolling) {
-                verticalScroll(state = scrollState)
-            },
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-
-        Text(
-            text = "Settlement",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = primary900,
+    if(processingMessage.isNotEmpty()){
+        // Processing/Success/Error Screen Overlay using StatusScreen
+        val dataMessage = MessageForStatusScreen(
+            text = processingMessage,
+            statusScreenType = processingScreenType
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        SettlementStatusScreen(navController, dataMessage)
+    } else {
 
-        // Toggle between Current and Settled Batch
-        Row(
-            Modifier
+        Column(
+            modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .border(width = 2.dp, color = shadowColor, shape = RoundedCornerShape(5.dp))
-                .innerShadow(
-                    color = innerShadow,
-                    blur = 8.dp,
-                    spread = 5.dp,
-                    cornersRadius = 8.dp,
-                    offsetX = 0.dp,
-                    offsetY = 0.dp
-                )
-                .background(iconBackgroundColor),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
+                .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .conditional(enableScrolling) {
+                    verticalScroll(state = scrollState)
+                },
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+
             Text(
-                text = "Current",
-                modifier = Modifier
-                    .padding(6.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .border(
-                        width = 1.dp,
-                        color = if (showCurrent) Color(0xFFDCEAFE) else Color.Transparent,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .background(if (showCurrent) Color.White.copy(alpha = 0.9f) else Color.Transparent)
-                    .padding(10.dp)
-                    .weight(1f)
-                    .noRippleClickable(enabled = !showCurrent) {
-                        showCurrent = true
-                    },
-                textAlign = TextAlign.Center,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = primary600
+                text = "Settlement",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = primary900,
             )
-            Text(
-                text = "Settled Batch",
-                modifier = Modifier
-                    .padding(6.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .border(
-                        width = 1.dp,
-                        color = if (!showCurrent) Color(0xFFDCEAFE) else Color.Transparent,
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .background(if (!showCurrent) Color.White.copy(alpha = 0.9f) else Color.Transparent)
-                    .padding(10.dp)
-                    .weight(1f)
-                    .noRippleClickable(enabled = showCurrent) {
-                        showCurrent = false
-                    },
-                textAlign = TextAlign.Center,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = primary600
-            )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Show current pending settlement
-        if (showCurrent) {
-            if(isLoading){
-                SettlementCardShimmer()
-            } else {
-                if (pendingSettlement != null) {
-                    SettlementCard(
-                        settlement = pendingSettlement!!,
-                        currency = currency,
-                        isPending = true
-                    )
-                } else {
-                    Text(
-                        text = "No pending settlement",
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(vertical = 32.dp)
-                    )
-                }
-            }
-        } else {
-            // Show settled batches
-            if(isLoading){
-                SettlementCardShimmer()
-                Spacer(modifier = Modifier.height(12.dp))
-                SettlementCardShimmer()
-            } else {
-                if (settledBatches.isNotEmpty()) {
-                    settledBatches.forEach { settlement ->
-                        SettlementCard(
-                            settlement = settlement,
-                            currency = currency,
-                            isPending = false
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                    }
-                } else {
-                    Text(
-                        text = "No settled batches",
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(vertical = 32.dp)
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Show Settle All button only for admin and when showing current
-        if (DPSharedPreferences.isAdmin(context) && showCurrent && pendingSettlement != null) {
-            Spacer(modifier = Modifier.height(20.dp))
-            FilledButton(
-                text = "Settle All",
-                disabled = false,
-                isLoading = loader,
-                modifier = Modifier
+            // Toggle between Current and Settled Batch
+            Row(
+                Modifier
                     .fillMaxWidth()
-                    .height(59.dp),
-                onClick = {
-                   isLoading = true
-                    CoroutineScope(Dispatchers.IO).launch {
-                        try{
-                            val response = settleBatch(context, pendingSettlement!!.BatchID)
-                            if(response != null && response.SettleStatus == SETTLED_BATCH){
-                                withContext(Dispatchers.Main) {
-                                    refreshList = !refreshList
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(width = 2.dp, color = shadowColor, shape = RoundedCornerShape(5.dp))
+                    .innerShadow(
+                        color = innerShadow,
+                        blur = 8.dp,
+                        spread = 5.dp,
+                        cornersRadius = 8.dp,
+                        offsetX = 0.dp,
+                        offsetY = 0.dp
+                    )
+                    .background(iconBackgroundColor),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Text(
+                    text = "Current",
+                    modifier = Modifier
+                        .padding(6.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .border(
+                            width = 1.dp,
+                            color = if (showCurrent) Color(0xFFDCEAFE) else Color.Transparent,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .background(if (showCurrent) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                        .padding(10.dp)
+                        .weight(1f)
+                        .noRippleClickable(enabled = !showCurrent) {
+                            showCurrent = true
+                        },
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primary600
+                )
+                Text(
+                    text = "Settled Batch",
+                    modifier = Modifier
+                        .padding(6.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .border(
+                            width = 1.dp,
+                            color = if (!showCurrent) Color(0xFFDCEAFE) else Color.Transparent,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .background(if (!showCurrent) Color.White.copy(alpha = 0.9f) else Color.Transparent)
+                        .padding(10.dp)
+                        .weight(1f)
+                        .noRippleClickable(enabled = showCurrent) {
+                            showCurrent = false
+                        },
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = primary600
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Show current pending settlement
+            if (showCurrent) {
+                if (isLoading) {
+                    SettlementCardShimmer()
+                } else {
+                    if (pendingSettlement != null) {
+                        SettlementCard(
+                            settlement = pendingSettlement!!,
+                            currency = currency,
+                            isPending = true
+                        )
+                    } else {
+                        Text(
+                            text = "No pending settlement",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(vertical = 32.dp)
+                        )
+                    }
+                }
+            } else {
+                // Show settled batches
+                if (isLoading) {
+                    SettlementCardShimmer()
+                    Spacer(modifier = Modifier.height(12.dp))
+                    SettlementCardShimmer()
+                } else {
+                    if (settledBatches.isNotEmpty()) {
+                        settledBatches.forEach { settlement ->
+                            SettlementCard(
+                                settlement = settlement,
+                                currency = currency,
+                                isPending = false
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                    } else {
+                        Text(
+                            text = "No settled batches",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(vertical = 32.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Show Settle All button only for admin and when showing current
+            if (DPSharedPreferences.isAdmin(context) && showCurrent && pendingSettlement != null) {
+                Spacer(modifier = Modifier.height(20.dp))
+                FilledButton(
+                    text = "Settle All",
+                    disabled = false,
+                    isLoading = loader,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(59.dp),
+                    onClick = {
+                        processingMessage = "Processing Settlement"
+                        isLoading = true
+                        CoroutineScope(Dispatchers.IO).launch {
+                            try {
+                                val response = settleBatch(context, pendingSettlement!!.BatchID)
+                                if (response != null && response.SettleStatus == SETTLED_BATCH) {
+                                    withContext(Dispatchers.Main) {
+                                        processingScreenType = StatusScreenType.SUCCESS
+                                        processingMessage = "Settlement Completed"
+                                    }
+                                    // Wait 5 seconds
+                                    delay(delayTime)
+                                    withContext(Dispatchers.Main) {
+                                        processingMessage = ""
+                                        pendingSettlement = null
+                                        settledBatches = emptyList()
+                                        isLoading = true
+                                        refreshList = !refreshList
+                                    }
                                 }
-                            }
-                        }  catch (e: retrofit2.HttpException) {
-                            val errorBody = e.response()?.errorBody()?.string()
-                            AppLogger.error("settle HTTP error ${e.code()}: $errorBody")
-                            withContext(Dispatchers.Main) {
-                               Toast.makeText(context, "Batch Error: $errorBody", Toast.LENGTH_SHORT).show()
-                            }
-                        } catch (e: Exception) {
-                            AppLogger.error("settle: $e")
-                        } finally {
-                            withContext(Dispatchers.Main) {
-                                isLoading = false
+                            } catch (e: retrofit2.HttpException) {
+                                val errorBody = e.response()?.errorBody()?.string()
+                                AppLogger.error("settle HTTP error ${e.code()}: $errorBody")
+//                                withContext(Dispatchers.Main) {
+//                                    Toast.makeText(
+//                                        context,
+//                                        "Batch Error: $errorBody",
+//                                        Toast.LENGTH_SHORT
+//                                    ).show()
+//                                }
+                                withContext(Dispatchers.Main) {
+                                    processingScreenType = StatusScreenType.ERROR
+                                    processingMessage = "Settlement Failed"
+                                }
+                                // Wait 5 seconds
+                                delay(delayTime)
+                                withContext(Dispatchers.Main) {
+                                    processingMessage = ""
+                                }
+                            } catch (e: Exception) {
+                                AppLogger.error("settle: $e")
+                                withContext(Dispatchers.Main) {
+                                    processingScreenType = StatusScreenType.ERROR
+                                    processingMessage = "Settlement Failed"
+                                }
+                                // Wait 5 seconds
+                                delay(delayTime)
+                                withContext(Dispatchers.Main) {
+                                    processingMessage = ""
+                                }
+                            } finally {
+                                withContext(Dispatchers.Main) {
+                                    isLoading = false
+                                }
                             }
                         }
                     }
-                }
-            )
+                )
+            }
         }
     }
 }

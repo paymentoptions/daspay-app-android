@@ -17,32 +17,36 @@ object ConfigurationManager {
      */
     suspend fun initializeConfig(context: Context): Boolean {
         return try {
-            val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+            // Download config for current flavor/environment
+            val appConfig = configDownload(context, BuildConfig.ENVIRONMENT)
 
-            if (savedBaseUrl.isNullOrEmpty()) {
-                AppLogger.debug("Base URL not found in preferences. Downloading config for environment: ${BuildConfig.ENVIRONMENT}")
+            if (appConfig != null) {
+                AppLogger.debug("Config downloaded successfully. Base URL: ${appConfig.BaseAPIURL}")
 
-                // Download config for current flavor/environment
-                val appConfig = configDownload(context, BuildConfig.ENVIRONMENT)
-
-                if (appConfig != null) {
-                    AppLogger.debug("Config downloaded successfully. Base URL: ${appConfig.BaseAPIURL}")
+                val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+                if(savedBaseUrl != appConfig.BaseAPIURL)
                     DPSharedPreferences.storeBaseUrl(context, appConfig.BaseAPIURL)
 
-                    // Reset RetrofitClient to use new base URL
-                    RetrofitClient.reset()
+                // Reset RetrofitClient to use new base URL
+                RetrofitClient.reset()
 
-                    isInitialized = true
-                    true
-                } else {
-                    AppLogger.error("Failed to download app configuration")
-                    false
-                }
-            } else {
-                AppLogger.debug("Using saved base URL from preferences: $savedBaseUrl")
                 isInitialized = true
                 true
+            } else {
+                AppLogger.error("Failed to download app configuration")
+                false
             }
+//            val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+//
+//            if (savedBaseUrl.isNullOrEmpty()) {
+//                AppLogger.debug("Base URL not found in preferences. Downloading config for environment: ${BuildConfig.ENVIRONMENT}")
+//
+//
+//            } else {
+//                AppLogger.debug("Using saved base URL from preferences: $savedBaseUrl")
+//                isInitialized = true
+//                true
+//            }
         } catch (e: Exception) {
             AppLogger.error("Error initializing config: ${e.message}")
             e.printStackTrace()

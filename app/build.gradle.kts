@@ -189,4 +189,5 @@ dependencies {
     // WorkManager for background task scheduling
     implementation("androidx.work:work-runtime-ktx:2.9.0")
 
+    implementation(libs.accompanist.swiperefresh)
 }
