@@ -62,7 +62,6 @@ import java.util.TimeZone
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.endpoints.settleBatch
 import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.SettlementStatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 import kotlinx.coroutines.CoroutineScope
@@ -106,7 +105,7 @@ fun BottomSectionContent(
                 isLoading = false
                 pendingSettlement = allRecords.firstOrNull { it.SettleStatus == PENDING_BATCH }
                 settledBatches = allRecords.filter { it.SettleStatus == SETTLED_BATCH }
-                    .sortedByDescending { it.SettledAt ?: it.UpdatedAt ?: it.CreatedAt }
+                  //  .sortedByDescending { it.SettledAt ?: it.UpdatedAt ?: it.CreatedAt }
             }
         } catch (e: Exception) {
             // Handle error
@@ -123,7 +122,7 @@ fun BottomSectionContent(
             statusScreenType = processingScreenType
         )
 
-        SettlementStatusScreen(navController, dataMessage)
+        StatusScreen(navController, dataMessage,{}, false)
     } else {
 
         Column(

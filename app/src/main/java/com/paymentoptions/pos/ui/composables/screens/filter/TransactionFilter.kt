@@ -155,7 +155,7 @@ fun TransactionFilter(navController: NavController) {
     fun getTransactionType(transactionType: String): String? {
         if (transactionType == ALL) return null;
         when (transactionType) {
-            "SALE" -> return "AUTHORISATION"
+            "SALE" -> return "SALE,AUTHORISATION"
             "REFUND" -> return "REFUND"
             "VOID" -> return "VOIDAUTHORISATION"
         }
@@ -306,6 +306,7 @@ fun TransactionFilter(navController: NavController) {
                         text = "APPLY FILTERS",
                         onClick = {
                             showFilterQuery = false
+                            dateFilterSelected = false
                             CoroutineScope(Dispatchers.IO).launch {
                                 try {
                                     val amount = amountState.text.toString()

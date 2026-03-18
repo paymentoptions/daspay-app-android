@@ -53,7 +53,7 @@ fun Transactions(
             if (!skip) {
                 val transactionListRecord = transaction.toTransactionListDataRecord()
                 //if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") earningAmount += transaction.amount.toFloat()
-                earningAmount = getTransactionAmount(transactionListRecord)
+                earningAmount += getTransactionAmount(transactionListRecord)
 
                 TransactionSummary(
                     navController,

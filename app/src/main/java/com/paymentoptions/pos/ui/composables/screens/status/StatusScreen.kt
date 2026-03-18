@@ -49,6 +49,7 @@ fun StatusScreen(
     navController: NavController,
     dataMessage: MessageForStatusScreen,
     strategyFn: () -> Unit = {},
+    showLogoImage : Boolean = true,
 ) {
     // Animate the circles during PROCESSING state
     val infiniteTransition = rememberInfiniteTransition(label = "processing_animation")
@@ -82,16 +83,20 @@ fun StatusScreen(
                     background(red300)
                 }) {
 
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.weight(3f)
-            ) {
-                LogoImage(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(LOGO_HEIGHT_IN_DP)
-                )
+            if(showLogoImage) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.weight(3f)
+                ) {
+                    LogoImage(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(LOGO_HEIGHT_IN_DP)
+                    )
+                }
+            } else {
+                Spacer(modifier = Modifier.height(45.dp))
             }
 
             Column(

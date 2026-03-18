@@ -101,7 +101,7 @@ fun getTransactionAmount(transaction: TransactionListDataRecord): Float {
         }
         // Money received (Sale) - Positive
         status == "SUCCESSFUL" && (transactionType == "PURCHASE" || transactionType == "AUTHORISATION") -> {
-            return transaction.amount.toFloat()
+            return +transaction.amount.toFloat()
         }
     }
     return 0f

@@ -126,7 +126,7 @@ fun TransactionActionScreen(
 
     fun updateRefundTransaction(sdkTransaction: com.theminesec.lib.dto.transaction.Transaction?) {
         CoroutineScope(Dispatchers.IO).launch {
-            val maxRetries = 2
+            val maxRetries = 1
             var currentAttempt = 0
             var lastError: Exception? = null
             var response: com.paymentoptions.pos.services.apiService.RefundResponse? = null
@@ -164,7 +164,7 @@ fun TransactionActionScreen(
 
                 } catch (e: retrofit2.HttpException) {
                     errorMessage = e.response()?.errorBody()?.string() ?: e.message()
-                    AppLogger.error("void HTTP error ${e.code()}: $errorMessage")
+                    AppLogger.error("Refund HTTP error ${e.code()}: $errorMessage")
                 } catch (e: Exception) {
                     AppLogger.error("Refund attempt $currentAttempt failed: ${e.message}", e)
                     lastError = e
@@ -232,7 +232,7 @@ fun TransactionActionScreen(
 
     fun updateVoidTransaction(sdkTransaction: com.theminesec.lib.dto.transaction.Transaction?) {
         CoroutineScope(Dispatchers.IO).launch {
-            val maxRetries = 5
+            val maxRetries = 1
             var currentAttempt = 0
             var lastError: Exception? = null
             var response: com.paymentoptions.pos.services.apiService.RefundResponse? = null
@@ -609,7 +609,7 @@ fun TransactionActionScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clickable {
-                                showBottomSheet = !showBottomSheet
+                                showBottomSheet = false
                                 when (targetAction) {
                                     TransactionAction.VOID -> doVoid(transaction)
                                     TransactionAction.REFUND -> doRefund(transaction)

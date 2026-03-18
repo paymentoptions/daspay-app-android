@@ -120,7 +120,7 @@ interface ApiService {
         @Query("endDate") endDate: String? = null,
         @Query("take") take: Int,
         @Query("amount") amount: String? = null,
-        @Query("id") id: String? = null,
+        @Query("ID") id: String? = null,
         @Query("TransactionType") transactionType: String? = null,
         @Query("ProductType") productType: String? = null
     ): InsightsResponse
