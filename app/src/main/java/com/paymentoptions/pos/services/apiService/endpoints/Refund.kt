@@ -32,7 +32,7 @@ suspend fun refund(
                     merchant_id = merchantId,
                     daspay_res = transaction,
                     amount = amount,
-                    notes = notes
+                    notes = if(notes?.isBlank() == true) "Refund from DASPay App" else notes!!
                 )
             )
 

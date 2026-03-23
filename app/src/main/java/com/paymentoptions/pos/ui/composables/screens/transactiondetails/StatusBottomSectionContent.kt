@@ -212,12 +212,30 @@ fun StatusBottomSectionContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(top = 30.dp, bottom = 20.dp)
             ) {
-                Text(
-                    text = title,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TransactionColors.Green,
-                )
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = title,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TransactionColors.Green,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+
+                    IconButton(
+                        onClick = { navController.popBackStack() },
+                        modifier = Modifier.align(Alignment.CenterEnd).padding(end = 10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = primary500,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 

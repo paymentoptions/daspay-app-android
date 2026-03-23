@@ -163,7 +163,18 @@ fun TransactionActionScreen(
                     }
 
                 } catch (e: retrofit2.HttpException) {
-                    errorMessage = e.response()?.errorBody()?.string() ?: e.message()
+                    errorMessage = try {
+                        val errorJson = e.response()?.errorBody()?.string()
+                        if (errorJson != null) {
+                            val jsonObj = org.json.JSONObject(errorJson)
+                            jsonObj.optJSONObject("gateway_response")?.optString("message")
+                                ?: e.message()
+                        } else {
+                            e.message()
+                        }
+                    }catch (e: Exception){
+                        e.message.toString()
+                    }
                     AppLogger.error("Refund HTTP error ${e.code()}: $errorMessage")
                 } catch (e: Exception) {
                     AppLogger.error("Refund attempt $currentAttempt failed: ${e.message}", e)
@@ -267,7 +278,18 @@ fun TransactionActionScreen(
                     }
 
                 } catch (e: retrofit2.HttpException) {
-                    errorMessage = e.response()?.errorBody()?.string() ?: e.message()
+                    errorMessage = try {
+                        val errorJson = e.response()?.errorBody()?.string()
+                        if (errorJson != null) {
+                            val jsonObj = org.json.JSONObject(errorJson)
+                            jsonObj.optJSONObject("gateway_response")?.optString("message")
+                                ?: e.message()
+                        } else {
+                            e.message()
+                        }
+                    } catch (e: Exception){
+                        e.message.toString()
+                    }
                     AppLogger.error("void HTTP error ${e.code()}: $errorMessage")
                 } catch (e: Exception) {
                     AppLogger.error("Void attempt $currentAttempt failed: ${e.message}", e)

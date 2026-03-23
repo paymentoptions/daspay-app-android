@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.settlement
 
-import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -60,15 +59,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.endpoints.settleBatch
-import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 
 const val SETTLED_BATCH = "settled"
 const val PENDING_BATCH = "pending"
@@ -89,9 +80,6 @@ fun BottomSectionContent(
     var settledBatches by remember { mutableStateOf<List<SettlementRecord>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var refreshList by remember { mutableStateOf(false) }
-    var processingScreenType by remember { mutableStateOf(StatusScreenType.PROCESSING) }
-    var processingMessage by remember { mutableStateOf("") }
-    val delayTime = 3000L
 
     // Fetch settlement data
     LaunchedEffect(refreshList) {
@@ -115,15 +103,7 @@ fun BottomSectionContent(
         }
     }
 
-    if(processingMessage.isNotEmpty()){
-        // Processing/Success/Error Screen Overlay using StatusScreen
-        val dataMessage = MessageForStatusScreen(
-            text = processingMessage,
-            statusScreenType = processingScreenType
-        )
 
-        StatusScreen(navController, dataMessage,{}, false)
-    } else {
 
         Column(
             modifier = Modifier
@@ -268,66 +248,60 @@ fun BottomSectionContent(
                         .fillMaxWidth()
                         .height(59.dp),
                     onClick = {
-                        processingMessage = "Processing Settlement"
                         isLoading = true
-                        CoroutineScope(Dispatchers.IO).launch {
-                            try {
-                                val response = settleBatch(context, pendingSettlement!!.BatchID)
-                                if (response != null && response.SettleStatus == SETTLED_BATCH) {
-                                    withContext(Dispatchers.Main) {
-                                        processingScreenType = StatusScreenType.SUCCESS
-                                        processingMessage = "Settlement Completed"
-                                    }
-                                    // Wait 5 seconds
-                                    delay(delayTime)
-                                    withContext(Dispatchers.Main) {
-                                        processingMessage = ""
-                                        pendingSettlement = null
-                                        settledBatches = emptyList()
-                                        isLoading = true
-                                        refreshList = !refreshList
-                                    }
-                                }
-                            } catch (e: retrofit2.HttpException) {
-                                val errorBody = e.response()?.errorBody()?.string()
-                                AppLogger.error("settle HTTP error ${e.code()}: $errorBody")
-//                                withContext(Dispatchers.Main) {
-//                                    Toast.makeText(
-//                                        context,
-//                                        "Batch Error: $errorBody",
-//                                        Toast.LENGTH_SHORT
-//                                    ).show()
+                        navController.navigate(Screens.SettlementAction.createRoute(pendingSettlement!!.BatchID))
+//
+//                        CoroutineScope(Dispatchers.IO).launch {
+//                            try {
+//                                val response = settleBatch(context, pendingSettlement!!.BatchID)
+//                                if (response != null && response.SettleStatus == SETTLED_BATCH) {
+//                                    withContext(Dispatchers.Main) {
+//                                        processingScreenType = StatusScreenType.SUCCESS
+//                                        processingMessage = "Settlement Completed"
+//                                    }
+//                                    // Wait 5 seconds
+//                                    delay(delayTime)
+//                                    withContext(Dispatchers.Main) {
+//                                        processingMessage = ""
+//                                        pendingSettlement = null
+//                                        settledBatches = emptyList()
+//                                        isLoading = true
+//                                        refreshList = !refreshList
+//                                    }
 //                                }
-                                withContext(Dispatchers.Main) {
-                                    processingScreenType = StatusScreenType.ERROR
-                                    processingMessage = "Settlement Failed"
-                                }
-                                // Wait 5 seconds
-                                delay(delayTime)
-                                withContext(Dispatchers.Main) {
-                                    processingMessage = ""
-                                }
-                            } catch (e: Exception) {
-                                AppLogger.error("settle: $e")
-                                withContext(Dispatchers.Main) {
-                                    processingScreenType = StatusScreenType.ERROR
-                                    processingMessage = "Settlement Failed"
-                                }
-                                // Wait 5 seconds
-                                delay(delayTime)
-                                withContext(Dispatchers.Main) {
-                                    processingMessage = ""
-                                }
-                            } finally {
-                                withContext(Dispatchers.Main) {
-                                    isLoading = false
-                                }
-                            }
-                        }
+//                            } catch (e: retrofit2.HttpException) {
+//                                val errorBody = e.response()?.errorBody()?.string()
+//                                AppLogger.error("settle HTTP error ${e.code()}: $errorBody")
+//                                withContext(Dispatchers.Main) {
+//                                    processingScreenType = StatusScreenType.ERROR
+//                                    processingMessage = "Settlement Failed"
+//                                }
+//                                // Wait 5 seconds
+//                                delay(delayTime)
+//                                withContext(Dispatchers.Main) {
+//                                    processingMessage = ""
+//                                }
+//                            } catch (e: Exception) {
+//                                AppLogger.error("settle: $e")
+//                                withContext(Dispatchers.Main) {
+//                                    processingScreenType = StatusScreenType.ERROR
+//                                    processingMessage = "Settlement Failed"
+//                                }
+//                                // Wait 5 seconds
+//                                delay(delayTime)
+//                                withContext(Dispatchers.Main) {
+//                                    processingMessage = ""
+//                                }
+//                            } finally {
+//                                withContext(Dispatchers.Main) {
+//                                    isLoading = false
+//                                }
+//                            }
+//                        }
                     }
                 )
             }
-        }
+
     }
 }
 
@@ -547,7 +521,7 @@ fun formatDate(dateString: String): String {
 
         val outputFormat = SimpleDateFormat("yyyy/MM/dd HH:mm:ss (z)", Locale.getDefault())
         date?.let { outputFormat.format(it) } ?: dateString
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         dateString
     }
 }

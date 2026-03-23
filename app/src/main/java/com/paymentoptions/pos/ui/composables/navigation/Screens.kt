@@ -38,6 +38,9 @@ sealed class Screens(val route: String) {
     object Settings : Screens(route = "Settings")
     object HelpAndSupport : Screens(route = "HelpAndSupport")
     object Settlement : Screens(route = "Settlement")
+    object SettlementAction : Screens(route = "SettlementAction/{settleId}"){
+        fun createRoute(settleId: String) = "SettlementAction/${java.net.URLEncoder.encode(settleId, "UTF-8")}"
+    }
     object SendLogs : Screens(route = "SendLogs")
     //------------------------------------------------------------------
 

@@ -135,10 +135,11 @@ fun TransactionFilter(navController: NavController) {
                 }
             },
             { dateFilterSelected = false })
-    } else {
-        fromDateCustomFilter = null
-        toDateCustomFilter = null
     }
+//    else {
+//        fromDateCustomFilter = null
+//        toDateCustomFilter = null
+//    }
 
     fun updateReceivalAmount(newAmount: Float) {
         receivalAmount = newAmount
@@ -147,15 +148,13 @@ fun TransactionFilter(navController: NavController) {
     fun resetFilter() {
         transactions = emptyList()
         showFilterQuery = true
-        receivalForTimePeriodText = "Today"
-        fromDateCustomFilter = null
         apiResponseAvailable = false
     }
 
     fun getTransactionType(transactionType: String): String? {
         if (transactionType == ALL) return null;
         when (transactionType) {
-            "SALE" -> return "SALE,AUTHORISATION"
+            "SALE" -> return "PURCHASE,AUTHORISATION"
             "REFUND" -> return "REFUND"
             "VOID" -> return "VOIDAUTHORISATION"
         }
@@ -251,7 +250,8 @@ fun TransactionFilter(navController: NavController) {
                                     modifier = Modifier
                                         .size(24.dp)
                                         .clickable {
-                                            dateFilterSelected = !dateFilterSelected
+                                            fromDateCustomFilter = null
+                                            dateFilterSelected = true
                                         }
                                 )
                             }
