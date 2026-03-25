@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.services.apiService.toTransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
@@ -47,8 +48,9 @@ fun Transactions(
 
             var skip = true
 
-            if ((selectedFilterKey == "ALL" || (selectedFilterKey == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selectedFilterKey == transaction.TransactionType.uppercase())) skip =
-                false
+            if ((selectedFilterKey == "ALL" || (selectedFilterKey == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND")
+                        || selectedFilterKey == transaction.TransactionType.uppercase()))
+                skip = false
 
             if (!skip) {
                 val transactionListRecord = transaction.toTransactionListDataRecord()
@@ -90,6 +92,8 @@ fun Transactions(
                 )
             }
         }
+        AppLogger.debug("total transactions : ${transactions.size} and earningAmount : $earningAmount")
+
         updateReceivalAmount(earningAmount)
     }
 }

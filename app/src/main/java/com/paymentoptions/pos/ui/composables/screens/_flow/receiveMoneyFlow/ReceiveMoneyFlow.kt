@@ -163,10 +163,10 @@ fun ReceiveMoneyFlow(
         val (isNfcSupported, _) = nfcStatusPair
         if (isNfcSupported) {
             // If NFC is supported (even if disabled), show all payment methods
-            paymentMethods
+            paymentMethods(context)
         } else {
             // If NFC is not supported, filter out the 'Tap' payment method
-            paymentMethods.filter { it != tapPaymentMethod }
+            paymentMethods(context).filter { it != tapPaymentMethod }
         }
     }
     var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(availablePaymentMethods.first()) }
@@ -220,7 +220,7 @@ fun ReceiveMoneyFlow(
         Toast.makeText(context, "Your device does not support NFC", Toast.LENGTH_SHORT).show()
     }
     */
-    if (!apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
+    if (availablePaymentMethods.contains(qrCodePaymentMethod) && !apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
         qrCodePaymentMethod.setIsEnabled(false)
         Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
     }

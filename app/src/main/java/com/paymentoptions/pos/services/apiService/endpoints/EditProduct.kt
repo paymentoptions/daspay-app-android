@@ -15,7 +15,7 @@ import java.io.File
  */
 suspend fun editProduct(context: Context, request: ProductRequest,foodItem: FoodItem,
                         selectedFile: File?): ProductResponse? {
-    try {
+
         val tokenRepository = TokenRepository.getInstance(context)
         val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
 
@@ -31,8 +31,4 @@ suspend fun editProduct(context: Context, request: ProductRequest,foodItem: Food
             uploadMediaToProduct(context, requestHeaders, editProductResponse.data.ProductID, selectedFile)
         }
         return editProductResponse
-    } catch (e: Exception) {
-        AppLogger.error("editProduct Error: $e")
-        throw e
-    }
 }

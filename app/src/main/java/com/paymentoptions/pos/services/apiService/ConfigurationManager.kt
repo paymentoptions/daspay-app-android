@@ -6,6 +6,14 @@ import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.endpoints.configDownload
 
+
+/**
+ * {"statusCode":200,"message":"successful","messageCode":"INFO_CONFIG_0000",
+ * "success":true,"data":[{"ID":5,"AppENV":"DEV","BaseAPIURL":"https://api-dev.paymentoptions.com/api/v1",
+ * "RegistryLogin":"DEV_LOGIN","RegistryToken":"DEV_TOKEN","PrevAppVersion":1,"CurrAppVersion":1,
+ * "IsUpdateMandatory":true,"TransactionDetailsURL":"https://me.paymentoptions.com/daspay-transaction-details/"}]}
+ *
+ */
 object ConfigurationManager {
 
     @Volatile
@@ -25,7 +33,7 @@ object ConfigurationManager {
 
                 val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
                 if(savedBaseUrl != appConfig.BaseAPIURL)
-                    DPSharedPreferences.storeBaseUrl(context, appConfig.BaseAPIURL)
+                    DPSharedPreferences.storeAppConfig(context, appConfig)
 
                 // Reset RetrofitClient to use new base URL
                 RetrofitClient.reset()
@@ -65,7 +73,7 @@ object ConfigurationManager {
 
             if (appConfig != null) {
                 AppLogger.debug("Config refreshed successfully. Base URL: ${appConfig.BaseAPIURL}")
-                DPSharedPreferences.storeBaseUrl(context, appConfig.BaseAPIURL)
+                DPSharedPreferences.storeAppConfig(context, appConfig)
 
                 // Reset RetrofitClient to use new base URL
                 RetrofitClient.reset()

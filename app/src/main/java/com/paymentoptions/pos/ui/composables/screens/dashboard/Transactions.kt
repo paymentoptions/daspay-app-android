@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.utils.getTransactionAmount
@@ -43,15 +44,32 @@ fun Transactions(
         modifier = Modifier.fillMaxSize()
     ) {
         var earningAmountTodayOnly = 0.0f
-        transactions.forEachIndexed { index, transaction ->
-                earningAmountTodayOnly += getTransactionAmount(transaction)
+        val today = OffsetDateTime.now()
 
-                item {
-                    TransactionSummary(
-                        navController, transaction,
-                    )
+        transactions.forEachIndexed { index, transaction ->
+                var skip = true
+
+                if ((selectedFilterKey == "ALL" || (selectedFilterKey == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") ||
+                        selectedFilterKey == transaction.TransactionType.uppercase()))
+                  skip = false
+
+                if (!skip) {
+                    val transactionDate = OffsetDateTime.parse(transaction.Date)
+
+                    if (transactionDate.dayOfMonth == today.dayOfMonth && transactionDate.year == today.year)
+                        earningAmountTodayOnly += getTransactionAmount(transaction)
+
+                    item {
+                        TransactionSummary(
+                            navController, transaction,
+                        )
+                    }
                 }
         }
+        AppLogger.debug("total transactions : ${transactions.size} and earningAmountTodayOnly : $earningAmountTodayOnly")
+
+
+        updateReceivalAmount(earningAmountTodayOnly)
 
 /*//        transactions.forEachIndexed { index, transaction ->
 //
@@ -108,6 +126,6 @@ fun Transactions(
 //                }
 //            }
 //        }*/
-        updateReceivalAmount(earningAmountTodayOnly)
+
     }
 }

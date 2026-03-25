@@ -101,7 +101,7 @@ fun TransactionSummary(
     // Format the amount with sign
     val formattedAmount = when (amountSign) {
         "+" -> "+${"%.2f".format(transaction.amount.toFloat())}"
-        "-" -> "+${"%.2f".format(transaction.amount.toFloat())}"
+        "-" -> "-${"%.2f".format(transaction.amount.toFloat())}"
         else -> "%.2f".format(transaction.amount.toFloat())
     }
 

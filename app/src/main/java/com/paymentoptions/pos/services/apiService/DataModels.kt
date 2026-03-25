@@ -72,6 +72,7 @@ data class TransactionListV2RequestFilter(
     val field: String,
     val operator: String,
     val value: String,
+    val operand: String? = null
 )
 
 data class TransactionListV2Request(
@@ -155,11 +156,11 @@ data class TransactionListResponse(
 )
 // -------------------------------------------------------
 
-data class RefundRequest(
-    val id: String,
-    val merchant_id: String,
-    val refundAmount: Int,
-)
+//data class RefundRequest(
+//    val id: String,
+//    val merchant_id: String,
+//    val refundAmount: Int,
+//)
 
 data class GatewayResponse(
     val version: String,
@@ -327,12 +328,12 @@ data class PaymentResponse(
 // -------------------------------------------------------
 
 // Payment status related ----------------------------------
-
-@Serializable
-data class PaymentStatusAmount(
-    val currency: String,
-    val value: Float,
-)
+//
+//@Serializable
+//data class PaymentStatusAmount(
+//    val currency: String,
+//    val value: Float,
+//)
 
 data class PaymentStatusRequest(
     val tranId: String?,
@@ -367,17 +368,17 @@ data class PaymentStatusRequest(
     val acquirerResponse: String = "",
 )
 
-data class PaymentStatusResponseData(
-    val foo: String,
-)
+//data class PaymentStatusResponseData(
+//    val foo: String,
+//)
 
-data class PaymentStatusResponse(
-    val statusCode: Int,
-    val message: String,
-    val messageCode: String,
-    val success: Boolean,
-    val data: PaymentStatusResponseData,
-)
+//data class PaymentStatusResponse(
+//    val statusCode: Int,
+//    val message: String,
+//    val messageCode: String,
+//    val success: Boolean,
+//    val data: PaymentStatusResponseData,
+//)
 // -------------------------------------------------------
 
 // PayByLink related ----------------------------------
@@ -871,7 +872,11 @@ data class AppConfig (
     val AppENV: String,
     val BaseAPIURL: String,
     val RegistryLogin: String,
-    val RegistryToken: String
+    val RegistryToken: String,
+    val PrevAppVersion: Long,
+    val CurrAppVersion: Long,
+    val IsUpdateMandatory: Boolean,
+    val TransactionDetailsURL: String
 )
 
 data class SettlementListResponse (
@@ -888,7 +893,7 @@ data class SettlementData (
     val records: List<SettlementRecord>
 )
 
-data class SettlementRecord (
+data class SettlementRecord  constructor(
     val ID: Long,
     val uuid: String,
     val BatchID: String,

@@ -555,6 +555,10 @@ fun EditProductSectionContent(
                                 selectedFile = uriToTempFile(context, imageUri),
                                 )
                             addFoodResponse?.statusCode == 200L || addFoodResponse?.statusCode == 201L // success
+                        } catch (e: retrofit2.HttpException) {
+                            errorMessage = "Something went wrong.."
+                            AppLogger.error("edit product HTTP error ${e.code()}: ${e.message()}")
+                            false
                         } catch (e: Exception) {
                             errorMessage = e.message ?: "Failed to add product."
                             AppLogger.error(e)

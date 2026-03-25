@@ -37,6 +37,7 @@ import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.TransactionListV2RequestFilter
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -51,6 +52,8 @@ import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 @Composable
@@ -62,10 +65,29 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var viewAll by remember { mutableStateOf(false) }
     var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
-    val take by remember { derivedStateOf { if (viewAll) 20 else 15 } }
+    val take by remember { derivedStateOf { if (viewAll) 100 else 100 } }
     var currentPage by remember { mutableIntStateOf(1) }
     var maxPage by remember { mutableIntStateOf(0) }
     val lazyColumnState = rememberLazyListState()
+
+    val today = LocalDate.now()
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
+    val dateStart = today.format(dateFormatter) + " 00:00:00"
+    val dateEnd = today.format(dateFormatter) + " 23:59:59"
+
+    val filters = listOf(
+        TransactionListV2RequestFilter(
+            field = "DateStart",
+            operator = "eq",
+            value = dateStart,
+        ),
+        TransactionListV2RequestFilter(
+            field = "DateEnd",
+            operator = "eq",
+            value = dateEnd,
+            operand = "AND"
+        )
+    )
 
     val scrollingEndReached by remember {
         derivedStateOf { lazyColumnState.isScrolledToTheEnd() }
@@ -89,12 +111,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         try {
             currentPage = 1
             val skip = 0
-            val transactionListFromAPI = transactionListV2(context, take, skip)
+            val transactionListFromAPI = transactionListV2(context, take, skip, if(viewAll) emptyList() else filters)
             if (transactionListFromAPI != null) {
                 maxPage = ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
                 totalTransactionCount = transactionListFromAPI.data.total_count
                 transactions = transactionListFromAPI.data.records.filterNotNull()
-                receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
+               // receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
             }
         } catch (e: Exception) {
             if (e.toString().contains("HTTP 401")) {
@@ -126,7 +148,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            val transactionListFromAPI = transactionListV2(context, take, skip)
+            val transactionListFromAPI = transactionListV2(context, take, skip, if(viewAll) emptyList() else filters)
 
             if (transactionListFromAPI != null) {
                 maxPage =
@@ -144,7 +166,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 }
 
                 //set receival amount from API total_amount field (rounded to two decimal place)
-                receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
+              //  receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
             }
         } catch (e: Exception) {
 
@@ -232,7 +254,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 ) {
 
                     Text(
-                        text = if (viewAll) "All Transactions" else "Recent Transactions",
+                        text = if (viewAll) "All Transactions" else "Today's Transactions",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = primary500,
@@ -257,7 +279,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 Transactions(
                     navController,
                     transactions = transactions,
-                    lazyColumnState = lazyColumnState
+                    lazyColumnState = lazyColumnState,
+                    updateReceivalAmount = {
+                        receivalAmount = it
+                    }
                 )
             }
         }

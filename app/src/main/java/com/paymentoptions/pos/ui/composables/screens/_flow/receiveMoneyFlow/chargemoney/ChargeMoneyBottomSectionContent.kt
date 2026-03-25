@@ -196,30 +196,35 @@ fun ChargeMoneyBottomSectionContent(
             .verticalScroll(state = rememberScrollState(), enabled = enableScrolling),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .background(iconBackgroundColor)
-                .innerShadow(
-                    color = innerShadow,
-                    blur = 8.dp,
-                    spread = 5.dp,
-                    cornersRadius = 8.dp,
-                    offsetX = 0.dp,
-                    offsetY = 0.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-//            paymentMethods.filter { it.isEnabled }.forEach {
-            availablePaymentMethods.filter { it.isEnabled }.forEach {
-                PaymentMethodButton(
-                    paymentMethod = it,
-                    selectedPaymentMethod = selectedPaymentMethod,
-                    onSelected = { updateSelectedPaymentMethod(it) },
-                    modifier = Modifier.weight(1f)
-                )
+
+        if(availablePaymentMethods.size == 1){
+            // select the one item by default
+            updateSelectedPaymentMethod(availablePaymentMethods.first())
+        } else {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(iconBackgroundColor)
+                    .innerShadow(
+                        color = innerShadow,
+                        blur = 8.dp,
+                        spread = 5.dp,
+                        cornersRadius = 8.dp,
+                        offsetX = 0.dp,
+                        offsetY = 0.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                availablePaymentMethods.filter { it.isEnabled }.forEach {
+                    PaymentMethodButton(
+                        paymentMethod = it,
+                        selectedPaymentMethod = selectedPaymentMethod,
+                        onSelected = { updateSelectedPaymentMethod(it) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
 

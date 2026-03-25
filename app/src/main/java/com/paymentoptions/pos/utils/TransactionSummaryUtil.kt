@@ -2,6 +2,7 @@ package com.paymentoptions.pos.utils
 
 import androidx.compose.ui.graphics.Color
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 
 // Status Colors
@@ -65,7 +66,7 @@ fun getAmountSign(transaction: TransactionListDataRecord): String {
     val settleStatus = transaction.SettleStatus?.uppercase() ?: ""
     val transactionType = transaction.TransactionType.uppercase()
 
-    return when {
+    val result =  when {
         // Not Successful - No sign
         status == "NOTSUCCESSFUL" || settleStatus == "FAILED" -> ""
 
@@ -81,6 +82,10 @@ fun getAmountSign(transaction: TransactionListDataRecord): String {
         // Default - No sign
         else -> ""
     }
+
+    AppLogger.debug("getAmountSign", "status: $status, settleStatus: $settleStatus, transactionType: $transactionType, result: $result")
+
+    return result
 }
 
 fun getTransactionAmount(transaction: TransactionListDataRecord): Float {

@@ -6,11 +6,16 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AccessLevel
+import com.paymentoptions.pos.services.apiService.AppConfig
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Apms
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Schemes
 import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
+import com.paymentoptions.pos.utils.PaymentMethod
+import com.paymentoptions.pos.utils.qrCodePaymentMethod
+import com.paymentoptions.pos.utils.tapPaymentMethod
+import com.paymentoptions.pos.utils.viaLinkPaymentMethod
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -212,7 +217,7 @@ object DPSharedPreferences {
         }
 
     fun getTransactionCurrency(context: Context): String {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var transactionCurrency = ""
 
         externalDeviceConfiguration?.let {
@@ -225,7 +230,7 @@ object DPSharedPreferences {
     }
 
     fun getSettlementCurrency(context: Context): String {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var settlementCurrency = ""
 
         externalDeviceConfiguration?.let {
@@ -236,7 +241,7 @@ object DPSharedPreferences {
 
     //SOFTPOS DASMID
     fun getTapPayDasmid(context: Context): String {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var dasmid = ""
 
         externalDeviceConfiguration?.let {
@@ -250,9 +255,32 @@ object DPSharedPreferences {
         return dasmid
     }
 
+    fun getAvailablePaymentsList(context: Context): List<PaymentMethod> {
+        val externalDeviceConfiguration = getDeviceConfiguration(context) ?: return emptyList()
+
+        val availableTypes = externalDeviceConfiguration.data.paymentMethod
+            .map { it.Type }
+            .toSet()
+
+        val supportedPayments = mutableListOf<PaymentMethod>()
+
+        if ("SOFTPOS" in availableTypes) {
+            supportedPayments.add(tapPaymentMethod)
+        }
+        if ("QR" in availableTypes) {
+            supportedPayments.add(qrCodePaymentMethod)
+        }
+        if ("PBL" in availableTypes) {
+            supportedPayments.add(viaLinkPaymentMethod)
+        }
+
+        return supportedPayments
+    }
+
+
     //QP DASMID
     fun getQRDasmid(context: Context): String {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var dasmid = ""
 
         externalDeviceConfiguration?.let {
@@ -268,7 +296,7 @@ object DPSharedPreferences {
 
     //PBl DASMID
     fun getPayByLinkDasmid(context: Context): String {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var dasmid = ""
 
         externalDeviceConfiguration?.let {
@@ -284,7 +312,7 @@ object DPSharedPreferences {
 
     //this function will extract schemes from the external device configuration in which the payment method type is SOFTPOS
     fun getSchemes(context: Context): DevicePaymentMethod_Schemes {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var schemes = DevicePaymentMethod_Schemes()
 
         externalDeviceConfiguration?.let {
@@ -300,7 +328,7 @@ object DPSharedPreferences {
 
     //this function will extract apms from the external device configuration in which the payment method type is QR
     fun getApms(context: Context): DevicePaymentMethod_Apms {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var apms = DevicePaymentMethod_Apms()
 
         externalDeviceConfiguration?.let {
@@ -316,7 +344,7 @@ object DPSharedPreferences {
     }
 
     fun getDeviceId(context: Context): String? {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var deviceId: String? = null
 
         externalDeviceConfiguration?.let {
@@ -325,17 +353,26 @@ object DPSharedPreferences {
         return deviceId
     }
 
-    fun storeBaseUrl(context: Context, baseAPIURL: String) = runBlocking{
+    fun storeAppConfig(context: Context, appConfig: AppConfig) = runBlocking{
         val sharedPreferences = getSecurePrefs(context)
         with(sharedPreferences.edit()) {
-            putString("base_api_url", baseAPIURL)
+            putString("BaseAPIURL", appConfig.BaseAPIURL)
+            putString("TransactionDetailsURL", appConfig.TransactionDetailsURL)
             apply()
         }
     }
 
     fun getBaseUrl(context: Context): String?{
         val sharedPreferences = getSecurePrefs(context)
-        return  sharedPreferences.getString("base_api_url", "")
+        return  sharedPreferences.getString("BaseAPIURL", "")
     }
+
+    fun getTransactionDetailsUrl(context: Context): String?
+    {
+        val sharedPreferences = getSecurePrefs(context)
+        return sharedPreferences.getString("TransactionDetailsURL", "")
+    }
+
+
 
 }
