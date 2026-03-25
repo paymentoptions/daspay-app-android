@@ -84,7 +84,17 @@ fun Navigator() {
         //------------------------------------------------------------------
 
         // More Menu Items ------------------------------------------------
-        composable(Screens.TransactionHistory.route) { TransactionHistoryScreen(navController) }
+        composable("${Screens.TransactionHistory.route}?showBarChart={showBarChart}", arguments = listOf(
+            navArgument("showBarChart") {
+                type = NavType.BoolType
+            },
+        )) { backStackEntry->
+
+            TransactionHistoryScreen(
+                navController,
+                backStackEntry.arguments?.getBoolean("showBarChart") ?: false
+                )
+        }
         composable(
             route = "${Screens.TransactionReceipt.route}?transactionId={transactionId}&title={title}&amount={amount}&refrenceId={refrenceId}&aggregator={aggregator}&dateString={dateString}",
             arguments = listOf(

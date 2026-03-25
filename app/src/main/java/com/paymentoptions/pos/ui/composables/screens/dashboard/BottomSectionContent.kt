@@ -63,9 +63,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
     var firstPageFetch by remember { mutableStateOf(false) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
-    var viewAll by remember { mutableStateOf(false) }
     var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
-    val take by remember { derivedStateOf { if (viewAll) 100 else 100 } }
+    val take by remember { derivedStateOf { 100 } }
     var currentPage by remember { mutableIntStateOf(1) }
     var maxPage by remember { mutableIntStateOf(0) }
     val lazyColumnState = rememberLazyListState()
@@ -111,7 +110,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         try {
             currentPage = 1
             val skip = 0
-            val transactionListFromAPI = transactionListV2(context, take, skip, if(viewAll) emptyList() else filters)
+            val transactionListFromAPI = transactionListV2(context, take, skip, filters)
             if (transactionListFromAPI != null) {
                 maxPage = ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
                 totalTransactionCount = transactionListFromAPI.data.total_count
@@ -136,19 +135,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         }
     }
 
-    LaunchedEffect(viewAll) {
-        if (!viewAll) {
-            currentPage = 1
-            transactions = listOf<TransactionListDataRecord>()
-            firstPageFetch = false
-        }
-    }
-
     LaunchedEffect(currentPage, take) {
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            val transactionListFromAPI = transactionListV2(context, take, skip, if(viewAll) emptyList() else filters)
+            val transactionListFromAPI = transactionListV2(context, take, skip, filters)
 
             if (transactionListFromAPI != null) {
                 maxPage =
@@ -188,7 +179,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         }
     }
 
-    if (scrollingEndReached && viewAll) LaunchedEffect(Unit) {
+    if (scrollingEndReached) LaunchedEffect(Unit) {
         nextPageHandler()
     }
 
@@ -235,7 +226,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 if(DPSharedPreferences.isAdmin(context)) {
                     FilledButton(
                         text = "View Insights",
-                        onClick = { navController.navigate(Screens.TransactionHistory.route) },
+                        onClick = {
+                            navController.navigate("${Screens.TransactionHistory.route}?showBarChart=${true}")
+                                  },
                         modifier = Modifier
                             .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                             .width(160.dp)
@@ -254,15 +247,18 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 ) {
 
                     Text(
-                        text = if (viewAll) "All Transactions" else "Today's Transactions",
+                        text = "Today's Transactions",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = primary500,
                     )
 
-                    SuggestionChip(border = borderThin, onClick = { viewAll = !viewAll }, label = {
+                    SuggestionChip(border = borderThin, onClick = {
+                        navController.navigate("${Screens.TransactionHistory.route}?showBarChart=${false}")
+
+                    }, label = {
                         Text(
-                            text = if (viewAll) "View recent" else "View All",
+                            text = "View All",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )

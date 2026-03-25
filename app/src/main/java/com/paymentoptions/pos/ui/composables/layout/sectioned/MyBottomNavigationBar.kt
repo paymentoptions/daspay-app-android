@@ -109,7 +109,7 @@ val query = BottomNavigationBarItem(
 val transactionHistory = BottomNavigationBarItem(
     title = "Transaction History",
     icon = Icons.Outlined.CreditCard,
-    route = Screens.TransactionHistory.route
+    route = "${Screens.TransactionHistory.route}?showBarChart=${false}"
 )
 
 val settlement = BottomNavigationBarItem(
