@@ -195,7 +195,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 navController.navigate(Screens.Token.route)
                             }
                         }
-                    } catch (_: Exception) {
+                    } catch (e: Exception){
+                        AppLogger.error("signIn error: $e")
                         Toast.makeText(context, "Invalid Credentials", Toast.LENGTH_LONG).show()
                     } finally {
                         isLoading = false

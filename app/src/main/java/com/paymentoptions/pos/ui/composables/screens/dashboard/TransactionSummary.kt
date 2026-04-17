@@ -66,6 +66,7 @@ import com.paymentoptions.pos.utils.timeAgo
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
+import java.util.Locale
 
 var TRANSACTION_TO_BE_REFUNDED: TransactionListDataRecord? = null
 

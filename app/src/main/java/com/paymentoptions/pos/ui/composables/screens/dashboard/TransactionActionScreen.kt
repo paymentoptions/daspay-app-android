@@ -631,7 +631,7 @@ fun TransactionActionScreen(
                         modifier = Modifier
                             .weight(1f)
                             .clickable {
-                                showBottomSheet = false
+                                showBottomSheet = !showBottomSheet
                                 when (targetAction) {
                                     TransactionAction.VOID -> doVoid(transaction)
                                     TransactionAction.REFUND -> doRefund(transaction)

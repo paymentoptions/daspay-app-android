@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
@@ -216,6 +217,20 @@ fun MyBottomNavigationBar(
         },
         onDismissFn = { showSignOutConfirmationDialog = false })
 
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route.orEmpty()
+
+    val isHomeSelected = currentRoute.startsWith(Screens.Dashboard.route) && !showMoreItems
+    val isFoodSelected = currentRoute.startsWith(Screens.FoodOrderFlow.route) && !showMoreItems
+    val isReceiveMoneySelected = currentRoute.startsWith(Screens.ReceiveMoneyFlow.route) && !showMoreItems
+    val isQuerySelected = currentRoute.startsWith(Screens.QueryScreen.route) && !showMoreItems
+    val isMoreRoute = currentRoute.startsWith(Screens.TransactionHistory.route) ||
+        currentRoute.startsWith(Screens.Settlement.route) ||
+        currentRoute.startsWith(Screens.Settings.route) ||
+        currentRoute.startsWith(Screens.HelpAndSupport.route) ||
+        currentRoute.startsWith(Screens.SendLogs.route)
+    val isMoreSelected = showMoreItems || isMoreRoute
+
     Column(modifier = modifier) {
 
         val modifier1 = if (showMoreItems) Modifier.clip(
@@ -285,6 +300,7 @@ fun MyBottomNavigationBar(
             Item(
                 home,
                 modifier = Modifier.weight(1f),
+                isSelected = isHomeSelected,
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
@@ -298,12 +314,16 @@ fun MyBottomNavigationBar(
                                 saveState = true
                             }
                         }
+                        if(showMoreItems){
+                            onClickShowMoreItems()
+                        }
                     }
                 })
 
             Item(
                 foodMenu,
                 modifier = Modifier.weight(1f),
+                isSelected = isFoodSelected,
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
@@ -325,11 +345,15 @@ fun MyBottomNavigationBar(
                             popUpTo(foodMenu.route) { inclusive = true }
                         }
                     }
+                    if(showMoreItems){
+                        onClickShowMoreItems()
+                    }
                 })
 
             Item(
                 receiveMoney,
                 modifier = Modifier.weight(1.5f),
+                isSelected = isReceiveMoneySelected,
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
@@ -343,13 +367,18 @@ fun MyBottomNavigationBar(
                                 saveState = true
                             }
                         }
+                        if(showMoreItems){
+                            onClickShowMoreItems()
+                        }
                     }
                 })
 
             Item(
                 query,
                 modifier = Modifier.weight(1f),
+                isSelected = isQuerySelected,
                 onSelected = {
+
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
@@ -362,12 +391,17 @@ fun MyBottomNavigationBar(
                                 saveState = true
                             }
                         }
+                        if(showMoreItems){
+                            onClickShowMoreItems()
+                        }
                     }
-                })
+                }
+            )
 
             Item(
                 more,
                 modifier = Modifier.weight(1f),
+                isSelected = isMoreSelected,
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
@@ -389,6 +423,7 @@ fun Item(
     minLines: Int = 1,
     maxLines: Int = 1,
     inMore: Boolean = false,
+    isSelected: Boolean = false,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable {
@@ -400,20 +435,27 @@ fun Item(
             modifier = Modifier
                 .size(if (inMore) 51.dp else 39.dp)
                 .clip(RoundedCornerShape(50))
-                .background(if (item.hideIcon || !inMore) Color.Transparent else iconBackgroundColor),
+                .background(
+                    when {
+                        inMore -> iconBackgroundColor
+                        item.hideIcon -> Color.Transparent
+                      //  isSelected -> iconBackgroundColor
+                        else -> Color.Transparent
+                    }
+                ),
             contentAlignment = Alignment.Center
         ) {
             if (!item.hideIcon) if (item.svgIcon != null) Icon(
                 painter = painterResource(R.drawable.query_icon),
                 contentDescription = item.title,
                 modifier = Modifier.size(24.dp),
-                tint = primary500
+                tint =  if (isSelected) primary100 else primary500
             )
             else Icon(
                 imageVector = item.icon,
                 contentDescription = item.title,
                 modifier = Modifier.size(24.dp),
-                tint = primary500
+                tint = if (isSelected) primary100 else primary500
             )
         }
 
@@ -425,8 +467,13 @@ fun Item(
             minLines = minLines,
             maxLines = maxLines,
             fontSize = if (inMore) 14.sp else 12.sp,
-            fontWeight = if (inMore) FontWeight.Normal else FontWeight.SemiBold,
-            color = if (item.hideIcon) primary100 else primary500,
+            fontWeight = if (inMore) FontWeight.Normal else if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = when {
+                inMore -> primary500
+                item.hideIcon -> if (isSelected) primary100 else primary500
+                isSelected -> primary100
+                else -> primary500
+            },
         )
     }
 }

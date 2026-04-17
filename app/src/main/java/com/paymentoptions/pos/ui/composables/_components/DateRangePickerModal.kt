@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
@@ -22,7 +23,15 @@ fun DateRangePickerModal(
     onDateSelected: (Long?, Long?) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val dateRangePickerState = rememberDateRangePickerState()
+    val today = System.currentTimeMillis()
+
+    val dateRangePickerState = rememberDateRangePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis <= today
+            }
+        }
+    )
 
     DatePickerDialog(onDismissRequest = onDismiss, confirmButton = {
         TextButton(

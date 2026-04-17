@@ -30,8 +30,8 @@ android {
         applicationId = "com.paymentoptions.pos"
         minSdk = 29
         targetSdk = 36
-        versionCode = 1
-        versionName = "2.0"
+        versionCode = 3
+        versionName = "3.0"
 
 
         val appName = "Daspay"

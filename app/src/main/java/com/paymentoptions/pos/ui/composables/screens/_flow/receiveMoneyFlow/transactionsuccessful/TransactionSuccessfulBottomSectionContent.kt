@@ -233,7 +233,7 @@ fun TransactionSuccessfulBottomSectionContent(
                 amount = String.format(
                     Locale.US,
                     "%.2f",
-                    paymentDetailsLatestResponse?.data?.Amount ?: 0.0
+                    paymentDetailsLatestResponse?.data?.Amount ?: 0.00
                 )
             )
 

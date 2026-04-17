@@ -46,7 +46,7 @@ suspend fun completeDeviceRegistration(
         val errorBody = e.response()?.errorBody()?.string()
         //if the error is the specific "Device already registered" case
         android.util.Log.e("API_ERROR_RESPONSE", "HTTP ${e.code()}: $errorBody")
-        Result.failure(Exception("HTTP ${e.code()}: $errorBody"))
+        Result.failure(Exception(errorBody))
 
     } catch (e: Exception) {
         android.util.Log.e("API_ERROR_RESPONSE", "A general error occurred", e)

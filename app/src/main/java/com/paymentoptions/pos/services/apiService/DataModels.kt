@@ -25,7 +25,7 @@ data class SignInData(
     val appLevel: String,
     val contactNo: String,
     val referralCode: String,
-    val accessLevel: AccessLevel,
+    val accessLevel: AccessLevel?,
     val signInAsMerchant: Boolean,
     val passwordExpiry: String,
 )

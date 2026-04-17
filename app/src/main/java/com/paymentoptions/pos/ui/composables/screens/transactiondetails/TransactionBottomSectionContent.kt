@@ -95,6 +95,7 @@ fun TransactionBottomSectionContent(
     val currency = getTransactionCurrency(context)
     val scrollState = rememberScrollState()
     val amountValue = transaction?.amount?.toDoubleOrNull() ?: 0.0
+    AppLogger.debug("transaction clicked is : $transaction")
 
     val transactionUuid = transaction?.uuid
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
@@ -134,10 +135,10 @@ fun TransactionBottomSectionContent(
             + "$amountSign , transactionTypeLabel: $transactionTypeLabel, statusColor: $statusColor")
 
     // Format the amount with sign
-    val formattedAmount = when {
-        amountSign == "+" -> "+${transaction.amount}"
-        amountSign == "-" -> "-${transaction.amount}"
-        else -> transaction.amount
+    val formattedAmount = when (amountSign) {
+        "+" -> "+${"%.2f".format(transaction.amount.toFloat())}"
+        "-" -> "-${"%.2f".format(transaction.amount.toFloat())}"
+        else -> "%.2f".format(transaction.amount.toFloat())
     }
 
     val statusText = when {

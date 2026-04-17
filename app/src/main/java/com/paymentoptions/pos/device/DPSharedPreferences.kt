@@ -27,11 +27,32 @@ object DPSharedPreferences {
         const val sharedPreferencesLabel: String = "my_prefs"
 
         private fun getSecurePrefs(context: Context): android.content.SharedPreferences {
+            return try {
+                createEncryptedPrefs(context)
+            } catch (e: Throwable) {
+                // AEADBadTagException / KeyStoreException — encrypted prefs or master key corrupted.
+                AppLogger.error("EncryptedSharedPreferences corrupted, resetting: ${e.message}")
+                clearCorruptedPrefsFiles(context)
+                try {
+                    createEncryptedPrefs(context)
+                } catch (e2: Throwable) {
+                    // If still failing, delete the Android Keystore master key entry and try once more
+                    AppLogger.error("EncryptedSharedPreferences still corrupted after cleanup, deleting keystore entry: ${e2.message}")
+                    try {
+                        val keyStore = java.security.KeyStore.getInstance("AndroidKeyStore")
+                        keyStore.load(null)
+                        keyStore.deleteEntry(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+                    } catch (ignored: Throwable) { }
+                    clearCorruptedPrefsFiles(context)
+                    createEncryptedPrefs(context)
+                }
+            }
+        }
 
+        private fun createEncryptedPrefs(context: Context): android.content.SharedPreferences {
             val masterKey = MasterKey.Builder(context)
                 .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                 .build()
-            println("secure prefs called with master key: $masterKey")
             return EncryptedSharedPreferences.create(
                 context,
                 sharedPreferencesLabel,
@@ -39,6 +60,22 @@ object DPSharedPreferences {
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             )
+        }
+
+        private fun clearCorruptedPrefsFiles(context: Context) {
+            val prefsDir = context.applicationInfo.dataDir + "/shared_prefs/"
+            // 1. Remove the encrypted prefs file
+            java.io.File(prefsDir + sharedPreferencesLabel + ".xml").also {
+                if (it.exists()) it.delete()
+            }
+            // 2. Remove the Tink keyset prefs (used by EncryptedSharedPreferences internally)
+            java.io.File(prefsDir + "__androidx_security_crypto_encrypted_prefs__" + sharedPreferencesLabel + ".xml").also {
+                if (it.exists()) it.delete()
+            }
+            // 3. Also try without the pref name suffix (older versions of the library)
+            java.io.File(prefsDir + "__androidx_security_crypto_encrypted_prefs__.xml").also {
+                if (it.exists()) it.delete()
+            }
         }
 
         fun saveBoolean(context: Context, key: String, value: Boolean) = runBlocking {
@@ -225,6 +262,7 @@ object DPSharedPreferences {
                 it.data.paymentMethod.firstOrNull()?.TransactionCCY?.firstOrNull() ?: ""
 
         }
+        AppLogger.debug("transactionCurrency : $transactionCurrency")
 
         return transactionCurrency
     }
@@ -261,6 +299,8 @@ object DPSharedPreferences {
         val availableTypes = externalDeviceConfiguration.data.paymentMethod
             .map { it.Type }
             .toSet()
+
+        AppLogger.debug("available payments: $availableTypes")
 
         val supportedPayments = mutableListOf<PaymentMethod>()
 
