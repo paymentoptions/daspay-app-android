@@ -100,10 +100,14 @@ fun TransactionSummary(
             + "transactionIcon: $transactionIcon")
 
     // Format the amount with sign
-    val formattedAmount = when (amountSign) {
-        "+" -> "+${"%.2f".format(transaction.amount.toFloat())}"
-        "-" -> "-${"%.2f".format(transaction.amount.toFloat())}"
-        else -> "%.2f".format(transaction.amount.toFloat())
+    val formattedAmount = if(transaction.amount.toFloat() == 0.toFloat()){
+        "0.00"
+    } else {
+        when (amountSign) {
+            "+" -> "+${"%.2f".format(transaction.amount.toFloat())}"
+            "-" -> "-${"%.2f".format(transaction.amount.toFloat())}"
+            else -> "%.2f".format(transaction.amount.toFloat())
+        }
     }
 
     val dateStr = buildAnnotatedString {

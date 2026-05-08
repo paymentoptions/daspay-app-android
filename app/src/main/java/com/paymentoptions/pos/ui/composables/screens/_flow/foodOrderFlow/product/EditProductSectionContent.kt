@@ -193,7 +193,7 @@ fun EditProductSectionContent(
                     OutlinedTextInput(
                         state = productPrice,
                         label = "Product Price *",
-                        placeholder = BuildConfig.CURRENCY,
+                        placeholder =DPSharedPreferences.getTransactionCurrency(context),
                         onlyDigits = true,
                         disabled = DPSharedPreferences.isStaff(context),
                         modifier = Modifier.fillMaxWidth()
@@ -602,7 +602,7 @@ private fun getProductRequest(
         ProductCode = productCode.text.toString(),
         ProductStock = productStock.toLong(),
         ProductStatus = true,
-        Currency = BuildConfig.CURRENCY,
+        Currency = DPSharedPreferences.getTransactionCurrency(context),
         MerchantID = selectedFoodItem.item.MerchantID,
         CategoryID = selectedFoodItem.item.CategoryID,
     ) else {
@@ -613,7 +613,7 @@ private fun getProductRequest(
             ProductSize = productSize,
             ProductStock = productStock.toLong(),
             ProductStatus = true,
-            Currency = BuildConfig.CURRENCY,
+            Currency = DPSharedPreferences.getTransactionCurrency(context),
             MerchantID = selectedFoodItem.item.MerchantID,
             CategoryID = selectedFoodItem.item.CategoryID,
             ProductPrice = null,

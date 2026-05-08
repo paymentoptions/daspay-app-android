@@ -41,13 +41,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.endpoints.paymentStatus
 import com.paymentoptions.pos.services.apiService.endpoints.refund
 import com.paymentoptions.pos.services.apiService.endpoints.void
+import com.paymentoptions.pos.services.apiService.toPaymentStatusRequest
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
@@ -65,6 +67,7 @@ import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
+import com.theminesec.lib.dto.transaction.TranStatus
 import com.theminesec.lib.dto.transaction.TranType
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
@@ -124,44 +127,121 @@ fun TransactionActionScreen(
         }
     }
 
+    // Stores the childUUID from the void/refund API response
+    var refundChildUUID by remember { mutableStateOf<String?>(null) }
+    var voidChildUUID by remember { mutableStateOf<String?>(null) }
+
+    fun sendWebhookNotification(
+        sdkTransaction: com.theminesec.lib.dto.transaction.Transaction,
+        parentUUID: String,
+        childUUID: String,
+        actionLabel: String,
+        successTitle: String,
+    ) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                withContext(Dispatchers.Main) {
+                    processingScreenType = StatusScreenType.PROCESSING
+                    processingMessage = "Processing $actionLabel..."
+                }
+
+                val paymentStatusRequest = sdkTransaction.toPaymentStatusRequest(
+                    parentUUID = parentUUID,
+                    childUUID = childUUID,
+                )
+
+
+                AppLogger.debug("Webhook request for $actionLabel: parentUUID=$parentUUID, childUUID=$childUUID and paymentStatusRequest: $paymentStatusRequest")
+
+                val webhookSuccess = paymentStatus(
+                    context = context,
+                    request = paymentStatusRequest,
+                    tranStatus = TranStatus.APPROVED
+                )
+
+                AppLogger.debug("Webhook response for $actionLabel: $webhookSuccess")
+
+                // Show success
+                withContext(Dispatchers.Main) {
+                    processingScreenType = StatusScreenType.SUCCESS
+                    processingMessage = "$actionLabel Completed"
+                }
+                delay(delayTime)
+
+                withContext(Dispatchers.Main) {
+                    navController.navigate(
+                        "${Screens.TransactionReceipt.route}?transactionId=$childUUID" +
+                                "&title=Your transaction is ${actionLabel}ed&amount=${transaction.amount}&refrenceId=$childUUID" +
+                                "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}"
+                    ) {
+                        popUpTo(Screens.TransactionAction.route) { inclusive = true }
+                    }
+                }
+            } catch (e: Exception) {
+                AppLogger.error("Webhook notification failed for $actionLabel: ${e.message}", e)
+                // Still show success since the void/refund API already succeeded
+                withContext(Dispatchers.Main) {
+                    processingScreenType = StatusScreenType.SUCCESS
+                    processingMessage = "$actionLabel Completed"
+                }
+                delay(delayTime)
+                withContext(Dispatchers.Main) {
+                    navController.navigate(
+                        "${Screens.TransactionReceipt.route}?transactionId=$childUUID" +
+                                "&title=Your transaction is ${actionLabel}ed&amount=${transaction.amount}&refrenceId=$childUUID" +
+                                "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}"
+                    ) {
+                        popUpTo(Screens.TransactionAction.route) { inclusive = true }
+                    }
+                }
+            }
+        }
+    }
+
     fun updateRefundTransaction(sdkTransaction: com.theminesec.lib.dto.transaction.Transaction?) {
+        // For SOFTPOS: API was already called in doRefund, now send webhook with MineSec response
+        if (sdkTransaction != null && refundChildUUID != null) {
+            sendWebhookNotification(
+                sdkTransaction = sdkTransaction,
+                parentUUID = transaction.uuid,
+                childUUID = refundChildUUID!!,
+                actionLabel = "Refund",
+                successTitle = "Your transaction is Refunded",
+            )
+            return
+        }
+
+        // For PBL/QR: No MineSec involved, call refund API directly
         CoroutineScope(Dispatchers.IO).launch {
             val maxRetries = 1
             var currentAttempt = 0
             var lastError: Exception? = null
             var response: com.paymentoptions.pos.services.apiService.RefundResponse? = null
 
-            // Show processing screen on Main thread FIRST
             withContext(Dispatchers.Main) {
                 processingScreenType = StatusScreenType.PROCESSING
                 processingMessage = "Processing Refund..."
             }
 
-            // Retry loop with exponential backoff
             while (currentAttempt < maxRetries && response == null) {
                 try {
                     currentAttempt++
                     AppLogger.debug("Refund attempt $currentAttempt of $maxRetries")
 
-
-                    // Call API
                     response = refund(
                         context = context,
                         transactionId = transaction.uuid,
                         merchantId = transaction.DASMID,
-                        transaction = sdkTransaction,
                         amount = transaction.amount,
                         notes = notesInput.text.toString()
                     )
 
                     if (response != null) {
                         AppLogger.debug("Refund successful on attempt $currentAttempt: $response")
-                        break // Success - exit retry loop
+                        break
                     } else {
-                        AppLogger.warn("Refund returned null on attempt $currentAttempt")
                         lastError = Exception("API returned null response")
                     }
-
                 } catch (e: retrofit2.HttpException) {
                     errorMessage = try {
                         val errorJson = e.response()?.errorBody()?.string()
@@ -172,37 +252,25 @@ fun TransactionActionScreen(
                         } else {
                             e.message()
                         }
-                    }catch (e: Exception){
+                    } catch (e: Exception) {
                         e.message.toString()
                     }
                     AppLogger.error("Refund HTTP error ${e.code()}: $errorMessage")
                 } catch (e: Exception) {
                     AppLogger.error("Refund attempt $currentAttempt failed: ${e.message}", e)
                     lastError = e
-
-                    // If not the last attempt, wait before retrying (exponential backoff)
                     if (currentAttempt < maxRetries) {
-                        val delayTime = (1000L * currentAttempt) // 1s, 2s, 3s, 4s
-                        AppLogger.debug("Waiting ${delayTime}ms before retry...")
-                        delay(delayTime)
+                        delay(1000L * currentAttempt)
                     }
                 }
             }
 
-            // Check final result
             if (response != null) {
-                // Show success screen on Main thread
                 withContext(Dispatchers.Main) {
                     processingScreenType = StatusScreenType.SUCCESS
                     processingMessage = "Refund Completed"
                 }
-                AppLogger.debug("StatusScreen: Showing SUCCESS screen for 5 seconds")
-
-                // Wait 5 seconds
                 delay(delayTime)
-                AppLogger.debug("StatusScreen: 5 seconds elapsed, closing screen")
-
-                // Navigate to Transaction Receipt screen
                 withContext(Dispatchers.Main) {
                     navController.navigate(
                         "${Screens.TransactionReceipt.route}?transactionId=${response.transaction_details.id}" +
@@ -212,24 +280,11 @@ fun TransactionActionScreen(
                         popUpTo(Screens.TransactionAction.route) { inclusive = true }
                     }
                 }
-
             } else {
-                // All immediate retries failed
                 AppLogger.error("Refund failed after $maxRetries attempts. Last error: ${lastError?.message}")
-
-                // Schedule hourly retries for 24 hours
-//                AppLogger.debug("Scheduling hourly retries for refund over next 24 hours")
-//                TransactionRetryScheduler.scheduleHourlyRetries(
-//                    context = context,
-//                    transaction = transaction,
-//                    sdkTransaction = sdkTransaction,
-//                    operationType = TransactionRetryWorker.OPERATION_REFUND
-//                )
-
                 withContext(Dispatchers.Main) {
                     processingScreenType = StatusScreenType.ERROR
                     processingMessage = "Refund failed"
-                    //processingMessage = "Refund Failed After $maxRetries Attempts\nScheduled hourly retries for 24 hours"
                 }
                 delay(delayTime)
                 withContext(Dispatchers.Main) {
@@ -242,116 +297,18 @@ fun TransactionActionScreen(
     }
 
     fun updateVoidTransaction(sdkTransaction: com.theminesec.lib.dto.transaction.Transaction?) {
-        CoroutineScope(Dispatchers.IO).launch {
-            val maxRetries = 1
-            var currentAttempt = 0
-            var lastError: Exception? = null
-            var response: com.paymentoptions.pos.services.apiService.RefundResponse? = null
-
-            // Show processing screen on Main thread FIRST
-            withContext(Dispatchers.Main) {
-                processingScreenType = StatusScreenType.PROCESSING
-                processingMessage = "Processing Void..."
-            }
-
-            // Retry loop with exponential backoff
-            while (currentAttempt < maxRetries && response == null) {
-                try {
-                    currentAttempt++
-                    AppLogger.debug("Void attempt $currentAttempt of $maxRetries")
-
-
-                    // Call API
-                    response = void(
-                        context = context,
-                        transactionId = transaction.uuid,
-                        merchantId = transaction.DASMID,
-                        transaction = sdkTransaction!!
-                    )
-
-                    if (response != null) {
-                        AppLogger.debug("Void successful on attempt $currentAttempt: $response")
-                        break // Success - exit retry loop
-                    } else {
-                        AppLogger.warn("Void returned null on attempt $currentAttempt")
-                        lastError = Exception("API returned null response")
-                    }
-
-                } catch (e: retrofit2.HttpException) {
-                    errorMessage = try {
-                        val errorJson = e.response()?.errorBody()?.string()
-                        if (errorJson != null) {
-                            val jsonObj = org.json.JSONObject(errorJson)
-                            jsonObj.optJSONObject("gateway_response")?.optString("message")
-                                ?: e.message()
-                        } else {
-                            e.message()
-                        }
-                    } catch (e: Exception){
-                        e.message.toString()
-                    }
-                    AppLogger.error("void HTTP error ${e.code()}: $errorMessage")
-                } catch (e: Exception) {
-                    AppLogger.error("Void attempt $currentAttempt failed: ${e.message}", e)
-                    lastError = e
-
-                    // If not the last attempt, wait before retrying (exponential backoff)
-                    if (currentAttempt < maxRetries) {
-                        val delayTime = (1000L * currentAttempt) // 1s, 2s, 3s, 4s
-                        AppLogger.debug("Waiting ${delayTime}ms before retry...")
-                        delay(delayTime)
-                    }
-                }
-            }
-
-            // Check final result
-            if (response != null) {
-                // Show success screen on Main thread
-                withContext(Dispatchers.Main) {
-                    processingScreenType = StatusScreenType.SUCCESS
-                    processingMessage = "Voided"
-                }
-                AppLogger.debug("StatusScreen: Showing SUCCESS screen for 5 seconds")
-
-                // Wait 5 seconds
-                delay(delayTime)
-
-                // Navigate to Transaction Receipt screen
-                withContext(Dispatchers.Main) {
-                    navController.navigate(
-                        "${Screens.TransactionReceipt.route}?transactionId=${response.transaction_details.id}" +
-                                "&title=Your transaction is Voided&amount=${transaction.amount}&refrenceId=${response.transaction_details.id}" +
-                                "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}"
-                    ) {
-                        popUpTo(Screens.TransactionAction.route) { inclusive = true }
-                    }
-                }
-
-            } else {
-                // All immediate retries failed
-                AppLogger.error("Void failed after $maxRetries attempts. Last error: ${lastError?.message}")
-
-                // Schedule hourly retries for 24 hours
-//                AppLogger.debug("Scheduling hourly retries for void over next 24 hours")
-//                TransactionRetryScheduler.scheduleHourlyRetries(
-//                    context = context,
-//                    transaction = transaction,
-//                    sdkTransaction = sdkTransaction,
-//                    operationType = TransactionRetryWorker.OPERATION_VOID
-//                )
-
-                withContext(Dispatchers.Main) {
-                    processingScreenType = StatusScreenType.ERROR
-                    //processingMessage = "Void Failed After $maxRetries Attempts\nScheduled hourly retries for 24 hours"
-                    processingMessage = "Void failed"
-                }
-                delay(delayTime)
-                withContext(Dispatchers.Main) {
-                    navController.popBackStack()
-
-                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-                }
-            }
+        // API was already called in doVoid, now send webhook with MineSec response
+        if (sdkTransaction != null && voidChildUUID != null) {
+            sendWebhookNotification(
+                sdkTransaction = sdkTransaction,
+                parentUUID = transaction.uuid,
+                childUUID = voidChildUUID!!,
+                actionLabel = "Void",
+                successTitle = "Your transaction is Voided",
+            )
+        } else {
+            AppLogger.error("updateVoidTransaction called without sdkTransaction or voidChildUUID")
+            showTransactionFailure()
         }
     }
 
@@ -378,11 +335,59 @@ fun TransactionActionScreen(
         }
     }
 
+
+
     fun doVoid(transaction: TransactionListDataRecord) {
         AppLogger.debug("full transaction object: $transaction")
         processingScreenType = StatusScreenType.PROCESSING
         processingMessage = "Processing Void..."
-        launcher.launch(input = PoiRequest.ActionVoid(transaction.AcquirerTransactionID!!))
+
+        // Step 1: Call void API first (without daspay_res)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = void(
+                    context = context,
+                    transactionId = transaction.uuid,
+                    merchantId = transaction.DASMID,
+                )
+
+                if (response != null) {
+                    AppLogger.debug("Void API successful, childUUID: ${response.transaction_details.id}")
+                    withContext(Dispatchers.Main) {
+                        voidChildUUID = response.transaction_details.id
+                        // Step 2: Launch MineSec SDK
+                        launcher.launch(input = PoiRequest.ActionVoid(transaction.AcquirerTransactionID!!))
+                    }
+                } else {
+                    AppLogger.error("Void API returned null")
+                    withContext(Dispatchers.Main) {
+                        errorMessage = "Void request failed"
+                        showTransactionFailure()
+                    }
+                }
+            } catch (e: retrofit2.HttpException) {
+                errorMessage = try {
+                    val errorJson = e.response()?.errorBody()?.string()
+                    if (errorJson != null) {
+                        val jsonObj = org.json.JSONObject(errorJson)
+                        jsonObj.optJSONObject("gateway_response")?.optString("message")
+                            ?: e.message()
+                    } else {
+                        e.message()
+                    }
+                } catch (ex: Exception) {
+                    ex.message.toString()
+                }
+                AppLogger.error("Void API HTTP error ${e.code()}: $errorMessage")
+                withContext(Dispatchers.Main) { showTransactionFailure() }
+            } catch (e: Exception) {
+                AppLogger.error("Void API failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    errorMessage = e.message ?: "Void failed"
+                    showTransactionFailure()
+                }
+            }
+        }
     }
 
     fun doRefund(transaction: TransactionListDataRecord) {
@@ -392,15 +397,65 @@ fun TransactionActionScreen(
             "SOFTPOS" -> {
                 processingScreenType = StatusScreenType.PROCESSING
                 processingMessage = "Processing Refund..."
-                launcher.launch(
-                    input = PoiRequest.ActionLinkedRefund(
-                        transaction.AcquirerTransactionID!!,
-                        Amount(BigDecimal(transaction.amount), Currency.getInstance(BuildConfig.CURRENCY))
-                    )
-                )
+
+                // Step 1: Call refund API first (without daspay_res)
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val response = refund(
+                            context = context,
+                            transactionId = transaction.uuid,
+                            merchantId = transaction.DASMID,
+                            amount = transaction.amount,
+                            notes = notesInput.text.toString()
+                        )
+
+                        if (response != null) {
+                            AppLogger.debug("Refund API successful, childUUID: ${response.transaction_details.id}")
+                            withContext(Dispatchers.Main) {
+                                refundChildUUID = response.transaction_details.id
+                                // Step 2: Launch MineSec SDK
+                                launcher.launch(
+                                    input = PoiRequest.ActionLinkedRefund(
+                                        transaction.AcquirerTransactionID!!,
+                                        Amount(BigDecimal(transaction.amount),
+                                            Currency.getInstance(DPSharedPreferences.getTransactionCurrency(context),))
+                                    )
+                                )
+                            }
+                        } else {
+                            AppLogger.error("Refund API returned null")
+                            withContext(Dispatchers.Main) {
+                                errorMessage = "Refund request failed"
+                                showTransactionFailure()
+                            }
+                        }
+                    } catch (e: retrofit2.HttpException) {
+                        errorMessage = try {
+                            val errorJson = e.response()?.errorBody()?.string()
+                            if (errorJson != null) {
+                                val jsonObj = org.json.JSONObject(errorJson)
+                                jsonObj.optJSONObject("gateway_response")?.optString("message")
+                                    ?: e.message()
+                            } else {
+                                e.message()
+                            }
+                        } catch (ex: Exception) {
+                            ex.message.toString()
+                        }
+                        AppLogger.error("Refund API HTTP error ${e.code()}: $errorMessage")
+                        withContext(Dispatchers.Main) { showTransactionFailure() }
+                    } catch (e: Exception) {
+                        AppLogger.error("Refund API failed: ${e.message}", e)
+                        withContext(Dispatchers.Main) {
+                            errorMessage = e.message ?: "Refund failed"
+                            showTransactionFailure()
+                        }
+                    }
+                }
             }
 
             "PBL", "QR" -> {
+                // No MineSec involved for PBL/QR, call API directly
                 updateRefundTransaction(null)
             }
         }

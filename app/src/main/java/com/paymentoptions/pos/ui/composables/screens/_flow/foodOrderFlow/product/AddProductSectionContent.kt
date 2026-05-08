@@ -68,6 +68,7 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import androidx.core.content.FileProvider
 import com.paymentoptions.pos.BuildConfig
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -559,7 +560,7 @@ fun AddProductSectionContent(
                                     ProductCode = productCode.text.toString(),
                                     ProductStock = productStock.toLong(),
                                     ProductStatus = true,
-                                    Currency = BuildConfig.CURRENCY,
+                                    Currency = DPSharedPreferences.getTransactionCurrency(context),
                                     MerchantID = categorySelected?.MerchantID ?: "",
                                     CategoryID = categorySelected?.CategoryID ?: "",
                                 ),

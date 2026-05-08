@@ -2,6 +2,8 @@ package com.paymentoptions.pos.services.apiService
 
 import com.theminesec.lib.dto.transaction.Transaction
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 import org.json.JSONObject
 import kotlin.String
 
@@ -130,7 +132,7 @@ data class TransactionRequest(
     val merchant_id: String,
     val amount: String? = null,
     val notes: String? = null,
-    val daspay_res: Transaction? = null,
+    //val daspay_res: Transaction? = null,
 )
 
 
@@ -366,6 +368,8 @@ data class PaymentStatusRequest(
     val acqTid: String = "null",
     val notifyId: Int = 0,
     val acquirerResponse: String = "",
+    val parentUUID: String? = null,
+    val childUUID: String? = null,
 )
 
 //data class PaymentStatusResponseData(
@@ -394,6 +398,7 @@ data class PayByLinkRequest(
     val ExpiryDate: String,
     val PBLLinkName: String,
     val Product: List<PayByLinkRequestProduct>,
+    val isSourceMinesec: Boolean = true
 )
 
 data class PayByLinkResponseDataProduct(
@@ -719,7 +724,6 @@ data class PaymentDetailsResponseData(
     val SubscriptionDetails: String?,
     val PaymentType: String,
     val AcquirerResponse: List<String?>,
-    val transactionHistory: List<PaymentDetailsResponseData_TransactionHistory>,
 )
 
 data class PrimaryAddress(
@@ -968,5 +972,42 @@ fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDat
         ResponseCode = "",
         IntegrationType = "",
         has3DS = false,
+    )
+}
+
+fun Transaction.toPaymentStatusRequest(
+    parentUUID: String? = null,
+    childUUID: String? = null
+): PaymentStatusRequest {
+    return PaymentStatusRequest(
+        tranId = this.posReference.toString(),
+        cvmPerformed = this.cvmPerformed.toString(),
+        tsi = this.tsi.toString(),
+        mcc = this.mcc,
+        merchantName = this.merchantName,
+        tranStatus = this.tranStatus.toString(),
+        tranType = this.tranType.toString(),
+        atc = this.atc.toString(),
+        createdAt = this.createdAt.toEpochMilliseconds().toString(),
+        updatedAt = this.updatedAt?.toEpochMilliseconds().toString(),
+        trace = this.trace,
+        callbackUrl = this.callbackUrl.toString(),
+        entryMode = this.entryMode.toString(),
+        amount = "{\"currency\":\"${this.amount.currency}\",\"value\":${this.amount.value.toFloat()}",
+        batchNo = this.batchNo.toString(),
+        appName = this.appName.toString(),
+        linkedTranId = this.posReference.toString(),
+        merchantAddr = this.merchantAddr.toString(),
+        rrn = this.rrn.toString(),
+        tc = this.tc.toString(),
+        tvr = this.tvr.toString(),
+        accountMasked = this.accountMasked.toString(),
+        sdkId = this.sdkId.toString(),
+        paymentMethod = this.paymentMethod.toString(),
+        hostMessageFormat = this.hostMessageFormat.toString(),
+        aid = this.aid.toString(),
+        acquirerResponse = Json.encodeToString(this),
+        parentUUID = parentUUID,
+        childUUID = childUUID,
     )
 }

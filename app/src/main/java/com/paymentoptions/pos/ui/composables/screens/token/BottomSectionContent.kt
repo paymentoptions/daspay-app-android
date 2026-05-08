@@ -707,6 +707,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         Log.d("DEBUG_TOKEN", "Step 5: Process finished.")
                     }
                 })
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

@@ -11,7 +11,6 @@ suspend fun void(
     context: Context,
     transactionId: String,
     merchantId: String,
-    transaction: com.theminesec.lib.dto.transaction.Transaction,
 ): RefundResponse? {
 
         val tokenRepository = TokenRepository.getInstance(context)
@@ -20,14 +19,12 @@ suspend fun void(
         val idToken = authDetails.data.token.idToken
         val requestHeaders = generateRequestHeader(idToken)
 
-        AppLogger.debug("void request: $transaction | $authDetails")
         val refundResponse: RefundResponse =
             RetrofitClient.getApi(context).void(
                 headers = requestHeaders,
                 request = com.paymentoptions.pos.services.apiService.TransactionRequest(
                     transactionId = transactionId,
                     merchant_id = merchantId,
-                    daspay_res = transaction
                 )
             )
 

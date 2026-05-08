@@ -23,6 +23,7 @@ import kotlinx.serialization.json.Json
 
 object DPSharedPreferences {
         private var accessLevel: AccessLevel? = null
+        private var transactionCurrency: String? = null
 
         const val sharedPreferencesLabel: String = "my_prefs"
 
@@ -44,7 +45,13 @@ object DPSharedPreferences {
                         keyStore.deleteEntry(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
                     } catch (ignored: Throwable) { }
                     clearCorruptedPrefsFiles(context)
-                    createEncryptedPrefs(context)
+                    try {
+                        createEncryptedPrefs(context)
+                    } catch (e3: Throwable) {
+                        // Last resort: fall back to unencrypted SharedPreferences to prevent crash
+                        AppLogger.error("EncryptedSharedPreferences unrecoverable, falling back to plain prefs: ${e3.message}")
+                        context.getSharedPreferences(sharedPreferencesLabel + "_fallback", Context.MODE_PRIVATE)
+                    }
                 }
             }
         }
@@ -98,6 +105,11 @@ object DPSharedPreferences {
                 putString(key, value)
                 apply()
             }
+        }
+
+        fun getKeyValue(context: Context, key: String): String? {
+            val sharedPreferences = getSecurePrefs(context)
+            return sharedPreferences.getString(key, null)
         }
 
         fun saveBiometricsStatus(context: Context, status: Boolean = false) {
@@ -254,17 +266,16 @@ object DPSharedPreferences {
         }
 
     fun getTransactionCurrency(context: Context): String {
+        if(transactionCurrency?.isNotEmpty() == true) return  transactionCurrency!!
         val externalDeviceConfiguration = getDeviceConfiguration(context)
-        var transactionCurrency = ""
 
         externalDeviceConfiguration?.let {
             transactionCurrency =
-                it.data.paymentMethod.firstOrNull()?.TransactionCCY?.firstOrNull() ?: ""
+                it.data.paymentMethod.firstOrNull()?.TransactionCCY?.firstOrNull()
 
         }
         AppLogger.debug("transactionCurrency : $transactionCurrency")
-
-        return transactionCurrency
+        return transactionCurrency ?: ""
     }
 
     fun getSettlementCurrency(context: Context): String {
@@ -316,6 +327,7 @@ object DPSharedPreferences {
 
         return supportedPayments
     }
+
 
 
     //QP DASMID

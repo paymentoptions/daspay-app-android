@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.TextView
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.ui.AmountView
@@ -32,7 +33,7 @@ class CustomUiProvider(
             description: String?
         ): View {
             return TextView(context).apply {
-                val text = "Total Amount\n${BuildConfig.CURRENCY.replace("D", "$")} ${amount.value}"
+                val text = "Total Amount\n${DPSharedPreferences.getTransactionCurrency(context).replace("D", "$")} ${amount.value}"
                 val spannable = SpannableString(text)
 
 
