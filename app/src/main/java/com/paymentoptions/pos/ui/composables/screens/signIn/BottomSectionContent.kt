@@ -26,6 +26,7 @@ import androidx.navigation.NavController
 import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.saveFcmToken
+import com.paymentoptions.pos.device.GeoRestrictionManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
@@ -189,6 +190,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                                 DPSharedPreferences.saveAuthDetails(context, signInResponse)
 
+
+                                // Save merchant country for geo-restriction
+                                GeoRestrictionManager.saveMerchantCountry(context, signInResponse.data.subsidiaries)
+
                                 // Start token auto refresh after successful sign-in
                                 TokenAutoRefresher.getInstance(context).onUserSignedIn()
 
@@ -208,5 +213,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 .height(59.dp)
                 .padding(bottom = 25.dp)
         )
+
+        Spacer(modifier = Modifier.height(10.dp))
     }
 }

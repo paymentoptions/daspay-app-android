@@ -5,6 +5,7 @@ import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.saveFcmToken
+import com.paymentoptions.pos.device.GeoRestrictionManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SignInRequest
@@ -38,6 +39,9 @@ suspend fun autoSignIn(context: Context): SignInResponse? {
                 }
 
                 DPSharedPreferences.saveAuthDetails(context, signInResponse)
+
+                // Save merchant country for geo-restriction
+                GeoRestrictionManager.saveMerchantCountry(context, signInResponse.data.subsidiaries)
                 //TokenRepository.getInstance(context).scheduleTokenRefresh(signInResponse.data.exp)
             }
         }

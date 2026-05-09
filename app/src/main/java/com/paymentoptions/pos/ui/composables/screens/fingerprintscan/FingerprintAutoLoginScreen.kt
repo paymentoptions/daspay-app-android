@@ -288,7 +288,7 @@ private fun onAuthSuccess(
                     if (response.success || response.message.contains("Device already registered")) {
 
                         // --- Second API Call ---
-                        Log.d(
+                        AppLogger.debug(
                             "DEBUG_TOKEN",
                             "Step 3: Proceeding to get external device configuration."
                         )
@@ -300,7 +300,7 @@ private fun onAuthSuccess(
                         getExternalDeviceConfiguration(
                             context, otp
                         ).onSuccess { configResponse ->
-                            Log.d(
+                            AppLogger.debug(
                                 "DEBUG_TOKEN",
                                 "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                             )
@@ -308,7 +308,7 @@ private fun onAuthSuccess(
                                 context, configResponse
                             )
                         }.onFailure { exception ->
-                            Log.e(
+                            AppLogger.error(
                                 "DEBUG_TOKEN",
                                 "Step 4 FAILED: getExternalDeviceConfiguration.",
                                 exception
@@ -317,7 +317,7 @@ private fun onAuthSuccess(
                                 exception.message ?: "Failed to fetch configuration"
                         }
                     } else {
-                        Log.w(
+                        AppLogger.warn(
                             "DEBUG_TOKEN",
                             "Step 2 WARNING: API reported not successful. Message: ${response.message}"
                         )
