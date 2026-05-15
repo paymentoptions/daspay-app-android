@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Fastfood
@@ -79,8 +80,11 @@ val home = BottomNavigationBarItem(
     title = "Home", icon = Icons.Outlined.Dashboard, route = Screens.Dashboard.route
 )
 
-val foodMenu = BottomNavigationBarItem(
-    title = "Food Menu", icon = Icons.Outlined.Fastfood, route = Screens.FoodOrderFlow.route
+val catalogMenu = BottomNavigationBarItem(
+    title = "Catalog",
+    svgIcon = R.drawable.catalog_icon,
+    icon = Icons.Outlined.Book,
+    route = Screens.FoodOrderFlow.route
 )
 
 val receiveMoney = BottomNavigationBarItem(
@@ -321,15 +325,15 @@ fun MyBottomNavigationBar(
                 })
 
             Item(
-                foodMenu,
+                catalogMenu,
                 modifier = Modifier.weight(1f),
                 isSelected = isFoodSelected,
                 onSelected = {
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
-                    if (currentRoute != foodMenu.route) {
-                        selectedBottomNavigationBarItem = foodMenu
+                    if (currentRoute != catalogMenu.route) {
+                        selectedBottomNavigationBarItem = catalogMenu
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
                             restoreState = true
@@ -339,10 +343,10 @@ fun MyBottomNavigationBar(
                         }
                     } else {
                         // User is already on food menu - reset to initial stage
-                        selectedBottomNavigationBarItem = foodMenu
-                        navController.navigate(foodMenu.route) {
+                        selectedBottomNavigationBarItem = catalogMenu
+                        navController.navigate(catalogMenu.route) {
                             launchSingleTop = true
-                            popUpTo(foodMenu.route) { inclusive = true }
+                            popUpTo(catalogMenu.route) { inclusive = true }
                         }
                     }
                     if(showMoreItems){
@@ -446,7 +450,7 @@ fun Item(
             contentAlignment = Alignment.Center
         ) {
             if (!item.hideIcon) if (item.svgIcon != null) Icon(
-                painter = painterResource(R.drawable.query_icon),
+                painter = painterResource(item.svgIcon),
                 contentDescription = item.title,
                 modifier = Modifier.size(24.dp),
                 tint =  if (isSelected) primary100 else primary500

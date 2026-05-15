@@ -77,12 +77,12 @@ fun EditProductSectionContent(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var productName = rememberTextFieldState(initialText = selectedFoodItem.item.ProductName)
-    var productDescription = rememberTextFieldState(initialText = selectedFoodItem.item.ProductDesc)
+    var productDescription = rememberTextFieldState(initialText = selectedFoodItem.item.ProductDesc?:"")
     var productPrice = rememberTextFieldState(initialText = String.format(Locale.US, "%.2f", selectedFoodItem.item.ProductPrice))
-    var productType by remember { mutableStateOf(selectedFoodItem.item.ProductFoodType) }
-    var productSize by remember { mutableStateOf(selectedFoodItem.item.ProductSize) }
+    //var productType by remember { mutableStateOf(selectedFoodItem.item.ProductFoodType) }
+    //var productSize by remember { mutableStateOf(selectedFoodItem.item.ProductSize) }
     var productCode = rememberTextFieldState(initialText = selectedFoodItem.item.ProductCode)
-    var productStock by remember { mutableStateOf(selectedFoodItem.item.ProductStock) }
+    //var productStock by remember { mutableStateOf(selectedFoodItem.item.ProductStock) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var showMediaSheet by remember { mutableStateOf(false) }
@@ -199,59 +199,68 @@ fun EditProductSectionContent(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-
-                // Product Type
-                Column(modifier = Modifier.weight(0.5f)) {
-                    Text(
-                        "Product Type",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = purple50
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    RectangularDropdownMenu(
-                        options = listOf("NONVEG", "VEG"),
-                        selected = productType,
-                        onSelected = { productType = it },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                // Product Code
                 Column(modifier = Modifier.weight(0.5f)) {
                     OutlinedTextInput(
                         state = productCode,
-                        label = "Product Code * (Unique)",
+                        label = "Product Code",
                         placeholder = "Ex. SKU-000",
                         disabled = DPSharedPreferences.isStaff(context),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
 
-                // Product Size
-                Column(modifier = Modifier.weight(0.5f)) {
-                    Text(
-                        "Product Size",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = purple50
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    RectangularDropdownMenu(
-                        options = listOf("REGULAR", "LARGE", "SMALL"),
-                        selected = productSize,
-                        onSelected = { productSize = it },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                // Product Type
+//                Column(modifier = Modifier.weight(0.5f)) {
+//                    Text(
+//                        "Product Type",
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Medium,
+//                        color = purple50
+//                    )
+//                    Spacer(modifier = Modifier.height(4.dp))
+//                    RectangularDropdownMenu(
+//                        options = listOf("NONVEG", "VEG"),
+//                        selected = productType,
+//                        onSelected = { productType = it },
+//                        modifier = Modifier.fillMaxWidth()
+//                    )
+//                }
             }
+//            Spacer(modifier = Modifier.height(8.dp))
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.spacedBy(12.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//
+//                // Product Code
+//                Column(modifier = Modifier.weight(0.5f)) {
+//                    OutlinedTextInput(
+//                        state = productCode,
+//                        label = "Product Code * (Unique)",
+//                        placeholder = "Ex. SKU-000",
+//                        disabled = DPSharedPreferences.isStaff(context),
+//                        modifier = Modifier.fillMaxWidth()
+//                    )
+//                }
+//
+//                // Product Size
+//                Column(modifier = Modifier.weight(0.5f)) {
+//                    Text(
+//                        "Product Size",
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Medium,
+//                        color = purple50
+//                    )
+//                    Spacer(modifier = Modifier.height(4.dp))
+//                    RectangularDropdownMenu(
+//                        options = listOf("REGULAR", "LARGE", "SMALL"),
+//                        selected = productSize,
+//                        onSelected = { productSize = it },
+//                        modifier = Modifier.fillMaxWidth()
+//                    )
+//                }
+//            }
 
             Spacer(modifier = Modifier.height(8.dp))
             Row(
@@ -261,72 +270,72 @@ fun EditProductSectionContent(
             ) {
 
                 // Product Stock
-                Column(modifier = Modifier.weight(0.5f)) {
-                    Text(
-                        "Product Stock",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = purple50
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Box(
-                        modifier = Modifier.fillMaxWidth()
-                            .height(88.dp)
-                            .border(
-                                width = 1.5.dp,
-                                color = Color(0xFF90CAF9),
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                            .background(
-                                color = Color.White,
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.padding(20.dp)
-                                .height(70.dp)
-                                .background(
-                                    brush = enabledFilledButtonGradientBrush,
-                                    shape = RoundedCornerShape(20.dp)
-                                )
-                                .border(
-                                    shape = RoundedCornerShape(20.dp),
-                                    width = 1.dp,
-                                    color = Color.Blue
-                                )
-                        ) {
-                            IconButton(
-                                onClick = { if (productStock > 1) productStock-- },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(Icons.Default.Remove,
-                                    contentDescription = "Decrease",
-                                    tint = Color.White)
-                            }
-
-                            Text(
-                                productStock.toString(),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = 12.dp)
-                            )
-
-                            IconButton(
-                                onClick = { productStock++ },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(Icons.Default.Add,
-                                    contentDescription = "Increase",
-                                    tint = Color.White)
-                            }
-                        }
-                    }
-                }
+//                Column(modifier = Modifier.weight(0.5f)) {
+//                    Text(
+//                        "Product Stock",
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Medium,
+//                        color = purple50
+//                    )
+//                    Spacer(modifier = Modifier.height(6.dp))
+//
+//                    Box(
+//                        modifier = Modifier.fillMaxWidth()
+//                            .height(88.dp)
+//                            .border(
+//                                width = 1.5.dp,
+//                                color = Color(0xFF90CAF9),
+//                                shape = RoundedCornerShape(6.dp)
+//                            )
+//                            .background(
+//                                color = Color.White,
+//                                shape = RoundedCornerShape(6.dp)
+//                            )
+//                            .padding(horizontal = 12.dp, vertical = 4.dp),
+//                    ) {
+//                        Row(
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.Center,
+//                            modifier = Modifier.padding(20.dp)
+//                                .height(70.dp)
+//                                .background(
+//                                    brush = enabledFilledButtonGradientBrush,
+//                                    shape = RoundedCornerShape(20.dp)
+//                                )
+//                                .border(
+//                                    shape = RoundedCornerShape(20.dp),
+//                                    width = 1.dp,
+//                                    color = Color.Blue
+//                                )
+//                        ) {
+//                            IconButton(
+//                                onClick = { if (productStock > 1) productStock-- },
+//                                modifier = Modifier.size(40.dp)
+//                            ) {
+//                                Icon(Icons.Default.Remove,
+//                                    contentDescription = "Decrease",
+//                                    tint = Color.White)
+//                            }
+//
+//                            Text(
+//                                productStock.toString(),
+//                                fontWeight = FontWeight.Bold,
+//                                fontSize = 14.sp,
+//                                color = Color.White,
+//                                modifier = Modifier.padding(horizontal = 12.dp)
+//                            )
+//
+//                            IconButton(
+//                                onClick = { productStock++ },
+//                                modifier = Modifier.size(40.dp)
+//                            ) {
+//                                Icon(Icons.Default.Add,
+//                                    contentDescription = "Increase",
+//                                    tint = Color.White)
+//                            }
+//                        }
+//                    }
+//                }
 
                 // Product Image
                 Column(
@@ -514,7 +523,7 @@ fun EditProductSectionContent(
                         isLoading = true
                         // Validate
                         if (productName.text.toString()
-                                .isBlank() || productCode.text.toString().isBlank()
+                                .isBlank()
                         ) {
                             errorMessage = "Please fill all required fields."
                             isLoading = false
@@ -545,10 +554,10 @@ fun EditProductSectionContent(
                                     productName,
                                     productDescription,
                                     finalPrice,
-                                    productType,
-                                    productSize,
+//                                    productType,
+//                                    productSize,
                                     productCode,
-                                    productStock,
+                                   // productStock,
                                     selectedFoodItem
                                 ),
                                 foodItem = selectedFoodItem,
@@ -587,20 +596,20 @@ private fun getProductRequest(
     productName: TextFieldState,
     productDescription: TextFieldState,
     finalPrice: Float,
-    productType: String,
-    productSize: String,
+//    productType: String,
+//    productSize: String,
     productCode: TextFieldState,
-    productStock: Int,
+    //productStock: Int,
     selectedFoodItem: FoodItem
 ): ProductRequest {
     if (DPSharedPreferences.isAdmin(context)) return ProductRequest(
         ProductName = productName.text.toString(),
         ProductDesc = productDescription.text.toString(),
         ProductPrice = finalPrice,
-        ProductFoodType = productType,
-        ProductSize = productSize,
+//        ProductFoodType = productType,
+//        ProductSize = productSize,
         ProductCode = productCode.text.toString(),
-        ProductStock = productStock.toLong(),
+       // ProductStock = productStock.toLong(),
         ProductStatus = true,
         Currency = DPSharedPreferences.getTransactionCurrency(context),
         MerchantID = selectedFoodItem.item.MerchantID,
@@ -609,9 +618,9 @@ private fun getProductRequest(
         return ProductRequest(
             ProductName = productName.text.toString(),
             ProductDesc = productDescription.text.toString(),
-            ProductFoodType = productType,
-            ProductSize = productSize,
-            ProductStock = productStock.toLong(),
+//            ProductFoodType = productType,
+//            ProductSize = productSize,
+//            ProductStock = productStock.toLong(),
             ProductStatus = true,
             Currency = DPSharedPreferences.getTransactionCurrency(context),
             MerchantID = selectedFoodItem.item.MerchantID,

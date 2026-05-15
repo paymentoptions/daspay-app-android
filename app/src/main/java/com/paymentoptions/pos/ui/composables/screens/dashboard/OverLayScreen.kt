@@ -254,8 +254,8 @@ fun OverLayScreen(context: Context, onDismiss: () -> Unit) {
                     title = "Main\nScreen"
                 )
                 NavHighlightItem(
-                    icon = Icons.Outlined.Fastfood,
-                    label = "Food Menu",
+                    svgIcon = R.drawable.catalog_icon,
+                    label = "Catalog",
                     title = "Menu\nItems"
                 )
                 NavHighlightItem(
