@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.utils.getTransactionAmount
@@ -42,61 +43,89 @@ fun Transactions(
         horizontalAlignment = Alignment.End,
         modifier = Modifier.fillMaxSize()
     ) {
-
         var earningAmountTodayOnly = 0.0f
+        val today = OffsetDateTime.now()
 
         transactions.forEachIndexed { index, transaction ->
+                var skip = true
 
-            var skip = true
+                if ((selectedFilterKey == "ALL" || (selectedFilterKey == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") ||
+                        selectedFilterKey == transaction.TransactionType.uppercase()))
+                  skip = false
 
-            if ((selectedFilterKey == "ALL" || (selectedFilterKey == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND") || selectedFilterKey == transaction.TransactionType.uppercase())) skip =
-                false
+                if (!skip) {
+                    val transactionDate = OffsetDateTime.parse(transaction.Date)
 
-            if (!skip) {
-                 earningAmountTodayOnly = getTransactionAmount(transaction)
-//                if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
-//
-//                    val transactionDate = OffsetDateTime.parse(transaction.Date)
-//                    val today = OffsetDateTime.now()
-//
-//                    if (transactionDate.dayOfMonth == today.dayOfMonth && transactionDate.year == today.year)
-//                        earningAmountTodayOnly += transaction.amount.toFloat()
-//                }
+                    if (transactionDate.dayOfMonth == today.dayOfMonth && transactionDate.year == today.year)
+                        earningAmountTodayOnly += getTransactionAmount(transaction)
 
-                item {
-                    TransactionSummary(
-                        navController, transaction,
-//                        longClickedTransactionId, onLongClick = {
-//
-//                            if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
-//                                longClickedTransactionId =
-//                                    if (longClickedTransactionId.isEmpty()) it
-//                                    else if (longClickedTransactionId == it) "" else it
-//                            } else {
-//                                Toast.makeText(
-//                                    context,
-//                                "Txn details: ${transaction.status} | ${transaction.TransactionType}:",
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-//                            }
-//                        }, onSwipeLeft = {
-//                            if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
-//                                longClickedTransactionId = it
-//                            } else {
-//                            Toast.makeText(
-//                                context,
-//                                "Txn details: ${transaction.status} | ${transaction.TransactionType}:",
-//                                Toast.LENGTH_SHORT
-//                            ).show()
-//                            }
-//                        }, onSwipeRight = {
-//                            longClickedTransactionId = ""
-//                        },
-//                        triggerListRefresh = { triggerListRefresh() }
-                    )
+                    item {
+                        TransactionSummary(
+                            navController, transaction,
+                        )
+                    }
                 }
-            }
         }
+        AppLogger.debug("total transactions : ${transactions.size} and earningAmountTodayOnly : $earningAmountTodayOnly")
+
+
         updateReceivalAmount(earningAmountTodayOnly)
+
+/*//        transactions.forEachIndexed { index, transaction ->
+//
+//            var skip = true
+//
+////            if ((selectedFilterKey == "ALL" || (selectedFilterKey == transaction.status.uppercase() && transaction.TransactionType.uppercase() != "REFUND")
+////                        || selectedFilterKey == transaction.TransactionType.uppercase()))
+////                skip = false
+//
+//            if (!skip) {
+//                 earningAmountTodayOnly += getTransactionAmount(transaction)
+//                AppLogger.debug("earningAmountTodayOnly = $earningAmountTodayOnly and transaction amount : ${getTransactionAmount(transaction)}")
+//
+////                if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
+////
+////                    val transactionDate = OffsetDateTime.parse(transaction.Date)
+////                    val today = OffsetDateTime.now()
+////
+////                    if (transactionDate.dayOfMonth == today.dayOfMonth && transactionDate.year == today.year)
+////                        earningAmountTodayOnly += transaction.amount.toFloat()
+////                }
+//
+//                item {
+//                    TransactionSummary(
+//                        navController, transaction,
+////                        longClickedTransactionId, onLongClick = {
+////
+////                            if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
+////                                longClickedTransactionId =
+////                                    if (longClickedTransactionId.isEmpty()) it
+////                                    else if (longClickedTransactionId == it) "" else it
+////                            } else {
+////                                Toast.makeText(
+////                                    context,
+////                                "Txn details: ${transaction.status} | ${transaction.TransactionType}:",
+////                                Toast.LENGTH_SHORT
+////                            ).show()
+////                            }
+////                        }, onSwipeLeft = {
+////                            if (transaction.TransactionType == "PURCHASE" && transaction.status == "SUCCESSFUL") {
+////                                longClickedTransactionId = it
+////                            } else {
+////                            Toast.makeText(
+////                                context,
+////                                "Txn details: ${transaction.status} | ${transaction.TransactionType}:",
+////                                Toast.LENGTH_SHORT
+////                            ).show()
+////                            }
+////                        }, onSwipeRight = {
+////                            longClickedTransactionId = ""
+////                        },
+////                        triggerListRefresh = { triggerListRefresh() }
+//                    )
+//                }
+//            }
+//        }*/
+
     }
 }

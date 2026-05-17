@@ -13,7 +13,7 @@ import java.io.File
  * Add Product to the server.
  */
 suspend fun addProduct(context: Context, request: ProductRequest, selectedFile : File?): ProductResponse? {
-    try {
+
         AppLogger.debug("addProduct: $request and selectedfile: $selectedFile")
         val tokenRepository = TokenRepository.getInstance(context)
         val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
@@ -27,8 +27,4 @@ suspend fun addProduct(context: Context, request: ProductRequest, selectedFile :
             uploadMediaToProduct(context, requestHeaders, addProductResponse.data.ProductID, selectedFile)
         }
         return addProductResponse
-    } catch (e: Exception) {
-        AppLogger.debug("addProductError: $e")
-        throw e
-    }
 }

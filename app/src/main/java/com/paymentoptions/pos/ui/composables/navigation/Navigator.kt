@@ -24,6 +24,7 @@ import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.Fingerprint
 import com.paymentoptions.pos.ui.composables.screens.helpandsupport.HelpAndSupportScreen
 import com.paymentoptions.pos.ui.composables.screens.notifications.NotificationsScreen
 import com.paymentoptions.pos.ui.composables.screens.settings.SettingsScreen
+import com.paymentoptions.pos.ui.composables.screens.settlement.SettlementActionScreen
 import com.paymentoptions.pos.ui.composables.screens.settlement.SettlementScreen
 import com.paymentoptions.pos.ui.composables.screens.signIn.SignInScreen
 import com.paymentoptions.pos.ui.composables.screens.splash.SplashScreen
@@ -83,7 +84,17 @@ fun Navigator() {
         //------------------------------------------------------------------
 
         // More Menu Items ------------------------------------------------
-        composable(Screens.TransactionHistory.route) { TransactionHistoryScreen(navController) }
+        composable("${Screens.TransactionHistory.route}?showBarChart={showBarChart}", arguments = listOf(
+            navArgument("showBarChart") {
+                type = NavType.BoolType
+            },
+        )) { backStackEntry->
+
+            TransactionHistoryScreen(
+                navController,
+                backStackEntry.arguments?.getBoolean("showBarChart") ?: false
+                )
+        }
         composable(
             route = "${Screens.TransactionReceipt.route}?transactionId={transactionId}&title={title}&amount={amount}&refrenceId={refrenceId}&aggregator={aggregator}&dateString={dateString}",
             arguments = listOf(
@@ -190,6 +201,10 @@ fun Navigator() {
         composable(Screens.Settings.route) { SettingsScreen(navController) }
         composable(Screens.HelpAndSupport.route) { HelpAndSupportScreen(navController) }
         composable(Screens.Settlement.route) { SettlementScreen(navController) }
+        composable(Screens.SettlementAction.route) { backStackEntry ->
+            val settleId = backStackEntry.arguments?.getString("settleId")
+            SettlementActionScreen(navController, settleId!!)
+        }
 
         //Misc
         composable(Screens.Splash.route) { SplashScreen(navController) }

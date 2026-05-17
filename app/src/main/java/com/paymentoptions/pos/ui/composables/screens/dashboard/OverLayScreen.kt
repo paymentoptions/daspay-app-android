@@ -22,8 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Fastfood
-import androidx.compose.material.icons.outlined.MoneyOff
-import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +44,7 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.theme.primary500
 
 
 @Composable
@@ -86,14 +85,15 @@ fun VerticalArrowLine(
 
 @Composable
 fun NavHighlightItem(
-    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    svgIcon: Int? = null,
     label: String,
     title: String,
     focusIcon: Boolean = false,
-    modifier: Modifier = Modifier
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
-        Text(title, color = Color(0xFFFFB74D), fontSize = 12.sp, textAlign = TextAlign.Center)
+        Text(title, color = Color(0xFFFFAE35), fontSize = 17.sp, textAlign = TextAlign.Center)
         VerticalArrowLine(
             modifier = Modifier
                 .height(if (focusIcon)  90.dp else 120.dp)
@@ -109,29 +109,52 @@ fun NavHighlightItem(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 if(focusIcon){
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = label,
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(50.dp)
-                            .background(Color(0xFF1976D2), shape = RoundedCornerShape(50))
-                            .border(3.dp, Color.White, RoundedCornerShape(50))
-                            .padding(6.dp)
-                    )
+                    if(svgIcon != null){
+                        Icon(
+                            painterResource(svgIcon),
+                            contentDescription = label,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(50.dp)
+                                .background(Color(0xFF1976D2), shape = RoundedCornerShape(50))
+                                .border(3.dp, Color.White, RoundedCornerShape(50))
+                                .padding(6.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = icon!!,
+                            contentDescription = label,
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(50.dp)
+                                .background(Color(0xFF1976D2), shape = RoundedCornerShape(50))
+                                .border(3.dp, Color.White, RoundedCornerShape(50))
+                                .padding(6.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(5.dp))
 
                 } else {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = label,
-                        tint = Color(0xFF1976D2), // blue tint for icon
-                        modifier = Modifier.size(28.dp)
-                    )
+                    if(svgIcon != null){
+                        Icon(
+                            painter = painterResource(svgIcon),
+                            contentDescription = label,
+                            modifier = Modifier.size(24.dp),
+                            tint = primary500
+                        )
+                    } else {
+                        Icon(
+                            imageVector = icon!!,
+                            contentDescription = label,
+                            tint = primary500, // blue tint for icon
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
+                Spacer(modifier = Modifier.height(5.dp))
                 Text(
                     text = label,
-                    color = Color(0xFF1976D2),
+                    color = primary500,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -231,8 +254,8 @@ fun OverLayScreen(context: Context, onDismiss: () -> Unit) {
                     title = "Main\nScreen"
                 )
                 NavHighlightItem(
-                    icon = Icons.Outlined.Fastfood,
-                    label = "Food Menu",
+                    svgIcon = R.drawable.catalog_icon,
+                    label = "Catalog",
                     title = "Menu\nItems"
                 )
                 NavHighlightItem(
@@ -242,12 +265,12 @@ fun OverLayScreen(context: Context, onDismiss: () -> Unit) {
                     focusIcon = true
                 )
                 NavHighlightItem(
-                    icon = Icons.Outlined.MoneyOff,
-                    label = "Refund",
-                    title = "Refund\nAlerts"
+                    svgIcon = R.drawable.query_icon,
+                    label = "Query",
+                    title = "Query &\nSearch"
                 )
                 NavHighlightItem(
-                    icon = Icons.Outlined.MoreHoriz,
+                    svgIcon = R.drawable.more_icon,
                     label = "More",
                     title = "Extra\nOptions"
                 )

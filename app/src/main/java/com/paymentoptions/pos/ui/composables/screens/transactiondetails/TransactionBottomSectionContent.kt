@@ -71,6 +71,7 @@ import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.TransactionAction
+import com.paymentoptions.pos.utils.TransactionColors
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.getAmountSign
 import com.paymentoptions.pos.utils.getAvailableAction
@@ -95,6 +96,7 @@ fun TransactionBottomSectionContent(
     val currency = getTransactionCurrency(context)
     val scrollState = rememberScrollState()
     val amountValue = transaction?.amount?.toDoubleOrNull() ?: 0.0
+    AppLogger.debug("transaction clicked is : $transaction")
 
     val transactionUuid = transaction?.uuid
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
@@ -125,19 +127,21 @@ fun TransactionBottomSectionContent(
 //    val transactionRefId =
 //        transaction?.uuid /*?: paymentDetailsLatestResponse?.data?.TransactionRefID.toString()*/
 
-    val statusColor = getStatusColor(transaction)
     val amountSign = getAmountSign(transaction)
     val availableAction = getAvailableAction(transaction)
     val transactionTypeLabel = getTransactionTypeLabel(transaction)
 
-    AppLogger.debug("TransactionSummary availableAction: $availableAction, amountSignIn :"
-            + "$amountSign , transactionTypeLabel: $transactionTypeLabel, statusColor: $statusColor")
+
 
     // Format the amount with sign
-    val formattedAmount = when {
-        amountSign == "+" -> "+${transaction.amount}"
-        amountSign == "-" -> "-${transaction.amount}"
-        else -> transaction.amount
+    val formattedAmount = if(transaction.amount.toFloat() == 0.toFloat()){
+        "0.00"
+    } else {
+        when (amountSign) {
+            "+" -> "+${"%.2f".format(transaction.amount.toFloat())}"
+            "-" -> "-${"%.2f".format(transaction.amount.toFloat())}"
+            else -> "%.2f".format(transaction.amount.toFloat())
+        }
     }
 
     val statusText = when {
@@ -146,6 +150,18 @@ fun TransactionBottomSectionContent(
         transactionStatus.uppercase() == "SUCCESSFUL" -> "Transaction Successful"
         else -> "Transaction Failed"
     }
+
+
+    val statusColor = when {
+        transactionType.uppercase() == "REFUNDED" -> TransactionColors.Green
+        transactionType.uppercase() == "VOIDED" -> TransactionColors.Green
+        transactionStatus.uppercase() == "SUCCESSFUL" -> TransactionColors.Green
+        else -> red500
+    }
+
+    AppLogger.debug("TransactionSummary availableAction: $availableAction, amountSignIn :"
+            + "$amountSign , transactionTypeLabel: $transactionTypeLabel, statusColor: $statusColor")
+
 
     fun navigateToVoidAction(transaction: TransactionListDataRecord){
         AppLogger.debug("full transaction object: $transaction")

@@ -288,7 +288,7 @@ private fun onAuthSuccess(
                     if (response.success || response.message.contains("Device already registered")) {
 
                         // --- Second API Call ---
-                        Log.d(
+                        AppLogger.debug(
                             "DEBUG_TOKEN",
                             "Step 3: Proceeding to get external device configuration."
                         )
@@ -300,7 +300,7 @@ private fun onAuthSuccess(
                         getExternalDeviceConfiguration(
                             context, otp
                         ).onSuccess { configResponse ->
-                            Log.d(
+                            AppLogger.debug(
                                 "DEBUG_TOKEN",
                                 "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                             )
@@ -308,7 +308,7 @@ private fun onAuthSuccess(
                                 context, configResponse
                             )
                         }.onFailure { exception ->
-                            Log.e(
+                            AppLogger.error(
                                 "DEBUG_TOKEN",
                                 "Step 4 FAILED: getExternalDeviceConfiguration.",
                                 exception
@@ -317,7 +317,7 @@ private fun onAuthSuccess(
                                 exception.message ?: "Failed to fetch configuration"
                         }
                     } else {
-                        Log.w(
+                        AppLogger.warn(
                             "DEBUG_TOKEN",
                             "Step 2 WARNING: API reported not successful. Message: ${response.message}"
                         )
@@ -326,12 +326,17 @@ private fun onAuthSuccess(
                 }.onFailure { exception ->
                     //if (json)
                     try {
-                        val jsonPart = exception.message?.substringAfter(":")?.trim()
-                        val jsonObject =
-                            if (jsonPart != null) JSONObject(jsonPart) else null // Fix type mismatch
-                        val exceptionMessage = jsonObject?.getString("message") ?: ""
+//                        val jsonPart = exception.message?.substringAfter("{")?.let { "{$it" }
+//                        val jsonObject = JSONObject(jsonPart ?: "{}")
+//                        val exceptionMessage = jsonObject.optString("message", "An unknown error occurred")
 
-                        Log.e(
+                        val jsonPart = exception.message
+
+                        if (!jsonPart.isNullOrEmpty() && jsonPart.trim().startsWith("{")) {
+                            val jsonObject = JSONObject(jsonPart)
+                            val exceptionMessage = jsonObject.optString("message")
+
+                        AppLogger.e(
                             "Step 2 FAILED: completeDeviceRegistration.",
                             exceptionMessage
                         )
@@ -346,7 +351,7 @@ private fun onAuthSuccess(
                                     isVerified = true
                                 )
 
-                                Log.d(
+                                AppLogger.debug(
                                     "DEBUG_TOKEN",
                                     "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                                 )
@@ -354,7 +359,7 @@ private fun onAuthSuccess(
                                     context, configResponse
                                 )
                             }.onFailure { exception ->
-                                Log.e(
+                                AppLogger.error(
                                     "DEBUG_TOKEN",
                                     "Step 4 FAILED: getExternalDeviceConfiguration.",
                                     exception
@@ -373,13 +378,17 @@ private fun onAuthSuccess(
                             errorMessage =
                                 exceptionMessage ?: "An unknown error occurred"
                         }
+                        } else {
+                            Log.e("API_ERROR", "Invalid JSON: $jsonPart")
+                        }
                     } catch (e: Exception) {
-                        errorMessage = e.message.toString()
+                        errorMessage = "Could not login, Please try again"
+                        AppLogger.debug("DEBUG_TOKEN", "Step 6: Process finished.$e")
                     }
                 }
-                Log.d("DEBUG_TOKEN", "Step 5: Process finished.")
+                AppLogger.debug("DEBUG_TOKEN", "Step 5: Process finished.")
 
-                Log.d("DEBUG_TOKEN", "Error message: $errorMessage")
+                AppLogger.debug("DEBUG_TOKEN", "Error message: $errorMessage")
 
 
                 // go to home screen if auto sign-in was successful

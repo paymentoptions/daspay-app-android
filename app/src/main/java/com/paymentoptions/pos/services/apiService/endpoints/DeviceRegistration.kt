@@ -46,7 +46,7 @@ suspend fun completeDeviceRegistration(
         val errorBody = e.response()?.errorBody()?.string()
         //if the error is the specific "Device already registered" case
         android.util.Log.e("API_ERROR_RESPONSE", "HTTP ${e.code()}: $errorBody")
-        Result.failure(Exception("HTTP ${e.code()}: $errorBody"))
+        Result.failure(Exception(errorBody))
 
     } catch (e: Exception) {
         android.util.Log.e("API_ERROR_RESPONSE", "A general error occurred", e)
@@ -73,6 +73,16 @@ suspend fun getExternalDeviceConfiguration(
         // The function name here is now corrected
         val response = RetrofitClient.getApi(context).getDeviceConfiguration(requestHeaders, deviceNumber, uniqueCode)
         Result.success(response)
+    } catch (e: retrofit2.HttpException) {
+        val errorBody = e.response()?.errorBody()?.string()
+        val serverMessage = try {
+            val json = org.json.JSONObject(errorBody ?: "")
+            json.optString("message", e.message())
+        } catch (_: Exception) {
+            e.message()
+        }
+        AppLogger.error("GetExternalDeviceConfigurationError: $serverMessage")
+        Result.failure(Exception(serverMessage))
     } catch (e: Exception) {
         AppLogger.error("GetExternalDeviceConfigurationError: ${e.message}")
         Result.failure(e)

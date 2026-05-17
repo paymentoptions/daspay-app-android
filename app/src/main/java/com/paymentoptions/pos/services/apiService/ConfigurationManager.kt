@@ -6,6 +6,14 @@ import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.endpoints.configDownload
 
+
+/**
+ * {"statusCode":200,"message":"successful","messageCode":"INFO_CONFIG_0000",
+ * "success":true,"data":[{"ID":5,"AppENV":"DEV","BaseAPIURL":"https://api-dev.paymentoptions.com/api/v1",
+ * "RegistryLogin":"DEV_LOGIN","RegistryToken":"DEV_TOKEN","PrevAppVersion":1,"CurrAppVersion":1,
+ * "IsUpdateMandatory":true,"TransactionDetailsURL":"https://me.paymentoptions.com/daspay-transaction-details/"}]}
+ *
+ */
 object ConfigurationManager {
 
     @Volatile
@@ -17,32 +25,36 @@ object ConfigurationManager {
      */
     suspend fun initializeConfig(context: Context): Boolean {
         return try {
-            val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+            // Download config for current flavor/environment
+            val appConfig = configDownload(context, BuildConfig.ENVIRONMENT)
 
-            if (savedBaseUrl.isNullOrEmpty()) {
-                AppLogger.debug("Base URL not found in preferences. Downloading config for environment: ${BuildConfig.ENVIRONMENT}")
+            if (appConfig != null) {
+                AppLogger.debug("Config downloaded successfully. Base URL: ${appConfig.BaseAPIURL}")
 
-                // Download config for current flavor/environment
-                val appConfig = configDownload(context, BuildConfig.ENVIRONMENT)
+                val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+                if(savedBaseUrl != appConfig.BaseAPIURL)
+                    DPSharedPreferences.storeAppConfig(context, appConfig)
 
-                if (appConfig != null) {
-                    AppLogger.debug("Config downloaded successfully. Base URL: ${appConfig.BaseAPIURL}")
-                    DPSharedPreferences.storeBaseUrl(context, appConfig.BaseAPIURL)
+                // Reset RetrofitClient to use new base URL
+                RetrofitClient.reset()
 
-                    // Reset RetrofitClient to use new base URL
-                    RetrofitClient.reset()
-
-                    isInitialized = true
-                    true
-                } else {
-                    AppLogger.error("Failed to download app configuration")
-                    false
-                }
-            } else {
-                AppLogger.debug("Using saved base URL from preferences: $savedBaseUrl")
                 isInitialized = true
                 true
+            } else {
+                AppLogger.error("Failed to download app configuration")
+                false
             }
+//            val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+//
+//            if (savedBaseUrl.isNullOrEmpty()) {
+//                AppLogger.debug("Base URL not found in preferences. Downloading config for environment: ${BuildConfig.ENVIRONMENT}")
+//
+//
+//            } else {
+//                AppLogger.debug("Using saved base URL from preferences: $savedBaseUrl")
+//                isInitialized = true
+//                true
+//            }
         } catch (e: Exception) {
             AppLogger.error("Error initializing config: ${e.message}")
             e.printStackTrace()
@@ -61,7 +73,7 @@ object ConfigurationManager {
 
             if (appConfig != null) {
                 AppLogger.debug("Config refreshed successfully. Base URL: ${appConfig.BaseAPIURL}")
-                DPSharedPreferences.storeBaseUrl(context, appConfig.BaseAPIURL)
+                DPSharedPreferences.storeAppConfig(context, appConfig)
 
                 // Reset RetrofitClient to use new base URL
                 RetrofitClient.reset()

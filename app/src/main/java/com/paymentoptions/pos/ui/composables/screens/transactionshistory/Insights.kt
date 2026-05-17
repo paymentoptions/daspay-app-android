@@ -28,6 +28,7 @@ import co.yml.charts.ui.barchart.models.BarChartData
 import co.yml.charts.ui.barchart.models.BarData
 import co.yml.charts.ui.barchart.models.BarStyle
 import co.yml.charts.ui.barchart.models.SelectionHighlightData
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderColor
@@ -143,7 +144,8 @@ fun Insights(
                         val label = index * chartMaxValue / 5
 
                         "$currency ${label.roundToInt()}"
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
+                        AppLogger.error("error : $e")
                         "0"
                     }
                 }.build()

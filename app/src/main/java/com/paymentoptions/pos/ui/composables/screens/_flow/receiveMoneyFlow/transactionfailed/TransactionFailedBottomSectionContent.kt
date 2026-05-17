@@ -191,6 +191,7 @@ fun TransactionFailedBottomSectionContent(
                     )
                 }
 
+                if(transactionAquirerResponse?.trace?.isNotEmpty() == true)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -209,6 +210,7 @@ fun TransactionFailedBottomSectionContent(
                     )
                 }
 
+               if(transactionAquirerResponse?.approvalCode?.isNotEmpty() == true)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween

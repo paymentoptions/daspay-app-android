@@ -41,7 +41,7 @@ fun BottomSectionContent(navController: NavController) {
         isLoading = true
         authDetails = DPSharedPreferences.getAuthDetails(context)
         isTokenVerified = DPSharedPreferences.getTokenStatus(context = context).first
-        isAuthenticated = authDetails?.success == true
+        isAuthenticated = authDetails?.success == true && isTokenVerified
         isLoading = false
     }
 

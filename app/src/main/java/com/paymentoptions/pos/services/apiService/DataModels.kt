@@ -2,6 +2,8 @@ package com.paymentoptions.pos.services.apiService
 
 import com.theminesec.lib.dto.transaction.Transaction
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 import org.json.JSONObject
 import kotlin.String
 
@@ -25,7 +27,7 @@ data class SignInData(
     val appLevel: String,
     val contactNo: String,
     val referralCode: String,
-    val accessLevel: AccessLevel,
+    val accessLevel: AccessLevel?,
     val signInAsMerchant: Boolean,
     val passwordExpiry: String,
 )
@@ -72,6 +74,7 @@ data class TransactionListV2RequestFilter(
     val field: String,
     val operator: String,
     val value: String,
+    val operand: String? = null
 )
 
 data class TransactionListV2Request(
@@ -129,7 +132,7 @@ data class TransactionRequest(
     val merchant_id: String,
     val amount: String? = null,
     val notes: String? = null,
-    val daspay_res: Transaction? = null,
+    //val daspay_res: Transaction? = null,
 )
 
 
@@ -155,11 +158,11 @@ data class TransactionListResponse(
 )
 // -------------------------------------------------------
 
-data class RefundRequest(
-    val id: String,
-    val merchant_id: String,
-    val refundAmount: Int,
-)
+//data class RefundRequest(
+//    val id: String,
+//    val merchant_id: String,
+//    val refundAmount: Int,
+//)
 
 data class GatewayResponse(
     val version: String,
@@ -327,12 +330,12 @@ data class PaymentResponse(
 // -------------------------------------------------------
 
 // Payment status related ----------------------------------
-
-@Serializable
-data class PaymentStatusAmount(
-    val currency: String,
-    val value: Float,
-)
+//
+//@Serializable
+//data class PaymentStatusAmount(
+//    val currency: String,
+//    val value: Float,
+//)
 
 data class PaymentStatusRequest(
     val tranId: String?,
@@ -365,19 +368,21 @@ data class PaymentStatusRequest(
     val acqTid: String = "null",
     val notifyId: Int = 0,
     val acquirerResponse: String = "",
+    val parentUUID: String? = null,
+    val childUUID: String? = null,
 )
 
-data class PaymentStatusResponseData(
-    val foo: String,
-)
+//data class PaymentStatusResponseData(
+//    val foo: String,
+//)
 
-data class PaymentStatusResponse(
-    val statusCode: Int,
-    val message: String,
-    val messageCode: String,
-    val success: Boolean,
-    val data: PaymentStatusResponseData,
-)
+//data class PaymentStatusResponse(
+//    val statusCode: Int,
+//    val message: String,
+//    val messageCode: String,
+//    val success: Boolean,
+//    val data: PaymentStatusResponseData,
+//)
 // -------------------------------------------------------
 
 // PayByLink related ----------------------------------
@@ -393,6 +398,7 @@ data class PayByLinkRequest(
     val ExpiryDate: String,
     val PBLLinkName: String,
     val Product: List<PayByLinkRequestProduct>,
+    val isSourceMinesec: Boolean = true
 )
 
 data class PayByLinkResponseDataProduct(
@@ -462,21 +468,22 @@ data class CategoryListResponse(
 data class ProductListDataRecord(
     val CategoryID: String,
     val ProductName: String,
-    val ProductDesc: String,
+    val ProductDesc: String? = null,
     val ProductStatus: Boolean,
     val ProductPrice: Float,
     val ProductID: String,
-    val ProductImage: String?,
+    val ProductImage: String? = null,
     val ProductCode: String,
-    val ProductFoodType: String,
-    val ProductSize: String,
-    val CreatedAt: String?,
-    val UpdatedAt: String?,
-    val ProductStock: Int,
+    val ProductFoodType: String? = null,
+    val ProductSize: String? = null,
+    val CreatedAt: String? = null,
+    val UpdatedAt: String? = null,
+    val ProductStock: Int? = null,
     val MerchantID: String,
     val Currency: String,
-    val DeletedAt: String?,
-    val DeletedBy: String?,
+    val DeletedAt: String? = null,
+    val isDeleted: Boolean? = null,
+    val DeletedBy: String? = null,
 )
 
 @Serializable
@@ -484,11 +491,11 @@ data class ProductRequest (
     val ProductName: String?,
     val ProductDesc: String?,
     val ProductPrice: Float?,
-    val ProductFoodType: String?,
-    val ProductSize: String?,
+    val ProductFoodType: String? = null,
+    val ProductSize: String? = null,
     val ProductCode: String?,
     val ProductStatus: Boolean?,
-    val ProductStock: Long?,
+    val ProductStock: Long? = null,
     val Currency: String?,
     val MerchantID: String?,
     val CategoryID: String?
@@ -718,7 +725,6 @@ data class PaymentDetailsResponseData(
     val SubscriptionDetails: String?,
     val PaymentType: String,
     val AcquirerResponse: List<String?>,
-    val transactionHistory: List<PaymentDetailsResponseData_TransactionHistory>,
 )
 
 data class PrimaryAddress(
@@ -871,7 +877,11 @@ data class AppConfig (
     val AppENV: String,
     val BaseAPIURL: String,
     val RegistryLogin: String,
-    val RegistryToken: String
+    val RegistryToken: String,
+    val PrevAppVersion: Long,
+    val CurrAppVersion: Long,
+    val IsUpdateMandatory: Boolean,
+    val TransactionDetailsURL: String
 )
 
 data class SettlementListResponse (
@@ -888,7 +898,7 @@ data class SettlementData (
     val records: List<SettlementRecord>
 )
 
-data class SettlementRecord (
+data class SettlementRecord  constructor(
     val ID: Long,
     val uuid: String,
     val BatchID: String,
@@ -963,5 +973,42 @@ fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDat
         ResponseCode = "",
         IntegrationType = "",
         has3DS = false,
+    )
+}
+
+fun Transaction.toPaymentStatusRequest(
+    parentUUID: String? = null,
+    childUUID: String? = null
+): PaymentStatusRequest {
+    return PaymentStatusRequest(
+        tranId = this.posReference.toString(),
+        cvmPerformed = this.cvmPerformed.toString(),
+        tsi = this.tsi.toString(),
+        mcc = this.mcc,
+        merchantName = this.merchantName,
+        tranStatus = this.tranStatus.toString(),
+        tranType = this.tranType.toString(),
+        atc = this.atc.toString(),
+        createdAt = this.createdAt.toEpochMilliseconds().toString(),
+        updatedAt = this.updatedAt?.toEpochMilliseconds().toString(),
+        trace = this.trace,
+        callbackUrl = this.callbackUrl.toString(),
+        entryMode = this.entryMode.toString(),
+        amount = "{\"currency\":\"${this.amount.currency}\",\"value\":${this.amount.value.toFloat()}",
+        batchNo = this.batchNo.toString(),
+        appName = this.appName.toString(),
+        linkedTranId = this.posReference.toString(),
+        merchantAddr = this.merchantAddr.toString(),
+        rrn = this.rrn.toString(),
+        tc = this.tc.toString(),
+        tvr = this.tvr.toString(),
+        accountMasked = this.accountMasked.toString(),
+        sdkId = this.sdkId.toString(),
+        paymentMethod = this.paymentMethod.toString(),
+        hostMessageFormat = this.hostMessageFormat.toString(),
+        aid = this.aid.toString(),
+        acquirerResponse = Json.encodeToString(this),
+        parentUUID = parentUUID,
+        childUUID = childUUID,
     )
 }

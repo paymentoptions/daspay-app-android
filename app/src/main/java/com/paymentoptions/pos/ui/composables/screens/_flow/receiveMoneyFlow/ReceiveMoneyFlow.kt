@@ -3,6 +3,7 @@ package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow
 import MyDialog
 import android.content.Intent
 import android.graphics.Bitmap
+import com.paymentoptions.pos.device.GeoRestrictionManager
 import android.os.Handler
 import android.provider.Settings
 import android.widget.Toast
@@ -32,11 +33,13 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -163,10 +166,10 @@ fun ReceiveMoneyFlow(
         val (isNfcSupported, _) = nfcStatusPair
         if (isNfcSupported) {
             // If NFC is supported (even if disabled), show all payment methods
-            paymentMethods
+            paymentMethods(context)
         } else {
             // If NFC is not supported, filter out the 'Tap' payment method
-            paymentMethods.filter { it != tapPaymentMethod }
+            paymentMethods(context).filter { it != tapPaymentMethod }
         }
     }
     var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(availablePaymentMethods.first()) }
@@ -220,12 +223,44 @@ fun ReceiveMoneyFlow(
         Toast.makeText(context, "Your device does not support NFC", Toast.LENGTH_SHORT).show()
     }
     */
-    if (!apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
+    if (availablePaymentMethods.contains(qrCodePaymentMethod) && !apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
         qrCodePaymentMethod.setIsEnabled(false)
         Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
     }
 
+    // Geo-restriction state
+    var showGeoRestrictionDialog by remember { mutableStateOf(false) }
+    var geoRestrictionMessage by remember { mutableStateOf("") }
+
+    var ignoreGeoDialog by remember { mutableStateOf(false) }
+
+    if (showGeoRestrictionDialog && !ignoreGeoDialog) {
+        AlertDialog(
+             onDismissRequest = { showGeoRestrictionDialog = false },
+             title = { Text("Device Restricted") },
+             text = { Text(geoRestrictionMessage) },
+             confirmButton = {
+                 TextButton(onClick = {
+                     showGeoRestrictionDialog = false
+                     ignoreGeoDialog = true
+                     receiveMoneyFlowStage = ReceiveMoneyFlowStage.CHARGE_MONEY
+                 }) {
+                     Text("OK")
+                 }
+             }
+         )
+    }
+
     fun updateFlowStage(newFoodOrderFlowStage: ReceiveMoneyFlowStage) {
+        // Check geo-restriction before allowing transaction stages
+        if (!ignoreGeoDialog && newFoodOrderFlowStage == ReceiveMoneyFlowStage.CHARGE_MONEY) {
+            val geoResult = GeoRestrictionManager.checkRestriction(context)
+            if (geoResult.isRestricted) {
+                geoRestrictionMessage = geoResult.message
+                showGeoRestrictionDialog = true
+                return
+            }
+        }
         receiveMoneyFlowStage = newFoodOrderFlowStage
     }
 
@@ -800,11 +835,11 @@ fun ReceiveMoneyFlow(
                 bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
                 bottomSectionMaxHeightRatio = 0.95f,
-                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+                enableScrollingOfBottomSectionContent = false
             ) {
                 TransactionFailedBottomSectionContent(
                     navController,
-                    enableScrolling = enableScrollingInsideBottomSectionContent,
+                    enableScrolling = true,
                     transactionId = latestTransactionId.toString(),
                     updateFlowStage = { })
             }

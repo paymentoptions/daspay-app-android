@@ -48,7 +48,7 @@ data class MessageForStatusScreen(
 fun StatusScreen(
     navController: NavController,
     dataMessage: MessageForStatusScreen,
-    strategyFn: () -> Unit = {},
+    strategyFn: () -> Unit = {}
 ) {
     // Animate the circles during PROCESSING state
     val infiniteTransition = rememberInfiniteTransition(label = "processing_animation")

@@ -6,11 +6,16 @@ import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AccessLevel
+import com.paymentoptions.pos.services.apiService.AppConfig
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Apms
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Schemes
 import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
+import com.paymentoptions.pos.utils.PaymentMethod
+import com.paymentoptions.pos.utils.qrCodePaymentMethod
+import com.paymentoptions.pos.utils.tapPaymentMethod
+import com.paymentoptions.pos.utils.viaLinkPaymentMethod
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -18,15 +23,43 @@ import kotlinx.serialization.json.Json
 
 object DPSharedPreferences {
         private var accessLevel: AccessLevel? = null
+        private var transactionCurrency: String? = null
 
         const val sharedPreferencesLabel: String = "my_prefs"
 
         private fun getSecurePrefs(context: Context): android.content.SharedPreferences {
+            return try {
+                createEncryptedPrefs(context)
+            } catch (e: Throwable) {
+                // AEADBadTagException / KeyStoreException — encrypted prefs or master key corrupted.
+                AppLogger.error("EncryptedSharedPreferences corrupted, resetting: ${e.message}")
+                clearCorruptedPrefsFiles(context)
+                try {
+                    createEncryptedPrefs(context)
+                } catch (e2: Throwable) {
+                    // If still failing, delete the Android Keystore master key entry and try once more
+                    AppLogger.error("EncryptedSharedPreferences still corrupted after cleanup, deleting keystore entry: ${e2.message}")
+                    try {
+                        val keyStore = java.security.KeyStore.getInstance("AndroidKeyStore")
+                        keyStore.load(null)
+                        keyStore.deleteEntry(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+                    } catch (ignored: Throwable) { }
+                    clearCorruptedPrefsFiles(context)
+                    try {
+                        createEncryptedPrefs(context)
+                    } catch (e3: Throwable) {
+                        // Last resort: fall back to unencrypted SharedPreferences to prevent crash
+                        AppLogger.error("EncryptedSharedPreferences unrecoverable, falling back to plain prefs: ${e3.message}")
+                        context.getSharedPreferences(sharedPreferencesLabel + "_fallback", Context.MODE_PRIVATE)
+                    }
+                }
+            }
+        }
 
+        private fun createEncryptedPrefs(context: Context): android.content.SharedPreferences {
             val masterKey = MasterKey.Builder(context)
                 .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
                 .build()
-            println("secure prefs called with master key: $masterKey")
             return EncryptedSharedPreferences.create(
                 context,
                 sharedPreferencesLabel,
@@ -34,6 +67,22 @@ object DPSharedPreferences {
                 EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
                 EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
             )
+        }
+
+        private fun clearCorruptedPrefsFiles(context: Context) {
+            val prefsDir = context.applicationInfo.dataDir + "/shared_prefs/"
+            // 1. Remove the encrypted prefs file
+            java.io.File(prefsDir + sharedPreferencesLabel + ".xml").also {
+                if (it.exists()) it.delete()
+            }
+            // 2. Remove the Tink keyset prefs (used by EncryptedSharedPreferences internally)
+            java.io.File(prefsDir + "__androidx_security_crypto_encrypted_prefs__" + sharedPreferencesLabel + ".xml").also {
+                if (it.exists()) it.delete()
+            }
+            // 3. Also try without the pref name suffix (older versions of the library)
+            java.io.File(prefsDir + "__androidx_security_crypto_encrypted_prefs__.xml").also {
+                if (it.exists()) it.delete()
+            }
         }
 
         fun saveBoolean(context: Context, key: String, value: Boolean) = runBlocking {
@@ -56,6 +105,11 @@ object DPSharedPreferences {
                 putString(key, value)
                 apply()
             }
+        }
+
+        fun getKeyValue(context: Context, key: String): String? {
+            val sharedPreferences = getSecurePrefs(context)
+            return sharedPreferences.getString(key, null)
         }
 
         fun saveBiometricsStatus(context: Context, status: Boolean = false) {
@@ -212,20 +266,20 @@ object DPSharedPreferences {
         }
 
     fun getTransactionCurrency(context: Context): String {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
-        var transactionCurrency = ""
+        if(transactionCurrency?.isNotEmpty() == true) return  transactionCurrency!!
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
 
         externalDeviceConfiguration?.let {
             transactionCurrency =
-                it.data.paymentMethod.firstOrNull()?.TransactionCCY?.firstOrNull() ?: ""
+                it.data.paymentMethod.firstOrNull()?.TransactionCCY?.firstOrNull()
 
         }
-
-        return transactionCurrency
+        AppLogger.debug("transactionCurrency : $transactionCurrency")
+        return transactionCurrency ?: ""
     }
 
     fun getSettlementCurrency(context: Context): String {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var settlementCurrency = ""
 
         externalDeviceConfiguration?.let {
@@ -236,7 +290,7 @@ object DPSharedPreferences {
 
     //SOFTPOS DASMID
     fun getTapPayDasmid(context: Context): String {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var dasmid = ""
 
         externalDeviceConfiguration?.let {
@@ -250,9 +304,35 @@ object DPSharedPreferences {
         return dasmid
     }
 
+    fun getAvailablePaymentsList(context: Context): List<PaymentMethod> {
+        val externalDeviceConfiguration = getDeviceConfiguration(context) ?: return emptyList()
+
+        val availableTypes = externalDeviceConfiguration.data.paymentMethod
+            .map { it.Type }
+            .toSet()
+
+        AppLogger.debug("available payments: $availableTypes")
+
+        val supportedPayments = mutableListOf<PaymentMethod>()
+
+        if ("SOFTPOS" in availableTypes) {
+            supportedPayments.add(tapPaymentMethod)
+        }
+        if ("QR" in availableTypes) {
+            supportedPayments.add(qrCodePaymentMethod)
+        }
+        if ("PBL" in availableTypes) {
+            supportedPayments.add(viaLinkPaymentMethod)
+        }
+
+        return supportedPayments
+    }
+
+
+
     //QP DASMID
     fun getQRDasmid(context: Context): String {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var dasmid = ""
 
         externalDeviceConfiguration?.let {
@@ -268,7 +348,7 @@ object DPSharedPreferences {
 
     //PBl DASMID
     fun getPayByLinkDasmid(context: Context): String {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var dasmid = ""
 
         externalDeviceConfiguration?.let {
@@ -284,7 +364,7 @@ object DPSharedPreferences {
 
     //this function will extract schemes from the external device configuration in which the payment method type is SOFTPOS
     fun getSchemes(context: Context): DevicePaymentMethod_Schemes {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var schemes = DevicePaymentMethod_Schemes()
 
         externalDeviceConfiguration?.let {
@@ -300,7 +380,7 @@ object DPSharedPreferences {
 
     //this function will extract apms from the external device configuration in which the payment method type is QR
     fun getApms(context: Context): DevicePaymentMethod_Apms {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var apms = DevicePaymentMethod_Apms()
 
         externalDeviceConfiguration?.let {
@@ -316,7 +396,7 @@ object DPSharedPreferences {
     }
 
     fun getDeviceId(context: Context): String? {
-        val externalDeviceConfiguration = DPSharedPreferences.getDeviceConfiguration(context)
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
         var deviceId: String? = null
 
         externalDeviceConfiguration?.let {
@@ -325,17 +405,26 @@ object DPSharedPreferences {
         return deviceId
     }
 
-    fun storeBaseUrl(context: Context, baseAPIURL: String) = runBlocking{
+    fun storeAppConfig(context: Context, appConfig: AppConfig) = runBlocking{
         val sharedPreferences = getSecurePrefs(context)
         with(sharedPreferences.edit()) {
-            putString("base_api_url", baseAPIURL)
+            putString("BaseAPIURL", appConfig.BaseAPIURL)
+            putString("TransactionDetailsURL", appConfig.TransactionDetailsURL)
             apply()
         }
     }
 
     fun getBaseUrl(context: Context): String?{
         val sharedPreferences = getSecurePrefs(context)
-        return  sharedPreferences.getString("base_api_url", "")
+        return  sharedPreferences.getString("BaseAPIURL", "")
     }
+
+    fun getTransactionDetailsUrl(context: Context): String?
+    {
+        val sharedPreferences = getSecurePrefs(context)
+        return sharedPreferences.getString("TransactionDetailsURL", "")
+    }
+
+
 
 }

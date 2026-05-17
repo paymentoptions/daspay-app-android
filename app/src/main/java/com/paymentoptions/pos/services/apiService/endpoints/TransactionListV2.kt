@@ -11,7 +11,7 @@ import com.paymentoptions.pos.services.apiService.generateRequestHeader
 
 suspend fun transactionListV2(
     context: Context,
-    take: Int = 10,
+    take: Int = 100,
     skip: Int = 0,
     filter: List<TransactionListV2RequestFilter> = listOf(),
 ): TransactionListResponse? {

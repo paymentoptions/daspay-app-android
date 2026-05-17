@@ -36,7 +36,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
@@ -73,13 +72,12 @@ import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
+import com.paymentoptions.pos.services.apiService.toPaymentStatusRequest
 import com.theminesec.lib.dto.transaction.Transaction
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
 
-import kotlinx.serialization.json.Json
 import java.math.BigDecimal
 import java.util.Currency
 
@@ -193,33 +191,38 @@ fun ChargeMoneyBottomSectionContent(
         modifier = Modifier
             .fillMaxWidth()
             .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-            .verticalScroll(state = rememberScrollState(), enabled = enableScrolling),
+            .then(if (enableScrolling) Modifier.verticalScroll(rememberScrollState()) else Modifier),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(8.dp))
-                .background(iconBackgroundColor)
-                .innerShadow(
-                    color = innerShadow,
-                    blur = 8.dp,
-                    spread = 5.dp,
-                    cornersRadius = 8.dp,
-                    offsetX = 0.dp,
-                    offsetY = 0.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-//            paymentMethods.filter { it.isEnabled }.forEach {
-            availablePaymentMethods.filter { it.isEnabled }.forEach {
-                PaymentMethodButton(
-                    paymentMethod = it,
-                    selectedPaymentMethod = selectedPaymentMethod,
-                    onSelected = { updateSelectedPaymentMethod(it) },
-                    modifier = Modifier.weight(1f)
-                )
+
+        if(availablePaymentMethods.size == 1){
+            // select the one item by default
+            updateSelectedPaymentMethod(availablePaymentMethods.first())
+        } else {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(iconBackgroundColor)
+                    .innerShadow(
+                        color = innerShadow,
+                        blur = 8.dp,
+                        spread = 5.dp,
+                        cornersRadius = 8.dp,
+                        offsetX = 0.dp,
+                        offsetY = 0.dp
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                availablePaymentMethods.filter { it.isEnabled }.forEach {
+                    PaymentMethodButton(
+                        paymentMethod = it,
+                        selectedPaymentMethod = selectedPaymentMethod,
+                        onSelected = { updateSelectedPaymentMethod(it) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
 
@@ -303,38 +306,7 @@ fun Tap_ChargeMoney(
         var completedSaleRequestId: String? = ""
 
         fun createPaymentRequest(transaction: Transaction): PaymentStatusRequest {
-            return PaymentStatusRequest(
-                tranId = transaction.posReference.toString(), //it.value.tranId,
-                cvmPerformed = transaction.cvmPerformed.toString(),
-                tsi = transaction.tsi.toString(),
-                mcc = transaction.mcc,
-                merchantName = transaction.merchantName,
-                tranStatus = transaction.tranStatus.toString(),
-                tranType = transaction.tranType.toString(),
-                atc = transaction.atc.toString(),
-                createdAt = transaction.createdAt.toEpochMilliseconds().toString(),
-                updatedAt = transaction.updatedAt?.toEpochMilliseconds().toString(),
-                trace = transaction.trace,
-                callbackUrl = transaction.callbackUrl.toString(),
-                entryMode = transaction.entryMode.toString(),
-                amount = "{\"currency\":\"${transaction.amount.currency}\",\"value\":${transaction.amount.value.toFloat()}",
-                batchNo = transaction.batchNo.toString(),
-                appName = transaction.appName.toString(),
-                linkedTranId = transaction.posReference.toString(),
-                merchantAddr = transaction.merchantAddr.toString(),
-                rrn = transaction.rrn.toString(),
-                tc = transaction.tc.toString(),
-                tvr = transaction.tvr.toString(),
-                accountMasked = transaction.accountMasked.toString(),
-                sdkId = transaction.sdkId.toString(),
-                paymentMethod = transaction.paymentMethod.toString(),
-                hostMessageFormat = transaction.hostMessageFormat.toString(),
-                aid = transaction.aid.toString(),
-                acquirerResponse = Json.encodeToString(transaction),
-//                                    acqMid = transaction.,
-//                                    acqTid = transaction.,
-//                                    notifyId = transaction.
-            )
+            return transaction.toPaymentStatusRequest()
         }
 
         when (it) {
@@ -361,13 +333,17 @@ fun Tap_ChargeMoney(
                     showProcessingScreen = true
                     try {
                         val paymentStatusResponse =
-                            paymentStatus(context = context, request = paymentStatusRequest)
+                            paymentStatus(context = context, request = paymentStatusRequest, it.value.tranStatus)
 
                         showProcessingScreen = false
                         if (paymentStatusResponse) {
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
                             onLoader { onSuccessUpdateFlowStage() }
-
+                        } else {
+                            updateLatestTransaction(paymentStatusRequest.tranId.toString())
+                            onLoader {
+                                onFailureUpdateFlowStage()
+                            }
                         }
                     } catch (e: Exception) {
                         showProcessingScreen = false
@@ -452,7 +428,7 @@ fun Tap_ChargeMoney(
                                 tranType = TranType.SALE,
                                 amount = Amount(
                                     BigDecimal(amountToCharge),
-                                    Currency.getInstance(BuildConfig.CURRENCY),
+                                    Currency.getInstance(DPSharedPreferences.getTransactionCurrency(context)),
                                 ),
                                 profileId = "prof_01KH8NQC4PVFKRNH31ZPC2QJNN",
                                 posReference = it.transaction_details.id

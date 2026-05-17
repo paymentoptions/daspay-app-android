@@ -66,6 +66,7 @@ import com.paymentoptions.pos.utils.timeAgo
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
+import java.util.Locale
 
 var TRANSACTION_TO_BE_REFUNDED: TransactionListDataRecord? = null
 
@@ -99,10 +100,14 @@ fun TransactionSummary(
             + "transactionIcon: $transactionIcon")
 
     // Format the amount with sign
-    val formattedAmount = when {
-        amountSign == "+" -> "+${transaction.amount}"
-        amountSign == "-" -> "-${transaction.amount}"
-        else -> transaction.amount
+    val formattedAmount = if(transaction.amount.toFloat() == 0.toFloat()){
+        "0.00"
+    } else {
+        when (amountSign) {
+            "+" -> "+${"%.2f".format(transaction.amount.toFloat())}"
+            "-" -> "-${"%.2f".format(transaction.amount.toFloat())}"
+            else -> "%.2f".format(transaction.amount.toFloat())
+        }
     }
 
     val dateStr = buildAnnotatedString {

@@ -641,53 +641,63 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         }.onFailure { exception ->
                             //if (json)
                             try {
-                                val jsonPart = exception.message?.substringAfter(":")?.trim()
-                                val jsonObject = JSONObject(jsonPart)
-                                val exceptionMessage = jsonObject.getString("message")
+                                val jsonPart = exception.message
 
-                                Log.e(
-                                    "Step 2 FAILED: completeDeviceRegistration.", exceptionMessage
-                                )
-                                if (exceptionMessage == "Device already registered") {
-                                    getExternalDeviceConfiguration(
-                                        context, otp.value
-                                    ).onSuccess { configResponse ->
+                                if (!jsonPart.isNullOrEmpty() && jsonPart.trim().startsWith("{")) {
+                                    val jsonObject = JSONObject(jsonPart)
+                                    val exceptionMessage = jsonObject.optString("message")
 
-                                        DPSharedPreferences.saveTokenStatus(
-                                            context = context,
-                                            tokenCode = otp.value,
-                                            isVerified = true
-                                        )
 
-                                        Log.d(
-                                            "DEBUG_TOKEN",
-                                            "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
-                                        )
-                                        DPSharedPreferences.saveDeviceConfiguration(
-                                            context, configResponse
-                                        )
-                                        openFingerprintScan = true
-                                    }.onFailure { exception ->
-                                        Log.e(
-                                            "DEBUG_TOKEN",
-                                            "Step 4 FAILED: getExternalDeviceConfiguration.",
-                                            exception
-                                        )
+                                    Log.e(
+                                        "Step 2 FAILED: completeDeviceRegistration.",
+                                        exceptionMessage
+                                    )
+                                    if (exceptionMessage == "Device already registered") {
+                                        getExternalDeviceConfiguration(
+                                            context, otp.value
+                                        ).onSuccess { configResponse ->
+
+                                            DPSharedPreferences.saveTokenStatus(
+                                                context = context,
+                                                tokenCode = otp.value,
+                                                isVerified = true
+                                            )
+
+                                            Log.d(
+                                                "DEBUG_TOKEN",
+                                                "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
+                                            )
+                                            DPSharedPreferences.saveDeviceConfiguration(
+                                                context, configResponse
+                                            )
+                                            openFingerprintScan = true
+                                        }.onFailure { exception ->
+                                            Log.e(
+                                                "DEBUG_TOKEN",
+                                                "Step 4 FAILED: getExternalDeviceConfiguration.",
+                                                exception
+                                            )
+                                            errorMessage =
+                                                exception.message ?: "Failed to fetch configuration"
+                                        }
+                                    } else if (exceptionMessage.lowercase()
+                                            .contains("unauthorized")
+                                    ) {
+                                        Toast.makeText(
+                                            context,
+                                            "Token expired. Please sign in again.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        DPSharedPreferences.clearSharedPreferences(context)
+                                        navController.navigate(Screens.AuthCheck.route) {
+                                            popUpTo(Screens.AuthCheck.route) { inclusive = true }
+                                        }
+                                    } else {
                                         errorMessage =
-                                            exception.message ?: "Failed to fetch configuration"
-                                    }
-                                } else if (exceptionMessage.lowercase().contains("unauthorized")) {
-                                    Toast.makeText(
-                                        context,
-                                        "Token expired. Please sign in again.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    DPSharedPreferences.clearSharedPreferences(context)
-                                    navController.navigate(Screens.AuthCheck.route) {
-                                        popUpTo(Screens.AuthCheck.route) { inclusive = true }
+                                            exceptionMessage ?: "An unknown error occurred"
                                     }
                                 } else {
-                                    errorMessage = exceptionMessage ?: "An unknown error occurred"
+                                    Log.d("DEBUG_TOKEN", "Step 7: JSON error.")
                                 }
                             } catch (e: Exception) {
                                 errorMessage = e.message.toString()
@@ -697,6 +707,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         Log.d("DEBUG_TOKEN", "Step 5: Process finished.")
                     }
                 })
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

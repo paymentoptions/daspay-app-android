@@ -7,7 +7,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun HelpAndSupportScreen(navController: NavController) {
-    SectionedLayout(navController = navController, bottomBarContent = BottomBarContent.NOTHING) {
+    SectionedLayout(navController = navController, bottomBarContent = BottomBarContent.NAVIGATION_BAR) {
         BottomSectionContent(navController)
     }
 }

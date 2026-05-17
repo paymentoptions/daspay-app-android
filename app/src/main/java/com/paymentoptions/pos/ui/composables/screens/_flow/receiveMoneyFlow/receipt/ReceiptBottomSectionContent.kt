@@ -368,7 +368,7 @@ fun ReceiptBottomSectionContent(
                 amount = String.format(
                     Locale.US,
                     "%.2f",
-                    paymentDetailsLatestResponse?.data?.Amount ?: 0.0
+                    paymentDetailsLatestResponse?.data?.Amount ?: 0.00
                 ),
                 fontSize = 20.sp,
                 color = primary500

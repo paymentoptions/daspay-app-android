@@ -55,12 +55,13 @@ fun EmailButton(text: String, email: Email, modifier: Modifier = Modifier) {
     }
 
     fun emailAction() {
-        val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:${emailState.text}")
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "message/rfc822"
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(emailState.text.toString()))
             putExtra(Intent.EXTRA_SUBJECT, email.subject)
             putExtra(Intent.EXTRA_TEXT, email.text)
         }
-        startActivity(context, intent, null)
+        startActivity(context, Intent.createChooser(intent, "Send Email"), null)
     }
 
     if (showDialog) AlertDialog(

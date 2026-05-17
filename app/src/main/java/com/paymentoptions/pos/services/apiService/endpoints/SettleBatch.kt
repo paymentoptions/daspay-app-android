@@ -2,8 +2,6 @@ package com.paymentoptions.pos.services.apiService.endpoints
 
 
 import android.content.Context
-import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.SettleBatchRequest
 import com.paymentoptions.pos.services.apiService.SettleBatchResponse

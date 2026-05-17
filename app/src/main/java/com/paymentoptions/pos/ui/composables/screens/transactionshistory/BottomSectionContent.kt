@@ -65,7 +65,7 @@ import java.util.Locale
 
 
 @Composable
-fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
+fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false, showBarChart: Boolean) {
     val context = LocalContext.current
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
@@ -73,7 +73,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var transactions by remember { mutableStateOf<List<InsightsResponseDataRecord>>(listOf()) }
     val scrollState = rememberScrollState()
 
-    var showBarChart by remember { mutableStateOf(false) }
+    var showBarChart by remember { mutableStateOf(showBarChart) }
     var fromDateCustomFilter by remember { mutableStateOf<Long?>(null) }
     var toDateCustomFilter by remember { mutableStateOf<Long?>(null) }
 

@@ -45,7 +45,12 @@ class TokenAutoRefresher private constructor(
     override fun onStart(owner: LifecycleOwner) {
         // App came to foreground
         AppLogger.debug("TokenAutoRefresher: App in foreground")
-        isUserLoggedIn = TokenRepository.getInstance(context.applicationContext).getAuthToken() != null
+        try {
+            isUserLoggedIn = TokenRepository.getInstance(context.applicationContext).getAuthToken() != null
+        } catch (e: Throwable) {
+            AppLogger.error("TokenAutoRefresher: Failed to check auth token - ${e.message}")
+            isUserLoggedIn = false
+        }
         AppLogger.debug("TokenAutoRefresher: isUserLoggedIn: $isUserLoggedIn")
         if (isUserLoggedIn) {
             startRefreshJob()

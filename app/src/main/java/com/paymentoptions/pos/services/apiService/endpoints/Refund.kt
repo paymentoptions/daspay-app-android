@@ -6,14 +6,12 @@ import com.paymentoptions.pos.services.apiService.RefundResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generateRefundRequestHeader
-import com.theminesec.lib.dto.transaction.Transaction
 
 suspend fun refund(
     context: Context,
     transactionId: String,
     merchantId: String,
     amount: String,
-    transaction: Transaction?,
     notes: String?,
 ): RefundResponse? {
 
@@ -23,16 +21,16 @@ suspend fun refund(
         val idToken = authDetails.data.token.idToken
         val requestHeaders = generateRefundRequestHeader(idToken)
 
-        AppLogger.debug("refund request: $transaction | $authDetails")
+        //AppLogger.debug("refund request: $transaction | $authDetails")
         val refundResponse: RefundResponse =
             RetrofitClient.getApi(context).refund(
                 headers = requestHeaders,
                 request = com.paymentoptions.pos.services.apiService.TransactionRequest(
                     transactionId = transactionId,
                     merchant_id = merchantId,
-                    daspay_res = transaction,
+                   // daspay_res = transaction,
                     amount = amount,
-                    notes = notes
+                    notes = if(notes?.isBlank() == true) "Refund from DASPay App" else notes!!
                 )
             )
 

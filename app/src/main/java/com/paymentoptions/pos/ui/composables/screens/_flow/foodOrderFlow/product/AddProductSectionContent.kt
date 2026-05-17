@@ -68,6 +68,7 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import androidx.core.content.FileProvider
 import com.paymentoptions.pos.BuildConfig
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -94,10 +95,10 @@ fun AddProductSectionContent(
     val productName = rememberTextFieldState()
     val productDescription = rememberTextFieldState()
     val productPrice = rememberTextFieldState()
-    var productType by remember { mutableStateOf("NONVEG") }
-    var productSize by remember { mutableStateOf("REGULAR") }
+    //var productType by remember { mutableStateOf("NONVEG") }
+    //var productSize by remember { mutableStateOf("REGULAR") }
     val productCode = rememberTextFieldState()
-    var productStock by remember { mutableStateOf(1) }
+    //var productStock by remember { mutableStateOf(1) }
     var showMediaSheet by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
@@ -222,57 +223,68 @@ fun AddProductSectionContent(
                     )
                 }
 
-                // Product Type
-                Column(modifier = Modifier.weight(0.5f)) {
-                    Text(
-                        "Product Type",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = purple50
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    RectangularDropdownMenu(
-                        options = listOf("NONVEG", "VEG"),
-                        selected = productType,
-                        onSelected = { productType = it },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
 
                 // Product Code
                 Column(modifier = Modifier.weight(0.5f)) {
                     OutlinedTextInput(
                         state = productCode,
-                        placeholder = "Enter Unique Product code",
+                        placeholder = "Enter Product code",
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Product Code * (Unique)",
+                        label = "Product Code",
                     )
                 }
 
-                // Product Size
-                Column(modifier = Modifier.weight(0.5f)) {
-                    Text(
-                        "Product Size",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = purple50
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    RectangularDropdownMenu(
-                        options = listOf("REGULAR", "LARGE", "SMALL"),
-                        selected = productSize,
-                        onSelected = { productSize = it },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                // Product Type
+//                Column(modifier = Modifier.weight(0.5f)) {
+//                    Text(
+//                        "Product Type",
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Medium,
+//                        color = purple50
+//                    )
+//                    Spacer(modifier = Modifier.height(4.dp))
+//                    RectangularDropdownMenu(
+//                        options = listOf("NONVEG", "VEG"),
+//                        selected = productType,
+//                        onSelected = { productType = it },
+//                        modifier = Modifier.fillMaxWidth()
+//                    )
+//                }
             }
+//            Spacer(modifier = Modifier.height(8.dp))
+//            Row(
+//                modifier = Modifier.fillMaxWidth(),
+//                horizontalArrangement = Arrangement.spacedBy(12.dp),
+//                verticalAlignment = Alignment.CenterVertically
+//            ) {
+//
+//                // Product Code
+//                Column(modifier = Modifier.weight(0.5f)) {
+//                    OutlinedTextInput(
+//                        state = productCode,
+//                        placeholder = "Enter Unique Product code",
+//                        modifier = Modifier.fillMaxWidth(),
+//                        label = "Product Code * (Unique)",
+//                    )
+//                }
+//
+//                // Product Size
+//                Column(modifier = Modifier.weight(0.5f)) {
+//                    Text(
+//                        "Product Size",
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Medium,
+//                        color = purple50
+//                    )
+//                    Spacer(modifier = Modifier.height(4.dp))
+//                    RectangularDropdownMenu(
+//                        options = listOf("REGULAR", "LARGE", "SMALL"),
+//                        selected = productSize,
+//                        onSelected = { productSize = it },
+//                        modifier = Modifier.fillMaxWidth()
+//                    )
+//                }
+//            }
 
             Spacer(modifier = Modifier.height(8.dp))
             Row(
@@ -282,72 +294,72 @@ fun AddProductSectionContent(
             ) {
 
                 // Product Stock
-                Column(modifier = Modifier.weight(0.5f)) {
-                    Text(
-                        "Product Stock",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = purple50
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Box(
-                        modifier = Modifier.fillMaxWidth()
-                            .height(88.dp)
-                            .border(
-                                width = 1.5.dp,
-                                color = Color(0xFF90CAF9),
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                            .background(
-                                color = Color.White,
-                                shape = RoundedCornerShape(6.dp)
-                            )
-                            .padding(horizontal = 12.dp, vertical = 4.dp),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.padding(20.dp)
-                                .height(70.dp)
-                                .background(
-                                    brush = enabledFilledButtonGradientBrush,
-                                    shape = RoundedCornerShape(20.dp)
-                                )
-                                .border(
-                                    shape = RoundedCornerShape(20.dp),
-                                    width = 1.dp,
-                                    color = Color.Blue
-                                )
-                        ) {
-                            IconButton(
-                                onClick = { if (productStock > 1) productStock-- },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(Icons.Default.Remove,
-                                    contentDescription = "Decrease",
-                                    tint = Color.White)
-                            }
-
-                            Text(
-                                productStock.toString(),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = 12.dp)
-                            )
-
-                            IconButton(
-                                onClick = { productStock++ },
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Icon(Icons.Default.Add,
-                                    contentDescription = "Increase",
-                                    tint = Color.White)
-                            }
-                        }
-                    }
-                }
+//                Column(modifier = Modifier.weight(0.5f)) {
+//                    Text(
+//                        "Product Stock",
+//                        fontSize = 14.sp,
+//                        fontWeight = FontWeight.Medium,
+//                        color = purple50
+//                    )
+//                    Spacer(modifier = Modifier.height(6.dp))
+//
+//                    Box(
+//                        modifier = Modifier.fillMaxWidth()
+//                            .height(88.dp)
+//                            .border(
+//                                width = 1.5.dp,
+//                                color = Color(0xFF90CAF9),
+//                                shape = RoundedCornerShape(6.dp)
+//                            )
+//                            .background(
+//                                color = Color.White,
+//                                shape = RoundedCornerShape(6.dp)
+//                            )
+//                            .padding(horizontal = 12.dp, vertical = 4.dp),
+//                    ) {
+//                        Row(
+//                            verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.Center,
+//                            modifier = Modifier.padding(20.dp)
+//                                .height(70.dp)
+//                                .background(
+//                                    brush = enabledFilledButtonGradientBrush,
+//                                    shape = RoundedCornerShape(20.dp)
+//                                )
+//                                .border(
+//                                    shape = RoundedCornerShape(20.dp),
+//                                    width = 1.dp,
+//                                    color = Color.Blue
+//                                )
+//                        ) {
+//                            IconButton(
+//                                onClick = { if (productStock > 1) productStock-- },
+//                                modifier = Modifier.size(40.dp)
+//                            ) {
+//                                Icon(Icons.Default.Remove,
+//                                    contentDescription = "Decrease",
+//                                    tint = Color.White)
+//                            }
+//
+//                            Text(
+//                                productStock.toString(),
+//                                fontWeight = FontWeight.Bold,
+//                                fontSize = 14.sp,
+//                                color = Color.White,
+//                                modifier = Modifier.padding(horizontal = 12.dp)
+//                            )
+//
+//                            IconButton(
+//                                onClick = { productStock++ },
+//                                modifier = Modifier.size(40.dp)
+//                            ) {
+//                                Icon(Icons.Default.Add,
+//                                    contentDescription = "Increase",
+//                                    tint = Color.White)
+//                            }
+//                        }
+//                    }
+//                }
 
                 // Product Image
                 Column(
@@ -522,8 +534,7 @@ fun AddProductSectionContent(
                     CoroutineScope(Dispatchers.IO).launch {
                         errorMessage = null
                         // Validate
-                        if (productName.text.toString().isBlank() || productCode.text.toString()
-                                .isBlank()
+                        if (productName.text.toString().isBlank()
                         ) {
                             errorMessage = "Please fill all required fields."
                             isLoading = false
@@ -554,18 +565,19 @@ fun AddProductSectionContent(
                                     ProductName = productName.text.toString(),
                                     ProductDesc = productDescription.text.toString(),
                                     ProductPrice = finalPrice,
-                                    ProductFoodType = productType,
-                                    ProductSize = productSize,
                                     ProductCode = productCode.text.toString(),
-                                    ProductStock = productStock.toLong(),
                                     ProductStatus = true,
-                                    Currency = BuildConfig.CURRENCY,
+                                    Currency = DPSharedPreferences.getTransactionCurrency(context),
                                     MerchantID = categorySelected?.MerchantID ?: "",
                                     CategoryID = categorySelected?.CategoryID ?: "",
                                 ),
                                 selectedFile = uriToTempFile(context, imageUri)
                             )
                             addFoodResponse?.statusCode == 200L || addFoodResponse?.statusCode == 201L // success
+                        } catch (e: retrofit2.HttpException) {
+                            errorMessage = "Something went wrong.."
+                            AppLogger.error("add product HTTP error ${e.code()}: ${e.message()}")
+                            false
                         } catch (e: Exception) {
                             errorMessage = e.message ?: "Failed to add product."
                             false

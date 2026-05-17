@@ -31,14 +31,14 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Text(
-                foodItem.item.ProductSize.lowercase().capitalize(),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Normal,
-                color = primary500,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+//            Text(
+//                foodItem.item.ProductSize.lowercase().capitalize(),
+//                fontSize = 12.sp,
+//                fontWeight = FontWeight.Normal,
+//                color = primary500,
+//                maxLines = 1,
+//                overflow = TextOverflow.Ellipsis
+//            )
 
             Text(
                 foodItem.item.ProductName,
@@ -48,6 +48,7 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
+            if(foodItem.item.ProductDesc != null)
             Text(
                 foodItem.item.ProductDesc,
                 fontSize = 11.sp,

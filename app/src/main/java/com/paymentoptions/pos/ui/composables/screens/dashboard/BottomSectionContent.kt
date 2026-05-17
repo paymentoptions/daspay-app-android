@@ -30,11 +30,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.TransactionListV2RequestFilter
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -46,6 +49,11 @@ import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.isScrolledToTheEnd
 import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import kotlin.math.ceil
 
 @Composable
@@ -55,12 +63,30 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
     var firstPageFetch by remember { mutableStateOf(false) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
-    var viewAll by remember { mutableStateOf(false) }
     var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
-    val take by remember { derivedStateOf { if (viewAll) 20 else 15 } }
+    val take by remember { derivedStateOf { 100 } }
     var currentPage by remember { mutableIntStateOf(1) }
     var maxPage by remember { mutableIntStateOf(0) }
     val lazyColumnState = rememberLazyListState()
+
+    val today = LocalDate.now()
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
+    val dateStart = today.format(dateFormatter) + " 00:00:00"
+    val dateEnd = today.format(dateFormatter) + " 23:59:59"
+
+    val filters = listOf(
+        TransactionListV2RequestFilter(
+            field = "DateStart",
+            operator = "eq",
+            value = dateStart,
+        ),
+        TransactionListV2RequestFilter(
+            field = "DateEnd",
+            operator = "eq",
+            value = dateEnd,
+            operand = "AND"
+        )
+    )
 
     val scrollingEndReached by remember {
         derivedStateOf { lazyColumnState.isScrolledToTheEnd() }
@@ -68,15 +94,44 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
     var totalTransactionCount by remember { mutableIntStateOf(take) }
 
+    // Pull-to-refresh state
+    var isRefreshing by remember { mutableStateOf(false) }
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+
     fun nextPageHandler() {
         if (currentPage < maxPage) currentPage++
     }
 
-    LaunchedEffect(viewAll) {
-        if (!viewAll) {
+    // Pull-to-refresh handler
+    suspend fun refreshTransactions() {
+        AppLogger.debug("Refreshing transactions called")
+        isRefreshing = true
+        apiResponseAvailable = false
+        try {
             currentPage = 1
-            transactions = listOf<TransactionListDataRecord>()
-            firstPageFetch = false
+            val skip = 0
+            val transactionListFromAPI = transactionListV2(context, take, skip, filters)
+            if (transactionListFromAPI != null) {
+                maxPage = ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
+                totalTransactionCount = transactionListFromAPI.data.total_count
+                transactions = transactionListFromAPI.data.records.filterNotNull()
+               // receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
+            }
+        } catch (e: Exception) {
+            if (e.toString().contains("HTTP 401")) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.session_expired),
+                    Toast.LENGTH_SHORT
+                ).show()
+                navController.navigate(Screens.FingerprintScan.route){
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        } finally {
+            isRefreshing = false
+            apiResponseAvailable = true
+            firstPageFetch = true
         }
     }
 
@@ -84,7 +139,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            val transactionListFromAPI = transactionListV2(context, take, skip)
+            val transactionListFromAPI = transactionListV2(context, take, skip, filters)
 
             if (transactionListFromAPI != null) {
                 maxPage =
@@ -95,14 +150,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 // For page 1, replace the list. For other pages, append
                 if (currentPage == 1) {
                     transactions = transactionListFromAPI.data.records.filterNotNull()
-                    AppLogger.debug("Replaced transactions list with ${transactions.size} items")
+                    AppLogger.debug("Replaced transactions list with "+transactions.size+" items")
                 } else {
                     transactions = transactions.plus(transactionListFromAPI.data.records.filterNotNull())
-                    AppLogger.debug("Appended to transactions list, now ${transactions.size} items")
+                    AppLogger.debug("Appended to transactions list, now "+transactions.size+" items")
                 }
 
                 //set receival amount from API total_amount field (rounded to two decimal place)
-                receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
+              //  receivalAmount = transactionListFromAPI.data.total_amount.toFloat()
             }
         } catch (e: Exception) {
 
@@ -124,90 +179,108 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         }
     }
 
-    if (scrollingEndReached && viewAll) LaunchedEffect(Unit) {
+    if (scrollingEndReached) LaunchedEffect(Unit) {
         nextPageHandler()
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-        horizontalAlignment = Alignment.CenterHorizontally
+    SwipeRefresh(
+        state = swipeRefreshState,
+        onRefresh = {
+            // Launch refresh in a coroutine
+            CoroutineScope(Dispatchers.IO).launch {
+                refreshTransactions()
+            }
+        }
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
+                .fillMaxSize()
+                .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "Receival for the day",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = primary900,
-                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            CurrencyText(
-                currency = currency,
-                amount = receivalAmount.formatToPrecisionString(),
-                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-                fontWeight = FontWeight(990)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if(DPSharedPreferences.isAdmin(context)) {
-                FilledButton(
-                    text = "View Insights",
-                    onClick = { navController.navigate(Screens.TransactionHistory.route) },
-                    modifier = Modifier
-                        .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                        .width(160.dp)
-                        .height(35.dp)
-                        .scale(0.8f),
-                )
-                Spacer(Modifier.height(20.dp))
-            }
-
-            Row(
-                Modifier
+            Column(
+                modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(vertical = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Text(
-                    text = if (viewAll) "All Transactions" else "Recent Transactions",
+                    text = "Receival for the day",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = primary500,
+                    color = primary900,
+                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                 )
 
-                SuggestionChip(border = borderThin, onClick = { viewAll = !viewAll }, label = {
-                    Text(
-                        text = if (viewAll) "View recent" else "View All",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                })
-            }
-        }
+                Spacer(modifier = Modifier.height(4.dp))
 
-        if (!firstPageFetch && !apiResponseAvailable) {
-            TransactionListShimmer(
-                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-                itemCount = 5
-            )
-        } else Column(modifier = Modifier.fillMaxWidth()) {
-            Transactions(
-                navController,
-                transactions = transactions,
-                lazyColumnState = lazyColumnState
-            )
+                CurrencyText(
+                    currency = currency,
+                    amount = receivalAmount.formatToPrecisionString(),
+                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                    fontWeight = FontWeight(990)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if(DPSharedPreferences.isAdmin(context)) {
+                    FilledButton(
+                        text = "View Insights",
+                        onClick = {
+                            navController.navigate("${Screens.TransactionHistory.route}?showBarChart=${true}")
+                                  },
+                        modifier = Modifier
+                            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                            .width(160.dp)
+                            .height(35.dp)
+                            .scale(0.8f),
+                    )
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+
+                    Text(
+                        text = "Today's Transactions",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = primary500,
+                    )
+
+                    SuggestionChip(border = borderThin, onClick = {
+                        navController.navigate("${Screens.TransactionHistory.route}?showBarChart=${false}")
+
+                    }, label = {
+                        Text(
+                            text = "View All",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    })
+                }
+            }
+
+            if (!firstPageFetch && !apiResponseAvailable) {
+                TransactionListShimmer(
+                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                    itemCount = 5
+                )
+            } else Column(modifier = Modifier.fillMaxWidth()) {
+                Transactions(
+                    navController,
+                    transactions = transactions,
+                    lazyColumnState = lazyColumnState,
+                    updateReceivalAmount = {
+                        receivalAmount = it
+                    }
+                )
+            }
         }
     }
 }
