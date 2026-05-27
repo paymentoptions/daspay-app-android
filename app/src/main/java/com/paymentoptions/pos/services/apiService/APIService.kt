@@ -185,6 +185,12 @@ interface ApiService {
         @Body request: SettleBatchRequest
     ): SettleBatchResponse
 
+   @GET("transactions/daspay/check-image/{uuid}")
+    suspend fun getSignature(
+        @HeaderMap  headers: Map<String, String>,
+        @Path("uuid") uuid: String,
+    ): GetSignatureResponse
+
 }
 
 var gson = GsonBuilder()

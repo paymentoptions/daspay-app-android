@@ -924,6 +924,19 @@ data class SettleBatchResponse (
     val SettlementRes: String
 )
 
+data class GetSignatureResponse (
+    val statusCode: Long,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: SignatureData
+)
+
+data class SignatureData (
+    val imageExists: Boolean,
+    val signatureURL: Any? = null
+)
+
 fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDataRecord {
     return TransactionListDataRecord(
         uuid = this.uuid,
