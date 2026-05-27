@@ -399,7 +399,7 @@ private fun onAuthSuccess(
                         Toast.makeText(context, "Auto sign-in is successful", Toast.LENGTH_SHORT)
                             .show()
                         navController.navigate(Screens.Dashboard.route) {
-                            popUpTo(Screens.AuthCheck.route) { inclusive = true }
+                            popUpTo(Screens.FingerprintScan.route) { inclusive = true }
                         }
                     }
                 } else {

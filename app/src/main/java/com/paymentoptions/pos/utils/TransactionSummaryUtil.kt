@@ -208,3 +208,22 @@ fun getTransactionTypeLabel(transaction: TransactionListDataRecord): String {
         else -> transactionType.lowercase().replaceFirstChar { it.uppercase() }
     }
 }
+
+fun getStatusText(transaction: TransactionListDataRecord): String {
+    val transactionType = transaction.TransactionType.uppercase()
+    val status = transaction.status.uppercase()
+    val settleStatus = transaction.SettleStatus?.uppercase() ?: ""
+    val productType = transaction.ProductType?.uppercase() ?: ""
+
+    return when {
+        transactionType == "REFUND" -> "Transaction Refunded"
+        transactionType == "VOID" -> "Transaction Voided"
+        transactionType == "VOIDAUTHORISATION" -> "Transaction Voided"
+        status == "SUCCESSFUL" -> "Transaction Successful"
+        // Unsettled Sale - Pending (Yellow)
+        settleStatus == "PENDING" && productType == "SOFTPOS" -> "Transaction Pending"
+        status == "PENDING" && productType == "QR" -> "Transaction Pending"
+        status == "PENDING" && productType == "PBL" -> "Transaction Pending"
+        else -> "Transaction Failed"
+    }
+}
