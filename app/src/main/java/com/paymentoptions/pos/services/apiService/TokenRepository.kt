@@ -37,7 +37,7 @@ class TokenRepository private constructor(
             renewCount ++
             val username = authDetails.data.email
             val refreshToken = authDetails.data.token.refreshToken
-            val requestHeaders = generateRequestHeader()
+            val requestHeaders = generateSignedRequestHeader(context)
             val refreshTokenRequest = RefreshTokenRequest(username, refreshToken)
             val refreshTokenResponse =
                 RetrofitClient.getApi(context).refreshToken(requestHeaders, refreshTokenRequest)
