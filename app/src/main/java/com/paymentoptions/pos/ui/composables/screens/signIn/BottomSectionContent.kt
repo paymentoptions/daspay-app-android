@@ -121,7 +121,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             maxLength = 32
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(22.dp))
 
 //        BasicTextInput(
 //            state = otpState,
@@ -211,9 +211,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             modifier = Modifier
                 .fillMaxWidth()
                 .height(59.dp)
-                .padding(bottom = 25.dp)
+                //.padding(bottom = 35.dp, top = 15.dp)
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(30.dp))
     }
 }

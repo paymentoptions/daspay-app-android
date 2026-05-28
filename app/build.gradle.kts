@@ -43,29 +43,36 @@ android {
     productFlavors {
         create("dev") {
             dimension = "environment"
-            buildConfigField("String", "CURRENCY", "\"SGD\"")
+           // buildConfigField("String", "CURRENCY", "\"SGD\"")
             buildConfigField("String", "ENVIRONMENT", "\"DEV\"")
             buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-dev.paymentoptions.com/api/v1/\"")
             versionNameSuffix = "-dev"
         }
         create("staging") {
             dimension = "environment"
-            buildConfigField("String", "CURRENCY", "\"SGD\"")
+           // buildConfigField("String", "CURRENCY", "\"SGD\"")
             buildConfigField("String", "ENVIRONMENT", "\"STAGING\"")
             buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-staging.paymentoptions.com/api/v1/\"")
             versionNameSuffix = "-staging"
         }
         create("production") {
             dimension = "environment"
-            buildConfigField("String", "CURRENCY", "\"SGD\"")
+            //buildConfigField("String", "CURRENCY", "\"SGD\"")
             buildConfigField("String", "ENVIRONMENT", "\"PROD\"")
             buildConfigField("String", "CONFIG_BASE_URL", "\"https://api.paymentoptions.com/api/v1/\"")
         }
     }
 
     signingConfigs {
+        getByName("debug") {
+            storeFile = keystoreProperties["storeFile"]?.let { rootProject.file(it as String) }
+            storePassword = keystoreProperties["storePassword"] as String?
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+        }
+
         create("release") {
-            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+            storeFile = keystoreProperties["storeFile"]?.let { rootProject.file(it as String) }
             storePassword = keystoreProperties["storePassword"] as String?
             keyAlias = keystoreProperties["keyAlias"] as String?
             keyPassword = keystoreProperties["keyPassword"] as String?
@@ -147,11 +154,17 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
 
-//    Minesec
-//    releaseImplementation("com.theminesec.sdk:headless:1.0.17")
+//    Minesec - using local AAR since remote registry is unavailable
     releaseImplementation(libs.headless.stage)
-    // we need to replace with Production SDK, using stage for release build also
     debugImplementation(libs.headless.stage)
+
+//    releaseImplementation(files("libs/minehades-stage-1.10.105.12.61.aar"))
+//    debugImplementation(files("libs/minehades-stage-1.10.105.12.61.aar"))
+//    releaseImplementation(files("libs/headless-stage-1.2.17-stage-release.aar"))
+//    debugImplementation(files("libs/headless-stage-1.2.17-stage-release.aar"))
+
+
+
 
     //Firebase
     implementation(platform(libs.firebase.bom))

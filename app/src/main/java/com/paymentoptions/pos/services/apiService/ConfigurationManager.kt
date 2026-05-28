@@ -32,11 +32,11 @@ object ConfigurationManager {
                 AppLogger.debug("Config downloaded successfully. Base URL: ${appConfig.BaseAPIURL}")
 
                 val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
-                if(savedBaseUrl != appConfig.BaseAPIURL)
+                if(savedBaseUrl != appConfig.BaseAPIURL) {
                     DPSharedPreferences.storeAppConfig(context, appConfig)
-
-                // Reset RetrofitClient to use new base URL
-                RetrofitClient.reset()
+                    // Reset RetrofitClient to use new base URL
+                    RetrofitClient.reset()
+                }
 
                 isInitialized = true
                 true

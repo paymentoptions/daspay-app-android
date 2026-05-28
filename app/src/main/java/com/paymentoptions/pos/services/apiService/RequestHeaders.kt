@@ -1,6 +1,8 @@
 package com.paymentoptions.pos.services.apiService
 
+import android.content.Context
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.utils.getDeviceIdentifier
 
 fun generateRequestHeader(authToken: String = ""): Map<String, String> {
     val headers = mapOf<String, String>(
@@ -31,13 +33,13 @@ fun generateRequestHeader(authToken: String = ""): Map<String, String> {
     return headers
 }
 
-fun generateSignedRequestHeader(): Map<String, String> {
+fun generateSignedRequestHeader(context: Context): Map<String, String> {
     val headers = mapOf<String, String>(
         "accept" to "*/*",
         "accept-language" to "en-US,en;q=0.9",
         "cache-control" to "no-cache",
         "content-type" to "application/json",
-        "x-domain" to "Daspay-Android",
+        "x-domain" to "Daspay-Android-${getDeviceIdentifier(context)}",
         "origin" to "https://api-dev.paymentoptions.com",
         "referer" to "https://api-dev.paymentoptions.com/",
         "pragma" to "no-cache",

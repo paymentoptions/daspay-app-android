@@ -28,6 +28,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,11 +45,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
 import com.google.gson.Gson
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.services.apiService.SignatureData
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.utils.getStatusColor
+import com.paymentoptions.pos.utils.getStatusText
+import com.paymentoptions.pos.services.apiService.endpoints.getSignature
+import com.paymentoptions.pos.utils.getStatusColor
+import com.paymentoptions.pos.utils.getStatusText
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
@@ -64,20 +72,15 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
-import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
-import com.paymentoptions.pos.ui.theme.purple50
-import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.TransactionAction
-import com.paymentoptions.pos.utils.TransactionColors
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.getAmountSign
 import com.paymentoptions.pos.utils.getAvailableAction
-import com.paymentoptions.pos.utils.getStatusColor
-import com.paymentoptions.pos.utils.getTransactionIcon
 import com.paymentoptions.pos.utils.getTransactionTypeLabel
+import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -103,6 +106,22 @@ fun TransactionBottomSectionContent(
         "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
     } else {
         null
+    }
+
+    var signatureData by remember { mutableStateOf<SignatureData?>(null) }
+    var isSignatureLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(transactionUuid) {
+        if (!transactionUuid.isNullOrBlank()) {
+            isSignatureLoading = true
+            signatureData = try {
+                getSignature(context = context, uuid = transactionUuid)?.data
+            } catch (e: Exception) {
+                AppLogger.error("TransactionBottomSectionContent getSignature error: ${e.message}")
+                null
+            }
+            isSignatureLoading = false
+        }
     }
 
     val dateString =
@@ -144,20 +163,8 @@ fun TransactionBottomSectionContent(
         }
     }
 
-    val statusText = when {
-        transactionType.uppercase() == "REFUNDED" -> "Refunded"
-        transactionType.uppercase() == "VOIDED" -> "Voided"
-        transactionStatus.uppercase() == "SUCCESSFUL" -> "Transaction Successful"
-        else -> "Transaction Failed"
-    }
-
-
-    val statusColor = when {
-        transactionType.uppercase() == "REFUNDED" -> TransactionColors.Green
-        transactionType.uppercase() == "VOIDED" -> TransactionColors.Green
-        transactionStatus.uppercase() == "SUCCESSFUL" -> TransactionColors.Green
-        else -> red500
-    }
+    val statusText = getStatusText(transaction)
+    val statusColor = getStatusColor(transaction)
 
     AppLogger.debug("TransactionSummary availableAction: $availableAction, amountSignIn :"
             + "$amountSign , transactionTypeLabel: $transactionTypeLabel, statusColor: $statusColor")
@@ -444,6 +451,64 @@ fun TransactionBottomSectionContent(
                             .padding(horizontal = 10.dp, vertical = 20.dp)
                             .clickable { showQrCodeBottomSheetExpanded = true }
                     )
+                }
+
+                // Signature section (server-side by transaction UUID)
+                if (isSignatureLoading) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
+                        Box(
+                            modifier = Modifier
+                                .width(150.dp)
+                                .height(14.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .shimmerEffect()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .shimmerEffect()
+                        )
+                    }
+                } else {
+                    val signatureUrl = signatureData?.signatureURL?.toString()
+                    if (signatureData?.imageExists == true && !signatureUrl.isNullOrBlank()) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
+                            Text(
+                                text = "Customer Signature",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = primary900
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                                    .background(Color.White),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                AsyncImage(
+                                    model = signatureUrl,
+                                    contentDescription = "Transaction Signature",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(140.dp)
+                                        .padding(8.dp)
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))

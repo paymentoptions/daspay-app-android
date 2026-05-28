@@ -51,12 +51,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
+import coil3.compose.AsyncImage
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
+import com.paymentoptions.pos.services.apiService.SignatureData
+import com.paymentoptions.pos.services.apiService.endpoints.getSignature
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
@@ -80,7 +82,6 @@ import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.utils.AppJson
-import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -108,6 +109,8 @@ fun StatusBottomSectionContent(
     var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
     var isLoading by remember { mutableStateOf(true) }
+    var signatureData by remember { mutableStateOf<SignatureData?>(null) }
+    var isSignatureLoading by remember { mutableStateOf(true) }
 
 
     LaunchedEffect(Unit) {
@@ -121,6 +124,19 @@ fun StatusBottomSectionContent(
             null
         }
         isLoading = false
+    }
+
+    LaunchedEffect(transactionId) {
+        if (transactionId.isNotBlank()) {
+            isSignatureLoading = true
+            signatureData = try {
+                getSignature(context = context, uuid = transactionId)?.data
+            } catch (e: Exception) {
+                AppLogger.error("GetSignature error: ${e.message}")
+                null
+            }
+            isSignatureLoading = false
+        }
     }
 
 
@@ -361,6 +377,76 @@ fun StatusBottomSectionContent(
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
+                }
+
+                // ── Signature Section ──────────────────────────────────────
+                if (isSignatureLoading) {
+                    // Shimmer placeholder while loading
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .width(150.dp)
+                                .height(14.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .shimmerEffect()
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .shimmerEffect()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                } else {
+                    val signatureUrl = signatureData?.signatureURL?.toString()
+                    if (signatureData?.imageExists == true && !signatureUrl.isNullOrBlank()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Customer Signature",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = primary900
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .dashedBorder(
+                                        color = Color.LightGray,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .background(Color.White),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                AsyncImage(
+                                    model = signatureUrl,
+                                    contentDescription = "Transaction Signature",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(140.dp)
+                                        .padding(8.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
                 }
             }
         }
