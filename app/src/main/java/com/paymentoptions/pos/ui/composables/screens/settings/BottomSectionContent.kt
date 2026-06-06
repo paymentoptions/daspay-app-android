@@ -29,9 +29,9 @@ import androidx.navigation.NavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.endpoints.signOut
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
-import com.paymentoptions.pos.services.apiService.endpoints.signOut
 import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
 import com.paymentoptions.pos.ui.composables._components.MySwitch
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
@@ -79,7 +79,7 @@ fun BottomSectionContent(navController: NavController) {
                 signOutLoader = true
 
                 try {
-                    signOutResponse = signOut(context)
+                    signOutResponse = signOut()
                 } catch (e: Exception) {
                     AppLogger.error("Error: ${e.toString()}")
                 } finally {

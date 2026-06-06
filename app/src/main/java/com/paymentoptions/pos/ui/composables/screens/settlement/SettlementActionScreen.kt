@@ -10,15 +10,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.endpoints.settleBatch
+import com.paymentoptions.pos.network.ApiHttpException
+import com.paymentoptions.pos.network.endpoints.settleBatch
 import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 @Composable
 fun SettlementActionScreen(
@@ -36,7 +39,7 @@ fun SettlementActionScreen(
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = settleBatch(context, settleId)
+                val response = settleBatch(settleId)
                 if (response != null && response.SettleStatus == SETTLED_BATCH) {
                     withContext(Dispatchers.Main) {
                         processingScreenType = StatusScreenType.SUCCESS
@@ -49,30 +52,18 @@ fun SettlementActionScreen(
                        // Toast.makeText(context, "Transaction is Settled", Toast.LENGTH_SHORT).show()
                     }
                 }
-            } catch (e: retrofit2.HttpException) {
-                val errorBody = e.response()?.errorBody()?.string()
-                AppLogger.error("settle HTTP error ${e.code()}: $errorBody")
-                withContext(Dispatchers.Main) {
-                    processingScreenType = StatusScreenType.ERROR
-                    processingMessage = "Settlement\n Failed"
-                }
-                // Wait 5 seconds
-                delay(delayTime)
-                withContext(Dispatchers.Main) {
-                    navController.popBackStack()
-                    Toast.makeText(context, errorBody, Toast.LENGTH_SHORT).show()
-                }
             } catch (e: Exception) {
                 AppLogger.error("settle: $e")
+                val errorMessage = parseApiErrorMessage(e, "Settlement failed")
                 withContext(Dispatchers.Main) {
                     processingScreenType = StatusScreenType.ERROR
-                    processingMessage = "Settlement\n Failed"
+                    processingMessage = errorMessage
                 }
                 // Wait 5 seconds
                 delay(delayTime)
                 withContext(Dispatchers.Main) {
                     navController.popBackStack()
-                    Toast.makeText(context, e.message, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
                 }
             }
         }

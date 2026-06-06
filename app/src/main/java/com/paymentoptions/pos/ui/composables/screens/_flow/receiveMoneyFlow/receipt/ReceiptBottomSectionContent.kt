@@ -60,9 +60,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
-import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -87,10 +87,8 @@ import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.utils.topdf.ComposePdfExporter
 import com.paymentoptions.pos.utils.topdf.PageSize
 import com.paymentoptions.pos.utils.topdf.PdfExportProgress
-import com.paymentoptions.pos.utils.AppJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -153,10 +151,7 @@ fun ReceiptBottomSectionContent(
     LaunchedEffect(Unit) {
         isLoading = true
         paymentDetailsLatestResponse = try {
-            paymentDetails(
-                context = context,
-                paymentId = transactionId
-            )
+            paymentDetails(paymentId = transactionId)
         } catch (e: Exception) {
             null
         }
@@ -167,11 +162,7 @@ fun ReceiptBottomSectionContent(
 
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(
-                    it
-                )
-            }
+            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
 
     val transactionDetailUrl = if (transactionUuid != null) {
         "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
@@ -911,11 +902,7 @@ private fun ReceiptContentForPDF(
 
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
-            paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(
-                    it
-                )
-            }
+            paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()
 
     Column(
         modifier = Modifier

@@ -39,10 +39,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import com.paymentoptions.pos.device.DPSharedPreferences.getKeyValue
+import com.paymentoptions.pos.device.DPSharedPreferences.saveKeyValue
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.endpoints.insights
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.insights
+import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -51,6 +54,7 @@ import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.getDeviceIdentifier
 import com.paymentoptions.pos.utils.modifiers.DashboardStatsShimmer
 import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import com.paymentoptions.pos.utils.modifiers.conditional
@@ -66,6 +70,7 @@ import java.util.Locale
 
 @Composable
 fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false, showBarChart: Boolean) {
+    val selectedFilterStorageKey = "transaction_history_selected_filter"
     val context = LocalContext.current
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
     var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
@@ -90,7 +95,15 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         "Custom" to "Custom Date Range",
     )
 
-    var selectedFilter by remember { mutableStateOf<Map.Entry<String, String>>(filters.entries.first()) }
+    val persistedFilterKey = remember {
+        getKeyValue(context, selectedFilterStorageKey)
+    }
+
+    var selectedFilter by remember {
+        mutableStateOf(
+            filters.entries.firstOrNull { it.key == persistedFilterKey } ?: filters.entries.first()
+        )
+    }
 
     if (selectedFilter.key == "Custom") {
         if (fromDateCustomFilter == null) DateRangePickerModal(
@@ -100,12 +113,16 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     fromDateCustomFilter = null
                     toDateCustomFilter = null
                     selectedFilter = filters.entries.first()
+                    saveKeyValue(context, selectedFilterStorageKey, selectedFilter.key)
                 } else {
                     fromDateCustomFilter = startDateMillis
                     toDateCustomFilter = endDateMillis
                 }
             },
-            { selectedFilter = filters.entries.first() })
+            {
+                selectedFilter = filters.entries.first()
+                saveKeyValue(context, selectedFilterStorageKey, selectedFilter.key)
+            })
     } else {
         fromDateCustomFilter = null
         toDateCustomFilter = null
@@ -195,8 +212,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         }
 
         try {
+            val deviceNumber = AppStorage.deviceNumber ?: getDeviceIdentifier(context)
+            val uniqueCode = AppStorage.tokenCode ?: ""
             val insightsResponse = insights(
-                context,
+                deviceNumber = deviceNumber,
+                uniqueCode = uniqueCode,
                 startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
                     .replace('-', '/') + " 00:00:00",
                 endDate = endDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
@@ -258,7 +278,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     navController,
                     filters,
                     selectedFilter,
-                    onFilterChange = { selectedFilter = it },
+                    onFilterChange = {
+                        selectedFilter = it
+                        saveKeyValue(context, selectedFilterStorageKey, it.key)
+                    },
                     icon = Icons.Default.CalendarMonth,
                     modifier = Modifier
                         .fillMaxHeight()

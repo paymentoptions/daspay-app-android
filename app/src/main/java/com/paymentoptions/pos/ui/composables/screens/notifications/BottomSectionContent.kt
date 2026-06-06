@@ -35,8 +35,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.network.TransactionListV2Request
+import com.paymentoptions.pos.network.endpoints.transactionListV2
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -119,7 +120,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            val transactionListFromAPI = transactionListV2(context, take, skip)
+            val transactionListFromAPI = transactionListV2(
+                TransactionListV2Request(take = take, skip = skip, filter = listOf())
+            )
 
             if (transactionListFromAPI != null) {
                 maxPage =

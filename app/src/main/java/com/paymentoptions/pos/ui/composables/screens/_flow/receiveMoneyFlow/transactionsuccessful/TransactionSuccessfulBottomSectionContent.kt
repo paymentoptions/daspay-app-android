@@ -56,11 +56,11 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import coil3.compose.AsyncImage
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.endpoints.paymentDetails
+import com.paymentoptions.pos.network.endpoints.getSignature
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.SignatureData
-import com.paymentoptions.pos.services.apiService.endpoints.getSignature
-import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
@@ -85,7 +85,6 @@ import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
-import com.paymentoptions.pos.utils.AppJson
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -112,10 +111,7 @@ fun TransactionSuccessfulBottomSectionContent(
 
     LaunchedEffect(Unit) {
         paymentDetailsLatestResponse = try {
-            paymentDetails(
-                context = context,
-                paymentId = transactionId
-            )
+            paymentDetails(paymentId = transactionId)
         } catch (e: Exception) {
             null
         }
@@ -125,7 +121,7 @@ fun TransactionSuccessfulBottomSectionContent(
         if (transactionId.isNotBlank()) {
             isSignatureLoading = true
             signatureData = try {
-                getSignature(context = context, uuid = transactionId)?.data
+                getSignature(uuid = transactionId)?.data
             } catch (e: Exception) {
                 AppLogger.error("GetSignature error: ${e.message}")
                 null
@@ -136,11 +132,7 @@ fun TransactionSuccessfulBottomSectionContent(
 
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(
-                    it
-                )
-            }
+            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
 
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {

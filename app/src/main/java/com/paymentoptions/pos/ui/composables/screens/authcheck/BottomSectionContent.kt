@@ -73,7 +73,8 @@ fun BottomSectionContent(navController: NavController) {
             navController = navController, onAuthSuccess = {
                 navController.navigate(Screens.Dashboard.route)
                 {
-                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                    popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
                 }
             }, onAuthFailed = {
                 Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()

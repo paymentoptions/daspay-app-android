@@ -40,8 +40,9 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getSettlementCurrency
+import com.paymentoptions.pos.network.endpoints.settlementList
 import com.paymentoptions.pos.services.apiService.SettlementRecord
-import com.paymentoptions.pos.services.apiService.endpoints.settlementList
+import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -60,6 +61,7 @@ import java.util.Locale
 import java.util.TimeZone
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.ui.composables.navigation.Screens
+import com.paymentoptions.pos.utils.getDeviceIdentifier
 
 const val SETTLED_BATCH = "settled"
 const val PENDING_BATCH = "pending"
@@ -85,7 +87,10 @@ fun BottomSectionContent(
     LaunchedEffect(refreshList) {
         isLoading = true
         try {
-            val response = settlementList(context)
+            val response = settlementList(
+                deviceNumber = AppStorage.deviceNumber ?: getDeviceIdentifier(context),
+                uniqueCode = AppStorage.tokenCode ?: "",
+            )
             if (response != null && response.success) {
                 val allRecords = response.data.records
 
@@ -250,54 +255,6 @@ fun BottomSectionContent(
                     onClick = {
                         isLoading = true
                         navController.navigate(Screens.SettlementAction.createRoute(pendingSettlement!!.BatchID))
-//
-//                        CoroutineScope(Dispatchers.IO).launch {
-//                            try {
-//                                val response = settleBatch(context, pendingSettlement!!.BatchID)
-//                                if (response != null && response.SettleStatus == SETTLED_BATCH) {
-//                                    withContext(Dispatchers.Main) {
-//                                        processingScreenType = StatusScreenType.SUCCESS
-//                                        processingMessage = "Settlement Completed"
-//                                    }
-//                                    // Wait 5 seconds
-//                                    delay(delayTime)
-//                                    withContext(Dispatchers.Main) {
-//                                        processingMessage = ""
-//                                        pendingSettlement = null
-//                                        settledBatches = emptyList()
-//                                        isLoading = true
-//                                        refreshList = !refreshList
-//                                    }
-//                                }
-//                            } catch (e: retrofit2.HttpException) {
-//                                val errorBody = e.response()?.errorBody()?.string()
-//                                AppLogger.error("settle HTTP error ${e.code()}: $errorBody")
-//                                withContext(Dispatchers.Main) {
-//                                    processingScreenType = StatusScreenType.ERROR
-//                                    processingMessage = "Settlement Failed"
-//                                }
-//                                // Wait 5 seconds
-//                                delay(delayTime)
-//                                withContext(Dispatchers.Main) {
-//                                    processingMessage = ""
-//                                }
-//                            } catch (e: Exception) {
-//                                AppLogger.error("settle: $e")
-//                                withContext(Dispatchers.Main) {
-//                                    processingScreenType = StatusScreenType.ERROR
-//                                    processingMessage = "Settlement Failed"
-//                                }
-//                                // Wait 5 seconds
-//                                delay(delayTime)
-//                                withContext(Dispatchers.Main) {
-//                                    processingMessage = ""
-//                                }
-//                            } finally {
-//                                withContext(Dispatchers.Main) {
-//                                    isLoading = false
-//                                }
-//                            }
-//                        }
                     }
                 )
             }

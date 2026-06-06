@@ -44,7 +44,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.google.gson.Gson
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
@@ -66,7 +67,6 @@ import com.paymentoptions.pos.utils.timeAgo
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
-import java.util.Locale
 
 var TRANSACTION_TO_BE_REFUNDED: TransactionListDataRecord? = null
 
@@ -128,13 +128,13 @@ fun TransactionSummary(
 
     fun navigateToVoidAction(transaction: TransactionListDataRecord){
         AppLogger.debug("full transaction object: $transaction")
-        val transactionJson = Gson().toJson(transaction)
+        val transactionJson = Json.encodeToString(transaction)
         navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "VOID"))
     }
 
     fun navigateToRefundAction(transaction: TransactionListDataRecord){
         AppLogger.debug("full transaction object: $transaction")
-        val transactionJson = Gson().toJson(transaction)
+        val transactionJson = Json.encodeToString(transaction)
         navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "REFUND"))
     }
 
@@ -198,7 +198,7 @@ fun TransactionSummary(
                 }
                 .combinedClickable(onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ToggleOn)
-                    val transactionJson = Gson().toJson(transaction)
+                    val transactionJson = Json.encodeToString(transaction)
                     navController.navigate(Screens.TransactionDetails.createRoute(transactionJson))
                 }, onLongClick = {
 //                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)

@@ -33,22 +33,19 @@ import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.services.apiService.ProductRequest
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil3.compose.AsyncImage
-import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.endpoints.editProduct
+import com.paymentoptions.pos.network.endpoints.editProduct
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -58,6 +55,7 @@ import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -544,11 +542,10 @@ fun EditProductSectionContent(
                         // Safe conversion + rounding to 2 decimals
                         val priceFloat = priceText.toFloat()
                         val finalPrice = String.format(Locale.US,"%.2f", priceFloat).toFloat()
-
+                        val selectedFile = uriToTempFile(context, imageUri)
 
                         val result = try {
                             val addFoodResponse = editProduct(
-                                context = context,
                                 request = getProductRequest(
                                     context,
                                     productName,
@@ -560,17 +557,13 @@ fun EditProductSectionContent(
                                    // productStock,
                                     selectedFoodItem
                                 ),
-                                foodItem = selectedFoodItem,
-                                selectedFile = uriToTempFile(context, imageUri),
+                                productId = selectedFoodItem.item.ProductID,
+                                imageBytes = selectedFile?.readBytes(),
+                                imageFileName = selectedFile?.absolutePath
                                 )
                             addFoodResponse?.statusCode == 200L || addFoodResponse?.statusCode == 201L // success
-                        } catch (e: retrofit2.HttpException) {
-                            errorMessage = "Something went wrong.."
-                            AppLogger.error("edit product HTTP error ${e.code()}: ${e.message()}")
-                            false
                         } catch (e: Exception) {
-                            errorMessage = e.message ?: "Failed to add product."
-                            AppLogger.error(e)
+                            errorMessage = parseApiErrorMessage(e, "Something went wrong..")
                             false
                         }
                         isLoading = false

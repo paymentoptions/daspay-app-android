@@ -70,13 +70,15 @@ fun TransactionDetailsScreen(
                 enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
                 blurTopSection = true
             ) {
-                TransactionBottomSectionContent(
-                    navController = navController,
-                    transaction = transaction!!,
-                    updateDetailsScreenType = {
-                        transactionDetailsScreenType = it
-                    }
-                )
+                transaction?.let {
+                    TransactionBottomSectionContent(
+                        navController = navController,
+                        transaction = it,
+                        updateDetailsScreenType = { type ->
+                            transactionDetailsScreenType = type
+                        }
+                    )
+                }
             }
     }
 }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
@@ -28,13 +27,14 @@ import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.saveFcmToken
 import com.paymentoptions.pos.device.GeoRestrictionManager
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.SignInResponse
+import com.paymentoptions.pos.network.SignInResponse
+import com.paymentoptions.pos.network.endpoints.signIn
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
-import com.paymentoptions.pos.services.apiService.endpoints.signIn
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.utils.getDeviceIdentifier
 import com.paymentoptions.pos.utils.inProduction
 import com.paymentoptions.pos.utils.validation.validateEmail
 import com.paymentoptions.pos.utils.validation.validatePassword
@@ -161,7 +161,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                     try {
                         signInResponse =
-                            signIn(context, emailState.text.toString(), passwordState.text.toString())
+                            signIn(
+                                username = emailState.text.toString(),
+                                password = passwordState.text.toString(),
+                                deviceNumber = getDeviceIdentifier(context),
+                            )
                         AppLogger.debug("signInResponse: $signInResponse")
 
                         if (signInResponse == null) {
@@ -171,7 +175,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         }
 
                         signInResponse?.let {
-                            if (signInResponse.success) {
+                            if (signInResponse.success == true) {
                                 DPSharedPreferences.saveCredentials(
                                     context,
                                     emailState.text.toString(),
@@ -192,10 +196,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
 
                                 // Save merchant country for geo-restriction
-                                GeoRestrictionManager.saveMerchantCountry(context, signInResponse.data.subsidiaries)
+                                GeoRestrictionManager.saveMerchantCountry(context, signInResponse.data!!.subsidiaries)
 
                                 // Start token auto refresh after successful sign-in
-                                TokenAutoRefresher.getInstance(context).onUserSignedIn()
+                                //TokenAutoRefresher.getInstance(context).onUserSignedIn()
 
                                 navController.navigate(Screens.Token.route)
                             }

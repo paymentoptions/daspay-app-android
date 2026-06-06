@@ -1,26 +1,43 @@
-@file:OptIn(ExperimentalForeignApi::class)
-
 package com.paymentoptions.pos.shared
 
+import androidx.compose.ui.window.ComposeUIViewController
+import com.paymentoptions.pos.App
+import com.paymentoptions.pos.storage.AppStorage
+import com.paymentoptions.pos.storage.createSettings
 import platform.UIKit.UIViewController
-import platform.UIKit.UILabel
-import platform.UIKit.UIColor
-import platform.CoreGraphics.CGRectMake
-import kotlinx.cinterop.ExperimentalForeignApi
 
-fun MainViewController(): UIViewController {
-    return object : UIViewController(nibName = null, bundle = null) {
-        override fun viewDidLoad() {
-            super.viewDidLoad()
-            view.backgroundColor = UIColor.whiteColor
+/**
+ * iOS entry point for the shared Compose Multiplatform UI.
+ *
+ * Called from AppDelegate / SwiftUI:
+ *
+ * ```swift
+ * import sharedKit
+ *
+ * struct ContentView: View {
+ *     var body: some View {
+ *         ComposeView()
+ *             .ignoresSafeArea(.all)
+ *     }
+ * }
+ *
+ * struct ComposeView: UIViewControllerRepresentable {
+ *     func makeUIViewController(context: Context) -> UIViewController {
+ *         MainViewControllerKt.MainViewController()
+ *     }
+ *     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+ * }
+ * ```
+ *
+ * @param baseUrl  The API base URL, read from Info.plist or injected at build time.
+ */
+fun MainViewController(
+    baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/",
+): UIViewController {
+    // Initialise storage before the first composition
+    AppStorage.init(createSettings())
 
-            val label = UILabel(frame = CGRectMake(0.0, 0.0, 300.0, 50.0))
-            label.text = Greeting().greet()
-            label.textColor = UIColor.blackColor
-            label.center = view.center
-            label.textAlignment = 1L // NSTextAlignmentCenter
-            view.addSubview(label)
-        }
+    return ComposeUIViewController {
+        App(buildTimeBaseUrl = baseUrl)
     }
 }
-

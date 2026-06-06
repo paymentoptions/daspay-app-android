@@ -36,9 +36,10 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.TransactionListV2Request
+import com.paymentoptions.pos.network.TransactionListV2RequestFilter
+import com.paymentoptions.pos.network.endpoints.transactionListV2
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.TransactionListV2RequestFilter
-import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -110,7 +111,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         try {
             currentPage = 1
             val skip = 0
-            val transactionListFromAPI = transactionListV2(context, take, skip, filters)
+            val transactionListFromAPI = transactionListV2(
+                TransactionListV2Request(take = take, skip = skip, filter = filters)
+            )
             if (transactionListFromAPI != null) {
                 maxPage = ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
                 totalTransactionCount = transactionListFromAPI.data.total_count
@@ -139,7 +142,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
-            val transactionListFromAPI = transactionListV2(context, take, skip, filters)
+            val transactionListFromAPI = transactionListV2(
+                TransactionListV2Request(take = take, skip = skip, filter = filters)
+            )
 
             if (transactionListFromAPI != null) {
                 maxPage =

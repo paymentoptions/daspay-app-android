@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
-import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -50,7 +50,6 @@ import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
-import com.paymentoptions.pos.utils.AppJson
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -69,10 +68,7 @@ fun TransactionFailedBottomSectionContent(
 
     LaunchedEffect(Unit) {
         paymentDetailsLatestResponse = try {
-            paymentDetails(
-                context = context,
-                paymentId = transactionId
-            )
+            paymentDetails(paymentId = transactionId)
         } catch (e: Exception) {
             null
         }
@@ -80,11 +76,7 @@ fun TransactionFailedBottomSectionContent(
 
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(
-                    it
-                )
-            }
+            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
 
     val dateString =
         paymentDetailsLatestResponse?.data?.Date ?: OffsetDateTime.now()

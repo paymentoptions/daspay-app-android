@@ -69,16 +69,16 @@ import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getApms
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.network.endpoints.categoryList
+import com.paymentoptions.pos.network.endpoints.payByLink
+import com.paymentoptions.pos.network.endpoints.paymentDetails
+import com.paymentoptions.pos.network.endpoints.productList
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
-import com.paymentoptions.pos.services.apiService.endpoints.categoryList
-import com.paymentoptions.pos.services.apiService.endpoints.payByLink
-import com.paymentoptions.pos.services.apiService.endpoints.payByQr
-import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
-import com.paymentoptions.pos.services.apiService.endpoints.productList
+import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -123,6 +123,8 @@ import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.inProduction
+import com.paymentoptions.pos.utils.decodeJwtPayload
+import com.paymentoptions.pos.utils.getMerchantIdFromToken
 import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
@@ -172,7 +174,7 @@ fun FoodOrderFlow(
         LaunchedEffect(latestTransactionId) {
             try {
                 paymentDetailsResponse = paymentDetails(
-                    context = context, paymentId = latestTransactionId.toString()
+                    paymentId = latestTransactionId.toString()
                 )
             } catch (e: Exception) {
                 paymentDetailsResponse = null
@@ -277,7 +279,10 @@ fun FoodOrderFlow(
     LaunchedEffect(Unit) {
         foodCategoryListAvailable = false
         try {
-            val foodCategoryListFromAPI = categoryList(context)
+            val merchantId = AppStorage.idToken
+                ?.let { getMerchantIdFromToken(decodeJwtPayload(it)) }
+                ?: ""
+            val foodCategoryListFromAPI = categoryList(merchantId)
 
             if (foodCategoryListFromAPI != null) foodCategoryList =
                 foodCategoryListFromAPI.data.records
@@ -575,7 +580,10 @@ fun FoodOrderFlow(
                                             )
                                         )
 
-                                        val response = payByQr(context, request)
+                                        val response = payByLink(
+                                            dasmid = DPSharedPreferences.getQRDasmid(context),
+                                            request = request,
+                                        )
                                         if (response != null && response.success) {
                                             val paymentUrl =
                                                 "https://api-dev.paymentoptions.com/paybylink/" + response.data.ProductID
@@ -719,7 +727,7 @@ fun FoodOrderFlow(
                                            DPSharedPreferences.getPayByLinkDasmid(context)
 
                                         payByLinkResponse =
-                                            payByLink(context, payByLinkRequest, dasmid)
+                                            payByLink(dasmid = dasmid, request = payByLinkRequest)
 
                                         if (payByLinkResponse != null && payByLinkResponse!!.success) {
 //                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
@@ -1131,7 +1139,7 @@ private suspend fun getProductsPerCategory(
     navController: NavController
 ) {
     try {
-        val foodItemListFromAPI = productList(context, selectedFoodCategory!!.CategoryID)
+        val foodItemListFromAPI = productList(selectedFoodCategory!!.CategoryID)
 
         if (foodItemListFromAPI != null) {
             val newFoodItems = foodItemListFromAPI.data.records.map { record ->

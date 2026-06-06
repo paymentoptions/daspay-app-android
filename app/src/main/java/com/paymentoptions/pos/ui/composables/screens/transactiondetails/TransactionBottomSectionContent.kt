@@ -46,15 +46,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
-import com.google.gson.Gson
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.endpoints.getSignature
 import com.paymentoptions.pos.services.apiService.SignatureData
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.utils.getStatusColor
-import com.paymentoptions.pos.utils.getStatusText
-import com.paymentoptions.pos.services.apiService.endpoints.getSignature
 import com.paymentoptions.pos.utils.getStatusColor
 import com.paymentoptions.pos.utils.getStatusText
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
@@ -115,7 +114,7 @@ fun TransactionBottomSectionContent(
         if (!transactionUuid.isNullOrBlank()) {
             isSignatureLoading = true
             signatureData = try {
-                getSignature(context = context, uuid = transactionUuid)?.data
+                getSignature(uuid = transactionUuid)?.data
             } catch (e: Exception) {
                 AppLogger.error("TransactionBottomSectionContent getSignature error: ${e.message}")
                 null
@@ -172,13 +171,13 @@ fun TransactionBottomSectionContent(
 
     fun navigateToVoidAction(transaction: TransactionListDataRecord){
         AppLogger.debug("full transaction object: $transaction")
-        val transactionJson = Gson().toJson(transaction)
+        val transactionJson = Json.encodeToString(transaction)
         navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "VOID"))
     }
 
     fun navigateToRefundAction(transaction: TransactionListDataRecord){
         AppLogger.debug("full transaction object: $transaction")
-        val transactionJson = Gson().toJson(transaction)
+        val transactionJson = Json.encodeToString(transaction)
         navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "REFUND"))
     }
 

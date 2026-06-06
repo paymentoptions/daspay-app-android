@@ -4,8 +4,8 @@ accompanistSwipeRefresh = "0.27.0"
 agp = "8.8.1"
 androidxComposeBom = "2025.01.00"
 biometric = "1.2.0-alpha05"
-coilCompose = "3.2.0"
-coilNetworkOkhttp = "3.2.0"
+coilCompose = "3.0.4"
+coilNetworkOkhttp = "3.0.4"
 converterGson = "2.9.0"
 core = "3.5.3"
 firebaseAnalytics = "22.4.0"
@@ -17,8 +17,8 @@ coreKtx = "1.16.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-kotlinxDatetime = "0.3.2"
-kotlinxSerializationJson = "1.6.3"
+kotlinxDatetime = "0.6.1"
+kotlinxSerializationJson = "1.7.3"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
 composeBom = "2024.09.00"
@@ -26,9 +26,12 @@ lifecycleViewmodelKtx = "2.8.7"
 loggingInterceptor = "4.12.0"
 material3Lint = "1.4.0-alpha12"
 minehades = "1.2.3"
+mpandroidchart = "v3.1.0"
 navigationCompose = "2.8.9"
+okhttp = "4.12.0"
 retrofit = "2.9.0"
 firebaseMessagingKtx = "24.1.1"
+workRuntimeKtx = "2.9.0"
 ycharts = "2.1.0"
 runtime = "1.0.0-alpha04"
 vico = "1.16.1"
@@ -42,6 +45,29 @@ foundationVersion = "1.10.1"
 log4jVersion = "2.24.1"
 log4jBom = "2.24.1"
 
+# ── Compose Multiplatform ────────────────────────────────────────────────────
+jetbrainsCompose = "1.7.3"
+
+# ── Ktor (multiplatform networking) ──────────────────────────────────────────
+# Pinned to 2.3.12 to match the MineSec SDK's compiled Ktor version.
+# MineSec declares ktor-bom:2.3.12; upgrading to 3.x causes a
+# ClassNotFoundException for HttpTimeout at runtime inside GlueClient.
+ktor = "2.3.12"
+
+# ── Multiplatform Settings (replaces EncryptedSharedPreferences) ─────────────
+multiplatformSettings = "1.2.0"
+
+# ── JetBrains Navigation Compose (CMP-compatible navigation) ─────────────────
+jetbrainsNavigation = "2.8.0-alpha10"
+
+# ── Coroutines ────────────────────────────────────────────────────────────────
+coroutines = "1.9.0"
+
+# ── Coil3 Ktor network fetcher (CMP) ─────────────────────────────────────────
+# coil-network-ktor2 targets Ktor 2.x; use this to stay in sync with the
+# Ktor 2.3.12 pin required by the MineSec SDK.
+coilNetworkKtor = "3.0.4"
+
 
 [libraries]
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
@@ -53,6 +79,7 @@ androidx-foundation = { module = "androidx.compose.foundation:foundation", versi
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilNetworkOkhttp" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif", version.ref = "coilCompose" }
@@ -79,6 +106,8 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 minehades = { module = "com.theminesec:minehades", version.ref = "minehades" }
+mpandroidchart = { module = "com.github.PhilJay:MPAndroidChart", version.ref = "mpandroidchart" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 ycharts = { module = "co.yml:ycharts", version.ref = "ycharts" }
@@ -97,10 +126,36 @@ log4j-bom = {group = "org.apache.logging.log4j", name = "log4j-bom", version.ref
 log4j-api = { group = "org.apache.logging.log4j", name = "log4j-api", version.ref = "log4jVersion" }
 log4j-core = { group = "org.apache.logging.log4j", name = "log4j-core", version.ref = "log4jVersion" }
 
+# ── Ktor ─────────────────────────────────────────────────────────────────────
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
+ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
+
+# ── Multiplatform Settings ────────────────────────────────────────────────────
+multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
+multiplatform-settings-no-arg = { module = "com.russhwolf:multiplatform-settings-no-arg", version.ref = "multiplatformSettings" }
+
+# ── JetBrains Navigation Compose ─────────────────────────────────────────────
+jetbrains-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "jetbrainsNavigation" }
+
+# ── Coroutines ────────────────────────────────────────────────────────────────
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+
+# ── Coil3 Ktor network fetcher (CMP) ─────────────────────────────────────────
+coil-network-ktor2 = { module = "io.coil-kt.coil3:coil-network-ktor2", version.ref = "coilNetworkKtor" }
+coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coilNetworkKtor" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 android-lint = { id = "com.android.lint", version.ref = "agp" }
+jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "jetbrainsCompose" }

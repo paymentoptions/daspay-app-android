@@ -37,9 +37,10 @@ import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
-import com.google.gson.Gson
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
-import com.paymentoptions.pos.services.apiService.toTransactionListDataRecord
+import com.paymentoptions.pos.network.toTransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderColor
@@ -47,7 +48,6 @@ import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
-import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import java.time.LocalDate
@@ -135,7 +135,7 @@ fun TransactionsGroupedBarChart(
 
             transactions.forEach { transaction ->
                 if (transaction.status == "SUCCESSFUL") {
-                    val date = safeParseOffsetDateTime(transaction.TransactionDate).toLocalDateTime()
+                    val date = safeParseOffsetDateTime(transaction.TransactionDate?:"").toLocalDateTime()
                     val hour = date.hour
                     if (hour < minHour) minHour = hour
                     if (hour > maxHour) maxHour = hour
@@ -210,7 +210,7 @@ fun TransactionsGroupedBarChart(
     // Process transactions based on display mode
     transactions.forEach { transaction ->
         if (transaction.status == "SUCCESSFUL") {
-            val txnDateTime = safeParseOffsetDateTime(transaction.TransactionDate)
+            val txnDateTime = safeParseOffsetDateTime(transaction.TransactionDate?:"")
             val txnDate = txnDateTime.toLocalDate()
             val txnHour = txnDateTime.hour
 
@@ -220,7 +220,7 @@ fun TransactionsGroupedBarChart(
                     var minHour = 24
                     transactions.forEach { t ->
                         if (t.status == "SUCCESSFUL") {
-                            val h = safeParseOffsetDateTime(t.TransactionDate).hour
+                            val h = safeParseOffsetDateTime(t.TransactionDate?:"").hour
                             if (h < minHour) minHour = h
                         }
                     }
@@ -315,7 +315,7 @@ fun TransactionsGroupedBarChart(
                                     // Navigate to the first transaction details
                                     val transaction = filteredTransactions.firstOrNull() ?: slotTransactions.first()
                                     val transactionListDataRecord = transaction.toTransactionListDataRecord()
-                                    val transactionJson = Gson().toJson(transactionListDataRecord)
+                                    val transactionJson = Json.encodeToString(transactionListDataRecord)
                                     navController.navigate(Screens.TransactionDetails.createRoute(transactionJson))
                                 }
                             }

@@ -72,13 +72,12 @@ import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getApms
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.network.endpoints.payByLink
+import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
-import com.paymentoptions.pos.services.apiService.endpoints.payByLink
-import com.paymentoptions.pos.services.apiService.endpoints.payByQr
-import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -185,7 +184,7 @@ fun ReceiveMoneyFlow(
         LaunchedEffect(latestTransactionId) {
             try {
                 paymentDetailsResponse = paymentDetails(
-                    context = context, paymentId = latestTransactionId.toString()
+                    paymentId = latestTransactionId.toString()
                 )
             } catch (_: Exception) {
                 paymentDetailsResponse = null
@@ -450,7 +449,7 @@ fun ReceiveMoneyFlow(
                                                 )
                                             )
 
-                                            val response = payByQr(context, request)
+                                            val response = payByLink(dasmid = DPSharedPreferences.getQRDasmid(context), request)
                                             if (response != null && response.success) {
                                                 val paymentUrl =
                                                     "https://api-dev.paymentoptions.com/paybylink/" + response.data.ProductID
@@ -570,7 +569,7 @@ fun ReceiveMoneyFlow(
                                                     context
                                                 )
                                             payByLinkResponse =
-                                                payByLink(context, payByLinkRequest, dasmid)
+                                                payByLink(request = payByLinkRequest, dasmid = dasmid)
                                             if (payByLinkResponse != null && payByLinkResponse!!.success) {
 //                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
                                                 paymentUrl =

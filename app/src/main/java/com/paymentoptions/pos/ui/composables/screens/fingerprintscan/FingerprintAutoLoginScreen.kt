@@ -41,18 +41,16 @@ import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.navigation.NavController
+import com.paymentoptions.pos.auth.AuthEventManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.AuthEventManager
-import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
-import com.paymentoptions.pos.services.apiService.endpoints.autoSignIn
-import com.paymentoptions.pos.services.apiService.endpoints.completeDeviceRegistration
-import com.paymentoptions.pos.services.apiService.endpoints.getExternalDeviceConfiguration
+import com.paymentoptions.pos.network.endpoints.autoSignIn
+import com.paymentoptions.pos.network.endpoints.completeDeviceRegistration
+import com.paymentoptions.pos.network.endpoints.getExternalDeviceConfiguration
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
@@ -62,6 +60,9 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_TOP_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.utils.getDeviceIdentifier
+import com.paymentoptions.pos.utils.parseApiErrorMessage
+import androidx.compose.foundation.layout.navigationBarsPadding
 
 @Composable
 fun FingerprintAutoLoginScreen(
@@ -119,6 +120,7 @@ fun FingerprintAutoLoginScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(alignment = Alignment.BottomCenter)
+                .navigationBarsPadding()
                 .clip(RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp))
                 .background(Color.White)
                 .padding(vertical = 40.dp, horizontal = 24.dp)
@@ -267,7 +269,7 @@ private fun onAuthSuccess(
             }
         }
         try {
-            val authCredentials = autoSignIn(context) // Remove redundant semicolon
+            val authCredentials = autoSignIn(getDeviceIdentifier(context))
             if (authCredentials != null) {
                 val authDetails = DPSharedPreferences.getSavedCredentials(context)
                 val otp = authDetails.third
@@ -280,7 +282,7 @@ private fun onAuthSuccess(
 
                 // --- First API Call ---
                 if (otp == null) return@launch
-                completeDeviceRegistration(context, otp).onSuccess { response ->
+                completeDeviceRegistration(otp, getDeviceIdentifier(context)).onSuccess { response ->
                     Log.d(
                         "DEBUG_TOKEN",
                         "Step 2: completeDeviceRegistration SUCCEEDED. Response: $response"
@@ -298,7 +300,7 @@ private fun onAuthSuccess(
                         )
 
                         getExternalDeviceConfiguration(
-                            context, otp
+                            otp, getDeviceIdentifier(context)
                         ).onSuccess { configResponse ->
                             AppLogger.debug(
                                 "DEBUG_TOKEN",
@@ -313,8 +315,7 @@ private fun onAuthSuccess(
                                 "Step 4 FAILED: getExternalDeviceConfiguration.",
                                 exception
                             )
-                            errorMessage =
-                                exception.message ?: "Failed to fetch configuration"
+                            errorMessage = parseApiErrorMessage(exception, "Failed to fetch configuration")
                         }
                     } else {
                         AppLogger.warn(
@@ -324,66 +325,39 @@ private fun onAuthSuccess(
                         errorMessage = response.message
                     }
                 }.onFailure { exception ->
-                    //if (json)
-                    try {
-//                        val jsonPart = exception.message?.substringAfter("{")?.let { "{$it" }
-//                        val jsonObject = JSONObject(jsonPart ?: "{}")
-//                        val exceptionMessage = jsonObject.optString("message", "An unknown error occurred")
+                    val exceptionMessage = parseApiErrorMessage(exception, "Registration failed")
+                    AppLogger.e("DEBUG_TOKEN", "Step 2 FAILED: completeDeviceRegistration. Msg: $exceptionMessage", exception.toString())
 
-                        val jsonPart = exception.message
+                    if (exceptionMessage == "Device already registered") {
+                        getExternalDeviceConfiguration(otp, getDeviceIdentifier(context)).onSuccess { configResponse ->
+                            DPSharedPreferences.saveTokenStatus(
+                                context = context,
+                                tokenCode = otp,
+                                isVerified = true
+                            )
 
-                        if (!jsonPart.isNullOrEmpty() && jsonPart.trim().startsWith("{")) {
-                            val jsonObject = JSONObject(jsonPart)
-                            val exceptionMessage = jsonObject.optString("message")
-
-                        AppLogger.e(
-                            "Step 2 FAILED: completeDeviceRegistration.",
-                            exceptionMessage
-                        )
-                        if (exceptionMessage == "Device already registered") {
-                            getExternalDeviceConfiguration(
-                                context, otp
-                            ).onSuccess { configResponse ->
-
-                                DPSharedPreferences.saveTokenStatus(
-                                    context = context,
-                                    tokenCode = otp,
-                                    isVerified = true
-                                )
-
-                                AppLogger.debug(
-                                    "DEBUG_TOKEN",
-                                    "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
-                                )
-                                DPSharedPreferences.saveDeviceConfiguration(
-                                    context, configResponse
-                                )
-                            }.onFailure { exception ->
-                                AppLogger.error(
-                                    "DEBUG_TOKEN",
-                                    "Step 4 FAILED: getExternalDeviceConfiguration.",
-                                    exception
-                                )
-                                errorMessage =
-                                    exception.message ?: "Failed to fetch configuration"
-                            }
-                        } else if (exceptionMessage.lowercase()
-                                .contains("unauthorized")
-                        ) {
-                            AppLogger.debug("Auto login failing, fatal exception")
-                            withContext(Dispatchers.Main) {
-                                autoSignInFailed(context, navController)
-                            }
-                        } else {
-                            errorMessage =
-                                exceptionMessage ?: "An unknown error occurred"
+                            AppLogger.debug(
+                                "DEBUG_TOKEN",
+                                "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
+                            )
+                            DPSharedPreferences.saveDeviceConfiguration(
+                                context, configResponse
+                            )
+                        }.onFailure { innerException ->
+                            AppLogger.error(
+                                "DEBUG_TOKEN",
+                                "Step 4 FAILED: getExternalDeviceConfiguration.",
+                                innerException
+                            )
+                            errorMessage = parseApiErrorMessage(innerException, "Failed to fetch configuration")
                         }
-                        } else {
-                            Log.e("API_ERROR", "Invalid JSON: $jsonPart")
+                    } else if (exceptionMessage.lowercase().contains("unauthorized")) {
+                        AppLogger.debug("Auto login failing, fatal exception")
+                        withContext(Dispatchers.Main) {
+                            autoSignInFailed(context, navController)
                         }
-                    } catch (e: Exception) {
-                        errorMessage = "Could not login, Please try again"
-                        AppLogger.debug("DEBUG_TOKEN", "Step 6: Process finished.$e")
+                    } else {
+                        errorMessage = exceptionMessage
                     }
                 }
                 AppLogger.debug("DEBUG_TOKEN", "Step 5: Process finished.")
@@ -393,13 +367,12 @@ private fun onAuthSuccess(
 
                 // go to home screen if auto sign-in was successful
                 if (errorMessage.isEmpty()) {
-                    // Start token auto refresh after successful auto sign-in
-                    TokenAutoRefresher.getInstance(context).onUserSignedIn()
                     withContext(Dispatchers.Main) {
                         Toast.makeText(context, "Auto sign-in is successful", Toast.LENGTH_SHORT)
                             .show()
                         navController.navigate(Screens.Dashboard.route) {
-                            popUpTo(Screens.FingerprintScan.route) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
+                            launchSingleTop = true
                         }
                     }
                 } else {
@@ -431,7 +404,8 @@ private fun autoSignInFailed(
 ) {
     // Auto sign-in failed - notify the system
     Toast.makeText(context, "Auto sign-in has failed, Please enter credentials again", Toast.LENGTH_SHORT).show()
-    AuthEventManager.onAutoSignInFailed()
+     AuthEventManager.requireManualSignIn()
+    //TODO
     DPSharedPreferences.clearSharedPreferences(context)
     navController.navigate(Screens.AuthCheck.route) {
         popUpTo(0) { inclusive = true }
