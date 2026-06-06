@@ -47,8 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
 import androidx.navigation.NavController
+import com.paymentoptions.pos.network.endpoints.uploadSignature
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
-import com.paymentoptions.pos.services.apiService.endpoints.uploadSignature
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -61,6 +61,7 @@ import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.io.ByteArrayOutputStream
 import java.util.Date
 import kotlin.math.roundToInt
 
@@ -226,8 +227,7 @@ fun TakeDigitalSignatureBottomSectionContent(
                             isLoading = true
                             try {
                                 val response = uploadSignature(
-                                    context = context,
-                                    signatureBitmap = signatureBitmap,
+                                    signatureBytes = bitmapToByteArray(signatureBitmap),
                                     transactionId = transactionId_value
                                 )
 
@@ -269,6 +269,13 @@ fun TakeDigitalSignatureBottomSectionContent(
         }
     }
 }
+
+private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
+    val output = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
+    return output.toByteArray()
+}
+
 /*
 fun createSignatureBitmap(
     path: Path,

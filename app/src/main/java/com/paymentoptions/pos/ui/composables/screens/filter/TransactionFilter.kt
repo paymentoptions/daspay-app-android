@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,9 +23,7 @@ import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -53,13 +50,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.endpoints.insights
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.insights
+import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -69,12 +66,12 @@ import com.paymentoptions.pos.ui.composables.screens.transactionshistory.Transac
 import com.paymentoptions.pos.ui.composables.screens.transactionshistory.TransactionsGroupedBarChart
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderThin
-import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.ui.theme.red300
+import com.paymentoptions.pos.utils.getDeviceIdentifier
 import com.paymentoptions.pos.utils.modifiers.DashboardStatsShimmer
 import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import com.paymentoptions.pos.utils.modifiers.conditional
@@ -312,8 +309,11 @@ fun TransactionFilter(navController: NavController) {
                                     val amount = amountState.text.toString()
                                     val tranxId = tranxIdState.text.toString()
                                     val transctionType = getTransactionType(selectedTranxType)
+                                    val deviceNumber = AppStorage.deviceNumber ?: getDeviceIdentifier(context)
+                                    val uniqueCode = AppStorage.tokenCode ?: ""
                                     val insightsResponse = insights(
-                                        context,
+                                        deviceNumber = deviceNumber,
+                                        uniqueCode = uniqueCode,
                                         startDate = startDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
                                                 .replace('-', '/') + " 00:00:00"
                                         ,
