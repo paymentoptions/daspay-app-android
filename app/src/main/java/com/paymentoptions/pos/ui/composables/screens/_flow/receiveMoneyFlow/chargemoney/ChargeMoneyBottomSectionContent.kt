@@ -42,13 +42,13 @@ import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getTapPayDasmid
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.network.endpoints.payment
+import com.paymentoptions.pos.network.endpoints.paymentStatus
 import com.paymentoptions.pos.services.apiService.Address
 import com.paymentoptions.pos.services.apiService.PaymentRequest
 import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.PaymentReturnUrl
 import com.paymentoptions.pos.services.apiService.PaymentStatusRequest
-import com.paymentoptions.pos.services.apiService.endpoints.payment
-import com.paymentoptions.pos.services.apiService.endpoints.paymentStatus
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.dialogs.AlertDialogType
@@ -59,7 +59,6 @@ import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
-import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getDeviceIpAddress
 import com.paymentoptions.pos.utils.getDeviceTimeZone
@@ -73,6 +72,7 @@ import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
 import com.paymentoptions.pos.services.apiService.toPaymentStatusRequest
+import com.paymentoptions.pos.utils.PaymentMethod
 import com.theminesec.lib.dto.transaction.Transaction
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
@@ -288,7 +288,7 @@ fun Tap_ChargeMoney(
 
     
     val merchant: MutableMap<String, String> = mutableMapOf<String, String>()
-    val decodedJwtPayloadJson = decodeJwtPayload(authDetails!!.data.token.idToken)
+    val decodedJwtPayloadJson = decodeJwtPayload(authDetails!!.data!!.token.idToken)
     val currency = getTransactionCurrency(context)
 
     merchant["dasmid"] = getTapPayDasmid(context)
@@ -333,7 +333,7 @@ fun Tap_ChargeMoney(
                     showProcessingScreen = true
                     try {
                         val paymentStatusResponse =
-                            paymentStatus(context = context, request = paymentStatusRequest, it.value.tranStatus)
+                            paymentStatus(request = paymentStatusRequest) != null
 
                         showProcessingScreen = false
                         if (paymentStatusResponse) {
@@ -406,7 +406,7 @@ fun Tap_ChargeMoney(
         scope.launch {
             paymentLoader = true
             try {
-                val paymentResponse: PaymentResponse? = payment(context, paymentRequest)
+                val paymentResponse: PaymentResponse? = payment(paymentRequest)
                 println("paymentResponse: $paymentResponse")
                 if (paymentResponse == null) {
                     Toast.makeText(
