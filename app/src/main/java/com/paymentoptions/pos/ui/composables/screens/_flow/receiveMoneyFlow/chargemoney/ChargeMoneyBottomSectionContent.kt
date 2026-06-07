@@ -49,6 +49,7 @@ import com.paymentoptions.pos.services.apiService.PaymentReturnUrl
 import com.paymentoptions.pos.services.apiService.PaymentStatusRequest
 import com.paymentoptions.pos.services.apiService.endpoints.payment
 import com.paymentoptions.pos.services.apiService.endpoints.paymentStatus
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.dialogs.AlertDialogType
@@ -176,7 +177,8 @@ fun ChargeMoneyBottomSectionContent(
             showDeveloperOptionsEnabled = true
         } else if (inProduction && !Nfc.getStatus(context).second) {
             showNFCNotEnabled = true
-        } else
+        } else {
+            AppAnalytics.tapToPayInitiated(amount = amountToCharge, currency = currency)
             Tap_ChargeMoney(
                 navController = navController,
                 amountToCharge = amountToCharge,
@@ -185,6 +187,7 @@ fun ChargeMoneyBottomSectionContent(
                 onFailureUpdateFlowStage = onFailureUpdateFlowStage,
                 updateLatestTransaction = updateLatestTransaction
             )
+        }
     }
 
     Column(
@@ -219,7 +222,13 @@ fun ChargeMoneyBottomSectionContent(
                     PaymentMethodButton(
                         paymentMethod = it,
                         selectedPaymentMethod = selectedPaymentMethod,
-                        onSelected = { updateSelectedPaymentMethod(it) },
+                        onSelected = {
+                            AppAnalytics.criticalButtonClick(
+                                buttonName = "select_payment_method_${it.text.lowercase().replace(" ", "_")}",
+                                screen = "receive_money"
+                            )
+                            updateSelectedPaymentMethod(it)
+                        },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -311,11 +320,22 @@ fun Tap_ChargeMoney(
 
         when (it) {
             is WrappedResult.Success -> {
+                AppAnalytics.profileDownloadOrActivation(
+                    profileId = "prof_01KRMSZV8148Z2REJ43VW9HQNE",
+                    stage = "activation",
+                    result = "completed"
+                )
                 if (it.value.tranType == TranType.SALE) {
                     completedSaleTranId = it.value.tranId
                     completedSalePosReference = it.value.posReference
                     completedSaleRequestId = it.value.actions.firstOrNull()?.requestId
                 }
+
+                AppAnalytics.paymentStatus(
+                    status = it.value.tranStatus.name,
+                    paymentType = "SOFTPOS",
+                    transactionId = completedSaleTranId
+                )
 
                 println("inThis Launcher success ---->")
                 transactionDetailsText =
@@ -346,6 +366,11 @@ fun Tap_ChargeMoney(
                             }
                         }
                     } catch (e: Exception) {
+                        AppAnalytics.paymentStatus(
+                            status = "FAILED",
+                            paymentType = "SOFTPOS",
+                            transactionId = paymentStatusRequest.tranId
+                        )
                         showProcessingScreen = false
                         updateLatestTransaction(paymentStatusRequest.tranId.toString())
                         onLoader {
@@ -357,6 +382,11 @@ fun Tap_ChargeMoney(
 
             is WrappedResult.Failure -> {
                 println("inThis Launcher failure ---->: $it")
+                AppAnalytics.paymentStatus(
+                    status = it.toString(),
+                    paymentType = "SOFTPOS",
+                    transactionId = null
+                )
             }
         }
     }
@@ -401,6 +431,7 @@ fun Tap_ChargeMoney(
         onActionFn = {})
 
     if (!hasLaunchedPayment) {
+        val profileId = "prof_01KRMSZV8148Z2REJ43VW9HQNE"
         hasLaunchedPayment = true
 
         scope.launch {
@@ -423,6 +454,11 @@ fun Tap_ChargeMoney(
                 paymentResponse?.let {
                     if (it.success) {
                         println("inThis PaymentResponse ---->")
+                        AppAnalytics.profileDownloadOrActivation(
+                            profileId = profileId,
+                            stage = "activation",
+                            result = "started"
+                        )
                         launcher.launch(
                             PoiRequest.ActionNew(
                                 tranType = TranType.SALE,
@@ -430,13 +466,18 @@ fun Tap_ChargeMoney(
                                     BigDecimal(amountToCharge),
                                     Currency.getInstance(DPSharedPreferences.getTransactionCurrency(context)),
                                 ),
-                                profileId = "prof_01KH8NQC4PVFKRNH31ZPC2QJNN",
+                                profileId = profileId,
                                 posReference = it.transaction_details.id
                             )
                         )
                     }
                 }
             } catch (e: Exception) {
+                AppAnalytics.paymentStatus(
+                    status = "FAILED",
+                    paymentType = "SOFTPOS",
+                    transactionId = null
+                )
                 DPSharedPreferences.clearSharedPreferences(context)
                 navController.navigate(Screens.AuthCheck.route) {
                     popUpTo(0) { inclusive = true }

@@ -2,6 +2,7 @@ package com.paymentoptions.pos.logger
 
 import android.os.Process
 import android.util.Log
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import java.io.PrintWriter
 import java.io.StringWriter
 
@@ -19,6 +20,7 @@ class SdkUnCaughtException(
         thread.uncaughtExceptionHandler = null
         Thread.setDefaultUncaughtExceptionHandler(null)
         onThrowError(throwable)
+        AppAnalytics.appCrash(throwable = throwable, threadName = thread.name)
         val result = StringWriter()
         val printWriter = PrintWriter(result)
         throwable.printStackTrace(printWriter)

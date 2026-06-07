@@ -31,6 +31,7 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signIn
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -155,6 +156,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             disabled = emailError || passwordError,
             isLoading = isLoading,
             onClick = {
+                AppAnalytics.criticalButtonClick(buttonName = "proceed_login", screen = "sign_in")
                 scope.launch {
                     isLoading = true
                     var signInResponse: SignInResponse? = null
@@ -165,6 +167,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         AppLogger.debug("signInResponse: $signInResponse")
 
                         if (signInResponse == null) {
+                            AppAnalytics.login(result = "failed", email = emailState.text.toString())
                             Toast.makeText(
                                 context, "Invalid Credentials", Toast.LENGTH_LONG
                             ).show()
@@ -172,6 +175,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                         signInResponse?.let {
                             if (signInResponse.success) {
+                                AppAnalytics.login(result = "success", email = emailState.text.toString())
                                 DPSharedPreferences.saveCredentials(
                                     context,
                                     emailState.text.toString(),
@@ -198,10 +202,13 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 TokenAutoRefresher.getInstance(context).onUserSignedIn()
 
                                 navController.navigate(Screens.Token.route)
+                            } else {
+                                AppAnalytics.login(result = "failed", email = emailState.text.toString())
                             }
                         }
                     } catch (e: Exception){
                         AppLogger.error("signIn error: $e")
+                        AppAnalytics.login(result = "failed", email = emailState.text.toString())
                         Toast.makeText(context, "Invalid Credentials", Toast.LENGTH_LONG).show()
                     } finally {
                         isLoading = false

@@ -48,6 +48,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.google.gson.Gson
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignatureData
@@ -103,7 +104,7 @@ fun TransactionBottomSectionContent(
 
     val transactionUuid = transaction?.uuid
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
-        "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
+        "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
     } else {
         null
     }

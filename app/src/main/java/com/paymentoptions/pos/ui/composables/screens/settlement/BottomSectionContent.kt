@@ -59,6 +59,7 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 
 const val SETTLED_BATCH = "settled"
@@ -248,6 +249,8 @@ fun BottomSectionContent(
                         .fillMaxWidth()
                         .height(59.dp),
                     onClick = {
+                        AppAnalytics.criticalButtonClick(buttonName = "settle_all", screen = "settlement")
+                        AppAnalytics.settlementSubmitted(batchId = pendingSettlement!!.BatchID)
                         isLoading = true
                         navController.navigate(Screens.SettlementAction.createRoute(pendingSettlement!!.BatchID))
 //

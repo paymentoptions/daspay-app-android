@@ -55,10 +55,10 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import coil3.compose.AsyncImage
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
-import com.paymentoptions.pos.services.apiService.SignatureData
 import com.paymentoptions.pos.services.apiService.endpoints.getSignature
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
@@ -107,8 +107,6 @@ fun TransactionSuccessfulBottomSectionContent(
     val scrollState = rememberScrollState()
     var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
-    var signatureData by remember { mutableStateOf<SignatureData?>(null) }
-    var isSignatureLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         paymentDetailsLatestResponse = try {
@@ -118,19 +116,6 @@ fun TransactionSuccessfulBottomSectionContent(
             )
         } catch (e: Exception) {
             null
-        }
-    }
-
-    LaunchedEffect(transactionId) {
-        if (transactionId.isNotBlank()) {
-            isSignatureLoading = true
-            signatureData = try {
-                getSignature(context = context, uuid = transactionId)?.data
-            } catch (e: Exception) {
-                AppLogger.error("GetSignature error: ${e.message}")
-                null
-            }
-            isSignatureLoading = false
         }
     }
 
@@ -144,7 +129,7 @@ fun TransactionSuccessfulBottomSectionContent(
 
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
-        "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
+        "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
     } else {
         null
     }
@@ -533,75 +518,6 @@ fun TransactionSuccessfulBottomSectionContent(
                         }
                     }
 
-                }
-
-                // ── Server Signature Section ─────────────────────────────
-                if (isSignatureLoading) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Box(
-                            modifier = Modifier
-                                .width(150.dp)
-                                .height(14.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .shimmerEffect()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .shimmerEffect()
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
-                } else {
-                    val signatureUrl = signatureData?.signatureURL?.toString()
-                    if (signatureData?.imageExists == true && !signatureUrl.isNullOrBlank()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Customer Signature",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = primary900
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(150.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .dashedBorder(
-                                        color = Color.LightGray,
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .background(Color.White),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                AsyncImage(
-                                    model = signatureUrl,
-                                    contentDescription = "Transaction Signature",
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(140.dp)
-                                        .padding(8.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                        }
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))

@@ -24,6 +24,8 @@ import kotlinx.serialization.json.Json
 object DPSharedPreferences {
         private var accessLevel: AccessLevel? = null
         private var transactionCurrency: String? = null
+        private const val DATADOG_CLIENT_TOKEN_KEY = "datadog_client_token"
+        private const val DATADOG_APPLICATION_ID_KEY = "datadog_application_id"
 
         const val sharedPreferencesLabel: String = "my_prefs"
 
@@ -164,6 +166,23 @@ object DPSharedPreferences {
                 putString("fcm_token", token)
                 apply()
             }
+        }
+
+        fun saveDatadogCredentials(context: Context, clientToken: String, applicationId: String) {
+            val sharedPreferences = getSecurePrefs(context)
+            with(sharedPreferences.edit()) {
+                putString(DATADOG_CLIENT_TOKEN_KEY, clientToken)
+                putString(DATADOG_APPLICATION_ID_KEY, applicationId)
+                apply()
+            }
+        }
+
+        fun getDatadogClientToken(context: Context): String? {
+            return getSecurePrefs(context).getString(DATADOG_CLIENT_TOKEN_KEY, null)
+        }
+
+        fun getDatadogApplicationId(context: Context): String? {
+            return getSecurePrefs(context).getString(DATADOG_APPLICATION_ID_KEY, null)
         }
 
         fun getFcmToken(context: Context): String? {
@@ -422,7 +441,9 @@ object DPSharedPreferences {
     fun getTransactionDetailsUrl(context: Context): String?
     {
         val sharedPreferences = getSecurePrefs(context)
-        return sharedPreferences.getString("TransactionDetailsURL", "")
+        val url =  sharedPreferences.getString("TransactionDetailsURL", "https://dev.paymentoptions.com/daspay-transaction-details/")
+        AppLogger.debug("getTransactionDetailsUrl: $url")
+        return url
     }
 
 

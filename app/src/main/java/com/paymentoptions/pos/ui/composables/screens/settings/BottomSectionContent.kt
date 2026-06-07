@@ -32,6 +32,7 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
 import com.paymentoptions.pos.ui.composables._components.MySwitch
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
@@ -75,13 +76,21 @@ fun BottomSectionContent(navController: NavController) {
         text = "Do you want to log out?",
         acceptButtonText = "Log Out",
         onAcceptFn = {
+            AppAnalytics.criticalButtonClick(buttonName = "logout_confirm", screen = "settings")
+            AppAnalytics.logout(result = "initiated", source = "settings")
             scope.launch {
                 signOutLoader = true
 
                 try {
                     signOutResponse = signOut(context)
+                    if (signOutResponse?.success == true || signOutResponse == null) {
+                        AppAnalytics.logout(result = "success", source = "settings")
+                    } else {
+                        AppAnalytics.logout(result = "failed", source = "settings")
+                    }
                 } catch (e: Exception) {
                     AppLogger.error("Error: ${e.toString()}")
+                    AppAnalytics.logout(result = "failed", source = "settings")
                 } finally {
                     // Stop token auto refresh on sign out
                     TokenAutoRefresher.getInstance(context).onUserSignedOut()
@@ -228,6 +237,7 @@ fun BottomSectionContent(navController: NavController) {
 
                 FilledButton(
                     text = "Logout", onClick = {
+                        AppAnalytics.criticalButtonClick(buttonName = "logout", screen = "settings")
                         showSignOutConfirmationDialog = true
                     }, isLoading = signOutLoader, modifier = Modifier
                         .fillMaxWidth()

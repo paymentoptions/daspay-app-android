@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables._components.NotificationPermission
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
@@ -20,6 +21,10 @@ fun DashboardScreen(navController: NavController) {
         mutableStateOf(
             DPSharedPreferences.getBoolean(context = context, "dashboard_overlay_shown").not()
         )
+    }
+
+    LaunchedEffect(Unit) {
+        AppAnalytics.dashboardNavigation(destination = "Dashboard", source = "screen_enter")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {

@@ -148,7 +148,7 @@ fun StatusBottomSectionContent(
                 )
             }
 
-    val transactionDetailUrl = "https://dev.paymentoptions.com/daspay-transaction-details/$transactionId"
+    val transactionDetailUrl = "${DPSharedPreferences.getTransactionDetailsUrl(context)}$transactionId"
 
     if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),
