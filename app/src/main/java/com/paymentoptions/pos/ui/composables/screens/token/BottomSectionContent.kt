@@ -41,8 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.services.apiService.endpoints.completeDeviceRegistration
-import com.paymentoptions.pos.services.apiService.endpoints.getExternalDeviceConfiguration
+import com.paymentoptions.pos.network.endpoints.completeDeviceRegistration
+import com.paymentoptions.pos.network.endpoints.getExternalDeviceConfiguration
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -54,9 +54,10 @@ import com.paymentoptions.pos.ui.theme.primary300
 import com.paymentoptions.pos.ui.theme.primary50
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.getDeviceIdentifier
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 
 @Composable
@@ -69,10 +70,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    val deviceNumber = getDeviceIdentifier(context)
 
     if (openFingerprintScan) FingerprintScanScreen(navController = navController, onAuthSuccess = {
         navController.navigate(Screens.Dashboard.route) {
-            popUpTo(Screens.AuthCheck.route) { inclusive = true }
+            popUpTo(0) { inclusive = true }
+            launchSingleTop = true
         }
         openFingerprintScan = false
 
@@ -594,7 +597,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         Log.d("DEBUG_TOKEN", "Step 1: Button clicked. Starting process.")
 
                         // --- First API Call ---
-                        completeDeviceRegistration(context, otp.value).onSuccess { response ->
+                        completeDeviceRegistration(otp.value, deviceNumber).onSuccess { response ->
                             Log.d(
                                 "DEBUG_TOKEN",
                                 "Step 2: completeDeviceRegistration SUCCEEDED. Response: $response"
@@ -612,7 +615,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 )
 
                                 getExternalDeviceConfiguration(
-                                    context, otp.value
+                                    otp.value, deviceNumber
                                 ).onSuccess { configResponse ->
                                     Log.d(
                                         "DEBUG_TOKEN",
@@ -628,8 +631,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                         "Step 4 FAILED: getExternalDeviceConfiguration.",
                                         exception
                                     )
-                                    errorMessage =
-                                        exception.message ?: "Failed to fetch configuration"
+                                    errorMessage = parseApiErrorMessage(exception, "Failed to fetch configuration")
                                 }
                             } else {
                                 Log.w(
@@ -639,68 +641,47 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 errorMessage = response.message
                             }
                         }.onFailure { exception ->
-                            //if (json)
-                            try {
-                                val jsonPart = exception.message
+                            val exceptionMessage = parseApiErrorMessage(exception, "Registration failed")
+                            Log.e("DEBUG_TOKEN", "Step 2 FAILED: completeDeviceRegistration. Msg: $exceptionMessage", )
 
-                                if (!jsonPart.isNullOrEmpty() && jsonPart.trim().startsWith("{")) {
-                                    val jsonObject = JSONObject(jsonPart)
-                                    val exceptionMessage = jsonObject.optString("message")
-
-
-                                    Log.e(
-                                        "Step 2 FAILED: completeDeviceRegistration.",
-                                        exceptionMessage
+                            if (exceptionMessage == "Device already registered") {
+                                getExternalDeviceConfiguration(
+                                    otp.value, deviceNumber
+                                ).onSuccess { configResponse ->
+                                    DPSharedPreferences.saveTokenStatus(
+                                        context = context,
+                                        tokenCode = otp.value,
+                                        isVerified = true
                                     )
-                                    if (exceptionMessage == "Device already registered") {
-                                        getExternalDeviceConfiguration(
-                                            context, otp.value
-                                        ).onSuccess { configResponse ->
 
-                                            DPSharedPreferences.saveTokenStatus(
-                                                context = context,
-                                                tokenCode = otp.value,
-                                                isVerified = true
-                                            )
-
-                                            Log.d(
-                                                "DEBUG_TOKEN",
-                                                "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
-                                            )
-                                            DPSharedPreferences.saveDeviceConfiguration(
-                                                context, configResponse
-                                            )
-                                            openFingerprintScan = true
-                                        }.onFailure { exception ->
-                                            Log.e(
-                                                "DEBUG_TOKEN",
-                                                "Step 4 FAILED: getExternalDeviceConfiguration.",
-                                                exception
-                                            )
-                                            errorMessage =
-                                                exception.message ?: "Failed to fetch configuration"
-                                        }
-                                    } else if (exceptionMessage.lowercase()
-                                            .contains("unauthorized")
-                                    ) {
-                                        Toast.makeText(
-                                            context,
-                                            "Token expired. Please sign in again.",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                        DPSharedPreferences.clearSharedPreferences(context)
-                                        navController.navigate(Screens.AuthCheck.route) {
-                                            popUpTo(Screens.AuthCheck.route) { inclusive = true }
-                                        }
-                                    } else {
-                                        errorMessage =
-                                            exceptionMessage ?: "An unknown error occurred"
-                                    }
-                                } else {
-                                    Log.d("DEBUG_TOKEN", "Step 7: JSON error.")
+                                    Log.d(
+                                        "DEBUG_TOKEN",
+                                        "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
+                                    )
+                                    DPSharedPreferences.saveDeviceConfiguration(
+                                        context, configResponse
+                                    )
+                                    openFingerprintScan = true
+                                }.onFailure { innerException ->
+                                    Log.e(
+                                        "DEBUG_TOKEN",
+                                        "Step 4 FAILED: getExternalDeviceConfiguration.",
+                                        innerException
+                                    )
+                                    errorMessage = parseApiErrorMessage(innerException, "Failed to fetch configuration")
                                 }
-                            } catch (e: Exception) {
-                                errorMessage = e.message.toString()
+                            } else if (exceptionMessage.lowercase().contains("unauthorized")) {
+                                Toast.makeText(
+                                    context,
+                                    "Token expired. Please sign in again.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                DPSharedPreferences.clearSharedPreferences(context)
+                                navController.navigate(Screens.AuthCheck.route) {
+                                    popUpTo(Screens.AuthCheck.route) { inclusive = true }
+                                }
+                            } else {
+                                errorMessage = exceptionMessage
                             }
                         }
                         isLoading = false

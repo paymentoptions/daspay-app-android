@@ -19,13 +19,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -34,17 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.services.apiService.ProductRequest
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.addProduct
-import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -60,6 +54,7 @@ import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -67,16 +62,13 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import androidx.core.content.FileProvider
-import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.endpoints.addProduct
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
 import com.paymentoptions.pos.ui.theme.AppTheme
-import com.paymentoptions.pos.ui.theme.disabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.innerShadow
-import com.paymentoptions.pos.ui.theme.shadowColor
-import com.paymentoptions.pos.ui.theme.shadowColor2
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import java.util.Locale
 
@@ -559,9 +551,9 @@ fun AddProductSectionContent(
 
                         val result = try {
                             AppLogger.debug("categorySelected id: $categorySelected")
-
+                            val selectedFile = uriToTempFile(context, imageUri)
                             val addFoodResponse = addProduct(
-                                context = context, request = ProductRequest(
+                                request = ProductRequest(
                                     ProductName = productName.text.toString(),
                                     ProductDesc = productDescription.text.toString(),
                                     ProductPrice = finalPrice,
@@ -571,15 +563,12 @@ fun AddProductSectionContent(
                                     MerchantID = categorySelected?.MerchantID ?: "",
                                     CategoryID = categorySelected?.CategoryID ?: "",
                                 ),
-                                selectedFile = uriToTempFile(context, imageUri)
+                                imageBytes = selectedFile?.readBytes(),
+                                imageFileName = selectedFile?.absolutePath
                             )
                             addFoodResponse?.statusCode == 200L || addFoodResponse?.statusCode == 201L // success
-                        } catch (e: retrofit2.HttpException) {
-                            errorMessage = "Something went wrong.."
-                            AppLogger.error("add product HTTP error ${e.code()}: ${e.message()}")
-                            false
                         } catch (e: Exception) {
-                            errorMessage = e.message ?: "Failed to add product."
+                            errorMessage = parseApiErrorMessage(e, "Something went wrong..")
                             false
                         }
                         isLoading = false

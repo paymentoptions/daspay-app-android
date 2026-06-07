@@ -45,10 +45,11 @@ import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.endpoints.paymentStatus
+import com.paymentoptions.pos.network.endpoints.refund
+import com.paymentoptions.pos.network.endpoints.void
+import com.paymentoptions.pos.services.apiService.RefundResponse
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.paymentStatus
-import com.paymentoptions.pos.services.apiService.endpoints.refund
-import com.paymentoptions.pos.services.apiService.endpoints.void
 import com.paymentoptions.pos.services.apiService.toPaymentStatusRequest
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
@@ -64,10 +65,10 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.TransactionAction
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
-import com.theminesec.lib.dto.transaction.TranStatus
 import com.theminesec.lib.dto.transaction.TranType
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
@@ -76,6 +77,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.Currency
@@ -154,10 +156,8 @@ fun TransactionActionScreen(
                 AppLogger.debug("Webhook request for $actionLabel: parentUUID=$parentUUID, childUUID=$childUUID and paymentStatusRequest: $paymentStatusRequest")
 
                 val webhookSuccess = paymentStatus(
-                    context = context,
                     request = paymentStatusRequest,
-                    tranStatus = TranStatus.APPROVED
-                )
+                ) != null
 
                 AppLogger.debug("Webhook response for $actionLabel: $webhookSuccess")
 
@@ -216,7 +216,7 @@ fun TransactionActionScreen(
             val maxRetries = 1
             var currentAttempt = 0
             var lastError: Exception? = null
-            var response: com.paymentoptions.pos.services.apiService.RefundResponse? = null
+            var response: RefundResponse? = null
 
             withContext(Dispatchers.Main) {
                 processingScreenType = StatusScreenType.PROCESSING
@@ -229,11 +229,10 @@ fun TransactionActionScreen(
                     AppLogger.debug("Refund attempt $currentAttempt of $maxRetries")
 
                     response = refund(
-                        context = context,
                         transactionId = transaction.uuid,
                         merchantId = transaction.DASMID,
                         amount = transaction.amount,
-                        notes = notesInput.text.toString()
+                        notes = notesInput.text.toString().ifBlank { "Refund from DASPay App" }
                     )
 
                     if (response != null) {
@@ -242,23 +241,11 @@ fun TransactionActionScreen(
                     } else {
                         lastError = Exception("API returned null response")
                     }
-                } catch (e: retrofit2.HttpException) {
-                    errorMessage = try {
-                        val errorJson = e.response()?.errorBody()?.string()
-                        if (errorJson != null) {
-                            val jsonObj = org.json.JSONObject(errorJson)
-                            jsonObj.optJSONObject("gateway_response")?.optString("message")
-                                ?: e.message()
-                        } else {
-                            e.message()
-                        }
-                    } catch (e: Exception) {
-                        e.message.toString()
-                    }
-                    AppLogger.error("Refund HTTP error ${e.code()}: $errorMessage")
                 } catch (e: Exception) {
                     AppLogger.error("Refund attempt $currentAttempt failed: ${e.message}", e)
                     lastError = e
+
+                    errorMessage = parseApiErrorMessage(e,"Refund Failed")
                     if (currentAttempt < maxRetries) {
                         delay(1000L * currentAttempt)
                     }
@@ -346,7 +333,6 @@ fun TransactionActionScreen(
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = void(
-                    context = context,
                     transactionId = transaction.uuid,
                     merchantId = transaction.DASMID,
                 )
@@ -365,25 +351,10 @@ fun TransactionActionScreen(
                         showTransactionFailure()
                     }
                 }
-            } catch (e: retrofit2.HttpException) {
-                errorMessage = try {
-                    val errorJson = e.response()?.errorBody()?.string()
-                    if (errorJson != null) {
-                        val jsonObj = org.json.JSONObject(errorJson)
-                        jsonObj.optJSONObject("gateway_response")?.optString("message")
-                            ?: e.message()
-                    } else {
-                        e.message()
-                    }
-                } catch (ex: Exception) {
-                    ex.message.toString()
-                }
-                AppLogger.error("Void API HTTP error ${e.code()}: $errorMessage")
-                withContext(Dispatchers.Main) { showTransactionFailure() }
             } catch (e: Exception) {
                 AppLogger.error("Void API failed: ${e.message}", e)
                 withContext(Dispatchers.Main) {
-                    errorMessage = e.message ?: "Void failed"
+                    errorMessage = parseApiErrorMessage(e, "Void failed")
                     showTransactionFailure()
                 }
             }
@@ -402,11 +373,10 @@ fun TransactionActionScreen(
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
                         val response = refund(
-                            context = context,
                             transactionId = transaction.uuid,
                             merchantId = transaction.DASMID,
                             amount = transaction.amount,
-                            notes = notesInput.text.toString()
+                            notes = notesInput.text.toString().ifBlank { "Refund from DASPay App" }
                         )
 
                         if (response != null) {
@@ -429,25 +399,10 @@ fun TransactionActionScreen(
                                 showTransactionFailure()
                             }
                         }
-                    } catch (e: retrofit2.HttpException) {
-                        errorMessage = try {
-                            val errorJson = e.response()?.errorBody()?.string()
-                            if (errorJson != null) {
-                                val jsonObj = org.json.JSONObject(errorJson)
-                                jsonObj.optJSONObject("gateway_response")?.optString("message")
-                                    ?: e.message()
-                            } else {
-                                e.message()
-                            }
-                        } catch (ex: Exception) {
-                            ex.message.toString()
-                        }
-                        AppLogger.error("Refund API HTTP error ${e.code()}: $errorMessage")
-                        withContext(Dispatchers.Main) { showTransactionFailure() }
                     } catch (e: Exception) {
                         AppLogger.error("Refund API failed: ${e.message}", e)
                         withContext(Dispatchers.Main) {
-                            errorMessage = e.message ?: "Refund failed"
+                            errorMessage = parseApiErrorMessage(e, "Refund failed")
                             showTransactionFailure()
                         }
                     }

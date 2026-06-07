@@ -33,6 +33,7 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.ConfigurationManager
+import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayout
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import kotlinx.coroutines.delay
@@ -88,8 +89,17 @@ fun SplashScreen(navController: NavController) {
 
         if (signInResponse.isNotNull()) {
             delay(1000)
-            navController.navigate(Screens.Dashboard.route) {
-                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+            // check if token is saved
+            val token = AppStorage.tokenCode
+            if(token?.isBlank() == true) {
+                AppLogger.warn("Token is blank, navigating to AuthCheck")
+                navController.navigate(Screens.AuthCheck.route) {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                }
+            } else {
+                navController.navigate(Screens.Dashboard.route) {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                }
             }
         } else {
             delay(4000)

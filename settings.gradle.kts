@@ -9,6 +9,8 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        // JetBrains Compose Multiplatform plugin repository
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
     }
 }
 dependencyResolutionManagement {
@@ -17,6 +19,10 @@ dependencyResolutionManagement {
         google()
         maven { url = uri("https://jitpack.io") }
         mavenCentral()
+        // JetBrains Compose Multiplatform libraries
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+        // JetBrains Navigation Compose (CMP)
+        maven("https://androidx.dev/storage/compose-compiler/repository/")
 
         // MineSec's maven registry
         maven {
@@ -42,13 +48,13 @@ dependencyResolutionManagement {
             url = uri("https://maven.pkg.github.com/theminesec/ms-registry-client")
             credentials {
                 username = MINESEC_REGISTRY_LOGIN
-                password = "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"
+                password = "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"
             }
         }
 
     }
 }
 
-rootProject.name = "Payment Options POS"
+rootProject.name = "PaymentOptionsPOS"
 include(":app")
 include(":shared")

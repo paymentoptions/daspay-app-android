@@ -7,10 +7,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.gson.Gson
+import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.logger.SendLogsScreen
-import com.paymentoptions.pos.services.apiService.AuthEventManager
+import com.paymentoptions.pos.auth.AuthEventManager
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlow
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlow
@@ -151,7 +151,7 @@ fun Navigator() {
 
             // Parse transaction
             val transaction = try {
-                Gson().fromJson(decodedJson, TransactionListDataRecord::class.java)
+                Json { ignoreUnknownKeys = true }.decodeFromString<TransactionListDataRecord>(decodedJson)
             } catch (e: Exception) {
                 null
             }
@@ -177,9 +177,7 @@ fun Navigator() {
 
             // Try to parse as TransactionListDataRecord first
             val transaction = try {
-                val parsed = Gson().fromJson(decodedJson, TransactionListDataRecord::class.java)
-                // Check if it's a valid transaction (has required fields)
-                if (parsed?.MerchantRefID != null) parsed else null
+                Json { ignoreUnknownKeys = true }.decodeFromString<TransactionListDataRecord>(decodedJson)
             } catch (e: Exception) {
                 null
             }

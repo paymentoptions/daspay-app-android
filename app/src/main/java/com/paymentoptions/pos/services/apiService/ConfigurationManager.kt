@@ -4,116 +4,59 @@ import android.content.Context
 import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.endpoints.configDownload
-
+import com.paymentoptions.pos.network.endpoints.getAppConfiguration
 
 /**
- * {"statusCode":200,"message":"successful","messageCode":"INFO_CONFIG_0000",
- * "success":true,"data":[{"ID":5,"AppENV":"DEV","BaseAPIURL":"https://api-dev.paymentoptions.com/api/v1",
- * "RegistryLogin":"DEV_LOGIN","RegistryToken":"DEV_TOKEN","PrevAppVersion":1,"CurrAppVersion":1,
- * "IsUpdateMandatory":true,"TransactionDetailsURL":"https://me.paymentoptions.com/daspay-transaction-details/"}]}
- *
+ * Delegates to [com.paymentoptions.pos.network.ConfigurationManager] (shared module).
+ * Downloads app configuration and stores it via [DPSharedPreferences] → [com.paymentoptions.pos.storage.AppStorage].
  */
 object ConfigurationManager {
 
-    @Volatile
-    private var isInitialized = false
-
-    /**
-     * Initialize app configuration by checking if base URL is saved.
-     * If not saved, download config from API based on current environment.
-     */
     suspend fun initializeConfig(context: Context): Boolean {
         return try {
-            // Download config for current flavor/environment
-            val appConfig = configDownload(context, BuildConfig.ENVIRONMENT)
-
-            if (appConfig != null) {
-                AppLogger.debug("Config downloaded successfully. Base URL: ${appConfig.BaseAPIURL}")
-
-                val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
-                if(savedBaseUrl != appConfig.BaseAPIURL) {
-                    DPSharedPreferences.storeAppConfig(context, appConfig)
-                    // Reset RetrofitClient to use new base URL
-                    RetrofitClient.reset()
-                }
-
-                isInitialized = true
-                true
-            } else {
+            val appConfig = getAppConfiguration(BuildConfig.ENVIRONMENT)
+                ?.takeIf { it.success }
+                ?.data
+                ?.firstOrNull() ?: run {
                 AppLogger.error("Failed to download app configuration")
-                false
+                return false
             }
-//            val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
-//
-//            if (savedBaseUrl.isNullOrEmpty()) {
-//                AppLogger.debug("Base URL not found in preferences. Downloading config for environment: ${BuildConfig.ENVIRONMENT}")
-//
-//
-//            } else {
-//                AppLogger.debug("Using saved base URL from preferences: $savedBaseUrl")
-//                isInitialized = true
-//                true
-//            }
+            AppLogger.debug("Config downloaded. Base URL: ${appConfig.BaseAPIURL}")
+            val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+            if (savedBaseUrl != appConfig.BaseAPIURL) {
+                DPSharedPreferences.storeAppConfig(context, appConfig)
+                // Notify KtorClient that the base URL may have changed
+                com.paymentoptions.pos.network.ConfigurationManager.buildTimeBaseUrl =
+                    com.paymentoptions.pos.network.ConfigurationManager.buildTimeBaseUrl
+            }
+            true
         } catch (e: Exception) {
             AppLogger.error("Error initializing config: ${e.message}")
-            e.printStackTrace()
             false
         }
     }
 
-    /**
-     * Force refresh of configuration from API
-     */
     suspend fun refreshConfig(context: Context): Boolean {
         return try {
-            AppLogger.debug("Forcing config refresh for environment: ${BuildConfig.ENVIRONMENT}")
-
-            val appConfig = configDownload(context, BuildConfig.ENVIRONMENT)
-
-            if (appConfig != null) {
-                AppLogger.debug("Config refreshed successfully. Base URL: ${appConfig.BaseAPIURL}")
-                DPSharedPreferences.storeAppConfig(context, appConfig)
-
-                // Reset RetrofitClient to use new base URL
-                RetrofitClient.reset()
-
-                true
-            } else {
+            val appConfig = getAppConfiguration(BuildConfig.ENVIRONMENT)
+                ?.takeIf { it.success }
+                ?.data
+                ?.firstOrNull() ?: run {
                 AppLogger.error("Failed to refresh app configuration")
-                false
+                return false
             }
+            AppLogger.debug("Config refreshed. Base URL: ${appConfig.BaseAPIURL}")
+            DPSharedPreferences.storeAppConfig(context, appConfig)
+            true
         } catch (e: Exception) {
             AppLogger.error("Error refreshing config: ${e.message}")
-            e.printStackTrace()
             false
         }
     }
 
-    /**
-     * Get current environment name
-     */
-    fun getCurrentEnvironment(): String {
-        return BuildConfig.ENVIRONMENT
-    }
+    fun getCurrentEnvironment(): String = BuildConfig.ENVIRONMENT
 
-    /**
-     * Check if configuration is initialized
-     */
-    fun isConfigInitialized(): Boolean {
-        return isInitialized
-    }
-
-    /**
-     * Get the base URL being used (from preferences or BuildConfig)
-     */
-    fun getEffectiveBaseUrl(context: Context): String {
-        val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
-        return if (!savedBaseUrl.isNullOrEmpty()) {
-            savedBaseUrl
-        } else {
-            BuildConfig.CONFIG_BASE_URL
-        }
-    }
+    fun getEffectiveBaseUrl(context: Context): String =
+        DPSharedPreferences.getBaseUrl(context)?.takeIf { it.isNotEmpty() }
+            ?: BuildConfig.CONFIG_BASE_URL
 }
-

@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Dashboard
-import androidx.compose.material.icons.outlined.Fastfood
 import androidx.compose.material.icons.outlined.Filter
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.Info
@@ -55,9 +54,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.endpoints.signOut
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
-import com.paymentoptions.pos.services.apiService.endpoints.signOut
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -184,7 +183,7 @@ fun MyBottomNavigationBar(
                 signOutLoader = true
 
                 try {
-                    signOutResponse = signOut(context)
+                    signOutResponse = signOut()
                     println("signOutResponse: $signOutResponse")
 
                     if (signOutResponse == null) {

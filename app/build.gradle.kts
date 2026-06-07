@@ -6,8 +6,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-
-    kotlin("plugin.serialization") version "2.0.21"
+    alias(libs.plugins.kotlin.serialization)
     id("com.google.gms.google-services")
 }
 
@@ -119,12 +118,16 @@ android {
 }
 
 dependencies {
+    // ── Shared CMP module ─────────────────────────────────────────────────────
+    implementation(project(":shared"))
 
+    // ── Android app-level deps (platform-specific only) ───────────────────────
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    //implementation(platform(libs.androidx.compose.bom.v20250500)) //Vishal commented this dependency
-    //implementation(platform(libs.androidx.compose.bom)) //Vishal commented this dependency
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+
     implementation(libs.androidx.foundation) //Vishal added this dependency
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
@@ -133,8 +136,47 @@ dependencies {
     implementation(libs.androidx.material3.lint)
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.androidx.runtime)
-    implementation(libs.androidx.lifecycle.process)
-    implementation(libs.androidx.compose.foundation)
+
+    // MineSec Headless SDK (Android-only payment terminal SDK)
+    releaseImplementation(libs.headless.stage)
+    debugImplementation(libs.headless.stage)
+
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.messaging.ktx)  // FcmService extends FirebaseMessagingService
+
+    // Biometrics (IsBiometricAvailable.kt still in app)
+    implementation(libs.androidx.biometric)
+
+    // OkHttp (UploadMedia.kt uses it directly for S3 PUT)
+    implementation(libs.okhttp)
+
+    // Charts (Android-only until vico releases stable CMP support)
+    implementation(libs.ycharts)
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
+    implementation(libs.mpandroidchart)
+
+    // QR Code (ZXing – Android only; iOS uses CoreImage)
+    implementation(libs.core)
+
+    // WorkManager for background retries
+    implementation(libs.androidx.work.runtime.ktx)
+
+    // Logging
+    implementation(platform(libs.log4j.bom))
+    implementation(libs.log4j.api)
+    implementation(libs.log4j.core)
+
+    // Accompanist (Android-only)
+    implementation(libs.accompanist.systemuicontroller)
+    implementation(libs.accompanist.swiperefresh)
+
+    // Coil GIF support (Android-only extra)
+    implementation(libs.coil.gif)
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -142,65 +184,4 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.biometric)
-    implementation(libs.androidx.navigation.compose)
-    implementation(libs.kotlinx.serialization.json)
-
-    //RetroFit
-    implementation(libs.retrofit)
-    implementation(libs.converter.gson)
-    implementation(libs.androidx.lifecycle.viewmodel.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-
-
-//    Minesec - using local AAR since remote registry is unavailable
-    releaseImplementation(libs.headless.stage)
-    debugImplementation(libs.headless.stage)
-
-//    releaseImplementation(files("libs/minehades-stage-1.10.105.12.61.aar"))
-//    debugImplementation(files("libs/minehades-stage-1.10.105.12.61.aar"))
-//    releaseImplementation(files("libs/headless-stage-1.2.17-stage-release.aar"))
-//    debugImplementation(files("libs/headless-stage-1.2.17-stage-release.aar"))
-
-
-
-
-    //Firebase
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
-
-    //ycharts
-    implementation(libs.ycharts)
-
-    //System UI Color
-    implementation(libs.accompanist.systemuicontroller)
-
-    //Coil
-    implementation(libs.coil.compose)
-    implementation(libs.coil.network.okhttp)
-    implementation(libs.coil.gif)
-
-    implementation(libs.kotlinx.datetime)
-
-    // QR Code Generation (ZXing)
-    implementation(libs.core)
-
-    // For logging API requests and responses
-    implementation(libs.logging.interceptor)
-
-    implementation(libs.vico.compose)
-    implementation(libs.vico.compose.m3)
-
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
-
-    implementation(platform(libs.log4j.bom))
-    implementation(libs.log4j.api)
-    implementation(libs.log4j.core)
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
-
-    // WorkManager for background task scheduling
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
-
-    implementation(libs.accompanist.swiperefresh)
 }

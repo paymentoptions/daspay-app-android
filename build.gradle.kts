@@ -3,10 +3,14 @@ plugins {
     alias(libs.plugins.android.application) version "8.8.1" apply false
     alias(libs.plugins.kotlin.android)  apply false
     alias(libs.plugins.kotlin.compose)  apply false
+    alias(libs.plugins.kotlin.serialization) apply false
 
     id("com.google.gms.google-services") version "4.4.4" apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
     alias(libs.plugins.android.kotlin.multiplatform.library) apply false
     alias(libs.plugins.android.lint) apply false
+
+    // Compose Multiplatform – JetBrains runtime + resources plugin
+    alias(libs.plugins.jetbrains.compose) apply false
 }
 

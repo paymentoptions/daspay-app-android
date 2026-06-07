@@ -1,107 +1,32 @@
 package com.paymentoptions.pos.services.apiService
 
 import android.content.Context
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
-import com.paymentoptions.pos.logger.AppLogger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.minutes
+import com.paymentoptions.pos.auth.TokenRepository
+import com.paymentoptions.pos.storage.AppStorage
 
 /**
- * Automatically refreshes tokens every 5 minutes while the app is in the foreground
- * and the user is logged in.
+ * No-op stub kept for call-site compatibility.
+ * Token refresh is now handled by [com.paymentoptions.pos.auth.TokenRepository] (shared module).
  */
-class TokenAutoRefresher private constructor(
-    private val context: Context
-) : DefaultLifecycleObserver {
+class TokenAutoRefresher private constructor() {
 
-    private var refreshJob: Job? = null
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private var isUserLoggedIn = false
-
-    /**
-     * Call this after user successfully signs in to start the auto refresh
-     */
     fun onUserSignedIn() {
-        isUserLoggedIn = true
-        startRefreshJob()
+        val expiryEpochMs = AppStorage.tokenExpiry
+        if (expiryEpochMs > 0L) {
+            TokenRepository.scheduleProactiveRefresh(expiryEpochMs = expiryEpochMs)
+        }
     }
 
-    /**
-     * Call this after user signs out to stop the auto refresh
-     */
     fun onUserSignedOut() {
-        isUserLoggedIn = false
-        stopRefreshJob()
-    }
-
-    override fun onStart(owner: LifecycleOwner) {
-        // App came to foreground
-        AppLogger.debug("TokenAutoRefresher: App in foreground")
-        try {
-            isUserLoggedIn = TokenRepository.getInstance(context.applicationContext).getAuthToken() != null
-        } catch (e: Throwable) {
-            AppLogger.error("TokenAutoRefresher: Failed to check auth token - ${e.message}")
-            isUserLoggedIn = false
-        }
-        AppLogger.debug("TokenAutoRefresher: isUserLoggedIn: $isUserLoggedIn")
-        if (isUserLoggedIn) {
-            startRefreshJob()
-        }
-    }
-
-    override fun onStop(owner: LifecycleOwner) {
-        // App went to background
-        AppLogger.debug("TokenAutoRefresher: App in background")
-        stopRefreshJob()
-    }
-
-    private fun startRefreshJob() {
-        if (refreshJob?.isActive == true) return // Already running
-
-        refreshJob = scope.launch {
-            while (isActive) {
-                delay(6.minutes)
-                if (isUserLoggedIn) {
-                    try {
-                        AppLogger.debug("TokenAutoRefresher: Refreshing token...")
-                        val tokenRepository = TokenRepository.getInstance(context)
-                        tokenRepository.refreshTokenIfNeeded()
-                        AppLogger.debug("TokenAutoRefresher: Token refresh completed")
-                    } catch (e: Exception) {
-                        AppLogger.debug("TokenAutoRefresher: Token refresh failed - ${e.message}")
-                    }
-                }
-            }
-        }
-        AppLogger.debug("TokenAutoRefresher: Refresh job started")
-    }
-
-    private fun stopRefreshJob() {
-        refreshJob?.cancel()
-        refreshJob = null
-        AppLogger.debug("TokenAutoRefresher: Refresh job stopped")
+        TokenRepository.stop()
     }
 
     companion object {
-        @Volatile
-        private var INSTANCE: TokenAutoRefresher? = null
+        @Volatile private var INSTANCE: TokenAutoRefresher? = null
 
-        fun getInstance(context: Context): TokenAutoRefresher =
+        fun getInstance(@Suppress("UNUSED_PARAMETER") context: Context): TokenAutoRefresher =
             INSTANCE ?: synchronized(this) {
-                INSTANCE ?: TokenAutoRefresher(context.applicationContext).also {
-                    INSTANCE = it
-                    // Register with ProcessLifecycleOwner to observe app lifecycle
-                    ProcessLifecycleOwner.get().lifecycle.addObserver(it)
-                }
+                INSTANCE ?: TokenAutoRefresher().also { INSTANCE = it }
             }
     }
 }
-
