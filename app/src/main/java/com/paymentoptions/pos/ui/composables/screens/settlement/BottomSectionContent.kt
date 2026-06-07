@@ -37,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getSettlementCurrency
@@ -253,6 +254,8 @@ fun BottomSectionContent(
                         .fillMaxWidth()
                         .height(59.dp),
                     onClick = {
+                        AnalyticsHelper.trackCriticalButtonClick(buttonName = "Settle All", screenName = "Settlement")
+                        AnalyticsHelper.trackSettlementSubmitted(batchId = pendingSettlement!!.BatchID)
                         isLoading = true
                         navController.navigate(Screens.SettlementAction.createRoute(pendingSettlement!!.BatchID))
                     }

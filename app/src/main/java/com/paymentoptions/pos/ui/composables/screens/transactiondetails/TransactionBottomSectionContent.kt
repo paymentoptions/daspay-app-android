@@ -49,6 +49,7 @@ import coil3.compose.AsyncImage
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.getSignature
@@ -102,7 +103,7 @@ fun TransactionBottomSectionContent(
 
     val transactionUuid = transaction?.uuid
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
-        "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
+        "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
     } else {
         null
     }

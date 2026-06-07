@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    id("com.datadoghq.dd-sdk-android-gradle-plugin")
     id("com.google.gms.google-services")
 }
 
@@ -19,6 +20,26 @@ val keystoreProperties = Properties().apply {
     } else {
         println("WARNING: keystore.properties file not found at: ${keystoreFile.absolutePath}")
     }
+}
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(FileInputStream(localPropertiesFile))
+    }
+}
+
+fun resolveSecret(name: String): String {
+    return (
+        localProperties.getProperty(name)
+            ?: (project.findProperty(name) as? String)
+            ?: System.getenv(name)
+            ?: ""
+        ).trim()
+}
+
+fun asBuildConfigString(value: String): String {
+    return "\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
 }
 
 android {
@@ -36,6 +57,14 @@ android {
         val appName = "Daspay"
         base.archivesName.set("$appName-${versionName}-${versionCode}-${LocalDate.now()}")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val datadogClientToken = resolveSecret("DATADOG_CLIENT_TOKEN")
+        val datadogAppId = resolveSecret("DATADOG_APP_ID")
+        if (datadogClientToken.isBlank() || datadogAppId.isBlank()) {
+            println("WARNING: Datadog is not fully configured. Set DATADOG_CLIENT_TOKEN and DATADOG_APP_ID in local.properties or environment variables.")
+        }
+        buildConfigField("String", "DATADOG_CLIENT_TOKEN", asBuildConfigString(datadogClientToken))
+        buildConfigField("String", "DATADOG_APP_ID", asBuildConfigString(datadogAppId))
     }
 
     flavorDimensions += "environment"
@@ -168,6 +197,7 @@ dependencies {
     implementation(platform(libs.log4j.bom))
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
+    implementation("com.datadoghq:dd-sdk-android-rum:${libs.versions.datadogSdkAndroid.get()}")
 
     // Accompanist (Android-only)
     implementation(libs.accompanist.systemuicontroller)

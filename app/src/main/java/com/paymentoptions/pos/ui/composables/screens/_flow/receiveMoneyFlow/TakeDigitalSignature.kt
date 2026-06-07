@@ -47,8 +47,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
 import androidx.navigation.NavController
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.uploadSignature
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponseData
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -60,6 +62,11 @@ import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.text.SimpleDateFormat
 import java.io.ByteArrayOutputStream
 import java.util.Date
@@ -212,9 +219,9 @@ fun TakeDigitalSignatureBottomSectionContent(
             FilledButton(
                 text = "Confirm",
                 onClick = {
-                    val transactionId_value = paymentDetailsResponse?.data?.TransactionRefID
+                    val transactionIdValue = resolveTransactionId(paymentDetailsResponse)
 
-                    if (isSigned && transactionId_value != null) {
+                    if (isSigned && transactionIdValue != null) {
                         val signatureBitmap = createSignatureBitmap(
                             path,
                             canvasWith,
@@ -228,7 +235,7 @@ fun TakeDigitalSignatureBottomSectionContent(
                             try {
                                 val response = uploadSignature(
                                     signatureBytes = bitmapToByteArray(signatureBitmap),
-                                    transactionId = transactionId_value
+                                    transactionId = transactionIdValue
                                 )
 
                                 if (response != null && response.success) {
@@ -253,7 +260,7 @@ fun TakeDigitalSignatureBottomSectionContent(
                             }
                         }
 
-                    } else if (transactionId_value == null) {
+                    } else if (transactionIdValue == null) {
                         // should not happen just for check
                         Toast.makeText(
                             context,
@@ -274,6 +281,65 @@ private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
     val output = ByteArrayOutputStream()
     bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)
     return output.toByteArray()
+}
+
+private fun resolveTransactionId(paymentDetailsResponse: PaymentDetailsResponse?): String? {
+    val data = paymentDetailsResponse?.data ?: return null
+
+    return runCatching<String?> {
+        val transactionId = data.TransactionRefID
+        if (transactionId.isNotBlank()) {
+            AppLogger.debug(
+                "TakeDigitalSignature", "Resolved transaction id from TransactionRefID=$transactionId"
+            )
+            return@runCatching transactionId
+        }
+
+        val dataJson = Json.parseToJsonElement(
+            Json.encodeToString(PaymentDetailsResponseData.serializer(), data)
+        ).jsonObject
+
+        val directRef = dataJson["TransactionRefID"]
+            ?.jsonPrimitive
+            ?.contentOrNull
+            ?.takeIf { it.isNotBlank() }
+
+        if (directRef != null) {
+            AppLogger.debug(
+                "TakeDigitalSignature", "Resolved transaction id from TransactionRefID=$directRef"
+            )
+            return@runCatching directRef
+        }
+
+        AppLogger.warn(
+            "TakeDigitalSignature", "TransactionRefID is null/blank, trying TransactionHistory.uuid"
+        )
+
+        val historyUuid = runCatching {
+            dataJson["TransactionHistory"]
+                ?.jsonArray
+                ?.firstOrNull()
+                ?.jsonObject
+                ?.get("uuid")
+                ?.jsonPrimitive
+                ?.contentOrNull
+                ?.takeIf { it.isNotBlank() }
+        }.getOrNull()
+
+        if (historyUuid != null) {
+            AppLogger.debug(
+                "TakeDigitalSignature",
+                "Resolved transaction id from TransactionHistory.uuid=$historyUuid"
+            )
+            return@runCatching historyUuid
+        }
+
+        AppLogger.warn("TakeDigitalSignature", "TransactionHistory.uuid is also null/blank")
+
+        null
+    }.onFailure {
+        AppLogger.error("TakeDigitalSignature", "Failed to resolve transaction id", it)
+    }.getOrNull()
 }
 
 /*

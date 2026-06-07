@@ -123,6 +123,8 @@ import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.inProduction
+import com.paymentoptions.pos.utils.isUnauthorizedError
+import com.paymentoptions.pos.utils.showSessionExpiredAndNavigateToFingerprint
 import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getMerchantIdFromToken
 import com.paymentoptions.pos.utils.paymentMethods
@@ -290,16 +292,8 @@ fun FoodOrderFlow(
             selectedFoodCategory = foodCategoryList.firstOrNull()
 
         } catch (e: Exception) {
-            if (e.toString().contains("HTTP 401")) {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.session_expired),
-                    Toast.LENGTH_SHORT
-                ).show()
-                navController.navigate(Screens.FingerprintScan.route){
-                    // Clear back stack to prevent going back to authenticated screens
-                    popUpTo(0) { inclusive = true }
-                }
+            if (e.isUnauthorizedError()) {
+                showSessionExpiredAndNavigateToFingerprint(context, navController)
             }
         } finally {
             foodCategoryListAvailable = true
@@ -598,16 +592,8 @@ fun FoodOrderFlow(
 
 
 
-                                        if (e.toString().contains("HTTP 401")) {
-                                            Toast.makeText(
-                                                context,
-                                                context.getString(R.string.session_expired),
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            navController.navigate(Screens.FingerprintScan.route){
-                                                // Clear back stack to prevent going back to authenticated screens
-                                                popUpTo(0) { inclusive = true }
-                                            }
+                                        if (e.isUnauthorizedError()) {
+                                            showSessionExpiredAndNavigateToFingerprint(context, navController)
                                         }
                                     } finally {
                                         qrCodeLoading = false
@@ -1153,17 +1139,6 @@ private suspend fun getProductsPerCategory(
             selectedFoodCategory!!.CategoryID, listOf<FoodItem>(), context
         )
     } catch (e: Exception) {
-
-        if (e.toString().contains("HTTP 401")) {
-//            Toast.makeText(
-//                context,
-//                context.getString(R.string.session_expired),
-//                Toast.LENGTH_SHORT
-//            ).show()
-//            navController.navigate(Screens.FingerprintScan.route) {
-//                // Clear back stack to prevent going back to authenticated screens
-//                popUpTo(0) { inclusive = true }
-//            }
-        }
+        
     }
 }

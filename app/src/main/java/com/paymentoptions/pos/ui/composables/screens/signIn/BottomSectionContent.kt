@@ -23,19 +23,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.messaging.FirebaseMessaging
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.saveFcmToken
 import com.paymentoptions.pos.device.GeoRestrictionManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.SignInResponse
+import com.paymentoptions.pos.network.ApiHttpException
 import com.paymentoptions.pos.network.endpoints.signIn
-import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.utils.getDeviceIdentifier
 import com.paymentoptions.pos.utils.inProduction
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import com.paymentoptions.pos.utils.validation.validateEmail
 import com.paymentoptions.pos.utils.validation.validatePassword
 import kotlinx.coroutines.launch
@@ -155,6 +157,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             disabled = emailError || passwordError,
             isLoading = isLoading,
             onClick = {
+                AnalyticsHelper.trackCriticalButtonClick(buttonName = "Proceed", screenName = "SignIn")
                 scope.launch {
                     isLoading = true
                     var signInResponse: SignInResponse? = null
@@ -176,6 +179,13 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                         signInResponse?.let {
                             if (signInResponse.success == true) {
+                                AnalyticsHelper.trackLogin(
+                                    userId = signInResponse.data?.uid,
+                                    merchantId = signInResponse.data?.subsidiaries?.firstOrNull(),
+                                )
+                                signInResponse.data?.subsidiaries?.firstOrNull()?.let { merchantId ->
+                                    AnalyticsHelper.trackMerchantSelection(merchantId = merchantId)
+                                }
                                 DPSharedPreferences.saveCredentials(
                                     context,
                                     emailState.text.toString(),
@@ -205,8 +215,15 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             }
                         }
                     } catch (e: Exception){
+                        val statusCode = (e as? ApiHttpException)?.statusCode
+                        AnalyticsHelper.trackApiError(
+                            endpoint = "signIn",
+                            statusCode = statusCode,
+                            message = e.message ?: "Sign in failed",
+                            throwable = e,
+                        )
                         AppLogger.error("signIn error: $e")
-                        Toast.makeText(context, "Invalid Credentials", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, parseApiErrorMessage(e,"Invalid Credentials"), Toast.LENGTH_LONG).show()
                     } finally {
                         isLoading = false
                     }

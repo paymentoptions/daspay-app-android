@@ -52,8 +52,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.ApiHttpException
 import com.paymentoptions.pos.network.endpoints.signOut
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
@@ -179,6 +181,7 @@ fun MyBottomNavigationBar(
         text = "Do you want to log out?",
         acceptButtonText = "Log Out",
         onAcceptFn = {
+            AnalyticsHelper.trackCriticalButtonClick(buttonName = "Log Out Confirm", screenName = "More")
             scope.launch {
                 signOutLoader = true
 
@@ -187,6 +190,7 @@ fun MyBottomNavigationBar(
                     println("signOutResponse: $signOutResponse")
 
                     if (signOutResponse == null) {
+                        AnalyticsHelper.trackLogout()
                         TokenAutoRefresher.getInstance(context).onUserSignedOut()
                         DPSharedPreferences.clearSharedPreferences(context)
                         navController.navigate(Screens.AuthCheck.route) {
@@ -196,6 +200,7 @@ fun MyBottomNavigationBar(
 
                     signOutResponse?.let {
                         if (it.success) {
+                            AnalyticsHelper.trackLogout()
                             TokenAutoRefresher.getInstance(context).onUserSignedOut()
                             DPSharedPreferences.clearSharedPreferences(context)
                             navController.navigate(Screens.AuthCheck.route) {
@@ -204,6 +209,12 @@ fun MyBottomNavigationBar(
                         }
                     }
                 } catch (e: Exception) {
+                    AnalyticsHelper.trackApiError(
+                        endpoint = "signOut",
+                        statusCode = (e as? ApiHttpException)?.statusCode,
+                        message = e.message ?: "Sign out failed",
+                        throwable = e,
+                    )
                     TokenAutoRefresher.getInstance(context).onUserSignedOut()
                     DPSharedPreferences.clearSharedPreferences(context)
                     navController.navigate(Screens.AuthCheck.route) {
@@ -278,7 +289,10 @@ fun MyBottomNavigationBar(
                                 icon = Icons.AutoMirrored.Outlined.Logout,
                                 route = "Dummy"
                             ),
-                            onSelected = { showSignOutConfirmationDialog = true },
+                            onSelected = {
+                                AnalyticsHelper.trackCriticalButtonClick(buttonName = "Log Out", screenName = "More")
+                                showSignOutConfirmationDialog = true
+                            },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(16.dp),
@@ -309,6 +323,7 @@ fun MyBottomNavigationBar(
                         navController.currentBackStackEntry?.destination?.route
 
                     if (currentRoute != home.route) {
+                        AnalyticsHelper.trackDashboardNavigation(section = home.title)
                         selectedBottomNavigationBarItem = home
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
@@ -332,6 +347,7 @@ fun MyBottomNavigationBar(
                         navController.currentBackStackEntry?.destination?.route
 
                     if (currentRoute != catalogMenu.route) {
+                        AnalyticsHelper.trackDashboardNavigation(section = catalogMenu.title)
                         selectedBottomNavigationBarItem = catalogMenu
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
@@ -342,6 +358,7 @@ fun MyBottomNavigationBar(
                         }
                     } else {
                         // User is already on food menu - reset to initial stage
+                        AnalyticsHelper.trackDashboardNavigation(section = catalogMenu.title)
                         selectedBottomNavigationBarItem = catalogMenu
                         navController.navigate(catalogMenu.route) {
                             launchSingleTop = true
@@ -362,6 +379,7 @@ fun MyBottomNavigationBar(
                         navController.currentBackStackEntry?.destination?.route
 
                     if (currentRoute != receiveMoney.route) {
+                        AnalyticsHelper.trackDashboardNavigation(section = receiveMoney.title)
                         selectedBottomNavigationBarItem = receiveMoney
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
@@ -386,6 +404,7 @@ fun MyBottomNavigationBar(
                         navController.currentBackStackEntry?.destination?.route
 
                     if (currentRoute != query.route) {
+                        AnalyticsHelper.trackDashboardNavigation(section = query.title)
                         selectedBottomNavigationBarItem = query
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
@@ -410,6 +429,7 @@ fun MyBottomNavigationBar(
                         navController.currentBackStackEntry?.destination?.route
 
                     if (currentRoute != more.route) {
+                        AnalyticsHelper.trackDashboardNavigation(section = more.title)
                         selectedBottomNavigationBarItem = more
                         onClickShowMoreItems()
                     }

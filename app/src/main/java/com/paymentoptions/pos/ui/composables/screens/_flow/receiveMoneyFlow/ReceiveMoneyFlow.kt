@@ -66,6 +66,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.ScreenRatioToDp
@@ -74,6 +75,7 @@ import com.paymentoptions.pos.device.DPSharedPreferences.getApms
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.network.endpoints.payByLink
 import com.paymentoptions.pos.network.endpoints.paymentDetails
+import com.paymentoptions.pos.network.ApiHttpException
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
@@ -111,7 +113,9 @@ import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.inProduction
+import com.paymentoptions.pos.utils.isUnauthorizedError
 import com.paymentoptions.pos.utils.paymentMethods
+import com.paymentoptions.pos.utils.showSessionExpiredAndNavigateToFingerprint
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.paymentoptions.pos.utils.viaLinkPaymentMethod
@@ -391,9 +395,19 @@ fun ReceiveMoneyFlow(
                                                     } else if (!Nfc.getStatus(context).second) {
                                                         showNFCNotEnabled = true
                                                     } else {
+                                                        AnalyticsHelper.trackTapToPayInitiated(
+                                                            amount = amountToChargeState,
+                                                            currency = currency,
+                                                        )
                                                         startTapAndPay = true
                                                     }
-                                                else startTapAndPay = true
+                                                else {
+                                                    AnalyticsHelper.trackTapToPayInitiated(
+                                                        amount = amountToChargeState,
+                                                        currency = currency,
+                                                    )
+                                                    startTapAndPay = true
+                                                }
                                             })
 
                                     FilledButton(
@@ -405,9 +419,19 @@ fun ReceiveMoneyFlow(
                                                 } else if (!Nfc.getStatus(context).second) {
                                                     showNFCNotEnabled = true
                                                 } else {
+                                                    AnalyticsHelper.trackTapToPayInitiated(
+                                                        amount = amountToChargeState,
+                                                        currency = currency,
+                                                    )
                                                     startTapAndPay = true
                                                 }
-                                            else startTapAndPay = true
+                                            else {
+                                                AnalyticsHelper.trackTapToPayInitiated(
+                                                    amount = amountToChargeState,
+                                                    currency = currency,
+                                                )
+                                                startTapAndPay = true
+                                            }
                                         },
                                         modifier = Modifier
                                             .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
@@ -430,6 +454,10 @@ fun ReceiveMoneyFlow(
                                     LaunchedEffect(Unit) {
                                         qrCodeLoading = true
                                         qrCodeError = null
+                                        AnalyticsHelper.trackQrPaymentInitiated(
+                                            amount = amountToChargeState,
+                                            currency = currency,
+                                        )
                                         try {
                                             val amountValue =
                                                 amountToChargeState.toLongOrNull()?.div(100f) ?: 0f
@@ -458,20 +486,18 @@ fun ReceiveMoneyFlow(
                                                 qrCodeError = "Failed to generate QR code."
                                             }
                                         } catch (e: Exception) {
+                                            AnalyticsHelper.trackApiError(
+                                                endpoint = "payByLink(qr)",
+                                                statusCode = (e as? ApiHttpException)?.statusCode,
+                                                message = e.message ?: "QR payment initiation failed",
+                                                throwable = e,
+                                            )
                                             qrCodeError =
                                                 "Your session has expired. Please log in again to continue."
                                             e.printStackTrace()
 
-                                            if (e.toString().contains("HTTP 401")) {
-                                                Toast.makeText(
-                                                    context,
-                                                    context.getString(R.string.session_expired),
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                                navController.navigate(Screens.FingerprintScan.route){
-                                                    // Clear back stack to prevent going back to authenticated screens
-                                                    popUpTo(0) { inclusive = true }
-                                                }
+                                            if (e.isUnauthorizedError()) {
+                                                showSessionExpiredAndNavigateToFingerprint(context, navController)
                                             }
                                         } finally {
                                             qrCodeLoading = false
@@ -571,12 +597,22 @@ fun ReceiveMoneyFlow(
                                             payByLinkResponse =
                                                 payByLink(request = payByLinkRequest, dasmid = dasmid)
                                             if (payByLinkResponse != null && payByLinkResponse!!.success) {
+                                                AnalyticsHelper.trackPayByLinkCreated(
+                                                    linkId = payByLinkResponse!!.data.ProductID,
+                                                    amount = amountToChargeState,
+                                                )
 //                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
                                                 paymentUrl =
                                                     "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID
                                                 viaLinkQrBitmap = generateQrCode(paymentUrl)
                                             }
-                                        } catch (_: Exception) {
+                                        } catch (e: Exception) {
+                                            AnalyticsHelper.trackApiError(
+                                                endpoint = "payByLink(create)",
+                                                statusCode = (e as? ApiHttpException)?.statusCode,
+                                                message = e.message ?: "Pay by link creation failed",
+                                                throwable = e,
+                                            )
                                             Toast.makeText(
                                                 context,
                                                 "Error generating payment link...",

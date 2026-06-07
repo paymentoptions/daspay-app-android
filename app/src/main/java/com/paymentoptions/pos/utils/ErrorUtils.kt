@@ -6,6 +6,10 @@ import com.paymentoptions.pos.network.isNoNetworkError
 import com.paymentoptions.pos.network.isTimeoutError
 import org.json.JSONObject
 
+fun Throwable.isUnauthorizedError(): Boolean {
+    return (this as? ApiHttpException)?.statusCode == 401
+}
+
 /**
  * Parses the API error message from a Throwable.
  * It looks for JSON payloads in both ApiHttpException body and general exception messages.

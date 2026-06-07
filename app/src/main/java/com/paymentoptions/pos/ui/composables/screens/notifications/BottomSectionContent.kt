@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens.notifications
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +33,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.R
 import com.paymentoptions.pos.network.TransactionListV2Request
 import com.paymentoptions.pos.network.endpoints.transactionListV2
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
@@ -44,6 +42,8 @@ import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.bannerBgColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.utils.isUnauthorizedError
+import com.paymentoptions.pos.utils.showSessionExpiredAndNavigateToFingerprint
 import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import com.paymentoptions.pos.utils.modifiers.conditional
 import kotlin.math.ceil
@@ -148,16 +148,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 transactions = transactions.plus(transactionListFromAPI.data.records.filterNotNull())
             }
         } catch (e: Exception) {
-            if (e.toString().contains("HTTP 401")) {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.session_expired),
-                    Toast.LENGTH_SHORT
-                ).show()
-                navController.navigate(Screens.FingerprintScan.route){
-                    // Clear back stack to prevent going back to authenticated screens
-                    popUpTo(0) { inclusive = true }
-                }
+            if (e.isUnauthorizedError()) {
+                showSessionExpiredAndNavigateToFingerprint(context, navController)
             }
         } finally {
             apiResponseAvailable = true

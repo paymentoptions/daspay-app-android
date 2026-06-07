@@ -2,14 +2,20 @@ package com.paymentoptions.pos.ui.composables.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.logger.SendLogsScreen
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.auth.AuthEventManager
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlow
@@ -41,6 +47,20 @@ import java.net.URLDecoder
 fun Navigator() {
     val navController = rememberNavController()
     val startDestination = Screens.Splash.route
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    var previousRoute by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(currentRoute) {
+        val from = previousRoute
+        val to = currentRoute
+        if (!from.isNullOrBlank() && !to.isNullOrBlank() && from != to) {
+            AnalyticsHelper.trackScreenNavigation(fromScreen = from, toScreen = to)
+        }
+        if (!to.isNullOrBlank()) {
+            previousRoute = to
+        }
+    }
 
     // Observe auth events for global navigation handling
     LaunchedEffect(Unit) {

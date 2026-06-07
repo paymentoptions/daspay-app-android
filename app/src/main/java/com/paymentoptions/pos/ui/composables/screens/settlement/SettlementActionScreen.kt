@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.ApiHttpException
 import com.paymentoptions.pos.network.endpoints.settleBatch
@@ -41,6 +42,7 @@ fun SettlementActionScreen(
             try {
                 val response = settleBatch(settleId)
                 if (response != null && response.SettleStatus == SETTLED_BATCH) {
+                    AnalyticsHelper.trackSettlementResult(success = true, batchId = settleId)
                     withContext(Dispatchers.Main) {
                         processingScreenType = StatusScreenType.SUCCESS
                         processingMessage = "Settlement\n Completed"
@@ -53,6 +55,13 @@ fun SettlementActionScreen(
                     }
                 }
             } catch (e: Exception) {
+                AnalyticsHelper.trackSettlementResult(success = false, batchId = settleId, reason = e.message)
+                AnalyticsHelper.trackApiError(
+                    endpoint = "settleBatch",
+                    statusCode = (e as? ApiHttpException)?.statusCode,
+                    message = e.message ?: "Settlement failed",
+                    throwable = e,
+                )
                 AppLogger.error("settle: $e")
                 val errorMessage = parseApiErrorMessage(e, "Settlement failed")
                 withContext(Dispatchers.Main) {

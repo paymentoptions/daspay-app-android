@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.DPSharedPreferences
@@ -44,6 +45,7 @@ import com.paymentoptions.pos.device.DPSharedPreferences.getTapPayDasmid
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.network.endpoints.payment
 import com.paymentoptions.pos.network.endpoints.paymentStatus
+import com.paymentoptions.pos.network.ApiHttpException
 import com.paymentoptions.pos.services.apiService.Address
 import com.paymentoptions.pos.services.apiService.PaymentRequest
 import com.paymentoptions.pos.services.apiService.PaymentResponse
@@ -337,15 +339,34 @@ fun Tap_ChargeMoney(
 
                         showProcessingScreen = false
                         if (paymentStatusResponse) {
+                            AnalyticsHelper.trackPaymentApproved(
+                                transactionId = paymentStatusRequest.tranId.toString(),
+                                amount = amountToCharge,
+                            )
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
                             onLoader { onSuccessUpdateFlowStage() }
                         } else {
+                            AnalyticsHelper.trackPaymentDeclined(
+                                reason = "paymentStatus returned false",
+                                transactionId = paymentStatusRequest.tranId.toString(),
+                            )
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
                             onLoader {
                                 onFailureUpdateFlowStage()
                             }
                         }
                     } catch (e: Exception) {
+                        AnalyticsHelper.trackPaymentFailed(
+                            reason = e.message,
+                            transactionId = paymentStatusRequest.tranId.toString(),
+                            throwable = e,
+                        )
+                        AnalyticsHelper.trackApiError(
+                            endpoint = "paymentStatus",
+                            statusCode = (e as? ApiHttpException)?.statusCode,
+                            message = e.message ?: "Payment status failed",
+                            throwable = e,
+                        )
                         showProcessingScreen = false
                         updateLatestTransaction(paymentStatusRequest.tranId.toString())
                         onLoader {
@@ -356,6 +377,13 @@ fun Tap_ChargeMoney(
             }
 
             is WrappedResult.Failure -> {
+                val failureMessage = it.message
+                val isCancelled = failureMessage.contains("cancel", ignoreCase = true)
+                if (isCancelled) {
+                    AnalyticsHelper.trackPaymentCancelled(reason = failureMessage)
+                } else {
+                    AnalyticsHelper.trackPaymentFailed(reason = failureMessage)
+                }
                 println("inThis Launcher failure ---->: $it")
             }
         }
@@ -406,9 +434,15 @@ fun Tap_ChargeMoney(
         scope.launch {
             paymentLoader = true
             try {
+                AnalyticsHelper.trackPaymentStarted(
+                    paymentMethod = "SOFTPOS",
+                    amount = amountToCharge,
+                    currency = currency,
+                )
                 val paymentResponse: PaymentResponse? = payment(paymentRequest)
                 println("paymentResponse: $paymentResponse")
                 if (paymentResponse == null) {
+                    AnalyticsHelper.trackPaymentFailed(reason = "Payment response is null")
                     Toast.makeText(
                         context,
                         "Your session has expired. Please log in again to continue.",
@@ -437,11 +471,18 @@ fun Tap_ChargeMoney(
                     }
                 }
             } catch (e: Exception) {
+                AnalyticsHelper.trackPaymentFailed(reason = e.message, throwable = e)
+                AnalyticsHelper.trackApiError(
+                    endpoint = "payment",
+                    statusCode = (e as? ApiHttpException)?.statusCode,
+                    message = e.message ?: "Payment start failed",
+                    throwable = e,
+                )
                 DPSharedPreferences.clearSharedPreferences(context)
                 navController.navigate(Screens.AuthCheck.route) {
                     popUpTo(0) { inclusive = true }
                 }
-                println("Error: ${e.toString()}")
+                println("Payment Error: ${e.toString()}")
             } finally {
                 paymentLoader = false
             }
