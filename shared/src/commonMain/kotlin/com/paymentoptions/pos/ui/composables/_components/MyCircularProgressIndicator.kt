@@ -1,0 +1,38 @@
+package com.paymentoptions.pos.ui.composables._components
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.paymentoptions.pos.ui.composables._components.images.loaders.LoaderImage
+import com.paymentoptions.pos.ui.composables._components.images.loaders.LoaderWhiteImage
+import com.paymentoptions.pos.ui.theme.primary100
+
+@Composable
+fun MyCircularProgressIndicator(text: String? = null,
+                                color: Color = primary100,
+                                useWhiteLoader: Boolean = false) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (useWhiteLoader) {
+            LoaderWhiteImage(modifier = Modifier.height(72.dp))
+        } else {
+            LoaderImage(modifier = Modifier.height(72.dp))
+        }
+
+        if (text != null) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(text, color = Color.White)
+        }
+    }
+}
