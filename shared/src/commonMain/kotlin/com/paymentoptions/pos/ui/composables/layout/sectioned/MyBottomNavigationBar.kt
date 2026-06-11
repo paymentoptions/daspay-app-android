@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.layout.sectioned
 
-import MyDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,9 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -51,28 +48,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.paymentoptions.pos.R
 import com.paymentoptions.pos.analytics.AnalyticsHelper
-import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.isDebugBuild
 import com.paymentoptions.pos.network.ApiHttpException
+import com.paymentoptions.pos.network.SignOutResponse
 import com.paymentoptions.pos.network.endpoints.signOut
-import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
-import com.paymentoptions.pos.ui.composables.navigation.Screens
+import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
+import com.paymentoptions.pos.ui.navigation.Screens
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import paymentoptionspos.shared.generated.resources.Res
+import paymentoptionspos.shared.generated.resources.catalog_icon
+import paymentoptionspos.shared.generated.resources.query_icon
 
 val BOTTOM_NAVIGATION_HEIGHT_IN_DP = 75.dp
 
 data class BottomNavigationBarItem(
     val title: String,
     val icon: ImageVector,
-    val svgIcon: Int? = null,
+    val svgIcon: DrawableResource? = null,
     val route: String,
     val hideIcon: Boolean = false,
 )
@@ -83,7 +85,7 @@ val home = BottomNavigationBarItem(
 
 val catalogMenu = BottomNavigationBarItem(
     title = "Catalog",
-    svgIcon = R.drawable.catalog_icon,
+    svgIcon = Res.drawable.catalog_icon,
     icon = Icons.Outlined.Book,
     route = Screens.FoodOrderFlow.route
 )
@@ -107,7 +109,7 @@ val more = BottomNavigationBarItem(
 
 val query = BottomNavigationBarItem(
     title = "Query",
-    svgIcon = R.drawable.query_icon,
+    svgIcon = Res.drawable.query_icon,
     icon = Icons.Outlined.Filter,
     route = Screens.QueryScreen.route
 )
@@ -136,7 +138,6 @@ val sendLogs = BottomNavigationBarItem(
 
 val itemsInMoreAdmin = listOf<BottomNavigationBarItem>(
     transactionHistory,
-//    notifications,
     settlement,
     settings,
     helpAndSupport,
@@ -158,20 +159,18 @@ fun MyBottomNavigationBar(
     onClickShowMoreItems: () -> Unit,
     bottomNavigationBarHeightInDp: Dp = BOTTOM_NAVIGATION_HEIGHT_IN_DP,
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var showSignOutConfirmationDialog by remember { mutableStateOf(false) }
     var signOutLoader by remember { mutableStateOf(false) }
     var signOutResponse: SignOutResponse? = null
-//    var selected by remember { mutableStateOf<BottomNavigationBarItem>(home) }
 
-    val moreList : ArrayList<BottomNavigationBarItem> = arrayListOf()
-    if (DPSharedPreferences.isAdmin(context)) {
+    val moreList: ArrayList<BottomNavigationBarItem> = arrayListOf()
+    if (DPStorageManager.isAdmin()) {
         moreList.addAll(itemsInMoreAdmin)
     } else {
         moreList.addAll(itemsInMoreStaff)
     }
-    if(AppLogger.IS_DEBUG_ENABLED){
+    if (isDebugBuild) {
         moreList.add(sendLogs)
     }
 
@@ -191,8 +190,8 @@ fun MyBottomNavigationBar(
 
                     if (signOutResponse == null) {
                         AnalyticsHelper.trackLogout()
-                        TokenAutoRefresher.getInstance(context).onUserSignedOut()
-                        DPSharedPreferences.clearSharedPreferences(context)
+                        TokenAutoRefresher.getInstance().onUserSignedOut()
+                        DPStorageManager.clearSharedPreferences()
                         navController.navigate(Screens.AuthCheck.route) {
                             popUpTo(0) { inclusive = true }
                         }
@@ -201,8 +200,8 @@ fun MyBottomNavigationBar(
                     signOutResponse?.let {
                         if (it.success) {
                             AnalyticsHelper.trackLogout()
-                            TokenAutoRefresher.getInstance(context).onUserSignedOut()
-                            DPSharedPreferences.clearSharedPreferences(context)
+                            TokenAutoRefresher.getInstance().onUserSignedOut()
+                            DPStorageManager.clearSharedPreferences()
                             navController.navigate(Screens.AuthCheck.route) {
                                 popUpTo(0) { inclusive = true }
                             }
@@ -215,13 +214,13 @@ fun MyBottomNavigationBar(
                         message = e.message ?: "Sign out failed",
                         throwable = e,
                     )
-                    TokenAutoRefresher.getInstance(context).onUserSignedOut()
-                    DPSharedPreferences.clearSharedPreferences(context)
+                    TokenAutoRefresher.getInstance().onUserSignedOut()
+                    DPStorageManager.clearSharedPreferences()
                     navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
                     }
 
-                    println("Error: ${e.toString()}")
+                    println("Error: $e")
                 } finally {
                     signOutLoader = false
                 }
@@ -239,10 +238,10 @@ fun MyBottomNavigationBar(
     val isReceiveMoneySelected = currentRoute.startsWith(Screens.ReceiveMoneyFlow.route) && !showMoreItems
     val isQuerySelected = currentRoute.startsWith(Screens.QueryScreen.route) && !showMoreItems
     val isMoreRoute = currentRoute.startsWith(Screens.TransactionHistory.route) ||
-        currentRoute.startsWith(Screens.Settlement.route) ||
-        currentRoute.startsWith(Screens.Settings.route) ||
-        currentRoute.startsWith(Screens.HelpAndSupport.route) ||
-        currentRoute.startsWith(Screens.SendLogs.route)
+            currentRoute.startsWith(Screens.Settlement.route) ||
+            currentRoute.startsWith(Screens.Settings.route) ||
+            currentRoute.startsWith(Screens.HelpAndSupport.route) ||
+            currentRoute.startsWith(Screens.SendLogs.route)
     val isMoreSelected = showMoreItems || isMoreRoute
 
     Column(modifier = modifier) {
@@ -319,10 +318,9 @@ fun MyBottomNavigationBar(
                 modifier = Modifier.weight(1f),
                 isSelected = isHomeSelected,
                 onSelected = {
-                    val currentRoute =
-                        navController.currentBackStackEntry?.destination?.route
+                    val cur = navController.currentBackStackEntry?.destination?.route
 
-                    if (currentRoute != home.route) {
+                    if (cur != home.route) {
                         AnalyticsHelper.trackDashboardNavigation(section = home.title)
                         selectedBottomNavigationBarItem = home
                         navController.navigate(selectedBottomNavigationBarItem.route) {
@@ -332,7 +330,7 @@ fun MyBottomNavigationBar(
                                 saveState = true
                             }
                         }
-                        if(showMoreItems){
+                        if (showMoreItems) {
                             onClickShowMoreItems()
                         }
                     }
@@ -343,10 +341,9 @@ fun MyBottomNavigationBar(
                 modifier = Modifier.weight(1f),
                 isSelected = isFoodSelected,
                 onSelected = {
-                    val currentRoute =
-                        navController.currentBackStackEntry?.destination?.route
+                    val cur = navController.currentBackStackEntry?.destination?.route
 
-                    if (currentRoute != catalogMenu.route) {
+                    if (cur != catalogMenu.route) {
                         AnalyticsHelper.trackDashboardNavigation(section = catalogMenu.title)
                         selectedBottomNavigationBarItem = catalogMenu
                         navController.navigate(selectedBottomNavigationBarItem.route) {
@@ -357,7 +354,6 @@ fun MyBottomNavigationBar(
                             }
                         }
                     } else {
-                        // User is already on food menu - reset to initial stage
                         AnalyticsHelper.trackDashboardNavigation(section = catalogMenu.title)
                         selectedBottomNavigationBarItem = catalogMenu
                         navController.navigate(catalogMenu.route) {
@@ -365,7 +361,7 @@ fun MyBottomNavigationBar(
                             popUpTo(catalogMenu.route) { inclusive = true }
                         }
                     }
-                    if(showMoreItems){
+                    if (showMoreItems) {
                         onClickShowMoreItems()
                     }
                 })
@@ -375,10 +371,9 @@ fun MyBottomNavigationBar(
                 modifier = Modifier.weight(1.5f),
                 isSelected = isReceiveMoneySelected,
                 onSelected = {
-                    val currentRoute =
-                        navController.currentBackStackEntry?.destination?.route
+                    val cur = navController.currentBackStackEntry?.destination?.route
 
-                    if (currentRoute != receiveMoney.route) {
+                    if (cur != receiveMoney.route) {
                         AnalyticsHelper.trackDashboardNavigation(section = receiveMoney.title)
                         selectedBottomNavigationBarItem = receiveMoney
                         navController.navigate(selectedBottomNavigationBarItem.route) {
@@ -388,7 +383,7 @@ fun MyBottomNavigationBar(
                                 saveState = true
                             }
                         }
-                        if(showMoreItems){
+                        if (showMoreItems) {
                             onClickShowMoreItems()
                         }
                     }
@@ -399,11 +394,9 @@ fun MyBottomNavigationBar(
                 modifier = Modifier.weight(1f),
                 isSelected = isQuerySelected,
                 onSelected = {
+                    val cur = navController.currentBackStackEntry?.destination?.route
 
-                    val currentRoute =
-                        navController.currentBackStackEntry?.destination?.route
-
-                    if (currentRoute != query.route) {
+                    if (cur != query.route) {
                         AnalyticsHelper.trackDashboardNavigation(section = query.title)
                         selectedBottomNavigationBarItem = query
                         navController.navigate(selectedBottomNavigationBarItem.route) {
@@ -413,7 +406,7 @@ fun MyBottomNavigationBar(
                                 saveState = true
                             }
                         }
-                        if(showMoreItems){
+                        if (showMoreItems) {
                             onClickShowMoreItems()
                         }
                     }
@@ -425,10 +418,9 @@ fun MyBottomNavigationBar(
                 modifier = Modifier.weight(1f),
                 isSelected = isMoreSelected,
                 onSelected = {
-                    val currentRoute =
-                        navController.currentBackStackEntry?.destination?.route
+                    val cur = navController.currentBackStackEntry?.destination?.route
 
-                    if (currentRoute != more.route) {
+                    if (cur != more.route) {
                         AnalyticsHelper.trackDashboardNavigation(section = more.title)
                         selectedBottomNavigationBarItem = more
                         onClickShowMoreItems()
@@ -462,7 +454,6 @@ fun Item(
                     when {
                         inMore -> iconBackgroundColor
                         item.hideIcon -> Color.Transparent
-                      //  isSelected -> iconBackgroundColor
                         else -> Color.Transparent
                     }
                 ),
@@ -472,7 +463,7 @@ fun Item(
                 painter = painterResource(item.svgIcon),
                 contentDescription = item.title,
                 modifier = Modifier.size(24.dp),
-                tint =  if (isSelected) primary100 else primary500
+                tint = if (isSelected) primary100 else primary500
             )
             else Icon(
                 imageVector = item.icon,

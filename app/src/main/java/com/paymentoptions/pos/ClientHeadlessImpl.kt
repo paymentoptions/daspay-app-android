@@ -10,7 +10,8 @@ import android.view.View
 import android.widget.TextView
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.logger.AppLogger
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.ui.AmountView
@@ -32,8 +33,10 @@ class CustomUiProvider(
             amount: Amount,
             description: String?
         ): View {
+            AppLogger.debug("TapToPay amount view creation: amount=${amount.value}, currency=${DPStorageManager.getTransactionCurrency()}, description=$description")
             return TextView(context).apply {
-                val text = "Total Amount\n${DPSharedPreferences.getTransactionCurrency(context).replace("D", "$")} ${amount.value}"
+                val text = "Total Amount\n${DPStorageManager.getTransactionCurrency()
+                    .replace("D", "$")} ${amount.value}"
                 val spannable = SpannableString(text)
 
 

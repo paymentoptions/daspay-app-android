@@ -27,7 +27,6 @@ import com.paymentoptions.pos.ui.composables.screens.dashboard.DashboardScreen
 import com.paymentoptions.pos.ui.composables.screens.dashboard.TransactionActionScreen
 import com.paymentoptions.pos.ui.composables.screens.filter.TransactionFilter
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintAutoLoginScreen
-import com.paymentoptions.pos.ui.composables.screens.helpandsupport.HelpAndSupportScreen
 import com.paymentoptions.pos.ui.composables.screens.notifications.NotificationsScreen
 import com.paymentoptions.pos.ui.composables.screens.settings.SettingsScreen
 import com.paymentoptions.pos.ui.composables.screens.settlement.SettlementActionScreen
@@ -217,7 +216,7 @@ fun Navigator() {
         composable(Screens.RefundInitiated.route) { RefundInitiatedScreen(navController) }
         //------------------------------------------------------------------
         composable(Screens.Settings.route) { SettingsScreen(navController) }
-        composable(Screens.HelpAndSupport.route) { HelpAndSupportScreen(navController) }
+        //composable(Screens.HelpAndSupport.route) { HelpAndSupportScreen(navController) }
         composable(Screens.Settlement.route) { SettlementScreen(navController) }
         composable(Screens.SettlementAction.route) { backStackEntry ->
             val settleId = backStackEntry.arguments?.getString("settleId")

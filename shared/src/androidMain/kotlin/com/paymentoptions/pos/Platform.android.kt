@@ -4,6 +4,7 @@ import android.content.pm.ActivityInfo
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.util.Log
+import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
@@ -99,8 +100,27 @@ actual fun platformLogError(tag: String, message: String, throwable: Throwable?)
     Log.e(tag, message, throwable)
 }
 
+actual fun showToast(message: String) {
+    currentActivity?.let {
+        Toast.makeText(it, message, Toast.LENGTH_SHORT).show()
+    }
+}
+
 // ── Orientation ───────────────────────────────────────────────────────────────
 
 actual fun lockPortrait() {
     currentActivity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+}
+
+// ── Build flavor ──────────────────────────────────────────────────────────────
+
+@Volatile
+private var isDebugBuildHolder: Boolean = false
+
+actual val isDebugBuild: Boolean
+    get() = isDebugBuildHolder
+
+/** Wire from app `BuildConfig.DEBUG` at startup. */
+fun setIsDebugBuild(value: Boolean) {
+    isDebugBuildHolder = value
 }

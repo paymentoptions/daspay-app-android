@@ -65,3 +65,11 @@ actual fun lockPortrait() {
     // On iOS, orientation locking is handled in AppDelegate / SwiftUI.
     // Leave this as a no-op; configure supported orientations in Xcode project settings.
 }
+
+// ── Build flavor ──────────────────────────────────────────────────────────────
+
+actual val isDebugBuild: Boolean = false
+
+actual fun showToast(message: String) {
+
+}

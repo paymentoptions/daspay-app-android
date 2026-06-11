@@ -1,6 +1,6 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.chargemoney
 
-import MyDialog
+import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.provider.Settings
@@ -40,9 +40,11 @@ import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
-import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.device.DPSharedPreferences.getTapPayDasmid
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.device.DPStorageManager.getTapPayDasmid
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
+import com.paymentoptions.pos.getDeviceIpAddress
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.payment
 import com.paymentoptions.pos.network.endpoints.paymentStatus
 import com.paymentoptions.pos.network.ApiHttpException
@@ -62,7 +64,6 @@ import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary600
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.decodeJwtPayload
-import com.paymentoptions.pos.utils.getDeviceIpAddress
 import com.paymentoptions.pos.utils.getDeviceTimeZone
 import com.paymentoptions.pos.utils.getKeyFromToken
 import com.paymentoptions.pos.utils.inProduction
@@ -135,7 +136,8 @@ fun ChargeMoneyBottomSectionContent(
     updateLatestTransaction: (id: String) -> Unit,
 ) {
     val context = LocalContext.current
-    val currency = getTransactionCurrency(context)
+    val currency = getTransactionCurrency()
+    val nfcState = Nfc.getStatus(context)
 
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
@@ -173,12 +175,20 @@ fun ChargeMoneyBottomSectionContent(
     )
 
     if (startTapAndPay && selectedPaymentMethod === tapPaymentMethod) {
+        AppLogger.debug(
+            "TapToPay gate check: startTapAndPay=$startTapAndPay, selected=${selectedPaymentMethod.text}, inProduction=$inProduction, " +
+                    "developerOptionsEnabled=${DeveloperOptions.isEnabled(context)}, nfcEnabled=${nfcState.second}, nfcState=${nfcState.first}"
+        )
 
         if (inProduction && DeveloperOptions.isEnabled(context)) {
+            AppLogger.warn("TapToPay blocked: developer options are enabled on production build")
             showDeveloperOptionsEnabled = true
         } else if (inProduction && !Nfc.getStatus(context).second) {
+            AppLogger.warn("TapToPay blocked: NFC is disabled on production build")
             showNFCNotEnabled = true
-        } else
+        } else {
+
+            AppLogger.debug("TapToPay checks passed, launching Tap_ChargeMoney")
             Tap_ChargeMoney(
                 navController = navController,
                 amountToCharge = amountToCharge,
@@ -187,6 +197,7 @@ fun ChargeMoneyBottomSectionContent(
                 onFailureUpdateFlowStage = onFailureUpdateFlowStage,
                 updateLatestTransaction = updateLatestTransaction
             )
+        }
     }
 
     Column(
@@ -276,13 +287,15 @@ fun Tap_ChargeMoney(
     var showProcessingScreen by remember { mutableStateOf(false) }
     var transactionDetailsText by remember { mutableStateOf("") }
     var hasLaunchedPayment by remember { mutableStateOf(false) }
-    val authDetails = DPSharedPreferences.getAuthDetails(context)
+    val authDetails = DPStorageManager.getAuthDetails()
+    AppLogger.debug("TapToPay entry: amount=$amountToCharge, authAvailable=${authDetails != null}")
 
     if (authDetails == null) {
+        AppLogger.warn("TapToPay aborted: auth details not found, redirecting to auth")
         Toast.makeText(
             context, "Your session has expired. Please log in again to continue.", Toast.LENGTH_LONG
         ).show()
-        DPSharedPreferences.clearSharedPreferences(context)
+        DPStorageManager.clearSharedPreferences()
         navController.navigate(Screens.AuthCheck.route) {
             popUpTo(0) { inclusive = true }
         }
@@ -291,17 +304,21 @@ fun Tap_ChargeMoney(
     
     val merchant: MutableMap<String, String> = mutableMapOf<String, String>()
     val decodedJwtPayloadJson = decodeJwtPayload(authDetails!!.data!!.token.idToken)
-    val currency = getTransactionCurrency(context)
+    val currency = getTransactionCurrency()
 
-    merchant["dasmid"] = getTapPayDasmid(context)
+    merchant["dasmid"] = getTapPayDasmid()
     merchant["name"] = getKeyFromToken(decodedJwtPayloadJson, "name")
     merchant["email"] = getKeyFromToken(decodedJwtPayloadJson, "email")
     merchant["contact"] = getKeyFromToken(decodedJwtPayloadJson, "custom:ContactNo")
+    AppLogger.debug(
+        "TapToPay merchant prepared: dasmid=${merchant["dasmid"]}, namePresent=${!merchant["name"].isNullOrBlank()}, emailPresent=${!merchant["email"].isNullOrBlank()}, contactPresent=${!merchant["contact"].isNullOrBlank()}, currency=$currency"
+    )
 
     val launcher = rememberLauncherForActivityResult(
         HeadlessActivity.contract(ClientHeadlessImpl::class.java)
     ) {
         paymentLoader = false
+        AppLogger.debug("TapToPay MineSec launcher callback received: resultType=${it::class.simpleName}")
 
         var completedSaleTranId: String? = ""
         var completedSalePosReference: String? = ""
@@ -313,37 +330,42 @@ fun Tap_ChargeMoney(
 
         when (it) {
             is WrappedResult.Success -> {
+                AppLogger.debug(
+                    "TapToPay MineSec success: tranType=${it.value.tranType}, tranStatus=${it.value.tranStatus}, tranId=${it.value.tranId}, posReference=${it.value.posReference}"
+                )
                 if (it.value.tranType == TranType.SALE) {
                     completedSaleTranId = it.value.tranId
                     completedSalePosReference = it.value.posReference
                     completedSaleRequestId = it.value.actions.firstOrNull()?.requestId
                 }
 
-                println("inThis Launcher success ---->")
                 transactionDetailsText =
                     "Transaction of $$amountToCharge was successful. POS Reference Transaction ID returned by MineSec is: $completedSalePosReference."
-//                showTransactionStatus = true
-                println(
-                    "completedSaleTranId: $completedSaleTranId | completedSalePosReference: $completedSalePosReference | completedSaleRequestId: $completedSaleRequestId | it: ${it.value}"
+                AppLogger.debug(
+                    "TapToPay MineSec sale extracted: saleTranId=$completedSaleTranId, salePosReference=$completedSalePosReference, saleRequestId=$completedSaleRequestId"
                 )
 
                 rawInput = ""
 
                 val paymentStatusRequest = createPaymentRequest(it.value)
+                AppLogger.debug("TapToPay webhook payload built: $paymentStatusRequest")
 
                 scope.launch {
                     showProcessingScreen = true
+                    AppLogger.debug("TapToPay webhook call started")
                     try {
                         val paymentStatusResponse =
                             paymentStatus(request = paymentStatusRequest) != null
 
                         showProcessingScreen = false
+                        AppLogger.debug("TapToPay webhook response: success=$paymentStatusResponse, tranId=${paymentStatusRequest.tranId}")
                         if (paymentStatusResponse) {
                             AnalyticsHelper.trackPaymentApproved(
                                 transactionId = paymentStatusRequest.tranId.toString(),
                                 amount = amountToCharge,
                             )
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
+                            AppLogger.debug("TapToPay flow moving to SUCCESS stage for tranId=${paymentStatusRequest.tranId}")
                             onLoader { onSuccessUpdateFlowStage() }
                         } else {
                             AnalyticsHelper.trackPaymentDeclined(
@@ -351,11 +373,15 @@ fun Tap_ChargeMoney(
                                 transactionId = paymentStatusRequest.tranId.toString(),
                             )
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
+                            AppLogger.warn("TapToPay flow moving to FAILURE stage due to false webhook response for tranId=${paymentStatusRequest.tranId}")
+                            //onFailureMessage("Tap to Pay failed while confirming payment status. Please retry.")
                             onLoader {
                                 onFailureUpdateFlowStage()
                             }
                         }
                     } catch (e: Exception) {
+                        AppLogger.error("TapToPay webhook exception for tranId=${paymentStatusRequest.tranId}: ${e.message}", e)
+
                         AnalyticsHelper.trackPaymentFailed(
                             reason = e.message,
                             transactionId = paymentStatusRequest.tranId.toString(),
@@ -377,6 +403,12 @@ fun Tap_ChargeMoney(
             }
 
             is WrappedResult.Failure -> {
+                println("inThis Launcher failure ---->: $it")
+                val mineSecFailureMessage =
+                     it.extra?.get("message")?.toString() ?: it.message
+                AppLogger.error(
+                    "TapToPay MineSec failure: message=${it.message}, extraMessage=${mineSecFailureMessage}, raw=$it"
+                )
                 val failureMessage = it.message
                 val isCancelled = failureMessage.contains("cancel", ignoreCase = true)
                 if (isCancelled) {
@@ -384,7 +416,8 @@ fun Tap_ChargeMoney(
                 } else {
                     AnalyticsHelper.trackPaymentFailed(reason = failureMessage)
                 }
-                println("inThis Launcher failure ---->: $it")
+                Toast.makeText(context, mineSecFailureMessage, Toast.LENGTH_LONG).show()
+
             }
         }
     }
@@ -448,7 +481,7 @@ fun Tap_ChargeMoney(
                         "Your session has expired. Please log in again to continue.",
                         Toast.LENGTH_LONG
                     ).show()
-                    DPSharedPreferences.clearSharedPreferences(context)
+                    DPStorageManager.clearSharedPreferences()
                     navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -462,7 +495,7 @@ fun Tap_ChargeMoney(
                                 tranType = TranType.SALE,
                                 amount = Amount(
                                     BigDecimal(amountToCharge),
-                                    Currency.getInstance(DPSharedPreferences.getTransactionCurrency(context)),
+                                    Currency.getInstance(DPStorageManager.getTransactionCurrency()),
                                 ),
                                 profileId = "prof_01KH8NQC4PVFKRNH31ZPC2QJNN",
                                 posReference = it.transaction_details.id
@@ -478,7 +511,7 @@ fun Tap_ChargeMoney(
                     message = e.message ?: "Payment start failed",
                     throwable = e,
                 )
-                DPSharedPreferences.clearSharedPreferences(context)
+                DPStorageManager.clearSharedPreferences()
                 navController.navigate(Screens.AuthCheck.route) {
                     popUpTo(0) { inclusive = true }
                 }

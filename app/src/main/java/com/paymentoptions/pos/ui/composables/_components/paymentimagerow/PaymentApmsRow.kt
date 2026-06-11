@@ -13,7 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.paymentoptions.pos.device.DPSharedPreferences.getApms
+import com.paymentoptions.pos.device.DPStorageManager.getApms
 import com.paymentoptions.pos.ui.composables._components.images.apms.AliPayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.ApplePayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.DinersClubPayImage
@@ -28,7 +28,7 @@ import com.paymentoptions.pos.ui.composables._components.images.apms.WechatPayIm
 @Composable
 fun PaymentApmsRow(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    var apms by remember { mutableStateOf(getApms(context)) }
+    var apms by remember { mutableStateOf(getApms()) }
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),

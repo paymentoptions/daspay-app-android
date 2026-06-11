@@ -48,10 +48,20 @@ expect fun getDeviceIpAddress(): String
 expect fun platformLog(tag: String, message: String)
 expect fun platformLogError(tag: String, message: String, throwable: Throwable? = null)
 
+expect fun showToast(message: String)
+
 // ── Screen orientation ────────────────────────────────────────────────────────
 
 /** Lock to portrait; no-op on platforms that don't support it (e.g. iPad). */
 expect fun lockPortrait()
+
+// ── Build flavor ──────────────────────────────────────────────────────────────
+
+/**
+ * `true` when running a debug build. Wire from the app's `BuildConfig.DEBUG` via
+ * [setIsDebugBuild] (Android) at startup. Defaults to `false`.
+ */
+expect val isDebugBuild: Boolean
 
 // ── URL encoding helpers ──────────────────────────────────────────────────────
 
