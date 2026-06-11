@@ -40,7 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.network.endpoints.completeDeviceRegistration
 import com.paymentoptions.pos.network.endpoints.getExternalDeviceConfiguration
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
@@ -70,7 +70,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    val deviceNumber = getDeviceIdentifier(context)
+    val deviceNumber = getDeviceIdentifier()
 
     if (openFingerprintScan) FingerprintScanScreen(navController = navController, onAuthSuccess = {
         navController.navigate(Screens.Dashboard.route) {
@@ -610,8 +610,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                     "Step 3: Proceeding to get external device configuration."
                                 )
 
-                                DPSharedPreferences.saveTokenStatus(
-                                    context = context, tokenCode = otp.value, isVerified = true
+                                DPStorageManager.saveTokenStatus(
+                                    tokenCode = otp.value, isVerified = true
                                 )
 
                                 getExternalDeviceConfiguration(
@@ -621,8 +621,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                         "DEBUG_TOKEN",
                                         "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                                     )
-                                    DPSharedPreferences.saveDeviceConfiguration(
-                                        context, configResponse
+                                    DPStorageManager.saveDeviceConfiguration(
+                                        configResponse
                                     )
                                     openFingerprintScan = true
                                 }.onFailure { exception ->
@@ -648,8 +648,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 getExternalDeviceConfiguration(
                                     otp.value, deviceNumber
                                 ).onSuccess { configResponse ->
-                                    DPSharedPreferences.saveTokenStatus(
-                                        context = context,
+                                    DPStorageManager.saveTokenStatus(
                                         tokenCode = otp.value,
                                         isVerified = true
                                     )
@@ -658,8 +657,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                         "DEBUG_TOKEN",
                                         "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                                     )
-                                    DPSharedPreferences.saveDeviceConfiguration(
-                                        context, configResponse
+                                    DPStorageManager.saveDeviceConfiguration(
+                                        configResponse
                                     )
                                     openFingerprintScan = true
                                 }.onFailure { innerException ->
@@ -676,7 +675,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                     "Token expired. Please sign in again.",
                                     Toast.LENGTH_SHORT
                                 ).show()
-                                DPSharedPreferences.clearSharedPreferences(context)
+                                DPStorageManager.clearSharedPreferences()
                                 navController.navigate(Screens.AuthCheck.route) {
                                     popUpTo(Screens.AuthCheck.route) { inclusive = true }
                                 }

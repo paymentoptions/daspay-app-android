@@ -62,7 +62,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import androidx.core.content.FileProvider
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.addProduct
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
@@ -559,7 +559,7 @@ fun AddProductSectionContent(
                                     ProductPrice = finalPrice,
                                     ProductCode = productCode.text.toString(),
                                     ProductStatus = true,
-                                    Currency = DPSharedPreferences.getTransactionCurrency(context),
+                                    Currency = DPStorageManager.getTransactionCurrency(),
                                     MerchantID = categorySelected?.MerchantID ?: "",
                                     CategoryID = categorySelected?.CategoryID ?: "",
                                 ),

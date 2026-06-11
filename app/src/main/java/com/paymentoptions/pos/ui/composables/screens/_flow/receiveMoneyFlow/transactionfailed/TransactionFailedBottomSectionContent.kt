@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
@@ -62,7 +62,7 @@ fun TransactionFailedBottomSectionContent(
     updateFlowStage: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    val currency = getTransactionCurrency(context)
+    val currency = getTransactionCurrency()
     var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
 

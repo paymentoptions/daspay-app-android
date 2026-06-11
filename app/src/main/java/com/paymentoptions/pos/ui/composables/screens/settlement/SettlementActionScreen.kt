@@ -13,9 +13,9 @@ import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.ApiHttpException
 import com.paymentoptions.pos.network.endpoints.settleBatch
-import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
+import com.paymentoptions.pos.ui.screens.status.MessageForStatusScreen
+import com.paymentoptions.pos.ui.screens.status.StatusScreen
+import com.paymentoptions.pos.ui.screens.status.StatusScreenType
 import com.paymentoptions.pos.utils.parseApiErrorMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

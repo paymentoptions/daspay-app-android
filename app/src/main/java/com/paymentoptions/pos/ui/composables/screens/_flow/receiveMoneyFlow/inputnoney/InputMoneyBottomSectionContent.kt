@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
@@ -68,7 +68,7 @@ fun InputMoneyBottomSectionContent(
     var paymentLoader by remember { mutableStateOf(false) }
     val noteState = rememberTextFieldState()
     val context = LocalContext.current
-    val currency = getTransactionCurrency(context)
+    val currency = getTransactionCurrency()
     var lastClicked by remember { mutableStateOf<String?>(null) }
 
     val formattedAmount = formatAmount(amountToCharge)

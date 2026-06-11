@@ -34,8 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -88,7 +88,7 @@ fun AdditionalChargeBottomSectionContent(
         listOf("00", "0", "←"),
     )
     val context = LocalContext.current
-    val authDetails = DPSharedPreferences.getAuthDetails(context)
+    val authDetails = DPStorageManager.getAuthDetails()
     val noteState = rememberTextFieldState()
 
     if (authDetails == null) {
@@ -97,13 +97,13 @@ fun AdditionalChargeBottomSectionContent(
             "Your session has expired. Please log in again to continue.",
             Toast.LENGTH_LONG
         ).show()
-        DPSharedPreferences.clearSharedPreferences(context)
+        DPStorageManager.clearSharedPreferences()
         navController.navigate(Screens.AuthCheck.route) {
             popUpTo(0) { inclusive = true }
         }
     }
 
-    val currency = getTransactionCurrency(context)
+    val currency = getTransactionCurrency()
 
     Column(
         modifier = Modifier

@@ -10,7 +10,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.paymentoptions.pos.MainActivity
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.DPSharedPreferences.saveFcmToken
+import com.paymentoptions.pos.device.DPStorageManager.saveFcmToken
 import com.paymentoptions.pos.logger.AppLogger
 
 class FcmService : FirebaseMessagingService() {
@@ -18,7 +18,7 @@ class FcmService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         super.onNewToken(token)
         try {
-            saveFcmToken(this, token)
+            saveFcmToken(token)
         } catch (e: Exception) {
             AppLogger.error("Failed to save FCM token: ${e.message}")
         }

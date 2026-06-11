@@ -1,9 +1,10 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow
 
-import MyDialog
+import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import androidx.compose.ui.graphics.ImageBitmap
 import android.os.Handler
 import android.provider.Settings
 import android.widget.Toast
@@ -66,9 +67,9 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.ScreenRatioToDp
-import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.device.DPSharedPreferences.getApms
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.device.DPStorageManager.getApms
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.network.endpoints.categoryList
 import com.paymentoptions.pos.network.endpoints.payByLink
 import com.paymentoptions.pos.network.endpoints.paymentDetails
@@ -95,7 +96,6 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
-import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.additionalcharge.AdditionalChargeBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.product.AddProductSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu.FoodMenuBottomSectionContent
@@ -108,9 +108,9 @@ import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.char
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionfailed.TransactionFailedBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionsuccessful.TransactionSuccessfulBottomSectionContent
-import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
+import com.paymentoptions.pos.ui.screens.status.MessageForStatusScreen
+import com.paymentoptions.pos.ui.screens.status.StatusScreen
+import com.paymentoptions.pos.ui.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.green100
 import com.paymentoptions.pos.ui.theme.green500
 import com.paymentoptions.pos.ui.theme.primary100
@@ -149,7 +149,7 @@ fun FoodOrderFlow(
     initialFoodOrderFlowStage: FoodOrderFlowStage = FoodOrderFlowStage.MENU,
 ) {
     val context = LocalContext.current
-    val currency = getTransactionCurrency(context)
+    val currency = getTransactionCurrency()
     val enableScrollingInsideBottomSectionContent = true
     var failureProceedFlag by remember { mutableStateOf(false) }
     var successProceedFlag by remember { mutableStateOf(false) }
@@ -163,7 +163,7 @@ fun FoodOrderFlow(
     var foodCategoryListAvailable by remember { mutableStateOf(false) }
     var foodItemListAvailable by remember { mutableStateOf(false) }
     var startTapAndPay by remember { mutableStateOf(false) }
-    var apms by remember { mutableStateOf(getApms(context)) }
+    var apms by remember { mutableStateOf(getApms()) }
     var paymentUrl by remember { mutableStateOf("") }
     var cartState by remember { mutableStateOf<Cart>(Cart()) }
     var paymentDetailsResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
@@ -202,10 +202,10 @@ fun FoodOrderFlow(
         val (isNfcSupported, _) = nfcStatusPair
         if (isNfcSupported) {
             //If NFC is supported even if disabled, show all payment methods
-            paymentMethods(context)
+            paymentMethods()
         } else {
             //If NFC is not supported, filter out the 'Tap' payment method
-            paymentMethods(context).filter { it != tapPaymentMethod }
+            paymentMethods().filter { it != tapPaymentMethod }
         }
     }
 
@@ -293,7 +293,7 @@ fun FoodOrderFlow(
 
         } catch (e: Exception) {
             if (e.isUnauthorizedError()) {
-                showSessionExpiredAndNavigateToFingerprint(context, navController)
+                showSessionExpiredAndNavigateToFingerprint(navController)
             }
         } finally {
             foodCategoryListAvailable = true
@@ -522,7 +522,7 @@ fun FoodOrderFlow(
 
                                 startTapAndPay = false
 
-                                var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                                var qrCodeBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
                                 var qrCodeLoading by remember { mutableStateOf(false) }
                                 var qrCodeError by remember { mutableStateOf<String?>(null) }
 
@@ -575,7 +575,7 @@ fun FoodOrderFlow(
                                         )
 
                                         val response = payByLink(
-                                            dasmid = DPSharedPreferences.getQRDasmid(context),
+                                            dasmid = DPStorageManager.getQRDasmid(),
                                             request = request,
                                         )
                                         if (response != null && response.success) {
@@ -593,7 +593,7 @@ fun FoodOrderFlow(
 
 
                                         if (e.isUnauthorizedError()) {
-                                            showSessionExpiredAndNavigateToFingerprint(context, navController)
+                                            showSessionExpiredAndNavigateToFingerprint(navController)
                                         }
                                     } finally {
                                         qrCodeLoading = false
@@ -704,13 +704,13 @@ fun FoodOrderFlow(
                                     mutableStateOf(false)
                                 }
                                 val sheetState = rememberModalBottomSheetState()
-                                var viaLinkQrBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                                var viaLinkQrBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
                                 LaunchedEffect(Unit) {
                                     try {
                                         payByLinkApiResponseLoading = true
                                         val dasmid =
-                                           DPSharedPreferences.getPayByLinkDasmid(context)
+                                           DPStorageManager.getPayByLinkDasmid()
 
                                         payByLinkResponse =
                                             payByLink(dasmid = dasmid, request = payByLinkRequest)

@@ -13,7 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.paymentoptions.pos.ui.composables.navigation.Navigator
-import com.paymentoptions.pos.ui.composables.screens.nonetwork.NoNetworkScreen
+import com.paymentoptions.pos.ui.screens.nonetwork.NoNetworkScreen
 
 class NetworkChangeReceiver(private val onConnectionChanged: (Boolean) -> Unit) :
     BroadcastReceiver() {
@@ -50,7 +50,7 @@ fun NetworkStatusComposable(
         onNetworkAvailable()
         Navigator()
     } else {
-        NoNetworkScreen(context)
+        NoNetworkScreen()
         onNetworkNotAvailable()
     }
 }

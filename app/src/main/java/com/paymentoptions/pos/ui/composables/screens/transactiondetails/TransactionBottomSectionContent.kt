@@ -49,8 +49,8 @@ import coil3.compose.AsyncImage
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.getSignature
 import com.paymentoptions.pos.services.apiService.SignatureData
@@ -96,14 +96,14 @@ fun TransactionBottomSectionContent(
 ) {
     AppLogger.debug("transaction to display : $transaction")
     val context = LocalContext.current
-    val currency = getTransactionCurrency(context)
+    val currency = getTransactionCurrency()
     val scrollState = rememberScrollState()
     val amountValue = transaction?.amount?.toDoubleOrNull() ?: 0.0
     AppLogger.debug("transaction clicked is : $transaction")
 
     val transactionUuid = transaction?.uuid
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
-        "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
+        "${DPStorageManager.getTransactionDetailsUrl()}/$transactionUuid"
     } else {
         null
     }

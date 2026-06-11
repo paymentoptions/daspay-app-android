@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.ZigZagContainer1
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -67,7 +67,7 @@ fun ReviewCartBottomSectionContent(
     setShowToast: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    val currency = getTransactionCurrency(context)
+    val currency = getTransactionCurrency()
     val scrollState = rememberScrollState()
     var longClickedFoodItem by remember { mutableStateOf<FoodItem?>(null) }
 

@@ -68,7 +68,7 @@ kotlin {
                 api(compose.material3)
                 api(compose.ui)
                 api(compose.materialIconsExtended)
-                implementation(compose.components.resources)   // fonts, drawables
+                api(compose.components.resources)   // fonts, drawables
                 implementation(compose.components.uiToolingPreview)
 
                 // Navigation (JetBrains CMP fork of androidx.navigation:navigation-compose)
@@ -120,6 +120,16 @@ kotlin {
 
                 // Firebase (Android only)
                 implementation(libs.firebase.messaging.ktx)
+
+                // Datadog RUM (Android only)
+                implementation(libs.datadog.rum)
+
+                // Logging
+                implementation(libs.log4j.api)
+                implementation(libs.log4j.core)
+
+                // QR Code (ZXing)
+                implementation(libs.core)
             }
         }
 

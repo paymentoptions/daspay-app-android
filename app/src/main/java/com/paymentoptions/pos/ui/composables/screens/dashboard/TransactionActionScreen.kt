@@ -43,7 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.paymentStatus
 import com.paymentoptions.pos.network.endpoints.refund
@@ -58,9 +58,9 @@ import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_TOP_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
-import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
+import com.paymentoptions.pos.ui.screens.status.MessageForStatusScreen
+import com.paymentoptions.pos.ui.screens.status.StatusScreen
+import com.paymentoptions.pos.ui.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
@@ -77,7 +77,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.Currency
@@ -388,7 +387,7 @@ fun TransactionActionScreen(
                                     input = PoiRequest.ActionLinkedRefund(
                                         transaction.AcquirerTransactionID!!,
                                         Amount(BigDecimal(transaction.amount),
-                                            Currency.getInstance(DPSharedPreferences.getTransactionCurrency(context),))
+                                            Currency.getInstance(DPStorageManager.getTransactionCurrency(),))
                                     )
                                 )
                             }

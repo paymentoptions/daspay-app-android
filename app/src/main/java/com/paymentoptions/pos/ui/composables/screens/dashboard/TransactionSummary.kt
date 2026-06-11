@@ -62,6 +62,7 @@ import com.paymentoptions.pos.utils.getAmountSign
 import com.paymentoptions.pos.utils.getAvailableAction
 import com.paymentoptions.pos.utils.getStatusColor
 import com.paymentoptions.pos.utils.getTransactionIcon
+import org.jetbrains.compose.resources.painterResource
 import com.paymentoptions.pos.utils.getTransactionTypeLabel
 import com.paymentoptions.pos.utils.timeAgo
 import java.text.SimpleDateFormat

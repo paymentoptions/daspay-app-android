@@ -24,8 +24,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.analytics.AnalyticsHelper
-import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.device.DPSharedPreferences.saveFcmToken
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.device.DPStorageManager.saveFcmToken
 import com.paymentoptions.pos.device.GeoRestrictionManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.SignInResponse
@@ -65,7 +65,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
     val credentialModel = if (inProduction) CredentialModel.Empty else CredentialModel.Robowah
 
-    val (savedEmail, savedPassword, otp) = remember { DPSharedPreferences.getSavedCredentials(context) }
+    val (savedEmail, savedPassword, otp) = remember { DPStorageManager.getSavedCredentials() }
 
     val emailState = rememberTextFieldState(initialText = savedEmail ?: credentialModel.email)
     var emailError by remember { mutableStateOf(false) }
@@ -167,7 +167,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                             signIn(
                                 username = emailState.text.toString(),
                                 password = passwordState.text.toString(),
-                                deviceNumber = getDeviceIdentifier(context),
+                                deviceNumber = getDeviceIdentifier(),
                             )
                         AppLogger.debug("signInResponse: $signInResponse")
 
@@ -186,8 +186,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 signInResponse.data?.subsidiaries?.firstOrNull()?.let { merchantId ->
                                     AnalyticsHelper.trackMerchantSelection(merchantId = merchantId)
                                 }
-                                DPSharedPreferences.saveCredentials(
-                                    context,
+                                DPStorageManager.saveCredentials(
                                     emailState.text.toString(),
                                     passwordState.text.toString()
                                 )
@@ -195,14 +194,14 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
                                     if (task.isSuccessful) {
                                         val token = task.result
-                                        saveFcmToken(context, token)
+                                        saveFcmToken(token)
                                         AppLogger.debug("mainActivity token --> $token")
                                     } else {
                                         AppLogger.error("mainActivity token fetching failed ${task.exception}")
                                     }
                                 }
 
-                                DPSharedPreferences.saveAuthDetails(context, signInResponse)
+                                DPStorageManager.saveAuthDetails(signInResponse)
 
 
                                 // Save merchant country for geo-restriction

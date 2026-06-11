@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Dashboard
-import androidx.compose.material.icons.outlined.Fastfood
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,7 +40,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.primary500
@@ -173,7 +172,7 @@ fun OverLayScreen(context: Context, onDismiss: () -> Unit) {
             .background(Color(0xCC000000))
             .clickable {
                 onDismiss()
-                DPSharedPreferences.saveBoolean(context, "dashboard_overlay_shown", true)
+                DPStorageManager.saveBoolean("dashboard_overlay_shown", true)
             },
         contentAlignment = Alignment.TopCenter
     ) {

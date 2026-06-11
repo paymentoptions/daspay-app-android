@@ -1,8 +1,9 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow
 
-import MyDialog
+import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
 import android.content.Intent
 import android.graphics.Bitmap
+import androidx.compose.ui.graphics.ImageBitmap
 import com.paymentoptions.pos.device.GeoRestrictionManager
 import android.os.Handler
 import android.provider.Settings
@@ -70,9 +71,9 @@ import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.ScreenRatioToDp
-import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.device.DPSharedPreferences.getApms
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.device.DPStorageManager.getApms
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.network.endpoints.payByLink
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.network.ApiHttpException
@@ -96,15 +97,14 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
-import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.chargemoney.ChargeMoneyBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.inputnoney.InputMoneyBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionfailed.TransactionFailedBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionsuccessful.TransactionSuccessfulBottomSectionContent
-import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
-import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
+import com.paymentoptions.pos.ui.screens.status.MessageForStatusScreen
+import com.paymentoptions.pos.ui.screens.status.StatusScreen
+import com.paymentoptions.pos.ui.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
@@ -138,7 +138,7 @@ fun ReceiveMoneyFlow(
     initialReceiveMoneyFlowStage: ReceiveMoneyFlowStage = ReceiveMoneyFlowStage.INPUT_MONEY,
 ) {
     val context = LocalContext.current
-    val currency = getTransactionCurrency(context)
+    val currency = getTransactionCurrency()
     var failureProceedFlag by remember { mutableStateOf(false) }
     var successProceedFlag by remember { mutableStateOf(false) }
     val enableScrollingInsideBottomSectionContent = false
@@ -159,7 +159,7 @@ fun ReceiveMoneyFlow(
     var signatureBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var signatureDate by remember { mutableStateOf(Date()) }
     var signaturePath by remember { mutableStateOf(Path()) }
-    var apms by remember { mutableStateOf(getApms(context)) }
+    var apms by remember { mutableStateOf(getApms()) }
     var startTapAndPay by remember { mutableStateOf(false) }
     var paymentUrl by remember { mutableStateOf("") }
 
@@ -169,10 +169,10 @@ fun ReceiveMoneyFlow(
         val (isNfcSupported, _) = nfcStatusPair
         if (isNfcSupported) {
             // If NFC is supported (even if disabled), show all payment methods
-            paymentMethods(context)
+            paymentMethods()
         } else {
             // If NFC is not supported, filter out the 'Tap' payment method
-            paymentMethods(context).filter { it != tapPaymentMethod }
+            paymentMethods().filter { it != tapPaymentMethod }
         }
     }
     var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(availablePaymentMethods.first()) }
@@ -446,7 +446,7 @@ fun ReceiveMoneyFlow(
 
                                     startTapAndPay = false
 
-                                    var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                                    var qrCodeBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
                                     var qrCodeLoading by remember { mutableStateOf(false) }
                                     var qrCodeError by remember { mutableStateOf<String?>(null) }
 
@@ -477,7 +477,7 @@ fun ReceiveMoneyFlow(
                                                 )
                                             )
 
-                                            val response = payByLink(dasmid = DPSharedPreferences.getQRDasmid(context), request)
+                                            val response = payByLink(dasmid = DPStorageManager.getQRDasmid(), request)
                                             if (response != null && response.success) {
                                                 val paymentUrl =
                                                     "https://api-dev.paymentoptions.com/paybylink/" + response.data.ProductID
@@ -497,7 +497,7 @@ fun ReceiveMoneyFlow(
                                             e.printStackTrace()
 
                                             if (e.isUnauthorizedError()) {
-                                                showSessionExpiredAndNavigateToFingerprint(context, navController)
+                                                showSessionExpiredAndNavigateToFingerprint(navController)
                                             }
                                         } finally {
                                             qrCodeLoading = false
@@ -585,15 +585,13 @@ fun ReceiveMoneyFlow(
                                     }
                                     val sheetState = rememberModalBottomSheetState()
                                     //added a state variable to hold the generated QR bitmap
-                                    var viaLinkQrBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                                    var viaLinkQrBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
                                     LaunchedEffect(Unit) {
                                         try {
                                             payByLinkApiResponseLoading = true
                                             val dasmid =
-                                                DPSharedPreferences.getPayByLinkDasmid(
-                                                    context
-                                                )
+                                                DPStorageManager.getPayByLinkDasmid()
                                             payByLinkResponse =
                                                 payByLink(request = payByLinkRequest, dasmid = dasmid)
                                             if (payByLinkResponse != null && payByLinkResponse!!.success) {

@@ -2,13 +2,13 @@ package com.paymentoptions.pos.services.apiService
 
 import android.content.Context
 import com.paymentoptions.pos.BuildConfig
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.getAppConfiguration
 
 /**
  * Delegates to [com.paymentoptions.pos.network.ConfigurationManager] (shared module).
- * Downloads app configuration and stores it via [DPSharedPreferences] → [com.paymentoptions.pos.storage.AppStorage].
+ * Downloads app configuration and stores it via [DPStorageManager] → [com.paymentoptions.pos.storage.AppStorage].
  */
 object ConfigurationManager {
 
@@ -22,9 +22,9 @@ object ConfigurationManager {
                 return false
             }
             AppLogger.debug("Config downloaded. Base URL: ${appConfig.BaseAPIURL}")
-            val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+            val savedBaseUrl = DPStorageManager.getBaseUrl()
             if (savedBaseUrl != appConfig.BaseAPIURL) {
-                DPSharedPreferences.storeAppConfig(context, appConfig)
+                DPStorageManager.storeAppConfig(appConfig)
                 // Notify KtorClient that the base URL may have changed
                 com.paymentoptions.pos.network.ConfigurationManager.buildTimeBaseUrl =
                     com.paymentoptions.pos.network.ConfigurationManager.buildTimeBaseUrl
@@ -46,7 +46,7 @@ object ConfigurationManager {
                 return false
             }
             AppLogger.debug("Config refreshed. Base URL: ${appConfig.BaseAPIURL}")
-            DPSharedPreferences.storeAppConfig(context, appConfig)
+            DPStorageManager.storeAppConfig(appConfig)
             true
         } catch (e: Exception) {
             AppLogger.error("Error refreshing config: ${e.message}")
@@ -57,6 +57,6 @@ object ConfigurationManager {
     fun getCurrentEnvironment(): String = BuildConfig.ENVIRONMENT
 
     fun getEffectiveBaseUrl(context: Context): String =
-        DPSharedPreferences.getBaseUrl(context)?.takeIf { it.isNotEmpty() }
+        DPStorageManager.getBaseUrl()?.takeIf { it.isNotEmpty() }
             ?: BuildConfig.CONFIG_BASE_URL
 }

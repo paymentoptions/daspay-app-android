@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.insights
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
@@ -96,7 +96,7 @@ fun TransactionFilter(navController: NavController) {
     val scrollState = rememberScrollState()
 
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
-    var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
+    var currency by remember { mutableStateOf(getTransactionCurrency()) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactions by remember { mutableStateOf<List<InsightsResponseDataRecord>>(listOf()) }
 
@@ -309,7 +309,7 @@ fun TransactionFilter(navController: NavController) {
                                     val amount = amountState.text.toString()
                                     val tranxId = tranxIdState.text.toString()
                                     val transctionType = getTransactionType(selectedTranxType)
-                                    val deviceNumber = AppStorage.deviceNumber ?: getDeviceIdentifier(context)
+                                    val deviceNumber = AppStorage.deviceNumber ?: getDeviceIdentifier()
                                     val uniqueCode = AppStorage.tokenCode ?: ""
                                     val insightsResponse = insights(
                                         deviceNumber = deviceNumber,

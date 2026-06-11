@@ -46,7 +46,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.autoSignIn
 import com.paymentoptions.pos.network.endpoints.completeDeviceRegistration
@@ -269,9 +269,9 @@ private fun onAuthSuccess(
             }
         }
         try {
-            val authCredentials = autoSignIn(getDeviceIdentifier(context))
+            val authCredentials = autoSignIn(getDeviceIdentifier())
             if (authCredentials != null) {
-                val authDetails = DPSharedPreferences.getSavedCredentials(context)
+                val authDetails = DPStorageManager.getSavedCredentials()
                 val otp = authDetails.third
                 var errorMessage = ""
 
@@ -282,7 +282,7 @@ private fun onAuthSuccess(
 
                 // --- First API Call ---
                 if (otp == null) return@launch
-                completeDeviceRegistration(otp, getDeviceIdentifier(context)).onSuccess { response ->
+                completeDeviceRegistration(otp, getDeviceIdentifier()).onSuccess { response ->
                     Log.d(
                         "DEBUG_TOKEN",
                         "Step 2: completeDeviceRegistration SUCCEEDED. Response: $response"
@@ -295,19 +295,19 @@ private fun onAuthSuccess(
                             "Step 3: Proceeding to get external device configuration."
                         )
 
-                        DPSharedPreferences.saveTokenStatus(
-                            context = context, tokenCode = otp, isVerified = true
+                        DPStorageManager.saveTokenStatus(
+                            tokenCode = otp, isVerified = true
                         )
 
                         getExternalDeviceConfiguration(
-                            otp, getDeviceIdentifier(context)
+                            otp, getDeviceIdentifier()
                         ).onSuccess { configResponse ->
                             AppLogger.debug(
                                 "DEBUG_TOKEN",
                                 "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                             )
-                            DPSharedPreferences.saveDeviceConfiguration(
-                                context, configResponse
+                            DPStorageManager.saveDeviceConfiguration(
+                                configResponse
                             )
                         }.onFailure { exception ->
                             AppLogger.error(
@@ -329,9 +329,8 @@ private fun onAuthSuccess(
                     AppLogger.e("DEBUG_TOKEN", "Step 2 FAILED: completeDeviceRegistration. Msg: $exceptionMessage", exception.toString())
 
                     if (exceptionMessage == "Device already registered") {
-                        getExternalDeviceConfiguration(otp, getDeviceIdentifier(context)).onSuccess { configResponse ->
-                            DPSharedPreferences.saveTokenStatus(
-                                context = context,
+                        getExternalDeviceConfiguration(otp, getDeviceIdentifier()).onSuccess { configResponse ->
+                            DPStorageManager.saveTokenStatus(
                                 tokenCode = otp,
                                 isVerified = true
                             )
@@ -340,8 +339,8 @@ private fun onAuthSuccess(
                                 "DEBUG_TOKEN",
                                 "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                             )
-                            DPSharedPreferences.saveDeviceConfiguration(
-                                context, configResponse
+                            DPStorageManager.saveDeviceConfiguration(
+                                configResponse
                             )
                         }.onFailure { innerException ->
                             AppLogger.error(
@@ -406,7 +405,7 @@ private fun autoSignInFailed(
     Toast.makeText(context, "Auto sign-in has failed, Please enter credentials again", Toast.LENGTH_SHORT).show()
      AuthEventManager.requireManualSignIn()
     //TODO
-    DPSharedPreferences.clearSharedPreferences(context)
+    DPStorageManager.clearSharedPreferences()
     navController.navigate(Screens.AuthCheck.route) {
         popUpTo(0) { inclusive = true }
     }

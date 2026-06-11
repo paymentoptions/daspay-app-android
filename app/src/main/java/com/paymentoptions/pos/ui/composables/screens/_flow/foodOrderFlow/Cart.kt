@@ -2,7 +2,7 @@ package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow
 
 import android.content.Context
 import co.yml.charts.common.extensions.isNotNull
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.storage.AppStorage
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -19,16 +19,17 @@ class Cart(
     var additionalAmountNote: String = "",
 ) {
     companion object {
+        private val json = Json { ignoreUnknownKeys = true }
+
         fun save(context: Context, cart: Cart) {
-            DPSharedPreferences.saveCart(context, cart)
+            AppStorage.cartJson = cart.toJson()
         }
 
         fun load(context: Context): Cart? {
-            try {
-                val cart = DPSharedPreferences.getCart(context)
-                return cart
+            return try {
+                AppStorage.cartJson?.let { json.decodeFromString<Cart>(it) }
             } catch (e: Exception) {
-                return Cart()
+                Cart()
             }
         }
     }

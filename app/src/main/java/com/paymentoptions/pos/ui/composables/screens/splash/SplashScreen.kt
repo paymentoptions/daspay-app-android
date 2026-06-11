@@ -2,7 +2,6 @@ package com.paymentoptions.pos.ui.composables.screens.splash
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.os.Handler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -30,7 +29,7 @@ import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import coil3.compose.AsyncImage
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.ConfigurationManager
 import com.paymentoptions.pos.storage.AppStorage
@@ -41,7 +40,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun SplashScreen(navController: NavController) {
     val context = LocalContext.current
-    val signInResponse = DPSharedPreferences.getAuthDetails(context = context)
+    val signInResponse = DPStorageManager.getAuthDetails()
 
     var locationPermissionGranted by remember {
         mutableStateOf(

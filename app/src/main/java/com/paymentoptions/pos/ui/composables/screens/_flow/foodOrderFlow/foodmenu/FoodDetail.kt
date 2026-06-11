@@ -31,15 +31,6 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(4.dp),
             horizontalAlignment = Alignment.Start
         ) {
-//            Text(
-//                foodItem.item.ProductSize.lowercase().capitalize(),
-//                fontSize = 12.sp,
-//                fontWeight = FontWeight.Normal,
-//                color = primary500,
-//                maxLines = 1,
-//                overflow = TextOverflow.Ellipsis
-//            )
-
             Text(
                 foodItem.item.ProductName,
                 fontSize = 14.sp,

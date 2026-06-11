@@ -53,8 +53,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import coil3.compose.AsyncImage
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.paymentDetails
@@ -103,7 +103,7 @@ fun TransactionSuccessfulBottomSectionContent(
     updateFlowToReceipt: () -> Unit = {},
 ) {
     val context = LocalContext.current
-    val currency = getTransactionCurrency(context)
+    val currency = getTransactionCurrency()
     val scrollState = rememberScrollState()
     var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
@@ -137,7 +137,7 @@ fun TransactionSuccessfulBottomSectionContent(
 
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
-        "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
+        "${DPStorageManager.getTransactionDetailsUrl()}/$transactionUuid"
     } else {
         null
     }

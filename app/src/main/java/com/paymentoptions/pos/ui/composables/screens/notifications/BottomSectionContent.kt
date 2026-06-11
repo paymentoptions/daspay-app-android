@@ -149,7 +149,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
         } catch (e: Exception) {
             if (e.isUnauthorizedError()) {
-                showSessionExpiredAndNavigateToFingerprint(context, navController)
+                showSessionExpiredAndNavigateToFingerprint(navController)
             }
         } finally {
             apiResponseAvailable = true

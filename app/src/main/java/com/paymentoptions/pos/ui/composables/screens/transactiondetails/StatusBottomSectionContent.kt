@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.network.endpoints.getSignature
@@ -206,7 +206,7 @@ fun StatusBottomSectionContent(
         ReceiptShimmerLoading()
     } else {
         val formattedAmount = String.format(Locale.US, "%.2f", amount.toDoubleOrNull() ?: 0.0)
-        val currency = paymentDetailsLatestResponse?.data?.CurrencyCode ?: DPSharedPreferences.getTransactionCurrency(context)
+        val currency = paymentDetailsLatestResponse?.data?.CurrencyCode ?: DPStorageManager.getTransactionCurrency()
 
         Column(
             modifier = Modifier

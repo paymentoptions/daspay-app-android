@@ -43,7 +43,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import coil3.compose.AsyncImage
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.editProduct
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -191,9 +191,9 @@ fun EditProductSectionContent(
                     OutlinedTextInput(
                         state = productPrice,
                         label = "Product Price *",
-                        placeholder =DPSharedPreferences.getTransactionCurrency(context),
+                        placeholder =DPStorageManager.getTransactionCurrency(),
                         onlyDigits = true,
-                        disabled = DPSharedPreferences.isStaff(context),
+                        disabled = DPStorageManager.isStaff(),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -202,7 +202,7 @@ fun EditProductSectionContent(
                         state = productCode,
                         label = "Product Code",
                         placeholder = "Ex. SKU-000",
-                        disabled = DPSharedPreferences.isStaff(context),
+                        disabled = DPStorageManager.isStaff(),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -595,7 +595,7 @@ private fun getProductRequest(
     //productStock: Int,
     selectedFoodItem: FoodItem
 ): ProductRequest {
-    if (DPSharedPreferences.isAdmin(context)) return ProductRequest(
+    if (DPStorageManager.isAdmin()) return ProductRequest(
         ProductName = productName.text.toString(),
         ProductDesc = productDescription.text.toString(),
         ProductPrice = finalPrice,
@@ -604,7 +604,7 @@ private fun getProductRequest(
         ProductCode = productCode.text.toString(),
        // ProductStock = productStock.toLong(),
         ProductStatus = true,
-        Currency = DPSharedPreferences.getTransactionCurrency(context),
+        Currency = DPStorageManager.getTransactionCurrency(),
         MerchantID = selectedFoodItem.item.MerchantID,
         CategoryID = selectedFoodItem.item.CategoryID,
     ) else {
@@ -615,7 +615,7 @@ private fun getProductRequest(
 //            ProductSize = productSize,
 //            ProductStock = productStock.toLong(),
             ProductStatus = true,
-            Currency = DPSharedPreferences.getTransactionCurrency(context),
+            Currency = DPStorageManager.getTransactionCurrency(),
             MerchantID = selectedFoodItem.item.MerchantID,
             CategoryID = selectedFoodItem.item.CategoryID,
             ProductPrice = null,

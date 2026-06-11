@@ -39,9 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.DPSharedPreferences.getKeyValue
-import com.paymentoptions.pos.device.DPSharedPreferences.saveKeyValue
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager.getKeyValue
+import com.paymentoptions.pos.device.DPStorageManager.saveKeyValue
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.insights
 import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
@@ -73,7 +73,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val selectedFilterStorageKey = "transaction_history_selected_filter"
     val context = LocalContext.current
     var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
-    var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
+    var currency by remember { mutableStateOf(getTransactionCurrency()) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactions by remember { mutableStateOf<List<InsightsResponseDataRecord>>(listOf()) }
     val scrollState = rememberScrollState()
@@ -96,7 +96,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     )
 
     val persistedFilterKey = remember {
-        getKeyValue(context, selectedFilterStorageKey)
+        getKeyValue(selectedFilterStorageKey)
     }
 
     var selectedFilter by remember {
@@ -113,7 +113,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     fromDateCustomFilter = null
                     toDateCustomFilter = null
                     selectedFilter = filters.entries.first()
-                    saveKeyValue(context, selectedFilterStorageKey, selectedFilter.key)
+                    saveKeyValue(selectedFilterStorageKey, selectedFilter.key)
                 } else {
                     fromDateCustomFilter = startDateMillis
                     toDateCustomFilter = endDateMillis
@@ -121,7 +121,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             },
             {
                 selectedFilter = filters.entries.first()
-                saveKeyValue(context, selectedFilterStorageKey, selectedFilter.key)
+                saveKeyValue(selectedFilterStorageKey, selectedFilter.key)
             })
     } else {
         fromDateCustomFilter = null
@@ -212,7 +212,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         }
 
         try {
-            val deviceNumber = AppStorage.deviceNumber ?: getDeviceIdentifier(context)
+            val deviceNumber = AppStorage.deviceNumber ?: getDeviceIdentifier()
             val uniqueCode = AppStorage.tokenCode ?: ""
             val insightsResponse = insights(
                 deviceNumber = deviceNumber,
@@ -280,7 +280,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     selectedFilter,
                     onFilterChange = {
                         selectedFilter = it
-                        saveKeyValue(context, selectedFilterStorageKey, it.key)
+                        saveKeyValue(selectedFilterStorageKey, it.key)
                     },
                     icon = Icons.Default.CalendarMonth,
                     modifier = Modifier

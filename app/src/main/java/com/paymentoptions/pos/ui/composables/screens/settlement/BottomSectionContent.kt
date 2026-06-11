@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.device.DPSharedPreferences.getSettlementCurrency
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.device.DPStorageManager.getSettlementCurrency
 import com.paymentoptions.pos.network.endpoints.settlementList
 import com.paymentoptions.pos.services.apiService.SettlementRecord
 import com.paymentoptions.pos.storage.AppStorage
@@ -76,7 +76,7 @@ fun BottomSectionContent(
     var showCurrent by remember { mutableStateOf(true) }
     var loader by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val currency = getSettlementCurrency(context)
+    val currency = getSettlementCurrency()
 
     // Settlement data states
     var pendingSettlement by remember { mutableStateOf<SettlementRecord?>(null) }
@@ -89,7 +89,7 @@ fun BottomSectionContent(
         isLoading = true
         try {
             val response = settlementList(
-                deviceNumber = AppStorage.deviceNumber ?: getDeviceIdentifier(context),
+                deviceNumber = AppStorage.deviceNumber ?: getDeviceIdentifier(),
                 uniqueCode = AppStorage.tokenCode ?: "",
             )
             if (response != null && response.success) {
@@ -244,7 +244,7 @@ fun BottomSectionContent(
             Spacer(modifier = Modifier.height(20.dp))
 
             // Show Settle All button only for admin and when showing current
-            if (DPSharedPreferences.isAdmin(context) && showCurrent && pendingSettlement != null) {
+            if (DPStorageManager.isAdmin() && showCurrent && pendingSettlement != null) {
                 Spacer(modifier = Modifier.height(20.dp))
                 FilledButton(
                     text = "Settle All",
@@ -275,7 +275,7 @@ fun SettlementCard(
     val context = LocalContext.current
 
     // Get device info
-    val deviceConfig = DPSharedPreferences.getDeviceConfiguration(context)
+    val deviceConfig = DPStorageManager.getDeviceConfiguration()
     val mid = deviceConfig?.data?.deviceInfo?.DASMID ?: "00000000"
     val tid = deviceConfig?.data?.deviceInfo?.DeviceNumber?.takeLast(4) ?: "0000"
 

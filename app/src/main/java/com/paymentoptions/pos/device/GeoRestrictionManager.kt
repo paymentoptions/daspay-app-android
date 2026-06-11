@@ -27,8 +27,8 @@ object GeoRestrictionManager {
      */
     fun saveMerchantCountry(context: Context, subsidiaries: List<String>) {
         val country = subsidiaries.firstOrNull()?.uppercase() ?: return
-        DPSharedPreferences.saveKeyValue(context, PREF_MERCHANT_COUNTRY, country)
-        DPSharedPreferences.saveKeyValue(context, PREF_DEVICE_REGISTERED_COUNTRY, country)
+        DPStorageManager.saveKeyValue(PREF_MERCHANT_COUNTRY, country)
+        DPStorageManager.saveKeyValue(PREF_DEVICE_REGISTERED_COUNTRY, country)
         AppLogger.debug("GeoRestriction: Saved merchant country=$country from subsidiaries=$subsidiaries")
     }
 
@@ -36,7 +36,7 @@ object GeoRestrictionManager {
      * Get the saved merchant country code.
      */
     fun getMerchantCountry(context: Context): String {
-        return DPSharedPreferences.getKeyValue(context, PREF_MERCHANT_COUNTRY) ?: ""
+        return DPStorageManager.getKeyValue(PREF_MERCHANT_COUNTRY) ?: ""
     }
 
     /**
@@ -82,7 +82,7 @@ object GeoRestrictionManager {
      */
     fun checkRestriction(context: Context): GeoRestrictionResult {
         val merchantCountry = getMerchantCountry(context)
-        val deviceRegisteredCountry = DPSharedPreferences.getKeyValue(context, PREF_DEVICE_REGISTERED_COUNTRY) ?: merchantCountry
+        val deviceRegisteredCountry = DPStorageManager.getKeyValue(PREF_DEVICE_REGISTERED_COUNTRY) ?: merchantCountry
         val currentCountry = getCurrentLocationCountry(context)
 
         if (merchantCountry.isEmpty()) {

@@ -60,7 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
@@ -88,6 +88,8 @@ import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.utils.topdf.ComposePdfExporter
 import com.paymentoptions.pos.utils.topdf.PageSize
 import com.paymentoptions.pos.utils.topdf.PdfExportProgress
+import androidx.core.content.FileProvider
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -166,7 +168,7 @@ fun ReceiptBottomSectionContent(
             paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
 
     val transactionDetailUrl = if (transactionUuid != null) {
-        "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
+        "${DPStorageManager.getTransactionDetailsUrl()}/$transactionUuid"
     } else
         null
 
@@ -773,7 +775,6 @@ fun ReceiptBottomSectionContent(
                     scope.launch {
                         try {
                             ComposePdfExporter.export(
-                                context = context,
                                 fileName = "Receipt_${paymentDetailsLatestResponse?.data?.TransactionID}",
                                 pageSize = PageSize.A4,
                                 composable = { state ->
@@ -798,10 +799,15 @@ fun ReceiptBottomSectionContent(
                                             is PdfExportProgress.Success -> {
                                                 try {
                                                     // Direct print intent
+                                                    val uri = FileProvider.getUriForFile(
+                                                        context,
+                                                        "${context.packageName}.fileprovider",
+                                                        File(result.filePath)
+                                                    )
                                                     val printIntent =
                                                         Intent(Intent.ACTION_VIEW).apply {
                                                             setDataAndType(
-                                                                result.output,
+                                                                uri,
                                                                 "application/pdf"
                                                             )
                                                             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

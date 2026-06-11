@@ -31,8 +31,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.paymentoptions.pos.device.DPSharedPreferences
-import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.TransactionListV2Request
 import com.paymentoptions.pos.network.TransactionListV2RequestFilter
@@ -61,7 +61,7 @@ import kotlin.math.ceil
 fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
     var receivalAmount by remember { mutableFloatStateOf(0.0f) }
-    var currency by remember { mutableStateOf(getTransactionCurrency(context)) }
+    var currency by remember { mutableStateOf(getTransactionCurrency()) }
     var firstPageFetch by remember { mutableStateOf(false) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
@@ -122,7 +122,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
         } catch (e: Exception) {
             if (e.isUnauthorizedError()) {
-                showSessionExpiredAndNavigateToFingerprint(context, navController)
+                showSessionExpiredAndNavigateToFingerprint(navController)
             }
         } finally {
             isRefreshing = false
@@ -161,7 +161,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
 
             if (e.isUnauthorizedError()) {
-                showSessionExpiredAndNavigateToFingerprint(context, navController)
+                showSessionExpiredAndNavigateToFingerprint(navController)
             }
         } finally {
             apiResponseAvailable = true
@@ -213,7 +213,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                if(DPSharedPreferences.isAdmin(context)) {
+                if(DPStorageManager.isAdmin()) {
                     FilledButton(
                         text = "View Insights",
                         onClick = {
