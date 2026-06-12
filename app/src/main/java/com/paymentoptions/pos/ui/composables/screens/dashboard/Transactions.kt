@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.utils.getTransactionAmount
 import java.time.OffsetDateTime

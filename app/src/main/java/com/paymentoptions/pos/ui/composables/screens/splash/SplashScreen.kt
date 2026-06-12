@@ -28,10 +28,11 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import coil3.compose.AsyncImage
+import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.ConfigurationManager
+import com.paymentoptions.pos.network.ConfigurationManager
 import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayout
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -76,7 +77,7 @@ fun SplashScreen(navController: NavController) {
         if (!locationPermissionGranted) return@LaunchedEffect
 
         try {
-            val configInitialized = ConfigurationManager.initializeConfig(context)
+            val configInitialized = ConfigurationManager.initializeConfig(BuildConfig.ENVIRONMENT)
             if (configInitialized) {
                 AppLogger.info("Config initialized successfully on splash")
             } else {

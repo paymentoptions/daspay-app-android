@@ -18,7 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
+import com.paymentoptions.pos.network.CategoryListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.borderColor
 import com.paymentoptions.pos.ui.theme.borderThin

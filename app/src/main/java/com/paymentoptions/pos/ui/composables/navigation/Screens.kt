@@ -1,52 +1,52 @@
 package com.paymentoptions.pos.ui.composables.navigation
 
 sealed class Screens(val route: String) {
-    //Biometrics & Auth Check------------------------------------------
-    object FingerprintScan : Screens(route = "FingerprintScan")
+	//Biometrics & Auth Check------------------------------------------
+	object FingerprintScan : Screens(route = "FingerprintScan")
 
-    //    object FaceRecognition : Screens(route = "FaceRecognition")
-    object AuthCheck : Screens(route = "AuthCheck")
-    //-----------------------------------------------------------------
+	//    object FaceRecognition : Screens(route = "FaceRecognition")
+	object AuthCheck : Screens(route = "AuthCheck")
+	//-----------------------------------------------------------------
 
-    //Auth ------------------------------------------------------------
-    object SignIn : Screens(route = "SignIn")
-    object Token : Screens(route = "Token")
-    //-----------------------------------------------------------------
+	//Auth ------------------------------------------------------------
+	object SignIn : Screens(route = "SignIn")
+	object Token : Screens(route = "Token")
+	//-----------------------------------------------------------------
 
-    //Bottom Navigation -----------------------------------------------
-    object Dashboard : Screens(route = "Dashboard")
-    object FoodOrderFlow : Screens(route = "FoodOrderFlow")
-    object ReceiveMoneyFlow : Screens(route = "ReceiveMoneyFlow")
-    object Notifications : Screens(route = "Notifications")
-    //-----------------------------------------------------------------
+	//Bottom Navigation -----------------------------------------------
+	object Dashboard : Screens(route = "Dashboard")
+	object FoodOrderFlow : Screens(route = "FoodOrderFlow")
+	object ReceiveMoneyFlow : Screens(route = "ReceiveMoneyFlow")
+	object Notifications : Screens(route = "Notifications")
+	//-----------------------------------------------------------------
 
-    // More Menu Items ------------------------------------------------
-    object TransactionHistory : Screens(route = "TransactionHistory")
-    object TransactionReceipt : Screens(route = "TransactionRecept")
-    object TransactionAction : Screens(route = "TransactionAction/{transactionJson}/{action}") {
-        fun createRoute(transactionJson: String, action: String) = "TransactionAction/${java.net.URLEncoder.encode(transactionJson, "UTF-8")}/$action"
-    }
-    object TransactionDetails : Screens(route = "TransactionDetails/{transactionJson}") {
-        fun createRoute(transactionJson: String) = "TransactionDetails/${java.net.URLEncoder.encode(transactionJson, "UTF-8")}"
-    }
+	// More Menu Items ------------------------------------------------
+	object TransactionHistory : Screens(route = "TransactionHistory")
+	object TransactionReceipt : Screens(route = "TransactionRecept")
+	object TransactionAction : Screens(route = "TransactionAction/{transactionJson}/{action}") {
+		fun createRoute(transactionJson: String, action: String) = "TransactionAction/${java.net.URLEncoder.encode(transactionJson, "UTF-8")}/$action"
+	}
+	object TransactionDetails : Screens(route = "TransactionDetails/{transactionJson}") {
+		fun createRoute(transactionJson: String) = "TransactionDetails/${java.net.URLEncoder.encode(transactionJson, "UTF-8")}"
+	}
 
-    //------------------------------------------------------------------
-    object QueryScreen : Screens(route = "Query")
-    //object RefundTransaction : Screens(route = "RefundTransaction")
-    object RefundInitiated : Screens(route = "RefundInitiated")
-    //------------------------------------------------------------------
-    object Settings : Screens(route = "Settings")
-    object HelpAndSupport : Screens(route = "HelpAndSupport")
-    object Settlement : Screens(route = "Settlement")
-    object SettlementAction : Screens(route = "SettlementAction/{settleId}"){
-        fun createRoute(settleId: String) = "SettlementAction/${java.net.URLEncoder.encode(settleId, "UTF-8")}"
-    }
-    object SendLogs : Screens(route = "SendLogs")
-    //------------------------------------------------------------------
+	//------------------------------------------------------------------
+	object QueryScreen : Screens(route = "Query")
+	//object RefundTransaction : Screens(route = "RefundTransaction")
+	object RefundInitiated : Screens(route = "RefundInitiated")
+	//------------------------------------------------------------------
+	object Settings : Screens(route = "Settings")
+	object HelpAndSupport : Screens(route = "HelpAndSupport")
+	object Settlement : Screens(route = "Settlement")
+	object SettlementAction : Screens(route = "SettlementAction/{settleId}"){
+		fun createRoute(settleId: String) = "SettlementAction/${java.net.URLEncoder.encode(settleId, "UTF-8")}"
+	}
+	object SendLogs : Screens(route = "SendLogs")
+	//------------------------------------------------------------------
 
 
-    //Misc
-    object Splash : Screens(route = "Splash")
-    object FcmToken : Screens(route = "FcmToken")
-    object Status : Screens(route = "Status")
+	//Misc
+	object Splash : Screens(route = "Splash")
+	object FcmToken : Screens(route = "FcmToken")
+	object Status : Screens(route = "Status")
 }

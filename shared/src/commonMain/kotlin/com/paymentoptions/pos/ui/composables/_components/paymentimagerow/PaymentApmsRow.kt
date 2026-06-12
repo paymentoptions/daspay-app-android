@@ -12,7 +12,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.paymentoptions.pos.device.DPStorageManager.getApms
+import com.paymentoptions.pos.device.DPStorageManager.getDeviceConfiguration
+import com.paymentoptions.pos.network.DevicePaymentMethod_Apms
+import com.paymentoptions.pos.network.DevicePaymentMethod_Schemes
 import com.paymentoptions.pos.ui.composables._components.images.apms.AliPayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.ApplePayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.DinersClubPayImage
@@ -23,6 +25,18 @@ import com.paymentoptions.pos.ui.composables._components.images.apms.PayEasyImag
 import com.paymentoptions.pos.ui.composables._components.images.apms.PayPayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.WechatPayImage
 
+
+fun getSchemes(): DevicePaymentMethod_Schemes {
+    val config = getDeviceConfiguration() ?: return DevicePaymentMethod_Schemes()
+    return config.data?.paymentMethod?.firstOrNull { it.Type == "SOFTPOS" }?.schemes
+        ?: DevicePaymentMethod_Schemes()
+}
+
+fun getApms(): DevicePaymentMethod_Apms {
+    val config = getDeviceConfiguration() ?: return DevicePaymentMethod_Apms()
+    return config.data?.paymentMethod?.firstOrNull { it.Type == "QR" }?.apms
+        ?: DevicePaymentMethod_Apms()
+}
 
 @Composable
 fun PaymentApmsRow(modifier: Modifier = Modifier) {

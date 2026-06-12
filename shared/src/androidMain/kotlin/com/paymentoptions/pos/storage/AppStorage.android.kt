@@ -4,7 +4,9 @@ import com.russhwolf.settings.Settings
 import com.russhwolf.settings.get
 import com.russhwolf.settings.set
 
-actual object AppStorage {
+actual val AppStorage: StorageInterface = AndroidAppStorage
+
+object AndroidAppStorage : StorageInterface {
 
     private lateinit var settings: Settings
 
@@ -12,160 +14,160 @@ actual object AppStorage {
      * Call once in MainActivity before any read/write.
      * Uses the provided [Settings] (backed by EncryptedSharedPreferences).
      */
-    fun init(settings: Settings) {
+    override fun init(settings: Settings) {
         this.settings = settings
     }
 
     // ── Tokens ────────────────────────────────────────────────────────────────
 
-    actual var accessToken: String?
+    override var accessToken: String?
         get() = settings.getStringOrNull(KEY_ACCESS_TOKEN)
-        set(v) = if (v != null) settings[KEY_ACCESS_TOKEN] = v else settings.remove(KEY_ACCESS_TOKEN)
+        set(v) { if (v != null) settings[KEY_ACCESS_TOKEN] = v else settings.remove(KEY_ACCESS_TOKEN) }
 
-    actual var idToken: String?
+    override var idToken: String?
         get() = settings.getStringOrNull(KEY_ID_TOKEN)
-        set(v) = if (v != null) settings[KEY_ID_TOKEN] = v else settings.remove(KEY_ID_TOKEN)
+        set(v) { if (v != null) settings[KEY_ID_TOKEN] = v else settings.remove(KEY_ID_TOKEN) }
 
-    actual var refreshToken: String?
+    override var refreshToken: String?
         get() = settings.getStringOrNull(KEY_REFRESH_TOKEN)
-        set(v) = if (v != null) settings[KEY_REFRESH_TOKEN] = v else settings.remove(KEY_REFRESH_TOKEN)
+        set(v) { if (v != null) settings[KEY_REFRESH_TOKEN] = v else settings.remove(KEY_REFRESH_TOKEN) }
 
-    actual var tokenExpiry: Long
+    override var tokenExpiry: Long
         get() = settings[KEY_TOKEN_EXPIRY, 0L]
         set(v) { settings[KEY_TOKEN_EXPIRY] = v }
 
     // ── Token verification ────────────────────────────────────────────────────
 
-    actual var tokenVerified: Boolean
+    override var tokenVerified: Boolean
         get() = settings[KEY_TOKEN_VERIFIED, false]
         set(v) { settings[KEY_TOKEN_VERIFIED] = v }
 
-    actual var tokenCode: String?
+    override var tokenCode: String?
         get() = settings.getStringOrNull(KEY_TOKEN_CODE)
-        set(v) = if (v != null) settings[KEY_TOKEN_CODE] = v else settings.remove(KEY_TOKEN_CODE)
+        set(v) { if (v != null) settings[KEY_TOKEN_CODE] = v else settings.remove(KEY_TOKEN_CODE) }
 
     // ── Credentials ───────────────────────────────────────────────────────────
 
-    actual var savedUsername: String?
+    override var savedUsername: String?
         get() = settings.getStringOrNull(KEY_USERNAME)
-        set(v) = if (v != null) settings[KEY_USERNAME] = v else settings.remove(KEY_USERNAME)
+        set(v) { if (v != null) settings[KEY_USERNAME] = v else settings.remove(KEY_USERNAME) }
 
-    actual var savedPassword: String?
+    override var savedPassword: String?
         get() = settings.getStringOrNull(KEY_PASSWORD)
-        set(v) = if (v != null) settings[KEY_PASSWORD] = v else settings.remove(KEY_PASSWORD)
+        set(v) { if (v != null) settings[KEY_PASSWORD] = v else settings.remove(KEY_PASSWORD) }
 
     // ── User profile ──────────────────────────────────────────────────────────
 
-    actual var userEmail: String?
+    override var userEmail: String?
         get() = settings.getStringOrNull(KEY_USER_EMAIL)
-        set(v) = if (v != null) settings[KEY_USER_EMAIL] = v else settings.remove(KEY_USER_EMAIL)
+        set(v) { if (v != null) settings[KEY_USER_EMAIL] = v else settings.remove(KEY_USER_EMAIL) }
 
-    actual var userName: String?
+    override var userName: String?
         get() = settings.getStringOrNull(KEY_USER_NAME)
-        set(v) = if (v != null) settings[KEY_USER_NAME] = v else settings.remove(KEY_USER_NAME)
+        set(v) { if (v != null) settings[KEY_USER_NAME] = v else settings.remove(KEY_USER_NAME) }
 
-    actual var userUid: String?
+    override var userUid: String?
         get() = settings.getStringOrNull(KEY_USER_UID)
-        set(v) = if (v != null) settings[KEY_USER_UID] = v else settings.remove(KEY_USER_UID)
+        set(v) { if (v != null) settings[KEY_USER_UID] = v else settings.remove(KEY_USER_UID) }
 
-    actual var accessLevel: String?
+    override var accessLevel: String?
         get() = settings.getStringOrNull(KEY_ACCESS_LEVEL)
-        set(v) = if (v != null) settings[KEY_ACCESS_LEVEL] = v else settings.remove(KEY_ACCESS_LEVEL)
+        set(v) { if (v != null) settings[KEY_ACCESS_LEVEL] = v else settings.remove(KEY_ACCESS_LEVEL) }
 
-    actual var signInAsMerchant: Boolean
+    override var signInAsMerchant: Boolean
         get() = settings[KEY_SIGN_IN_AS_MERCHANT, false]
         set(v) { settings[KEY_SIGN_IN_AS_MERCHANT] = v }
 
     // ── Auth details JSON ─────────────────────────────────────────────────────
 
-    actual var authDetailsJson: String?
+    override var authDetailsJson: String?
         get() = settings.getStringOrNull(KEY_AUTH_DETAILS_JSON)
-        set(v) = if (v != null) settings[KEY_AUTH_DETAILS_JSON] = v else settings.remove(KEY_AUTH_DETAILS_JSON)
+        set(v) { if (v != null) settings[KEY_AUTH_DETAILS_JSON] = v else settings.remove(KEY_AUTH_DETAILS_JSON) }
 
     // ── Device registration ───────────────────────────────────────────────────
 
-    actual var deviceNumber: String?
+    override var deviceNumber: String?
         get() = settings.getStringOrNull(KEY_DEVICE_NUMBER)
-        set(v) = if (v != null) settings[KEY_DEVICE_NUMBER] = v else settings.remove(KEY_DEVICE_NUMBER)
+        set(v) { if (v != null) settings[KEY_DEVICE_NUMBER] = v else settings.remove(KEY_DEVICE_NUMBER) }
 
-    actual var deviceUniqueCode: String?
+    override var deviceUniqueCode: String?
         get() = settings.getStringOrNull(KEY_DEVICE_UNIQUE_CODE)
-        set(v) = if (v != null) settings[KEY_DEVICE_UNIQUE_CODE] = v else settings.remove(KEY_DEVICE_UNIQUE_CODE)
+        set(v) { if (v != null) settings[KEY_DEVICE_UNIQUE_CODE] = v else settings.remove(KEY_DEVICE_UNIQUE_CODE) }
 
-    actual var dasmid: String?
+    override var dasmid: String?
         get() = settings.getStringOrNull(KEY_DASMID)
-        set(v) = if (v != null) settings[KEY_DASMID] = v else settings.remove(KEY_DASMID)
+        set(v) { if (v != null) settings[KEY_DASMID] = v else settings.remove(KEY_DASMID) }
 
-    actual var merchantLegalName: String?
+    override var merchantLegalName: String?
         get() = settings.getStringOrNull(KEY_MERCHANT_LEGAL_NAME)
-        set(v) = if (v != null) settings[KEY_MERCHANT_LEGAL_NAME] = v else settings.remove(KEY_MERCHANT_LEGAL_NAME)
+        set(v) { if (v != null) settings[KEY_MERCHANT_LEGAL_NAME] = v else settings.remove(KEY_MERCHANT_LEGAL_NAME) }
 
     // ── Device / external config JSON ─────────────────────────────────────────
 
-    actual var deviceConfigJson: String?
+    override var deviceConfigJson: String?
         get() = settings.getStringOrNull(KEY_DEVICE_CONFIG_JSON)
-        set(v) = if (v != null) settings[KEY_DEVICE_CONFIG_JSON] = v else settings.remove(KEY_DEVICE_CONFIG_JSON)
+        set(v) { if (v != null) settings[KEY_DEVICE_CONFIG_JSON] = v else settings.remove(KEY_DEVICE_CONFIG_JSON) }
 
     // ── App config / URLs ─────────────────────────────────────────────────────
 
-    actual var baseUrl: String?
+    override var baseUrl: String?
         get() = settings.getStringOrNull(KEY_BASE_URL)
-        set(v) = if (v != null) settings[KEY_BASE_URL] = v else settings.remove(KEY_BASE_URL)
+        set(v) { if (v != null) settings[KEY_BASE_URL] = v else settings.remove(KEY_BASE_URL) }
 
-    actual var configBaseUrl: String?
+    override var configBaseUrl: String?
         get() = settings.getStringOrNull(KEY_CONFIG_BASE_URL)
-        set(v) = if (v != null) settings[KEY_CONFIG_BASE_URL] = v else settings.remove(KEY_CONFIG_BASE_URL)
+        set(v) { if (v != null) settings[KEY_CONFIG_BASE_URL] = v else settings.remove(KEY_CONFIG_BASE_URL) }
 
-    actual var transactionDetailsUrl: String?
+    override var transactionDetailsUrl: String?
         get() = settings.getStringOrNull(KEY_TRANSACTION_DETAILS_URL)
-        set(v) = if (v != null) settings[KEY_TRANSACTION_DETAILS_URL] = v else settings.remove(KEY_TRANSACTION_DETAILS_URL)
+        set(v) { if (v != null) settings[KEY_TRANSACTION_DETAILS_URL] = v else settings.remove(KEY_TRANSACTION_DETAILS_URL) }
 
     // ── FCM ───────────────────────────────────────────────────────────────────
 
-    actual var fcmToken: String?
+    override var fcmToken: String?
         get() = settings.getStringOrNull(KEY_FCM_TOKEN)
-        set(v) = if (v != null) settings[KEY_FCM_TOKEN] = v else settings.remove(KEY_FCM_TOKEN)
+        set(v) { if (v != null) settings[KEY_FCM_TOKEN] = v else settings.remove(KEY_FCM_TOKEN) }
 
     // ── Cart ──────────────────────────────────────────────────────────────────
 
-    actual var cartJson: String?
+    override var cartJson: String?
         get() = settings.getStringOrNull(KEY_CART_JSON)
-        set(v) = if (v != null) settings[KEY_CART_JSON] = v else settings.remove(KEY_CART_JSON)
+        set(v) { if (v != null) settings[KEY_CART_JSON] = v else settings.remove(KEY_CART_JSON) }
 
     // ── Payment methods ───────────────────────────────────────────────────────
 
-    actual var paymentMethodsJson: String?
+    override var paymentMethodsJson: String?
         get() = settings.getStringOrNull(KEY_PAYMENT_METHODS_JSON)
-        set(v) = if (v != null) settings[KEY_PAYMENT_METHODS_JSON] = v else settings.remove(KEY_PAYMENT_METHODS_JSON)
+        set(v) { if (v != null) settings[KEY_PAYMENT_METHODS_JSON] = v else settings.remove(KEY_PAYMENT_METHODS_JSON) }
 
-    actual var externalConfigJson: String?
+    override var externalConfigJson: String?
         get() = settings.getStringOrNull(KEY_EXTERNAL_CONFIG_JSON)
-        set(v) = if (v != null) settings[KEY_EXTERNAL_CONFIG_JSON] = v else settings.remove(KEY_EXTERNAL_CONFIG_JSON)
+        set(v) { if (v != null) settings[KEY_EXTERNAL_CONFIG_JSON] = v else settings.remove(KEY_EXTERNAL_CONFIG_JSON) }
 
     // ── Geo restriction ───────────────────────────────────────────────────────
 
-    actual var merchantCountriesJson: String?
+    override var merchantCountriesJson: String?
         get() = settings.getStringOrNull(KEY_MERCHANT_COUNTRIES_JSON)
-        set(v) = if (v != null) settings[KEY_MERCHANT_COUNTRIES_JSON] = v else settings.remove(KEY_MERCHANT_COUNTRIES_JSON)
+        set(v) { if (v != null) settings[KEY_MERCHANT_COUNTRIES_JSON] = v else settings.remove(KEY_MERCHANT_COUNTRIES_JSON) }
 
     // ── Biometric ─────────────────────────────────────────────────────────────
 
-    actual var isBiometricEnabled: Boolean
+    override var isBiometricEnabled: Boolean
         get() = settings[KEY_BIOMETRIC_ENABLED, false]
         set(v) { settings[KEY_BIOMETRIC_ENABLED] = v }
 
     // ── Generic helpers ───────────────────────────────────────────────────────
 
-    actual fun getString(key: String): String? = settings.getStringOrNull(key)
-    actual fun putString(key: String, value: String) { settings[key] = value }
-    actual fun getBoolean(key: String, default: Boolean): Boolean = settings[key, default]
-    actual fun putBoolean(key: String, value: Boolean) { settings[key] = value }
+    override fun getString(key: String): String? = settings.getStringOrNull(key)
+    override fun putString(key: String, value: String) { settings[key] = value }
+    override fun getBoolean(key: String, default: Boolean): Boolean = settings[key, default]
+    override fun putBoolean(key: String, value: Boolean) { settings[key] = value }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    actual fun isLoggedIn(): Boolean = !accessToken.isNullOrBlank()
+    override fun isLoggedIn(): Boolean = !accessToken.isNullOrBlank()
 
-    actual fun clearAuthData() {
+    override fun clearAuthData() {
         accessToken     = null
         idToken         = null
         refreshToken    = null
@@ -177,7 +179,7 @@ actual object AppStorage {
         authDetailsJson = null
     }
 
-    actual fun clearAll() {
+    override fun clearAll() {
         settings.clear()
     }
 

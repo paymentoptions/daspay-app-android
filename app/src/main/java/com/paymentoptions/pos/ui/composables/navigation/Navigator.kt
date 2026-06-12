@@ -17,7 +17,7 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.logger.SendLogsScreen
 import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.auth.AuthEventManager
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlow
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlow
 import com.paymentoptions.pos.ui.composables.screens._flow.refundFlow.refundinitiated.RefundInitiatedScreen

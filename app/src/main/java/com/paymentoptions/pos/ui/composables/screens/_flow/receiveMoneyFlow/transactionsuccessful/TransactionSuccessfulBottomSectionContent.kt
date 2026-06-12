@@ -59,9 +59,9 @@ import coil3.compose.AsyncImage
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.network.endpoints.getSignature
-import com.paymentoptions.pos.services.apiService.AquirerResponse
-import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
-import com.paymentoptions.pos.services.apiService.SignatureData
+import com.paymentoptions.pos.network.AquirerResponse
+import com.paymentoptions.pos.network.PaymentDetailsResponse
+import com.paymentoptions.pos.network.SignatureData
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip

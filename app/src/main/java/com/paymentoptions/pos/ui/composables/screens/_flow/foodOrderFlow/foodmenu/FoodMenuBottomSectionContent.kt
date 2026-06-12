@@ -34,8 +34,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
-import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
-import com.paymentoptions.pos.services.apiService.ProductListDataRecord
+import com.paymentoptions.pos.network.CategoryListDataRecord
+import com.paymentoptions.pos.network.ProductListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables._components.ZigZagContainer1

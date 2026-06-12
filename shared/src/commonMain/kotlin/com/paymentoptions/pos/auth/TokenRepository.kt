@@ -1,9 +1,9 @@
 package com.paymentoptions.pos.auth
 
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.network.TokenRefreshService
 import com.paymentoptions.pos.platformLog
 import com.paymentoptions.pos.platformLogError
-import com.paymentoptions.pos.storage.AppStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -88,7 +88,7 @@ object TokenRepository {
                 // Schedule the NEXT cycle for the freshly-stored expiry.
                 // Clear the job ref first so the guard above doesn't block the new schedule.
                 refreshJob = null
-                scheduleProactiveRefresh(AppStorage.tokenExpiry)
+                scheduleProactiveRefresh(DPStorageManager.getTokenExpiry())
             } else {
                 platformLog(TAG, "Proactive refresh returned null – user may need to re-authenticate")
                 AuthEventManager.requireReAuthentication()

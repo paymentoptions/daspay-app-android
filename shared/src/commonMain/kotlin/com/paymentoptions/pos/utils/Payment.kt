@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.TapAndPlay
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.paymentoptions.pos.network.ExternalConfigurationResponse
+import com.paymentoptions.pos.network.PaymentMethodRequest
 import com.paymentoptions.pos.storage.AppStorage
 import kotlinx.serialization.json.Json
 

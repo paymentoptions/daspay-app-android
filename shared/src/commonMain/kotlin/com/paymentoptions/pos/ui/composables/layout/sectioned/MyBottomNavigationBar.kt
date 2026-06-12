@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DPStorageManager
@@ -190,7 +191,7 @@ fun MyBottomNavigationBar(
 
                     if (signOutResponse == null) {
                         AnalyticsHelper.trackLogout()
-                        TokenAutoRefresher.getInstance().onUserSignedOut()
+                        TokenAutoRefresher.getInstance()?.onUserSignedOut()
                         DPStorageManager.clearSharedPreferences()
                         navController.navigate(Screens.AuthCheck.route) {
                             popUpTo(0) { inclusive = true }
@@ -200,7 +201,7 @@ fun MyBottomNavigationBar(
                     signOutResponse?.let {
                         if (it.success) {
                             AnalyticsHelper.trackLogout()
-                            TokenAutoRefresher.getInstance().onUserSignedOut()
+                            TokenAutoRefresher.getInstance()?.onUserSignedOut()
                             DPStorageManager.clearSharedPreferences()
                             navController.navigate(Screens.AuthCheck.route) {
                                 popUpTo(0) { inclusive = true }
@@ -214,7 +215,7 @@ fun MyBottomNavigationBar(
                         message = e.message ?: "Sign out failed",
                         throwable = e,
                     )
-                    TokenAutoRefresher.getInstance().onUserSignedOut()
+                    TokenAutoRefresher.getInstance()?.onUserSignedOut()
                     DPStorageManager.clearSharedPreferences()
                     navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
@@ -326,7 +327,7 @@ fun MyBottomNavigationBar(
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
                             restoreState = true
-                            popUpTo(navController.graph.startDestinationId) {
+                            popUpTo(navController.graph.findStartDestination().route ?: Screens.Dashboard.route) {
                                 saveState = true
                             }
                         }
@@ -349,7 +350,7 @@ fun MyBottomNavigationBar(
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
                             restoreState = true
-                            popUpTo(navController.graph.startDestinationId) {
+                            popUpTo(navController.graph.findStartDestination().route ?: Screens.Dashboard.route) {
                                 saveState = true
                             }
                         }
@@ -379,7 +380,7 @@ fun MyBottomNavigationBar(
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
                             restoreState = true
-                            popUpTo(navController.graph.startDestinationId) {
+                            popUpTo(navController.graph.findStartDestination().route ?: Screens.Dashboard.route) {
                                 saveState = true
                             }
                         }
@@ -402,7 +403,7 @@ fun MyBottomNavigationBar(
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
                             restoreState = true
-                            popUpTo(navController.graph.startDestinationId) {
+                            popUpTo(navController.graph.findStartDestination().route ?: Screens.Dashboard.route) {
                                 saveState = true
                             }
                         }

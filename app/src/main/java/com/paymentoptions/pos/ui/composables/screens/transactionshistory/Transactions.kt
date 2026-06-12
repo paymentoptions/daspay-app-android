@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
+import com.paymentoptions.pos.network.InsightsResponseDataRecord
 import com.paymentoptions.pos.network.toTransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables.screens.dashboard.TransactionSummary

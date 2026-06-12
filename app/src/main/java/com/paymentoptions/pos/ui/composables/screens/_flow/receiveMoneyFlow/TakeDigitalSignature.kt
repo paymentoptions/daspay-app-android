@@ -49,8 +49,8 @@ import androidx.core.graphics.createBitmap
 import androidx.navigation.NavController
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.uploadSignature
-import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
-import com.paymentoptions.pos.services.apiService.PaymentDetailsResponseData
+import com.paymentoptions.pos.network.PaymentDetailsResponse
+import com.paymentoptions.pos.network.PaymentDetailsResponseData
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton

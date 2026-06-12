@@ -30,7 +30,7 @@ import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.signOut
-import com.paymentoptions.pos.services.apiService.SignOutResponse
+import com.paymentoptions.pos.network.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
 import com.paymentoptions.pos.ui.composables._components.MySwitch
@@ -84,7 +84,7 @@ fun BottomSectionContent(navController: NavController) {
                     AppLogger.error("Error: ${e.toString()}")
                 } finally {
                     // Stop token auto refresh on sign out
-                    TokenAutoRefresher.getInstance(context).onUserSignedOut()
+                    TokenAutoRefresher.getInstance()?.onUserSignedOut()
 
                     DPStorageManager.clearSharedPreferences()
                     navController.navigate(Screens.Splash.route) {

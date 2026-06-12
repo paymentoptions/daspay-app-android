@@ -30,8 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.paymentoptions.pos.services.apiService.ProductRequest
-import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
+import com.paymentoptions.pos.network.ProductRequest
+import com.paymentoptions.pos.network.CategoryListDataRecord
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.filled.ArrowDropDown

@@ -55,7 +55,7 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.insights
-import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
+import com.paymentoptions.pos.network.InsightsResponseDataRecord
 import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.DateRangePickerModal
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton

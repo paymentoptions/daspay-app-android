@@ -48,11 +48,12 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.payment
 import com.paymentoptions.pos.network.endpoints.paymentStatus
 import com.paymentoptions.pos.network.ApiHttpException
-import com.paymentoptions.pos.services.apiService.Address
-import com.paymentoptions.pos.services.apiService.PaymentRequest
-import com.paymentoptions.pos.services.apiService.PaymentResponse
-import com.paymentoptions.pos.services.apiService.PaymentReturnUrl
-import com.paymentoptions.pos.services.apiService.PaymentStatusRequest
+import com.paymentoptions.pos.network.Address
+import com.paymentoptions.pos.network.PaymentMethodRequest
+import com.paymentoptions.pos.network.PaymentRequest
+import com.paymentoptions.pos.network.PaymentResponse
+import com.paymentoptions.pos.network.PaymentReturnUrl
+import com.paymentoptions.pos.network.PaymentStatusRequest
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.dialogs.AlertDialogType
@@ -76,6 +77,7 @@ import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
 import com.paymentoptions.pos.services.apiService.toPaymentStatusRequest
 import com.paymentoptions.pos.utils.PaymentMethod
+
 import com.theminesec.lib.dto.transaction.Transaction
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
@@ -438,7 +440,7 @@ fun Tap_ChargeMoney(
         postal_code = "100001"
     )
 
-    val paymentMethod = com.paymentoptions.pos.services.apiService.PaymentMethod(type = "daspay")
+    val paymentMethod = PaymentMethodRequest(type = "daspay")
 
     val paymentRequest = PaymentRequest(
         amount = amountToCharge,

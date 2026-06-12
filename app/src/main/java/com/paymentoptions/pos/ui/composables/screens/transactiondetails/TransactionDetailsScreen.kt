@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent

@@ -48,7 +48,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.logger.AppLogger
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.primary500

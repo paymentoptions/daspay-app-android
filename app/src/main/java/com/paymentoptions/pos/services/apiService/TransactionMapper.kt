@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.services.apiService
 
+import com.paymentoptions.pos.network.PaymentStatusRequest
 import com.theminesec.lib.dto.transaction.Transaction
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json

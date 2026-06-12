@@ -62,8 +62,8 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.network.endpoints.paymentDetails
-import com.paymentoptions.pos.services.apiService.AquirerResponse
-import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
+import com.paymentoptions.pos.network.AquirerResponse
+import com.paymentoptions.pos.network.PaymentDetailsResponse
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email

@@ -77,10 +77,10 @@ import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.network.endpoints.payByLink
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.network.ApiHttpException
-import com.paymentoptions.pos.services.apiService.PayByLinkRequest
-import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
-import com.paymentoptions.pos.services.apiService.PayByLinkResponse
-import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
+import com.paymentoptions.pos.network.PayByLinkRequest
+import com.paymentoptions.pos.network.PayByLinkRequestProduct
+import com.paymentoptions.pos.network.PayByLinkResponse
+import com.paymentoptions.pos.network.PaymentDetailsResponse
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email

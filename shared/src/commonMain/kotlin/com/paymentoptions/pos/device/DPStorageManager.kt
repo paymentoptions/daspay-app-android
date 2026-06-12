@@ -1,164 +1,104 @@
 package com.paymentoptions.pos.device
 
-import com.paymentoptions.pos.network.AccessLevel
 import com.paymentoptions.pos.network.AppConfig
 import com.paymentoptions.pos.network.DevicePaymentMethod_Apms
 import com.paymentoptions.pos.network.DevicePaymentMethod_Schemes
 import com.paymentoptions.pos.network.ExternalConfigurationResponse
 import com.paymentoptions.pos.network.SignInResponse
-import com.paymentoptions.pos.platformLog
-import com.paymentoptions.pos.platformLogError
-import com.paymentoptions.pos.storage.AppStorage
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 /**
- * Compatibility shim — all persistence now delegates to [AppStorage].
- * The `context` parameter is kept for call-site compatibility but is unused.
- * Prefer calling [AppStorage] directly in new code.
+ * Compatibility shim: all persistence delegates to AppStorage.
  */
 object DPStorageManager {
 
-    private const val TAG = "DPStorageManager"
-    private val json = Json { ignoreUnknownKeys = true }
+    fun saveBoolean(key: String, value: Boolean) = dpSaveBoolean(key, value)
 
-    fun saveBoolean(key: String, value: Boolean) {
-        AppStorage.putBoolean(key, value)
-    }
+    fun getBoolean(key: String): Boolean = dpGetBoolean(key)
 
-    fun getBoolean(key: String): Boolean =
-        AppStorage.getBoolean(key)
+    fun saveKeyValue(key: String, value: String) = dpSaveKeyValue(key, value)
 
-    fun saveKeyValue(key: String, value: String) {
-        AppStorage.putString(key, value)
-    }
+    fun getKeyValue(key: String): String? = dpGetKeyValue(key)
 
-    fun getKeyValue(key: String): String? =
-        AppStorage.getString(key)
+    fun saveBiometricsStatus(status: Boolean = false) = dpSaveBiometricsStatus(status)
 
-    fun saveBiometricsStatus(status: Boolean = false) {
-        AppStorage.isBiometricEnabled = status
-    }
+    fun getBiometricsStatus(): Boolean = dpGetBiometricsStatus()
 
-    fun getBiometricsStatus(): Boolean = AppStorage.isBiometricEnabled
+    fun isAdmin(): Boolean = dpIsAdmin()
 
-//    fun getImmersiveModeStatus(context: Any? = null): Boolean =
-//        AppStorage.getBoolean("immersive")
-//
-//    fun saveImmersiveModeStatus(context: Any? = null, status: Boolean = false) {
-//        AppStorage.putBoolean("immersive", status)
-//    }
+    fun isStaff(): Boolean = dpIsStaff()
 
-    fun isAdmin(): Boolean =
-        AppStorage.accessLevel == AccessLevel.ADMIN.name
+    fun saveAuthDetails(authDetails: SignInResponse) = dpSaveAuthDetails(authDetails)
 
-    fun isStaff(): Boolean =
-        AppStorage.accessLevel == AccessLevel.STAFF.name
+    fun getAuthDetails(): SignInResponse? = dpGetAuthDetails()
 
-    fun saveAuthDetails(authDetails: SignInResponse) {
-        AppStorage.authDetailsJson = json.encodeToString(authDetails)
-        if (authDetails.data == null) {
-            platformLogError(TAG, "authDetails.data is null")
-        }
-        platformLog(TAG, "authDetails.data: ${authDetails.data}")
-        val data = authDetails.data ?: return
-        AppStorage.accessToken      = data.token.accessToken
-        AppStorage.idToken          = data.token.idToken
-        AppStorage.refreshToken     = data.token.refreshToken
-        AppStorage.tokenExpiry      = data.exp * 1000L
-        AppStorage.userEmail        = data.email
-        AppStorage.userName         = data.name
-        AppStorage.userUid          = data.uid
-        AppStorage.accessLevel      = data.accessLevel?.name
-        AppStorage.signInAsMerchant = data.signInAsMerchant
-    }
+    fun clearSharedPreferences() = dpClearSharedPreferences()
 
-    fun getAuthDetails(): SignInResponse? {
-        platformLog(TAG, "Retrieving auth details: ")
-        return AppStorage.authDetailsJson?.let { json.decodeFromString(it) }
-    }
+    fun saveCredentials(email: String, password: String) = dpSaveCredentials(email, password)
 
-    fun clearSharedPreferences() {
-        platformLog(TAG, "Clearing auth data from shared preferences")
-        AppStorage.clearAuthData()
-    }
+    fun getSavedCredentials(): Triple<String?, String?, String?> = dpGetSavedCredentials()
 
-    fun saveCredentials(email: String, password: String) {
-        AppStorage.savedUsername = email
-        AppStorage.savedPassword = password
-    }
+    fun saveTokenStatus(tokenCode: String, isVerified: Boolean) = dpSaveTokenStatus(tokenCode, isVerified)
 
-    fun getSavedCredentials(): Triple<String?, String?, String?> =
-        Triple(AppStorage.savedUsername, AppStorage.savedPassword, AppStorage.tokenCode)
+    fun getTokenStatus(): Pair<Boolean, String> = dpGetTokenStatus()
 
-    fun saveTokenStatus(tokenCode: String, isVerified: Boolean) {
-        AppStorage.tokenCode     = tokenCode
-        AppStorage.tokenVerified = isVerified
-    }
+    fun saveFcmToken(token: String) = dpSaveFcmToken(token)
 
-    fun getTokenStatus(): Pair<Boolean, String> =
-        Pair(AppStorage.tokenVerified, AppStorage.tokenCode ?: "")
+    fun getFcmToken(): String? = dpGetFcmToken()
 
-    fun saveFcmToken(token: String) {
-        AppStorage.fcmToken = token
-    }
+    fun saveDeviceConfiguration(config: ExternalConfigurationResponse) = dpSaveDeviceConfiguration(config)
 
-    fun getFcmToken(): String? = AppStorage.fcmToken
+    fun getDeviceConfiguration(): ExternalConfigurationResponse? = dpGetDeviceConfiguration()
 
-    fun saveDeviceConfiguration(config: ExternalConfigurationResponse) {
-        AppStorage.deviceConfigJson = json.encodeToString(config)
-    }
+    fun getTransactionCurrency(): String = dpGetTransactionCurrency()
 
-    fun getDeviceConfiguration(): ExternalConfigurationResponse? =
-        AppStorage.deviceConfigJson?.let { json.decodeFromString(it) }
+    fun getSettlementCurrency(): String = dpGetSettlementCurrency()
 
-    fun getTransactionCurrency(): String {
-        val config = getDeviceConfiguration() ?: return ""
-        return config.data?.paymentMethod?.firstOrNull()?.TransactionCCY?.firstOrNull() ?: ""
-    }
+    fun getTapPayDasmid(): String = dpGetTapPayDasmid()
 
-    fun getSettlementCurrency(): String {
-        val config = getDeviceConfiguration() ?: return ""
-        return config.data?.paymentMethod?.firstOrNull()?.SettlementCCY ?: ""
-    }
+    fun getQRDasmid(): String = dpGetQRDasmid()
 
-    fun getTapPayDasmid(): String {
-        val config = getDeviceConfiguration() ?: return ""
-        return config.data?.paymentMethod?.firstOrNull { it.Type == "SOFTPOS" }?.DASMID ?: ""
-    }
+    fun getPayByLinkDasmid(): String = dpGetPayByLinkDasmid()
 
-    fun getQRDasmid(): String {
-        val config = getDeviceConfiguration() ?: return ""
-        return config.data?.paymentMethod?.firstOrNull { it.Type == "QR" }?.DASMID ?: ""
-    }
+    fun getSchemes(): DevicePaymentMethod_Schemes = dpGetSchemes()
 
-    fun getPayByLinkDasmid(): String {
-        val config = getDeviceConfiguration() ?: return ""
-        return config.data?.paymentMethod?.firstOrNull { it.Type == "PBL" }?.DASMID ?: ""
-    }
+    fun getApms(): DevicePaymentMethod_Apms = dpGetApms()
 
-    fun getSchemes(): DevicePaymentMethod_Schemes {
-        val config = getDeviceConfiguration() ?: return DevicePaymentMethod_Schemes()
-        return config.data?.paymentMethod?.firstOrNull { it.Type == "SOFTPOS" }?.schemes
-            ?: DevicePaymentMethod_Schemes()
-    }
+    fun storeAppConfig(appConfig: AppConfig) = dpStoreAppConfig(appConfig)
 
-    fun getApms(): DevicePaymentMethod_Apms {
-        val config = getDeviceConfiguration() ?: return DevicePaymentMethod_Apms()
-        return config.data?.paymentMethod?.firstOrNull { it.Type == "QR" }?.apms
-            ?: DevicePaymentMethod_Apms()
-    }
+    fun getTokenExpiry(): Long = dpGetTokenExpiry()
 
-//    fun getDeviceId(context: Any? = null): String? {
-//        return getDeviceConfiguration()?.data?.deviceInfo?.DeviceID
-//    }
+    fun getBaseUrl(): String? = dpGetBaseUrl()
 
-    fun storeAppConfig(appConfig: AppConfig) {
-        AppStorage.baseUrl               = appConfig.BaseAPIURL
-        AppStorage.transactionDetailsUrl = appConfig.TransactionDetailsURL
-    }
-
-    fun getBaseUrl(): String? = AppStorage.baseUrl
-
-    fun getTransactionDetailsUrl(): String? = AppStorage.transactionDetailsUrl
+    fun getTransactionDetailsUrl(): String? = dpGetTransactionDetailsUrl()
 }
+
+internal expect fun dpSaveBoolean(key: String, value: Boolean)
+internal expect fun dpGetBoolean(key: String): Boolean
+internal expect fun dpSaveKeyValue(key: String, value: String)
+internal expect fun dpGetKeyValue(key: String): String?
+internal expect fun dpSaveBiometricsStatus(status: Boolean)
+internal expect fun dpGetBiometricsStatus(): Boolean
+internal expect fun dpIsAdmin(): Boolean
+internal expect fun dpIsStaff(): Boolean
+internal expect fun dpSaveAuthDetails(authDetails: SignInResponse)
+internal expect fun dpGetAuthDetails(): SignInResponse?
+internal expect fun dpClearSharedPreferences()
+internal expect fun dpSaveCredentials(email: String, password: String)
+internal expect fun dpGetSavedCredentials(): Triple<String?, String?, String?>
+internal expect fun dpSaveTokenStatus(tokenCode: String, isVerified: Boolean)
+internal expect fun dpGetTokenStatus(): Pair<Boolean, String>
+internal expect fun dpSaveFcmToken(token: String)
+internal expect fun dpGetFcmToken(): String?
+internal expect fun dpSaveDeviceConfiguration(config: ExternalConfigurationResponse)
+internal expect fun dpGetDeviceConfiguration(): ExternalConfigurationResponse?
+internal expect fun dpGetTransactionCurrency(): String
+internal expect fun dpGetSettlementCurrency(): String
+internal expect fun dpGetTapPayDasmid(): String
+internal expect fun dpGetQRDasmid(): String
+internal expect fun dpGetPayByLinkDasmid(): String
+internal expect fun dpGetSchemes(): DevicePaymentMethod_Schemes
+internal expect fun dpGetApms(): DevicePaymentMethod_Apms
+internal expect fun dpStoreAppConfig(appConfig: AppConfig)
+internal expect fun dpGetTokenExpiry(): Long
+internal expect fun dpGetBaseUrl(): String?
+internal expect fun dpGetTransactionDetailsUrl(): String?

@@ -22,7 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.DPStorageManager
-import com.paymentoptions.pos.services.apiService.SignInResponse
+import com.paymentoptions.pos.network.SignInResponse
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen

@@ -905,34 +905,3 @@ data class AppConfigResponse(
     val success: Boolean,
     val data: List<AppConfig>,
 )
-
-// ── Convenience mapper ────────────────────────────────────────────────────────
-
-fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDataRecord =
-    TransactionListDataRecord(
-        uuid = uuid, V2UUID = uuid,
-        TransactionType = TransactionType,
-        amount = amount.toString(), CurrencyCode = CurrencyCode ?:"",
-        status = status?:"",
-        PaymentType = paymentMethod,
-        ProductType = ProductType ?: "",
-        Date = TransactionDate?:"", UpdatedDate = TransactionDate?:"",
-        TerminalId = TerminalID?:"", TerminalName = TerminalID?:"",
-        TransactionID = ID?.toIntOrNull() ?: 0,
-        SettleStatus = SettleStatus,
-        BatchID = BatchID, BatchNo = BatchNo,
-        SettledAt = "N/A",
-        AcquirerTransactionID = AcquirerTransactionID,
-        DASMID = DASMID ?: "",
-        IsVoided = IsVoided, IsRefunded = IsRefunded,
-        Isrecurring = false, IsWhitelisted = false,
-        MerchantRefID = "", LegalName = "", LegalNameInEnglish = "",
-        trackID = "", AcquirerMID = "", Scheme = "",
-        CardNumber = "", AcquirerCode = "", AuthCode = "",
-        SubscriptionId = "", PBLLinkName = "N/A",
-        GatewayResponse = "", ResponseCode = "", IntegrationType = "",
-        has3DS = false,
-    )
-
-
-

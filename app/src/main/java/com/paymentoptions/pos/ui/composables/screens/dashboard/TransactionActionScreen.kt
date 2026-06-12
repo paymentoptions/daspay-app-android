@@ -48,8 +48,8 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.paymentStatus
 import com.paymentoptions.pos.network.endpoints.refund
 import com.paymentoptions.pos.network.endpoints.void
-import com.paymentoptions.pos.services.apiService.RefundResponse
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.network.RefundResponse
+import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.toPaymentStatusRequest
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage

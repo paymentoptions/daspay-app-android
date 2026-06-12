@@ -39,7 +39,7 @@ import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import com.paymentoptions.pos.services.apiService.InsightsResponseDataRecord
+import com.paymentoptions.pos.network.InsightsResponseDataRecord
 import com.paymentoptions.pos.network.toTransactionListDataRecord
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme

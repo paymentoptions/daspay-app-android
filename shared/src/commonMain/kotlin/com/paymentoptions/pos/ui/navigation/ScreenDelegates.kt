@@ -10,6 +10,9 @@ import androidx.navigation.NavHostController
 import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.ui.screens.splash.SplashScreen
 import com.paymentoptions.pos.ui.screens.authcheck.AuthCheckScreen
+import com.paymentoptions.pos.ui.screens.fingerprintscan.FingerprintAutoLoginScreen
+import com.paymentoptions.pos.ui.screens.signin.SignInScreen
+import com.paymentoptions.pos.ui.screens.token.TokenScreen
 
 /**
  * These functions are thin delegating wrappers.
@@ -27,16 +30,16 @@ import com.paymentoptions.pos.ui.screens.authcheck.AuthCheckScreen
 fun SplashScreenPlaceholder(nav: NavHostController) = SplashScreen(nav)
 
 @Composable
-fun FingerprintScanScreenPlaceholder(nav: NavHostController) = LoadingPlaceholder()
+fun FingerprintScanScreenPlaceholder(nav: NavHostController) = FingerprintAutoLoginScreen(nav)
 
 @Composable
 fun AuthCheckScreenPlaceholder(nav: NavHostController) = AuthCheckScreen(nav)
 
 @Composable
-fun SignInScreenPlaceholder(nav: NavHostController) = LoadingPlaceholder()
+fun SignInScreenPlaceholder(nav: NavHostController) = SignInScreen(nav)
 
 @Composable
-fun TokenScreenPlaceholder(nav: NavHostController) = LoadingPlaceholder()
+fun TokenScreenPlaceholder(nav: NavHostController) = TokenScreen(nav)
 
 @Composable
 fun DashboardScreenPlaceholder(nav: NavHostController) = LoadingPlaceholder()

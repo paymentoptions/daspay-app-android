@@ -2,6 +2,7 @@ package com.paymentoptions.pos.services.apiService
 
 import com.paymentoptions.pos.auth.TokenRepository
 import com.paymentoptions.pos.storage.AppStorage
+import kotlin.concurrent.Volatile
 
 /**
  * No-op stub kept for call-site compatibility.
@@ -21,13 +22,12 @@ class TokenAutoRefresher private constructor() {
     }
 
     companion object {
-        @Volatile private var INSTANCE: TokenAutoRefresher? = null
+        @Volatile private var INSTANCE: TokenAutoRefresher = TokenAutoRefresher()
 
-        fun getInstance(@Suppress("UNUSED_PARAMETER") context: Any? = null): TokenAutoRefresher =
-            INSTANCE ?: instantiate()
+        fun getInstance() = INSTANCE
 
-        private fun instantiate(): TokenAutoRefresher = synchronized(this) {
-            INSTANCE ?: TokenAutoRefresher().also { INSTANCE = it }
-        }
+//        private fun instantiate(): () -> TokenAutoRefresher = {
+//            INSTANCE ?: TokenAutoRefresher().also { INSTANCE = it }
+//        }
     }
 }

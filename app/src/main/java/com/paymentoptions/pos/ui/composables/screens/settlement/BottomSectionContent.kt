@@ -42,7 +42,7 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.device.DPStorageManager.getSettlementCurrency
 import com.paymentoptions.pos.network.endpoints.settlementList
-import com.paymentoptions.pos.services.apiService.SettlementRecord
+import com.paymentoptions.pos.network.SettlementRecord
 import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP

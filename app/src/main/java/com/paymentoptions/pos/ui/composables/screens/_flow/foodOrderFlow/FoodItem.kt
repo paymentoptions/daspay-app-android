@@ -1,7 +1,7 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow
 
 import co.yml.charts.common.extensions.isNotNull
-import com.paymentoptions.pos.services.apiService.ProductListDataRecord
+import com.paymentoptions.pos.network.ProductListDataRecord
 import kotlinx.serialization.Serializable
 
 @Serializable

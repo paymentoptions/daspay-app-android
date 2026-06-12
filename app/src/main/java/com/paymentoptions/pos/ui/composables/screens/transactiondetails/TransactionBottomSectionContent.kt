@@ -53,8 +53,8 @@ import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.getSignature
-import com.paymentoptions.pos.services.apiService.SignatureData
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.network.SignatureData
+import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.utils.getStatusColor
 import com.paymentoptions.pos.utils.getStatusText
 import com.paymentoptions.pos.ui.composables._components.CurrencyText

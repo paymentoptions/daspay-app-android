@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ProgressState

@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.network.TransactionListV2Request
 import com.paymentoptions.pos.network.endpoints.transactionListV2
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.NoData
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens

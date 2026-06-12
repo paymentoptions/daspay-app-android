@@ -31,7 +31,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.borderThinError
 import com.paymentoptions.pos.ui.theme.green200
