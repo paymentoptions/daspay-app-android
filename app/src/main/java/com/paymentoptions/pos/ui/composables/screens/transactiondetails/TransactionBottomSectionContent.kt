@@ -81,7 +81,8 @@ import com.paymentoptions.pos.utils.getAmountSign
 import com.paymentoptions.pos.utils.getAvailableAction
 import com.paymentoptions.pos.utils.getTransactionTypeLabel
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
-import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.safeParseDateTime
+import kotlinx.datetime.toJavaInstant
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -125,10 +126,10 @@ fun TransactionBottomSectionContent(
     }
 
     val dateString =
-        transaction?.Date /*?: paymentDetailsLatestResponse?.data?.Date */ ?: OffsetDateTime.now()
+        transaction?.Date /*?: paymentDetailsLatestResponse?.data?.Date */ ?: java.time.OffsetDateTime.now()
             .toString()
-    val dateTime = safeParseOffsetDateTime(dateString)
-    val date: Date = Date.from(dateTime.toInstant())
+    val dateTime = safeParseDateTime(dateString)
+    val date: Date = Date.from(dateTime.toJavaInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM yyyy", Locale.US).format(date)
     val timeStringFormatted: String = SimpleDateFormat("hh:mm:ss a", Locale.US).format(date)
 

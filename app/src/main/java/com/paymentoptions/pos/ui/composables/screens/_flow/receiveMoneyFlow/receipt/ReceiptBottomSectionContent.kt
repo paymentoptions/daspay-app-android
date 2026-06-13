@@ -84,7 +84,8 @@ import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
-import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.safeParseDateTime
+import kotlinx.datetime.toJavaInstant
 import com.paymentoptions.pos.utils.topdf.ComposePdfExporter
 import com.paymentoptions.pos.utils.topdf.PageSize
 import com.paymentoptions.pos.utils.topdf.PdfExportProgress
@@ -120,9 +121,9 @@ fun ReceiptBottomSectionContent(
         val dateString = paymentDetailsLatestResponse?.data?.Date.toString()
         val timezoneId = paymentDetailsLatestResponse?.data?.TransactionTimezone.toString()
 
-        val utcDateTime = safeParseOffsetDateTime(dateString)
+        val utcDateTime = safeParseDateTime(dateString)
         val transactionZoneId = java.time.ZoneId.of(timezoneId)
-        val localDateTime = utcDateTime.atZoneSameInstant(transactionZoneId)
+        val localDateTime = utcDateTime.toJavaInstant().atZone(transactionZoneId)
 
         val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss (z)")
         localDateTime.format(formatter)
@@ -876,9 +877,9 @@ private fun ReceiptContentForPDF(
         val dateString = paymentDetailsLatestResponse?.data?.Date.toString()
         val timezoneId = paymentDetailsLatestResponse?.data?.TransactionTimezone.toString()
 
-        val utcDateTime = safeParseOffsetDateTime(dateString)
+        val utcDateTime = safeParseDateTime(dateString)
         val transactionZoneId = java.time.ZoneId.of(timezoneId)
-        val localDateTime = utcDateTime.atZoneSameInstant(transactionZoneId)
+        val localDateTime = utcDateTime.toJavaInstant().atZone(transactionZoneId)
 
         val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss (z)")
         localDateTime.format(formatter)

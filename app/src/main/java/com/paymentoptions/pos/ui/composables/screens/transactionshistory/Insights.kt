@@ -39,7 +39,9 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.formatToPrecisionString
-import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.safeParseDateTime
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.TimeZone
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
@@ -84,7 +86,7 @@ fun Insights(
 
                 if (index == 0) chartMaxValue = transaction.amount.toFloat()
 
-                val date = safeParseOffsetDateTime(transactionDate).toLocalDateTime()
+                val date = safeParseDateTime(transactionDate).toLocalDateTime(TimeZone.currentSystemDefault())
 
                 barData.add(
                     BarData(
@@ -92,7 +94,7 @@ fun Insights(
                         color = if (transaction.TransactionType == "REFUND") red500.copy(alpha = 0.8f) else Color.Green.copy(
                             alpha = 0.8f
                         ),
-                        label = "${date.dayOfMonth} ${months[date.monthValue - 1]}",
+                        label = "${date.dayOfMonth} ${months[date.monthNumber - 1]}",
                         gradientColorList = listOf(Color.Blue, Color.Yellow, Color.Green),
                         description = if (transaction.TransactionType == "REFUND") "Refund Txn #: ${transaction.uuid}" else "Purchase Txn #: ${transaction.uuid}",
                     )

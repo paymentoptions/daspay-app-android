@@ -80,7 +80,8 @@ import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
-import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.safeParseDateTime
+import kotlinx.datetime.toJavaInstant
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -282,9 +283,10 @@ fun StatusBottomSectionContent(
                     TransactionDetailRow(
                         label = "Date",
                         value = try {
-                            val utcDateTime = safeParseOffsetDateTime(dateString)
+                            val utcDateTime = safeParseDateTime(dateString).toJavaInstant()
                             val formatter = java.time.format.DateTimeFormatter.ofPattern("dd MMMM yyyy")
-                            utcDateTime.format(formatter)
+                                .withZone(java.time.ZoneId.of("UTC"))
+                            formatter.format(utcDateTime)
                         } catch (e: Exception) {
                             "N/A"
                         }

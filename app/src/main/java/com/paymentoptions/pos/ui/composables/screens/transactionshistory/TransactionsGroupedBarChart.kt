@@ -49,7 +49,9 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.formatToPrecisionString
-import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.safeParseDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -135,7 +137,7 @@ fun TransactionsGroupedBarChart(
 
             transactions.forEach { transaction ->
                 if (transaction.status == "SUCCESSFUL") {
-                    val date = safeParseOffsetDateTime(transaction.TransactionDate?:"").toLocalDateTime()
+                    val date = safeParseDateTime(transaction.TransactionDate?:"").toLocalDateTime(TimeZone.currentSystemDefault())
                     val hour = date.hour
                     if (hour < minHour) minHour = hour
                     if (hour > maxHour) maxHour = hour
@@ -210,8 +212,8 @@ fun TransactionsGroupedBarChart(
     // Process transactions based on display mode
     transactions.forEach { transaction ->
         if (transaction.status == "SUCCESSFUL") {
-            val txnDateTime = safeParseOffsetDateTime(transaction.TransactionDate?:"")
-            val txnDate = txnDateTime.toLocalDate()
+            val txnDateTime = safeParseDateTime(transaction.TransactionDate?:"").toLocalDateTime(TimeZone.currentSystemDefault())
+            val txnDate = java.time.LocalDate.of(txnDateTime.year, txnDateTime.monthNumber, txnDateTime.dayOfMonth)
             val txnHour = txnDateTime.hour
 
             val slotIndex = when (displayMode) {
@@ -220,7 +222,7 @@ fun TransactionsGroupedBarChart(
                     var minHour = 24
                     transactions.forEach { t ->
                         if (t.status == "SUCCESSFUL") {
-                            val h = safeParseOffsetDateTime(t.TransactionDate?:"").hour
+                            val h = safeParseDateTime(t.TransactionDate?:"").toLocalDateTime(TimeZone.currentSystemDefault()).hour
                             if (h < minHour) minHour = h
                         }
                     }

@@ -49,7 +49,8 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.formatToPrecisionString
-import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.safeParseDateTime
+import kotlinx.datetime.toJavaInstant
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -81,8 +82,8 @@ fun TransactionFailedBottomSectionContent(
     val dateString =
         paymentDetailsLatestResponse?.data?.Date ?: OffsetDateTime.now()
             .toString()  //"2025-04-23T03:38:57.349+00:00"
-    val dateTime = safeParseOffsetDateTime(dateString)
-    val date: Date = Date.from(dateTime.toInstant())
+    val dateTime = safeParseDateTime(dateString)
+    val date: Date = Date.from(dateTime.toJavaInstant())
     val formattedDate = SimpleDateFormat("dd MMMM YYYY").format(date)
 
     var shareableFailureText =

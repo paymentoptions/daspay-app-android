@@ -85,7 +85,8 @@ import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
-import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.safeParseDateTime
+import kotlinx.datetime.toJavaInstant
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -143,10 +144,10 @@ fun TransactionSuccessfulBottomSectionContent(
     }
 
     val dateString =
-        paymentDetailsLatestResponse?.data?.Date ?: OffsetDateTime.now()
+        paymentDetailsLatestResponse?.data?.Date ?: java.time.OffsetDateTime.now()
             .toString()
-    val dateTime = safeParseOffsetDateTime(dateString)
-    val date: Date = Date.from(dateTime.toInstant())
+    val dateTime = safeParseDateTime(dateString)
+    val date: Date = Date.from(dateTime.toJavaInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
 
     var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }

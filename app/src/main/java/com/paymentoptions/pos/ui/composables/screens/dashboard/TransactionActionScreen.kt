@@ -66,7 +66,8 @@ import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.parseApiErrorMessage
-import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.safeParseDateTime
+import kotlinx.datetime.toJavaInstant
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
@@ -101,8 +102,8 @@ fun TransactionActionScreen(
     val delayTime = 5000L
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val dateString = transaction.Date   //"2025-04-23T03:38:57.349+00:00"
-    val dateTime = safeParseOffsetDateTime(dateString)
-    val date: Date = Date.from(dateTime.toInstant())
+    val dateTime = safeParseDateTime(dateString)
+    val date: Date = Date.from(dateTime.toJavaInstant())
     val dateStringFormatted = SimpleDateFormat("dd MMMM, YYYY", Locale.US).format(date)
     val notesInput = remember { TextFieldState() }
 
