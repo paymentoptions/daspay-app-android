@@ -36,7 +36,7 @@ import com.paymentoptions.pos.ui.composables.screens.splash.SplashScreen
 import com.paymentoptions.pos.ui.composables.screens.token.TokenScreen
 import com.paymentoptions.pos.ui.composables.screens.transactiondetails.TransactionDetailsScreen
 import com.paymentoptions.pos.ui.composables.screens.transactiondetails.TransactionStatusScreen
-import com.paymentoptions.pos.ui.composables.screens.transactionshistory.TransactionHistoryScreen
+import com.paymentoptions.pos.ui.screens.transactionshistory.TransactionHistoryScreen
 import com.paymentoptions.pos.utils.TransactionAction
 import kotlinx.coroutines.flow.collectLatest
 import java.net.URLDecoder

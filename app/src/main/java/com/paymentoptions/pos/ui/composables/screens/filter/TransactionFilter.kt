@@ -62,8 +62,8 @@ import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseBut
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.simple.SimpleLayoutWithNavigation
-import com.paymentoptions.pos.ui.composables.screens.transactionshistory.Transactions
-import com.paymentoptions.pos.ui.composables.screens.transactionshistory.TransactionsGroupedBarChart
+import com.paymentoptions.pos.ui.screens.transactionshistory.Transactions
+import com.paymentoptions.pos.ui.screens.transactionshistory.TransactionsGroupedBarChart
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.innerShadow
@@ -570,8 +570,8 @@ fun SearchResultsContent(
                         if (showBarChart) TransactionsGroupedBarChart(
                             navController = navController,
                             transactions = transactions,
-                            startDate = startDate,
-                            endDate = endDate,
+                            startDateMillis = startDate.toInstant().toEpochMilli(),
+                            endDateMillis = endDate.toInstant().toEpochMilli(),
                             currency = currency,
                             updateReceivalAmount = {
                                 updateReceivalAmount(it)

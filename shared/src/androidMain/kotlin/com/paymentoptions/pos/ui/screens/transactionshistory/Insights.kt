@@ -1,4 +1,4 @@
-package com.paymentoptions.pos.ui.composables.screens.transactionshistory
+package com.paymentoptions.pos.ui.screens.transactionshistory
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -414,36 +414,6 @@ fun Insights(
                     )
                 }
             }
-
-//            AssistChip(
-//                modifier = Modifier
-//                    .fillMaxWidth(),
-//                onClick = { },
-//                label = {
-//                    Text(
-//                        text = higherString,
-//                        fontSize = 10.sp,
-//                        fontWeight = FontWeight.Medium,
-//                        color = primary500,
-//                        lineHeight = 16.sp,
-//                        maxLines = 1,
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(vertical = 6.dp),
-//                    )
-//                },
-//                border = noBorder,
-//                colors = AssistChipDefaults.assistChipColors(
-//                    containerColor = Color.LightGray.copy(0.2f)
-//                ),
-//                leadingIcon = {
-//                    Icon(
-//                        modifier = Modifier.offset(y = 8.dp),
-//                        painter = painterResource(R.drawable.higher),
-//                        contentDescription = "Hint",
-//                        tint = Color(0xFF1BCC91),
-//                    )
-//                })
 
         }
     }

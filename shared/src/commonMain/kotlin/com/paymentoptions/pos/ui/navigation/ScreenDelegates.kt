@@ -13,6 +13,7 @@ import com.paymentoptions.pos.ui.screens.authcheck.AuthCheckScreen
 import com.paymentoptions.pos.ui.screens.fingerprintscan.FingerprintAutoLoginScreen
 import com.paymentoptions.pos.ui.screens.signin.SignInScreen
 import com.paymentoptions.pos.ui.screens.token.TokenScreen
+import com.paymentoptions.pos.ui.screens.transactionshistory.TransactionHistoryScreen
 
 /**
  * These functions are thin delegating wrappers.
@@ -54,7 +55,7 @@ fun ReceiveMoneyFlowPlaceholder(nav: NavHostController) = LoadingPlaceholder()
 fun NotificationsScreenPlaceholder(nav: NavHostController) = LoadingPlaceholder()
 
 @Composable
-fun TransactionHistoryScreenPlaceholder(nav: NavHostController, showBarChart: Boolean) = LoadingPlaceholder()
+fun TransactionHistoryScreenPlaceholder(nav: NavHostController, showBarChart: Boolean) = TransactionHistoryScreen(nav, showBarChart)
 
 @Composable
 fun TransactionStatusScreenPlaceholder(
