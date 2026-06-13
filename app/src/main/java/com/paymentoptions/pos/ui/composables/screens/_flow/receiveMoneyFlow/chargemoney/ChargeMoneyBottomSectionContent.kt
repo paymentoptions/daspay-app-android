@@ -77,6 +77,7 @@ import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
 import com.paymentoptions.pos.services.apiService.toPaymentStatusRequest
 import com.paymentoptions.pos.utils.PaymentMethod
+import com.paymentoptions.pos.utils.showSessionExpiredAndNavigateToFingerprint
 
 import com.theminesec.lib.dto.transaction.Transaction
 import com.theminesec.sdk.headless.HeadlessActivity
@@ -292,15 +293,10 @@ fun Tap_ChargeMoney(
     val authDetails = DPStorageManager.getAuthDetails()
     AppLogger.debug("TapToPay entry: amount=$amountToCharge, authAvailable=${authDetails != null}")
 
-    if (authDetails == null) {
+    if (authDetails == null || authDetails.data == null || authDetails.data!!.token.idToken.isBlank()) {
         AppLogger.warn("TapToPay aborted: auth details not found, redirecting to auth")
-        Toast.makeText(
-            context, "Your session has expired. Please log in again to continue.", Toast.LENGTH_LONG
-        ).show()
-        DPStorageManager.clearSharedPreferences()
-        navController.navigate(Screens.AuthCheck.route) {
-            popUpTo(0) { inclusive = true }
-        }
+        showSessionExpiredAndNavigateToFingerprint(navController)
+        return
     }
 
     
@@ -478,15 +474,8 @@ fun Tap_ChargeMoney(
                 println("paymentResponse: $paymentResponse")
                 if (paymentResponse == null) {
                     AnalyticsHelper.trackPaymentFailed(reason = "Payment response is null")
-                    Toast.makeText(
-                        context,
-                        "Your session has expired. Please log in again to continue.",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    DPStorageManager.clearSharedPreferences()
-                    navController.navigate(Screens.AuthCheck.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
+                    showSessionExpiredAndNavigateToFingerprint(navController)
+                    return@launch
                 }
 
                 paymentResponse?.let {

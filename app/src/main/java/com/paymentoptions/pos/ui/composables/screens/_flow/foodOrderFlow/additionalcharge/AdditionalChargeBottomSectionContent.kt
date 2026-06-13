@@ -51,6 +51,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
+import com.paymentoptions.pos.utils.showSessionExpiredAndNavigateToFingerprint
 
 @Composable
 fun AdditionalChargeBottomSectionContent(
@@ -91,16 +92,9 @@ fun AdditionalChargeBottomSectionContent(
     val authDetails = DPStorageManager.getAuthDetails()
     val noteState = rememberTextFieldState()
 
-    if (authDetails == null) {
-        Toast.makeText(
-            context,
-            "Your session has expired. Please log in again to continue.",
-            Toast.LENGTH_LONG
-        ).show()
-        DPStorageManager.clearSharedPreferences()
-        navController.navigate(Screens.AuthCheck.route) {
-            popUpTo(0) { inclusive = true }
-        }
+    if (authDetails == null || authDetails.data == null || authDetails.data!!.token.idToken.isBlank()) {
+        showSessionExpiredAndNavigateToFingerprint(navController)
+        return
     }
 
     val currency = getTransactionCurrency()

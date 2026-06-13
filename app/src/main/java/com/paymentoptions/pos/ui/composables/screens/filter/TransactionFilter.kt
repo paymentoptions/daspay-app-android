@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -259,7 +261,14 @@ fun TransactionFilter(navController: NavController) {
                             label = "Amount :",
                             state = amountState,
                             onValueChange = { },
-                            placeholder = "Enter amount"
+                            placeholder = "Enter amount",
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            inputTransformation = InputTransformation {
+                                val regex = Regex("^\\d*\\.?\\d{0,2}$")
+                                if (!asCharSequence().matches(regex)) {
+                                    revertAllChanges()
+                                }
+                            }
                         )
 
                         // Tranx ID field
@@ -598,7 +607,9 @@ fun FilterTextInputField(
     modifier: Modifier = Modifier,
     placeholder: String = "",
     textFieldHeight: Dp = 46.dp,
-    trailingIcon: @Composable (() -> Unit)? = null
+    trailingIcon: @Composable (() -> Unit)? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    inputTransformation: InputTransformation? = null
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -623,7 +634,8 @@ fun FilterTextInputField(
             ) {
                 TextField(
                     state = state!!,
-                    keyboardOptions = KeyboardOptions.Default,
+                    keyboardOptions = keyboardOptions,
+                    inputTransformation = inputTransformation,
                     placeholder = {
                         Text(
                             placeholder,
