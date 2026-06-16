@@ -1,5 +1,11 @@
 package com.paymentoptions.pos
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Path
+import coil3.Uri
+import kotlinx.datetime.Instant
+
 /**
  * Platform-specific capabilities surfaced to commonMain via expect/actual.
  *
@@ -97,3 +103,88 @@ fun urlDecode(value: String): String {
     }
     return result.toString()
 }
+
+// ── Settings Navigation ───────────────────────────────────────────────────────
+
+/** Open device NFC settings. No-op if not supported. */
+expect fun openNfcSettings()
+
+/** Open device Developer Options. No-op if not supported. */
+expect fun openDeveloperSettings()
+
+// ── Date Formatting ──────────────────────────────────────────────────────────
+
+/**
+ * Formats a timestamp (epoch milliseconds) using the given pattern.
+ * Uses platform-native formatters (SimpleDateFormat on Android, NSDateFormatter on iOS).
+ */
+expect fun formatDate(instant: Instant, pattern: String): String
+
+// ── Image Handling ────────────────────────────────────────────────────────────
+
+/** Generates a signature image from a Path. */
+expect fun createSignatureImage(
+    path: Path,
+    width: Float,
+    height: Int,
+    isDrawnTopToBottom: Boolean
+): ImageBitmap?
+
+/** Converts an ImageBitmap to a ByteArray (PNG format). */
+expect fun imageBitmapToByteArray(bitmap: ImageBitmap): ByteArray
+
+/** Decodes an image from a URI (represented as Any for platform flexibility). */
+expect fun decodeImageFromUri(uri: Any): ImageBitmap?
+
+// ── Image Picker ──────────────────────────────────────────────────────────────
+
+interface KmpImagePickerLauncher {
+    fun launch()
+}
+
+/** Remembers a platform-specific image picker launcher. */
+@Composable
+expect fun rememberKmpImagePickerLauncher(onResult: (Uri?) -> Unit): KmpImagePickerLauncher
+
+interface KmpCameraLauncher {
+    fun launch()
+}
+
+/** Remembers a platform-specific camera launcher. */
+@Composable
+expect fun rememberKmpCameraLauncher(onResult: (Uri?) -> Unit): KmpCameraLauncher
+
+interface KmpFilePickerLauncher {
+    fun launch(mimeType: String)
+}
+
+/** Remembers a platform-specific file picker launcher. */
+@Composable
+expect fun rememberKmpFilePickerLauncher(onResult: (Uri?) -> Unit): KmpFilePickerLauncher
+
+// ── Permissions ───────────────────────────────────────────────────────────────
+
+interface KmpPermissionLauncher {
+    fun launch()
+}
+
+/** Remembers a launcher to request location permission. */
+@Composable
+expect fun rememberLocationPermissionLauncher(onResult: (Boolean) -> Unit): KmpPermissionLauncher
+
+/** Returns true if location permission is already granted. */
+expect fun isLocationPermissionGranted(): Boolean
+
+// ── Lifecycle ─────────────────────────────────────────────────────────────────
+
+/** Performs [onResume] whenever the screen becomes active/resumed. */
+@Composable
+expect fun OnResume(onResume: () -> Unit)
+
+// ── File Handling ─────────────────────────────────────────────────────────────
+
+/** Opens a PDF file using the platform's default viewer. */
+expect fun openPdf(filePath: String)
+
+/** Zips and shares application logs via email/chooser. */
+expect fun sendLogsToSdkTeam()

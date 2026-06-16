@@ -86,7 +86,7 @@ fun FingerprintAutoLoginScreen(navController: NavController) {
                         AutoSignInOutcome.Success -> {
                             showToast("Auto sign-in is successful")
                             navController.navigate(Screens.Dashboard.route) {
-                                popUpTo(0) { inclusive = true }
+                                popUpTo(Screens.Dashboard.route) { inclusive = true }
                                 launchSingleTop = true
                             }
                         }
@@ -267,7 +267,7 @@ private fun handleAutoSignInFailure(navController: NavController) {
     AuthEventManager.requireManualSignIn()
     AppStorage.clearAll()
     navController.navigate(Screens.AuthCheck.route) {
-        popUpTo(0) { inclusive = true }
+        popUpTo(Screens.AuthCheck.route) { inclusive = true }
     }
 }
 

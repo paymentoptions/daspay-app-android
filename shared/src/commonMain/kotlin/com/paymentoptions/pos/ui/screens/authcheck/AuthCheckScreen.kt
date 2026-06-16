@@ -25,9 +25,9 @@ fun AuthCheckScreen(navController: NavController) {
 
         if (isLoggedIn) {
             if (isTokenVerified) {
-                // If logged in and token verified, go to fingerprint/dashboard
-                navController.navigate(Screens.FingerprintScan.route) {
-                    popUpTo(Screens.AuthCheck.route) { inclusive = true }
+                // If logged in and token verified, go to dashboard
+                navController.navigate(Screens.Dashboard.route) {
+                    popUpTo(Screens.Dashboard.route) { inclusive = true }
                 }
             } else {
                 // If logged in but token not verified, go to token verification

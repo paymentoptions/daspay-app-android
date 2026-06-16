@@ -91,6 +91,9 @@ kotlin {
                 // Coil 3 – api() so app image components can use AsyncImage
                 api(libs.coil.compose)
                 implementation(libs.coil.network.ktor2)
+
+                // KoalaPlot for KMP Charts
+               // implementation(libs.koalaplot)
             }
         }
 
@@ -130,6 +133,16 @@ kotlin {
 
                 // QR Code (ZXing)
                 implementation(libs.core)
+
+                // Charts
+                implementation(libs.mpandroidchart)
+                implementation(libs.ycharts)
+
+                // Pull-to-refresh (Android dashboard)
+                implementation(libs.accompanist.swiperefresh)
+
+                // MineSec SoftPOS tap-to-pay
+                implementation(libs.headless.stage)
             }
         }
 

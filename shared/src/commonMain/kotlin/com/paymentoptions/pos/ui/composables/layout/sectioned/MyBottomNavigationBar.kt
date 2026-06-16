@@ -193,8 +193,8 @@ fun MyBottomNavigationBar(
                         AnalyticsHelper.trackLogout()
                         TokenAutoRefresher.getInstance()?.onUserSignedOut()
                         DPStorageManager.clearSharedPreferences()
-                        navController.navigate(Screens.AuthCheck.route) {
-                            popUpTo(0) { inclusive = true }
+                        navController.navigate(Screens.FingerprintScan.route) {
+                            popUpTo(Screens.FingerprintScan.route) { inclusive = true }
                         }
                     }
 

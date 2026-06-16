@@ -1,6 +1,5 @@
 package com.paymentoptions.pos
 
-import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -11,8 +10,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
-import com.paymentoptions.pos.device.LockScreenOrientation
-import com.paymentoptions.pos.device.NetworkStatusComposable
 import com.paymentoptions.pos.storage.initAppStorage
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.theminesec.sdk.headless.HeadlessSetup
@@ -40,9 +37,8 @@ class MainActivity : FragmentActivity() {
         setContent {
 
             AppTheme {
-                NetworkStatusComposable()
+                App(buildTimeBaseUrl = BuildConfig.CONFIG_BASE_URL)
             }
-            //App(buildTimeBaseUrl = BuildConfig.CONFIG_BASE_URL)
         }
     }
 

@@ -143,6 +143,6 @@ internal actual fun dpStoreAppConfig(appConfig: AppConfig) {
 
 internal actual fun dpGetTokenExpiry(): Long = storage.tokenExpiry
 
-internal actual fun dpGetBaseUrl(): String? = storage.baseUrl
+internal actual fun dpGetBaseUrl(): String? = "https://api-dev.paymentoptions.com/api/v1/"//storage.baseUrl
 
-internal actual fun dpGetTransactionDetailsUrl(): String? = storage.transactionDetailsUrl
+internal actual fun dpGetTransactionDetailsUrl(): String? =  "https://dev.paymentoptions.com/daspay-transaction-details/"//storage.transactionDetailsUrl

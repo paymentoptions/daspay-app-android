@@ -43,28 +43,31 @@ fun Navigator(
         }
     }
 
-    NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination,
+    ) {
 
         // ── Biometrics & Auth ─────────────────────────────────────────────
         composable(Screens.FingerprintScan.route) {
-            FingerprintScanScreenPlaceholder(navController)
+            OpenFingerprintScanScreen(navController)
         }
         composable(Screens.AuthCheck.route) {
-            AuthCheckScreenPlaceholder(navController)
+            OpenAuthCheckScreen(navController)
         }
         composable(Screens.SignIn.route) {
-            SignInScreenPlaceholder(navController)
+            OpenSignInScreen(navController)
         }
         composable(Screens.Token.route) {
-            TokenScreenPlaceholder(navController)
+            OpenTokenScreen(navController)
         }
 
         // ── Bottom Nav ────────────────────────────────────────────────────
         composable(Screens.Splash.route) {
-            SplashScreenPlaceholder(navController)
+            OpenSplashScreen(navController)
         }
         composable(Screens.Dashboard.route) {
-            DashboardScreenPlaceholder(navController)
+            OpenDashboardScreen(navController)
         }
         composable(Screens.FoodOrderFlow.route) {
             FoodOrderFlowPlaceholder(navController)
@@ -132,8 +135,10 @@ fun Navigator(
             val json = urlDecode(back.arguments?.getString("transactionJson") ?: "")
             val txn  = runCatching {
                 val parsed = Json { ignoreUnknownKeys = true }.decodeFromString<TransactionListDataRecord>(json)
-                if (parsed.MerchantRefID.isNotBlank()) parsed else null
+//                if (parsed.MerchantRefID.isNotBlank()) parsed else null
+                parsed
             }.getOrNull()
+         //   platformLog("Navigator", "Navigating Parsed transaction for details screen: $txn")
 
             TransactionDetailsScreenPlaceholder(navController, txn)
         }

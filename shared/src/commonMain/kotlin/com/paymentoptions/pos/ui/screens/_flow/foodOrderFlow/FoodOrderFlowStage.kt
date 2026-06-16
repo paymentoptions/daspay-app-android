@@ -1,0 +1,6 @@
+package com.paymentoptions.pos.ui.screens._flow.foodOrderFlow
+
+
+enum class FoodOrderFlowStage {
+    MENU, REVIEW_CART, ADDITIONAL_CHARGE, CHARGE_MONEY, RESULT_PROCESSING, RESULT_ERROR, RESULT_SUCCESS, DIGITAL_SIGNATURE, RECEIPT, ADD_PRODUCT, EDIT_PRODUCT
+}

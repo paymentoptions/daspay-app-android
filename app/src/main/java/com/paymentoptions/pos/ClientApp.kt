@@ -81,7 +81,6 @@ class ClientApp : Application() {
                 val setupFailureDetected = res.toString().contains("Failure(")
                 if (setupFailureDetected) {
                     Toast.makeText(this@ClientApp, "MineSec initial setup reported failures. Please report.", Toast.LENGTH_LONG).show()
-                    AppLogger.error("MineSec initialSetup contains failure result. If all entries fail with 987142, initSoftPos likely did not initialize the SDK runtime")
                 } else {
                     AppLogger.info("MineSec initialSetup completed without reported failures")
                 }

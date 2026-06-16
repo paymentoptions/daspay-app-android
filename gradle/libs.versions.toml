@@ -59,7 +59,7 @@ ktor = "2.3.12"
 multiplatformSettings = "1.2.0"
 
 # ── JetBrains Navigation Compose (CMP-compatible navigation) ─────────────────
-jetbrainsNavigation = "2.8.0-alpha10"
+jetbrainsNavigation = "2.9.2"
 
 # ── Coroutines ────────────────────────────────────────────────────────────────
 coroutines = "1.9.0"

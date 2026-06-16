@@ -124,6 +124,8 @@ fun TokenBottomSectionContent(navController: NavController, enableScrolling: Boo
         ) {
             repeat(6) { idx ->
                 val ch = otp.getOrNull(idx)?.toString() ?: ""
+                val isFilled = ch.isNotEmpty()
+
                 MyElevatedCard(modifier = Modifier.weight(1f)) {
                     OutlinedButton(
                         enabled = false,
@@ -132,17 +134,33 @@ fun TokenBottomSectionContent(navController: NavController, enableScrolling: Boo
                         modifier = Modifier
                             .height(70.dp)
                             .fillMaxWidth()
-                            .innerShadow(
-                                color = primary300,
-                                blur = 15.dp,
-                                spread = 5.dp,
-                                cornersRadius = 5.dp,
-                                offsetX = 0.dp,
-                                offsetY = 0.dp,
-                            )
-                            .background(primary50),
+                            .then(
+                                // Conditionally apply the shadow and background only if filled,
+                                // matching the original file's behavior.
+                                if (isFilled) {
+                                    Modifier
+                                        .innerShadow(
+                                            color = primary300,
+                                            blur = 15.dp,
+                                            spread = 5.dp,
+                                            cornersRadius = 5.dp,
+                                            offsetX = 0.dp,
+                                            offsetY = 0.dp,
+                                        )
+                                        .background(primary50)
+                                } else {
+                                    Modifier
+                                }
+                            ),
                     ) {
-                        Text(ch, color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Normal, textAlign = TextAlign.Center)
+                        Text(
+                            text = ch,
+                            // Match the original text colors
+                            color = if (isFilled) Color.White else primary500,
+                            fontSize = 30.sp,
+                            fontWeight = FontWeight.Normal,
+                            textAlign = TextAlign.Center
+                        )
                     }
                 }
             }
@@ -251,7 +269,7 @@ fun TokenBottomSectionContent(navController: NavController, enableScrolling: Boo
                                     showToast("Token expired. Please sign in again.")
                                     DPStorageManager.clearSharedPreferences()
                                     navController.navigate(Screens.AuthCheck.route) {
-                                        popUpTo(0) { inclusive = true }
+                                        popUpTo(Screens.AuthCheck.route) { inclusive = true }
                                     }
                                 } else {
                                     errorMessage = exceptionMessage

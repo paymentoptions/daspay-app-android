@@ -31,8 +31,7 @@ object ConfigurationManager {
             if (savedBaseUrl != appConfig.BaseAPIURL) {
                 DPStorageManager.storeAppConfig(appConfig)
                 // Notify KtorClient that the base URL may have changed
-                com.paymentoptions.pos.network.ConfigurationManager.buildTimeBaseUrl =
-                    com.paymentoptions.pos.network.ConfigurationManager.buildTimeBaseUrl
+                buildTimeBaseUrl = DPStorageManager.getBaseUrl() ?: appConfig.BaseAPIURL
             }
             true
         } catch (e: Exception) {
@@ -47,7 +46,7 @@ object ConfigurationManager {
             ?: buildTimeBaseUrl
 
     fun url(path: String): String {
-        val base = activeBaseUrl.trimEnd('/')
+        val base = "https://api-dev.paymentoptions.com/api/v1/".trimEnd('/')
         val segment = path.trimStart('/')
         return "$base/$segment"
     }

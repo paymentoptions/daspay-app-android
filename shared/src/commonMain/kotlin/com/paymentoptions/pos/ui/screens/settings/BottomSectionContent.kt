@@ -1,0 +1,192 @@
+package com.paymentoptions.pos.ui.screens.settings
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Mail
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.getBiometricAuthenticator
+import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.SignOutResponse
+import com.paymentoptions.pos.network.endpoints.signOut
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
+import com.paymentoptions.pos.showToast
+import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
+import com.paymentoptions.pos.ui.composables._components.MySwitch
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
+import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
+import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
+import com.paymentoptions.pos.ui.navigation.Screens
+import com.paymentoptions.pos.ui.screens.fingerprintscan.FingerprintScanScreen
+import com.paymentoptions.pos.ui.theme.primary500
+import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.formatEpochMillis
+import kotlinx.coroutines.launch
+
+@Composable
+fun BottomSectionContent(navController: NavController) {
+    var signOutLoader by remember { mutableStateOf(false) }
+    var showSignOutConfirmationDialog by remember { mutableStateOf(false) }
+    var signOutResponse: SignOutResponse? = null
+    val scope = rememberCoroutineScope()
+    var showBiometricScreen by remember { mutableStateOf(false) }
+    var biometricsEnabled by remember { mutableStateOf(DPStorageManager.getBiometricsStatus()) }
+    val biometricAuthenticator = remember { getBiometricAuthenticator() }
+    val isBiometricsAvailable = biometricAuthenticator.isAvailable()
+
+    var authDetails = DPStorageManager.getAuthDetails()
+    val username = authDetails?.data?.name ?: ""
+    val email = authDetails?.data?.email ?: ""
+
+    val lastLoginString: String = formatEpochMillis(
+        (authDetails?.data?.auth_time?.times(1000) ?: 0L),
+        "dd MMMM yyyy | hh:mm a",
+    )
+
+    MyDialog(
+        showDialog = showSignOutConfirmationDialog,
+        title = "Confirmation Required",
+        text = "Do you want to log out?",
+        acceptButtonText = "Log Out",
+        onAcceptFn = {
+            scope.launch {
+                signOutLoader = true
+                try {
+                    signOutResponse = signOut()
+                } catch (e: Exception) {
+                    AppLogger.error("Error: ${e.toString()}")
+                } finally {
+                    TokenAutoRefresher.getInstance()?.onUserSignedOut()
+                    DPStorageManager.clearSharedPreferences()
+                    navController.navigate(Screens.Splash.route) {
+                        popUpTo(Screens.Splash.route) { inclusive = true }
+                    }
+                    signOutLoader = false
+                    showSignOutConfirmationDialog = false
+                }
+            }
+        },
+        onDismissFn = { showSignOutConfirmationDialog = false },
+    )
+
+    if (showBiometricScreen) {
+        FingerprintScanScreen(
+            navController = navController,
+            onAuthSuccess = {
+                DPStorageManager.saveBiometricsStatus(!biometricsEnabled)
+                biometricsEnabled = !biometricsEnabled
+                showBiometricScreen = false
+            },
+            onAuthFailed = { showBiometricScreen = false },
+        )
+    } else {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            ScreenTitleWithCloseButton(title = "Settings", navController = navController)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column {
+                Text(
+                    text = "Welcome,",
+                    fontWeight = FontWeight.Normal,
+                    color = primary500,
+                    fontSize = 16.sp,
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = username,
+                    fontWeight = FontWeight.Bold,
+                    color = primary500,
+                    fontSize = 20.sp,
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(text = "Last login: $lastLoginString", color = purple50, fontSize = 14.sp)
+
+                Spacer(modifier = Modifier.height(30.dp))
+
+                LinkWithIcon(text = email, url = "mailto:$email", icon = Icons.Outlined.Mail)
+
+                Spacer(modifier = Modifier.height(50.dp))
+
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color.LightGray.copy(alpha = 0.2f),
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                if (isBiometricsAvailable) {
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            "Biometric",
+                            fontWeight = FontWeight.Bold,
+                            color = primary500,
+                            fontSize = 15.sp,
+                        )
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                if (biometricsEnabled) "Enabled" else "Disabled",
+                                fontWeight = FontWeight.Medium,
+                                color = primary500,
+                                fontSize = 14.sp,
+                            )
+
+                            MySwitch(isEnabled = biometricsEnabled, onClick = {
+                                try {
+                                    showBiometricScreen = true
+                                } catch (_: Exception) {
+                                    showToast("Unable to set biometrics status")
+                                }
+                            })
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                FilledButton(
+                    text = "Logout",
+                    onClick = { showSignOutConfirmationDialog = true },
+                    isLoading = signOutLoader,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(59.dp),
+                )
+            }
+        }
+    }
+}

@@ -1,0 +1,25 @@
+package com.paymentoptions.pos.ui.screens.notifications
+
+import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
+import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
+import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
+
+@Composable
+fun NotificationsScreen(navController: NavController) {
+    val enableScrollingInsideBottomSectionContent = true
+
+    SectionedLayout(
+        navController = navController,
+        bottomSectionMinHeightRatio = 0.85f,
+        bottomSectionMaxHeightRatio = 0.85f,
+        alwaysShowLogo = false,
+        enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+        bottomBarContent = BottomBarContent.NAVIGATION_BAR,//NOTHING
+        blurTopSection = true
+    ) {
+        BottomSectionContent(
+            navController, enableScrolling = enableScrollingInsideBottomSectionContent
+        )
+    }
+}

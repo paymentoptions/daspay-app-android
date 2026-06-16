@@ -61,6 +61,7 @@ import com.paymentoptions.pos.utils.getTransactionTypeLabel
 import com.paymentoptions.pos.utils.timeAgo
 import com.paymentoptions.pos.showToast
 import com.paymentoptions.pos.utils.formatEpochMillis
+import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.parseIsoDateToMillis
 import org.jetbrains.compose.resources.painterResource
 import paymentoptionspos.shared.generated.resources.Res
@@ -92,23 +93,13 @@ fun TransactionSummary(
     val availableAction = getAvailableAction(transaction)
     val transactionTypeLabel = getTransactionTypeLabel(transaction)
 
-    // Format the amount with sign - simple precision formatting
+    // Format the amount with sign
     val amountValue = transaction.amount.toFloat()
-    val formattedAmount = if(amountValue == 0f){
-        "0.00"
-    } else {
-        // Manual formatting for 2 decimal places to avoid java.lang.String.format
-        val absoluteAmount = if (amountValue < 0) -amountValue else amountValue
-        val integralPart = absoluteAmount.toInt()
-        val fractionalPart = ((absoluteAmount - integralPart) * 100).toInt()
-        val fractionalStr = if (fractionalPart < 10) "0$fractionalPart" else fractionalPart.toString()
-        val baseFormatted = "$integralPart.$fractionalStr"
-        
-        when (amountSign) {
-            "+" -> "+$baseFormatted"
-            "-" -> "-$baseFormatted"
-            else -> baseFormatted
-        }
+    val baseFormatted = amountValue.formatToPrecisionString()
+    val formattedAmount = when (amountSign) {
+        "+" -> "+$baseFormatted"
+        "-" -> "-$baseFormatted"
+        else -> baseFormatted
     }
 
     val dateStr = buildAnnotatedString {
@@ -180,9 +171,18 @@ fun TransactionSummary(
                     )
                 }
                 .clickable {
-                    haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove) // Changed from ToggleOn which is not always available in KMP
-                    val transactionJson = Json.encodeToString(transaction)
-                    navController.navigate(Screens.TransactionDetails.createRoute(transactionJson))
+                    try {
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove) // Changed from ToggleOn which is not always available in KMP
+                        val transactionJson = Json.encodeToString(transaction)
+                        AppLogger.debug("Navigating to transaction details with JSON: $transactionJson")
+                        navController.navigate(
+                            Screens.TransactionDetails.createRoute(
+                                transactionJson
+                            )
+                        )
+                    } catch (e: Exception) {
+                        AppLogger.error("Error navigating to transaction details: ${e.message}")
+                    }
                 }
                 .weight(if (showAvailableAction) 8.5f else 1f)
         ) {
