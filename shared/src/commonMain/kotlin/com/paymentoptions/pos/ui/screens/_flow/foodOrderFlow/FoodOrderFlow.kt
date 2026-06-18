@@ -139,6 +139,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.seconds
 
 const val MAX_QUANTITY_PER_FOOD_ITEM = 20
 
@@ -917,7 +918,7 @@ fun FoodOrderFlow(
                     onLoader = { onComplete ->
                         CoroutineScope(Dispatchers.Main).launch {
                             updateFlowStage(FoodOrderFlowStage.RESULT_PROCESSING)
-                            delay(3000)
+                            delay(3.seconds)
                             onComplete()
                         }
                     },

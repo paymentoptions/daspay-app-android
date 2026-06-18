@@ -63,7 +63,7 @@ class CustomUiProvider(
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
                 spannable.setSpan(
-                    AbsoluteSizeSpan(14, true),
+                    AbsoluteSizeSpan(24, true),
                     0,
                     "Total Amount".length,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
@@ -77,7 +77,7 @@ class CustomUiProvider(
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
                 )
                 spannable.setSpan(
-                    AbsoluteSizeSpan(34, true),
+                    AbsoluteSizeSpan(44, true),
                     "Total Amount\n".length,
                     text.length,
                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE

@@ -51,6 +51,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_TOP_PADDING_I
 import com.paymentoptions.pos.ui.navigation.Screens
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.getDeviceIdentifier
+import com.paymentoptions.pos.utils.isAndroid
 import com.paymentoptions.pos.utils.parseApiErrorMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -208,7 +209,7 @@ fun FingerprintAutoLoginScreen(navController: NavController) {
 
 private suspend fun performAutoSignIn(): AutoSignInOutcome {
     return try {
-        val authCredentials = autoSignIn(getDeviceIdentifier()) ?: return AutoSignInOutcome.RequireManualSignIn
+        val authCredentials = autoSignIn(getDeviceIdentifier(), isAndroid()) ?: return AutoSignInOutcome.RequireManualSignIn
         if (authCredentials.success != true) return AutoSignInOutcome.RequireManualSignIn
 
         val otp = DPStorageManager.getSavedCredentials().third ?: return AutoSignInOutcome.RequireManualSignIn

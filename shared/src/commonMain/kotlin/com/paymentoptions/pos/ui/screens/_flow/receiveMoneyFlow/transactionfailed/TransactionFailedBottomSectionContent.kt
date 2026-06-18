@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -53,6 +52,7 @@ import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.safeParseDateTime
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.Json
 
 @Composable
 fun TransactionFailedBottomSectionContent(
@@ -73,10 +73,16 @@ fun TransactionFailedBottomSectionContent(
         }
     }
 
-    if (paymentDetailsLatestResponse != null)
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-
+    if (paymentDetailsLatestResponse != null) {
+        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
+        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
+            runCatching<AquirerResponse> {
+                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
+            }.getOrNull() ?: AquirerResponse()
+        } else {
+            AquirerResponse()
+        }
+    }
     val dateString =
         paymentDetailsLatestResponse?.data?.Date ?: Clock.System.now()
             .toString()  //"2025-04-23T03:38:57.349+00:00"

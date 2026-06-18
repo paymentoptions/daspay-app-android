@@ -82,6 +82,7 @@ import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.utils.safeParseDateTime
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.Json
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalComposeApi::class
@@ -132,10 +133,16 @@ fun StatusBottomSectionContent(
     }
 
 
-    if (paymentDetailsLatestResponse != null)
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-
+    if (paymentDetailsLatestResponse != null) {
+        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
+        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
+            runCatching<AquirerResponse> {
+                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
+            }.getOrNull() ?: AquirerResponse()
+        } else {
+            AquirerResponse()
+        }
+    }
     val transactionDetailUrl = "https://dev.paymentoptions.com/daspay-transaction-details/$transactionId"
 
     if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
@@ -477,10 +484,16 @@ private fun ReceiptContentForPDF(
         "Address unavailable"
     }
 
-    if (paymentDetailsLatestResponse != null)
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()
-
+    if (paymentDetailsLatestResponse != null) {
+        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
+        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
+            runCatching<AquirerResponse> {
+                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
+            }.getOrNull() ?: AquirerResponse()
+        } else {
+            AquirerResponse()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()

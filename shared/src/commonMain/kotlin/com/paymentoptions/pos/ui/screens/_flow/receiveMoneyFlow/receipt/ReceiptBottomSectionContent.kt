@@ -66,6 +66,7 @@ import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.network.AquirerResponse
 import com.paymentoptions.pos.network.PaymentDetailsResponse
+import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -92,8 +93,6 @@ import kotlinx.datetime.Instant
 import com.paymentoptions.pos.utils.topdf.ComposePdfExporter
 import com.paymentoptions.pos.utils.topdf.PageSize
 import com.paymentoptions.pos.utils.topdf.PdfExportProgress
-import androidx.core.content.FileProvider
-import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -157,9 +156,16 @@ fun ReceiptBottomSectionContent(
 
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
 
-    if (paymentDetailsLatestResponse != null)
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
+    if (paymentDetailsLatestResponse != null) {
+        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
+        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
+            runCatching<AquirerResponse> {
+                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
+            }.getOrNull() ?: AquirerResponse()
+        } else {
+            AquirerResponse()
+        }
+    }
 
     val transactionDetailUrl = if (transactionUuid != null) {
         "${DPStorageManager.getTransactionDetailsUrl()}/$transactionUuid"
@@ -856,10 +862,16 @@ private fun ReceiptContentForPDF(
         "Address unavailable"
     }
 
-    if (paymentDetailsLatestResponse != null)
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()
-
+    if (paymentDetailsLatestResponse != null) {
+        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
+        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
+            runCatching<AquirerResponse> {
+                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
+            }.getOrNull() ?: AquirerResponse()
+        } else {
+            AquirerResponse()
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxWidth()

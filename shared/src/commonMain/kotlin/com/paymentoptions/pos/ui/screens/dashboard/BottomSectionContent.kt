@@ -28,8 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.paymentoptions.pos.ui.composables.SwipeRefreshBox
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
@@ -52,8 +51,9 @@ import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import kotlin.math.ceil
 
 @Composable
@@ -68,10 +68,10 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var maxPage by remember { mutableIntStateOf(0) }
     val lazyColumnState = rememberLazyListState()
 
-    val today = LocalDate.now()
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
-    val dateStart = today.format(dateFormatter) + " 00:00:00"
-    val dateEnd = today.format(dateFormatter) + " 23:59:59"
+    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val dateString = today.toString().replace("-", "/")
+    val dateStart = "$dateString 00:00:00"
+    val dateEnd = "$dateString 23:59:59"
 
     val filters = listOf(
         TransactionListV2RequestFilter(
@@ -95,7 +95,6 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
 
     // Pull-to-refresh state
     var isRefreshing by remember { mutableStateOf(false) }
-    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
     fun nextPageHandler() {
         if (currentPage < maxPage) currentPage++
@@ -171,11 +170,11 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         nextPageHandler()
     }
 
-    SwipeRefresh(
-        state = swipeRefreshState,
+    SwipeRefreshBox(
+        isRefreshing = isRefreshing,
         onRefresh = {
             // Launch refresh in a coroutine
-            CoroutineScope(Dispatchers.IO).launch {
+            CoroutineScope(Dispatchers.Default).launch {
                 refreshTransactions()
             }
         }

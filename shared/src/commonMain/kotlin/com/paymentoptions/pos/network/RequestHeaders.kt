@@ -48,7 +48,7 @@ fun HttpRequestBuilder.applyDaspayHeaders() {
 }
 
 fun HttpRequestBuilder.applyDaspaySignHeaders(isAndroid: Boolean, deviceNumber: String) {
-    header("x-domain", "Daspay-Android-$deviceNumber")
+    header("x-domain", "Daspay-${if(isAndroid) "Android" else "IOS"}-$deviceNumber")
     applyDaspayHeaders()
 }
 

@@ -2,7 +2,6 @@ package com.paymentoptions.pos.utils
 
 import platform.Foundation.NSData
 import platform.Foundation.create
-import platform.Foundation.base64EncodedString
 import platform.Foundation.NSDataBase64DecodingIgnoreUnknownCharacters
 import platform.Foundation.NSString
 import platform.Foundation.NSUTF8StringEncoding
@@ -18,5 +17,5 @@ actual fun decodeBase64(input: String): String {
     val data = NSData.create(base64EncodedString = padded, options = NSDataBase64DecodingIgnoreUnknownCharacters)
         ?: return ""
     
-    return NSString.create(data = data, encoding = NSUTF8StringEncoding)?.toString() ?: ""
+    return NSString.create(data = data, encoding = NSUTF8StringEncoding) as? String ?: ""
 }

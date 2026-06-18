@@ -823,6 +823,7 @@ fun ReceiveMoneyFlow(
                         CoroutineScope(Dispatchers.IO).launch {
                             // Simulate transaction processing delay
                             delay(3.seconds)
+                            it()
                         }
                     },
                     onSuccessUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) },

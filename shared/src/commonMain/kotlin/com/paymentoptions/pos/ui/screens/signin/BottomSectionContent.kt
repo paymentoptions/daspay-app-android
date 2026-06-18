@@ -35,6 +35,7 @@ import com.paymentoptions.pos.ui.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.utils.getDeviceIdentifier
 import com.paymentoptions.pos.utils.inProduction
+import com.paymentoptions.pos.utils.isAndroid
 import com.paymentoptions.pos.utils.parseApiErrorMessage
 import com.paymentoptions.pos.utils.validation.validateEmail
 import com.paymentoptions.pos.utils.validation.validatePassword
@@ -63,6 +64,7 @@ fun SignInBottomSectionContent(navController: NavController, enableScrolling: Bo
 
     var emailError by remember { mutableStateOf(false) }
     var passwordError by remember { mutableStateOf(false) }
+
 
     LaunchedEffect(emailState.text) {
         emailError = !validateEmail(emailState.text.toString())
@@ -121,6 +123,7 @@ fun SignInBottomSectionContent(navController: NavController, enableScrolling: Bo
                             username = emailState.text.toString(),
                             password = passwordState.text.toString(),
                             deviceNumber = getDeviceIdentifier(),
+                            isAndroid = isAndroid()
                         )
 
                         AppLogger.debug("signInResponse: $signInResponse")

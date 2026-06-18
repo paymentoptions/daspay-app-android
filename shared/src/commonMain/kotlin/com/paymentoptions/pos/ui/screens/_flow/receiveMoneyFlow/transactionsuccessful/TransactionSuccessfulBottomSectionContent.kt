@@ -56,6 +56,7 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import coil3.compose.AsyncImage
+import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.network.endpoints.getSignature
@@ -129,9 +130,16 @@ fun TransactionSuccessfulBottomSectionContent(
         }
     }
 
-    if (paymentDetailsLatestResponse != null)
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
+    if (paymentDetailsLatestResponse != null) {
+        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
+        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
+            runCatching<AquirerResponse> {
+                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
+            }.getOrNull() ?: AquirerResponse()
+        } else {
+            AquirerResponse()
+        }
+    }
 
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
@@ -237,6 +245,7 @@ fun TransactionSuccessfulBottomSectionContent(
                 color = green500,
             )
 
+            AppLogger.debug("paymentDetailsLatestResponse amount: ${paymentDetailsLatestResponse?.data?.Amount}")
             CurrencyText(
                 currency = currency,
                 amount = paymentDetailsLatestResponse?.data?.Amount.formatToPrecisionString()

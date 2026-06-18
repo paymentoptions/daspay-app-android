@@ -77,6 +77,7 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.TransactionAction
+import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.getAmountSign
 import com.paymentoptions.pos.utils.getAvailableAction
@@ -154,9 +155,9 @@ fun TransactionBottomSectionContent(
         "0.00"
     } else {
         when (amountSign) {
-            "+" -> "+${"%.2f".format(transaction.amount.toFloat())}"
-            "-" -> "-${"%.2f".format(transaction.amount.toFloat())}"
-            else -> "%.2f".format(transaction.amount.toFloat())
+            "+" -> "+${transaction.amount.toFloat().formatToPrecisionString()}"
+            "-" -> "-${transaction.amount.toFloat().formatToPrecisionString()}"
+            else -> transaction.amount.toFloat().formatToPrecisionString()
         }
     }
 

@@ -54,7 +54,6 @@ actual fun TapChargeMoney(
     onFailureUpdateFlowStage: () -> Unit,
     updateLatestTransaction: (id: String) -> Unit,
 ) {
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var rawInput = ""
     var paymentLoader by remember { mutableStateOf(false) }

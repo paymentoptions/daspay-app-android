@@ -7,7 +7,6 @@ import androidx.compose.ui.graphics.Path
 import coil3.Uri
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.datetime.Instant
-import platform.Foundation.NSLog
 import platform.Foundation.NSURL
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
@@ -17,6 +16,10 @@ import platform.LocalAuthentication.LAPolicyDeviceOwnerAuthenticationWithBiometr
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
 import platform.UIKit.UIDevice
+import com.paymentoptions.pos.logger.AppLogger
+
+import platform.UIKit.UIActivityViewController
+import platform.UIKit.UIPopoverArrowDirectionAny
 
 @OptIn(ExperimentalForeignApi::class)
 // ── Biometrics ────────────────────────────────────────────────────────────────
@@ -25,7 +28,6 @@ actual fun getBiometricAuthenticator(): BiometricAuthenticator = object : Biomet
 
     override fun isAvailable(): Boolean {
         val ctx = LAContext()
-        val error = objcPtr<platform.Foundation.NSError>()
         return ctx.canEvaluatePolicy(LAPolicyDeviceOwnerAuthenticationWithBiometrics, error = null)
     }
 
@@ -46,9 +48,6 @@ actual fun getBiometricAuthenticator(): BiometricAuthenticator = object : Biomet
     }
 }
 
-// Helper to work around iOS pointer type quirks
-private fun <T> objcPtr(): T? = null
-
 // ── FCM ───────────────────────────────────────────────────────────────────────
 
 actual suspend fun getPushToken(): String? = null   // Set up APNs integration here if needed
@@ -64,18 +63,21 @@ actual fun getDeviceIpAddress(): String = "0.0.0.0"   // Implement via CFNetwork
 // ── Logging ───────────────────────────────────────────────────────────────────
 
 actual fun platformLog(tag: String, message: String) {
-    NSLog("$tag: $message")
+    AppLogger.d(tag, message)
 }
 
 actual fun platformLogError(tag: String, message: String, throwable: Throwable?) {
-    NSLog("ERROR $tag: $message ${throwable?.message ?: ""}")
+    if (throwable != null) {
+        AppLogger.e(tag, "$message - ${throwable.message}", throwable.stackTraceToString())
+    } else {
+        AppLogger.e(tag, message)
+    }
 }
 
 // ── Orientation ───────────────────────────────────────────────────────────────
 
 actual fun lockPortrait() {
     // On iOS, orientation locking is handled in AppDelegate / SwiftUI.
-    // Leave this as a no-op; configure supported orientations in Xcode project settings.
 }
 
 // ── Build flavor ──────────────────────────────────────────────────────────────
@@ -83,12 +85,10 @@ actual fun lockPortrait() {
 actual val isDebugBuild: Boolean = false
 
 actual fun showToast(message: String) {
-
+    // iOS doesn't have a native toast. Implement via Swift banner if needed.
 }
 
 actual fun openNfcSettings() {
-    // iOS doesn't have a dedicated NFC toggle in Settings like Android.
-    // NFC is always on for supported models. We can try to open General settings or the App's settings.
     val url = NSURL.URLWithString("App-Prefs:root=General")
     if (url != null && UIApplication.sharedApplication.canOpenURL(url)) {
         UIApplication.sharedApplication.openURL(url)
@@ -99,7 +99,6 @@ actual fun openNfcSettings() {
 }
 
 actual fun openDeveloperSettings() {
-    // Developer settings only appear if Developer Mode is enabled.
     val url = NSURL.URLWithString("App-Prefs:root=DEVELOPER_SETTINGS")
     if (url != null && UIApplication.sharedApplication.canOpenURL(url)) {
         UIApplication.sharedApplication.openURL(url)
@@ -125,17 +124,11 @@ actual fun createSignatureImage(
     width: Float,
     height: Int,
     isDrawnTopToBottom: Boolean
-): ImageBitmap? {
-    return null 
-}
+): ImageBitmap? = null
 
-actual fun decodeImageFromUri(uri: Any): ImageBitmap? {
-    return null
-}
+actual fun decodeImageFromUri(uri: Any): ImageBitmap? = null
 
-actual fun imageBitmapToByteArray(bitmap: ImageBitmap): ByteArray {
-    return ByteArray(0)
-}
+actual fun imageBitmapToByteArray(bitmap: ImageBitmap): ByteArray = ByteArray(0)
 
 // ── Image Picker ──────────────────────────────────────────────────────────────
 
@@ -143,9 +136,7 @@ actual fun imageBitmapToByteArray(bitmap: ImageBitmap): ByteArray {
 actual fun rememberKmpImagePickerLauncher(onResult: (Uri?) -> Unit): KmpImagePickerLauncher {
     return remember {
         object : KmpImagePickerLauncher {
-            override fun launch() {
-                // TODO: Implement native iOS image picking
-            }
+            override fun launch() {}
         }
     }
 }
@@ -154,9 +145,7 @@ actual fun rememberKmpImagePickerLauncher(onResult: (Uri?) -> Unit): KmpImagePic
 actual fun rememberKmpCameraLauncher(onResult: (Uri?) -> Unit): KmpCameraLauncher {
     return remember {
         object : KmpCameraLauncher {
-            override fun launch() {
-                // TODO: Implement native iOS camera
-            }
+            override fun launch() {}
         }
     }
 }
@@ -165,26 +154,21 @@ actual fun rememberKmpCameraLauncher(onResult: (Uri?) -> Unit): KmpCameraLaunche
 actual fun rememberKmpFilePickerLauncher(onResult: (Uri?) -> Unit): KmpFilePickerLauncher {
     return remember {
         object : KmpFilePickerLauncher {
-            override fun launch(mimeType: String) {
-                // TODO: Implement native iOS file picking
-            }
+            override fun launch(mimeType: String) {}
         }
     }
 }
 
 // ── Permissions ───────────────────────────────────────────────────────────────
 
-actual fun isLocationPermissionGranted(): Boolean {
-    // Basic check for iOS
-    return true // Placeholder
-}
+actual fun isLocationPermissionGranted(): Boolean = true
 
 @Composable
 actual fun rememberLocationPermissionLauncher(onResult: (Boolean) -> Unit): KmpPermissionLauncher {
     return remember {
         object : KmpPermissionLauncher {
             override fun launch() {
-                onResult(true) // Placeholder
+                onResult(true)
             }
         }
     }
@@ -193,16 +177,10 @@ actual fun rememberLocationPermissionLauncher(onResult: (Boolean) -> Unit): KmpP
 // ── Lifecycle ─────────────────────────────────────────────────────────────────
 
 @Composable
-actual fun OnResume(onResume: () -> Unit) {
-    // Placeholder
-}
+actual fun OnResume(onResume: () -> Unit) {}
 
 // ── File Handling ─────────────────────────────────────────────────────────────
 
-actual fun openPdf(filePath: String) {
-    // Placeholder
-}
+actual fun openPdf(filePath: String) {}
 
-actual fun sendLogsToSdkTeam() {
-    // Placeholder
-}
+actual fun sendLogsToSdkTeam() {}

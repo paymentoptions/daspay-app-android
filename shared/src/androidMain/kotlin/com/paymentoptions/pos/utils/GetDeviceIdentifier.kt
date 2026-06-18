@@ -7,3 +7,5 @@ actual fun getDeviceIdentifier(): String {
     val context = currentActivity ?: return "unknown"
     return Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: "unknown"
 }
+
+actual fun isAndroid() = true

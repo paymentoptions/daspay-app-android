@@ -9,11 +9,11 @@ import com.paymentoptions.pos.storage.AppStorage
  * On success: saves auth details and fetches the push token.
  * Firebase FCM is resolved via [getPushToken] (expect/actual — Android provides real token, iOS returns null).
  */
-suspend fun autoSignIn(deviceNumber: String): SignInResponse? {
+suspend fun autoSignIn(deviceNumber: String, isAndroid: Boolean): SignInResponse? {
     val username = AppStorage.savedUsername ?: return null
     val password = AppStorage.savedPassword ?: return null
 
-    val response = signIn(username, password, deviceNumber) ?: return null
+    val response = signIn(username, password, deviceNumber, isAndroid) ?: return null
 
     if (response.success == true && response.data != null) {
         val data = response.data

@@ -80,7 +80,6 @@ fun TakeDigitalSignatureBottomSectionContent(
     var path by remember { mutableStateOf(signaturePath) }
     var isSigned by remember { mutableStateOf(false) }
     var currentPosition by remember { mutableStateOf(Offset.Unspecified) }
-//    val canvasHeight = 300.dp
     var canvasWith by remember { mutableStateOf(0f) }
     var canvasHeight by remember { mutableStateOf(0) }
     var startY by remember { mutableStateOf(0f) }
@@ -145,22 +144,19 @@ fun TakeDigitalSignatureBottomSectionContent(
                     .onSizeChanged {
                         canvasWith = it.width.toFloat()
                         canvasHeight = it.height
-
                     }
                     .pointerInput(true) {
                         detectDragGestures(onDragStart = { offset ->
                             path.moveTo(offset.x, offset.y)
                             currentPosition = offset
                             isSigned = true
-                            startY = offset.y //record the starting Y position
+                            startY = offset.y
                         }, onDrag = { change, _ ->
                             path.lineTo(change.position.x, change.position.y)
                             currentPosition = change.position
                             isSigned = true
                         }, onDragEnd = {
-//                            saveBitmap = true
-                            isDrawnTopToBottom =
-                                currentPosition.y > startY //determine direction when user lifts their finger
+                            isDrawnTopToBottom = currentPosition.y > startY
                         })
                     }) {
 
@@ -171,7 +167,6 @@ fun TakeDigitalSignatureBottomSectionContent(
                         )
                     )
                 }
-
             }
         }
 
@@ -179,12 +174,9 @@ fun TakeDigitalSignatureBottomSectionContent(
 
         Text(
             text = buildAnnotatedString {
-                withStyle(
-                    SpanStyle(
-                        purple50, fontWeight = FontWeight.Medium
-                    )
-                ) { append("Signing at: ") }
-
+                withStyle(SpanStyle(purple50, fontWeight = FontWeight.Medium)) {
+                    append("Signing at: ")
+                }
                 withStyle(SpanStyle(primary500)) {
                     append(formatDate(signatureDate, "dd MMMM, YYYY HH:mm:ss"))
                 }
@@ -214,29 +206,57 @@ fun TakeDigitalSignatureBottomSectionContent(
                             isLoading = true
                             try {
                                 if (signatureBitmap != null) {
+                                    val signatureBytes = imageBitmapToByteArray(signatureBitmap)
+
+                                    AppLogger.debug(
+                                        "TakeDigitalSignature",
+                                        "Uploading signature — bytes=${signatureBytes.size} transactionId=$transactionIdValue"
+                                    )
+
                                     val response = uploadSignature(
-                                        signatureBytes = imageBitmapToByteArray(signatureBitmap),
+                                        signatureBytes = signatureBytes,
                                         transactionId = transactionIdValue
                                     )
 
                                     if (response != null && response.success) {
+                                        AppLogger.debug(
+                                            "TakeDigitalSignature",
+                                            "Signature uploaded successfully"
+                                        )
                                         showToast("Signature Uploaded Successfully")
                                         updateFlowStageToSuccess()
                                     } else {
-                                        showToast("Signature upload failed. Please try again.")
+                                        // ✅ FIX: Surface actual API error message instead of a generic string
+                                        val errorMsg = response?.message
+                                            ?: "Signature upload failed. Please try again."
+                                        AppLogger.error(
+                                            "TakeDigitalSignature",
+                                            "Upload failed — message=$errorMsg code=${response?.messageCode}"
+                                        )
+                                        showToast(errorMsg)
                                     }
+                                } else {
+                                    AppLogger.warn(
+                                        "TakeDigitalSignature",
+                                        "signatureBitmap is null after createSignatureImage — nothing to upload"
+                                    )
+                                    showToast("Could not capture signature image. Please try again.")
                                 }
                             } catch (e: Exception) {
-                                showToast("Error: ${e.message}")
+                                // ✅ FIX: e.message can be null; fallback to class name for clarity
+                                val errorMsg = e.message ?: e::class.simpleName ?: "Unknown error"
+                                AppLogger.error("TakeDigitalSignature", "Upload exception: $errorMsg", e)
+                                showToast("Error: $errorMsg")
                             } finally {
                                 isLoading = false
                             }
                         }
 
                     } else if (transactionIdValue == null) {
-                        // should not happen just for check
+                        AppLogger.error("TakeDigitalSignature", "transactionIdValue is null — cannot upload")
                         showToast("Error: Transaction ID not found.")
                     } else {
+                        // Not signed — skip upload and proceed
                         updateFlowStageToSuccess()
                     }
                 },
@@ -298,8 +318,8 @@ private fun resolveTransactionId(paymentDetailsResponse: PaymentDetailsResponse?
         }
 
         AppLogger.warn("TakeDigitalSignature", "TransactionHistory.uuid is also null/blank")
-
         null
+
     }.onFailure {
         AppLogger.error("TakeDigitalSignature", "Failed to resolve transaction id", it)
     }.getOrNull()
