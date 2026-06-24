@@ -1,6 +1,7 @@
 package com.paymentoptions.pos
 
 import android.app.Application
+import android.widget.Toast
 import com.datadog.android.Datadog
 import com.datadog.android.DatadogSite
 import com.datadog.android.core.configuration.Configuration
@@ -40,10 +41,37 @@ class ClientApp : Application() {
 
         appScope.launch {
             try {
+                AppLogger.info("MineSec bootstrap started")
+                val hasLicenseAsset = try {
+                    assets.list("")?.contains("payment-options.license") == true
+                } catch (e: Exception) {
+                    AppLogger.error("MineSec bootstrap: failed while checking license asset presence: ${e.message}", e)
+                    false
+                }
+                AppLogger.debug("MineSec bootstrap context: package=${packageName}, process=${android.os.Process.myPid()}, flavor=${BuildConfig.FLAVOR}, buildType=${BuildConfig.BUILD_TYPE}, licenseAssetPresent=$hasLicenseAsset")
+
                 AppAnalytics.mineSecSdkInitialization(step = "init_soft_pos", result = "started")
                 val clientAppInitRes =
                     HeadlessSetup.initSoftPos(this@ClientApp, "payment-options.license")
-                AppLogger.debug("Application init: $clientAppInitRes")
+                when (clientAppInitRes) {
+                    is WrappedResult.Success -> {
+                        AppLogger.info("MineSec initSoftPos success: ${clientAppInitRes.value}")
+                    }
+
+                    is WrappedResult.Failure -> {
+                        AppLogger.error(
+                            "MineSec initSoftPos failed: code=${clientAppInitRes.code}, message=${clientAppInitRes.message}, contextual=${clientAppInitRes.contextual}, extra=${clientAppInitRes.extra}"
+                        )
+                        Toast.makeText(
+                            this@ClientApp,
+                            "MineSec initialization failed: ${clientAppInitRes.message} with code ${clientAppInitRes.code}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        if (clientAppInitRes.code == 987142) {
+                            AppLogger.warn("MineSec initSoftPos failure code 987142 indicates SDK is not initialized; verify AAR compatibility and license loading")
+                        }
+                    }
+                }
 //                AppAnalytics.mineSecSdkInitialization(
 //                    step = "init_soft_pos",
 //                    result = if (clientAppInitRes is WrappedResult.Success) "success" else "failed",
@@ -51,11 +79,19 @@ class ClientApp : Application() {
 //                )
 //
 //                AppAnalytics.mineSecSdkInitialization(step = "initial_setup", result = "started")
+                AppLogger.debug("MineSec initialSetup started")
                 val res = HeadlessSetup.initialSetup(this@ClientApp)
-                AppLogger.debug("Inital Setup---> ${res}")
+                AppLogger.debug("MineSec initialSetup response: $res")
+                val setupFailureDetected = res.toString().contains("Failure(")
+                if (setupFailureDetected) {
+                    AppLogger.error("MineSec initialSetup contains failure result. If all entries fail with 987142, initSoftPos likely did not initialize the SDK runtime")
+                } else {
+                    AppLogger.info("MineSec initialSetup completed without reported failures")
+                }
                // AppAnalytics.mineSecSdkInitialization(step = "initial_setup", result = "success")
                 _sdkInitStatus.emit(clientAppInitRes)
             } catch (e: Exception) {
+                AppLogger.error("MineSec bootstrap exception: ${e.message}", e)
                 AppAnalytics.mineSecSdkInitialization(
                     step = "application_bootstrap",
                     result = "failed",

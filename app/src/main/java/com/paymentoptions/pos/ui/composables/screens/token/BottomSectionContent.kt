@@ -122,13 +122,13 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         }
 
         Text(
-            text = "Register Device", style = AppTheme.typography.screenTitle
+            text = "Enter Device PIN", style = AppTheme.typography.screenTitle
         )
 
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Enter the token provided by admin to register this device",
+            text = "Enter the PIN provided by your administrator.",
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = purple50
@@ -584,7 +584,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(59.dp),
-                text = "Register Device",
+                text = "Continue",
                 disabled = otp.value.length < 6 || isLoading,
                 onClick = {
                     // special version for debugging

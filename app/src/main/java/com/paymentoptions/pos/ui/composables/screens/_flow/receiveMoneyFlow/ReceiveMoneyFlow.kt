@@ -144,6 +144,7 @@ fun ReceiveMoneyFlow(
     val enableScrollingInsideBottomSectionContent = false
     val scrollState = rememberScrollState()
     var latestTransactionId by remember { mutableStateOf<String?>(null) }
+    var transactionFailureMessage by remember { mutableStateOf<String?>(null) }
 
     var receiveMoneyFlowStage by remember {
         mutableStateOf(initialReceiveMoneyFlowStage)
@@ -915,6 +916,7 @@ fun ReceiveMoneyFlow(
                         )
                         updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
                     },
+                    updateFailureMessage = { transactionFailureMessage = it },
                     onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) },
                     startTapAndPay = startTapAndPay,
                     updateLatestTransaction = { latestTransactionId = it })
@@ -931,7 +933,8 @@ fun ReceiveMoneyFlow(
 
         ReceiveMoneyFlowStage.TRANSACTION_FAILED -> {
             val dataMessage = MessageForStatusScreen(
-                text = "Payment Failed", statusScreenType = StatusScreenType.ERROR
+                text = transactionFailureMessage ?: "Payment Failed",
+                statusScreenType = StatusScreenType.ERROR
             )
             StatusScreen(navController, dataMessage, strategyFn = {
                 Handler().postDelayed({
@@ -950,6 +953,7 @@ fun ReceiveMoneyFlow(
                     navController,
                     enableScrolling = true,
                     transactionId = latestTransactionId.toString(),
+                    failureMessage = transactionFailureMessage,
                     updateFlowStage = { })
             }
         }

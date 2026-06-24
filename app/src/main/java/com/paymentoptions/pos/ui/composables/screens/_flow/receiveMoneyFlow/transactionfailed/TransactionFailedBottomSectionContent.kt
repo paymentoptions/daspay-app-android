@@ -59,6 +59,7 @@ import java.util.Date
 fun TransactionFailedBottomSectionContent(
     navController: NavController,
     transactionId: String,
+    failureMessage: String? = null,
     enableScrolling: Boolean = false,
     updateFlowStage: () -> Unit = {},
 ) {
@@ -127,6 +128,17 @@ fun TransactionFailedBottomSectionContent(
                 fontWeight = FontWeight.SemiBold,
                 color = red500,
             )
+
+            if (!failureMessage.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = failureMessage,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = red500,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
             CurrencyText(

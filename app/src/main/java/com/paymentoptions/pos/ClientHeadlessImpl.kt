@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.ui.AmountView
@@ -18,7 +19,10 @@ import com.theminesec.sdk.headless.ui.UiProvider
 
 class ClientHeadlessImpl : HeadlessActivity(){
     override val experimentalScreenProvider = false
-    override fun provideUi(): UiProvider {return CustomUiProvider()}
+    override fun provideUi(): UiProvider {
+        AppLogger.debug("TapToPay HeadlessActivity provideUi called; experimentalScreenProvider=$experimentalScreenProvider")
+        return CustomUiProvider()
+    }
 }
 
 
@@ -32,6 +36,7 @@ class CustomUiProvider(
             amount: Amount,
             description: String?
         ): View {
+            AppLogger.debug("TapToPay amount view creation: amount=${amount.value}, currency=${DPSharedPreferences.getTransactionCurrency(context)}, description=$description")
             return TextView(context).apply {
                 val text = "Total Amount\n${DPSharedPreferences.getTransactionCurrency(context).replace("D", "$")} ${amount.value}"
                 val spannable = SpannableString(text)

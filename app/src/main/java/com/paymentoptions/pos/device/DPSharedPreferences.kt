@@ -441,7 +441,7 @@ object DPSharedPreferences {
     fun getTransactionDetailsUrl(context: Context): String?
     {
         val sharedPreferences = getSecurePrefs(context)
-        val url =  sharedPreferences.getString("TransactionDetailsURL", "https://dev.paymentoptions.com/daspay-transaction-details/")
+        val url =  sharedPreferences.getString("TransactionDetailsURL", "https://dev.paymentoptions.com/daspay-transaction-details")
         AppLogger.debug("getTransactionDetailsUrl: $url")
         return url
     }
