@@ -1,0 +1,12 @@
+{
+  "data" : [
+    {
+      "filename" : "payment-options.license",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

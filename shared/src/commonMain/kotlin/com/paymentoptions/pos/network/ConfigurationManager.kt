@@ -17,6 +17,9 @@ object ConfigurationManager {
     /** Injected at app startup from BuildConfig (Android) / plist (iOS). */
     var buildTimeBaseUrl: String = "https://api-dev.paymentoptions.com/api/v1/"
 
+    /** Injected at app startup from BuildConfig (Android) / plist (iOS). */
+    var buildEnvironment: String = "DEV"
+
     suspend fun initializeConfig(environment: String): Boolean {
         return try {
             val appConfig = getAppConfiguration(environment)
@@ -40,13 +43,14 @@ object ConfigurationManager {
         }
     }
 
+
     val activeBaseUrl: String
-        get() = AppStorage.baseUrl?.takeIf { it.isNotBlank() }
+        get() = DPStorageManager.getBaseUrl()?.takeIf { it.isNotBlank() }
             ?: AppStorage.configBaseUrl?.takeIf { it.isNotBlank() }
             ?: buildTimeBaseUrl
 
     fun url(path: String): String {
-        val base = "https://api-dev.paymentoptions.com/api/v1/".trimEnd('/')
+        val base = activeBaseUrl.trimEnd('/')
         val segment = path.trimStart('/')
         return "$base/$segment"
     }

@@ -172,8 +172,6 @@ object AndroidAppStorage : StorageInterface {
         idToken         = null
         refreshToken    = null
         tokenExpiry     = 0L
-        userEmail       = null
-        userName        = null
         userUid         = null
         accessLevel     = null
         authDetailsJson = null

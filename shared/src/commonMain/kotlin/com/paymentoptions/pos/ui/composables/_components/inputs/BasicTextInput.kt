@@ -4,18 +4,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicSecureTextField
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
-import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.TextObfuscationMode
 import androidx.compose.foundation.text.input.maxLength
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -55,7 +55,7 @@ fun BasicTextInput(
     textFieldHeight: Dp = 46.dp,
     maxLength: Int = 50,
     onlyDigits: Boolean = false,
-    disabled: Boolean = false
+    disabled: Boolean = false,
 ) {
     var showText by remember { mutableStateOf(false) }
     var wasFocusedAtLeastOnce by remember { mutableStateOf(false) }
@@ -76,55 +76,85 @@ fun BasicTextInput(
         }
 
         Box {
-            BasicTextField(
-                state = state,
-                enabled = !disabled,
-                keyboardOptions = if (onlyDigits) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default,
-                inputTransformation = InputTransformation.maxLength(maxLength),
-                outputTransformation = OutputTransformation {
-                    if (isSecure && !showText) replace(
-                        0, this.length, "*".repeat(this.length)
-                    )
-                },
-                lineLimits = TextFieldLineLimits.SingleLine,
-                textStyle = LocalTextStyle.current.copy(
-                    color = if (error) red300 else if (disabled) purple50.copy(alpha = 0.5f) else primary500,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                ),
-                cursorBrush = SolidColor(if (error) red300 else primary500),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(textFieldHeight)
-                    .onFocusChanged { if (it.isFocused) wasFocusedAtLeastOnce = true }
-                    .background(
-                        color = if (error) red300.copy(alpha = 0.1f) else Color.White,
-                        shape = RoundedCornerShape(6.dp)
-                    )
-                    .innerShadow(
-                        blur = 16.dp,
-                        color = innerShadow,
-                        cornersRadius = 6.dp,
-                        offsetX = 0.5.dp,
-                        offsetY = 0.5.dp
+            val commonModifier = Modifier
+                .fillMaxWidth()
+                .height(textFieldHeight)
+                .onFocusChanged { if (it.isFocused) wasFocusedAtLeastOnce = true }
+                .background(
+                    color = if (error) red300.copy(alpha = 0.1f) else Color.White,
+                    shape = RoundedCornerShape(6.dp),
+                )
+                .innerShadow(
+                    blur = 16.dp,
+                    color = innerShadow,
+                    cornersRadius = 6.dp,
+                    offsetX = 0.5.dp,
+                    offsetY = 0.5.dp,
+                )
+
+            if (isSecure) {
+                BasicSecureTextField(
+                    state = state,
+                    enabled = !disabled,
+                    textObfuscationMode = if (showText) TextObfuscationMode.Visible else TextObfuscationMode.RevealLastTyped,
+                    inputTransformation = InputTransformation.maxLength(maxLength),
+                    keyboardOptions = if (onlyDigits) KeyboardOptions(keyboardType = KeyboardType.NumberPassword) else KeyboardOptions(keyboardType = KeyboardType.Password),
+                    textStyle = LocalTextStyle.current.copy(
+                        color = if (error) red300 else if (disabled) purple50.copy(alpha = 0.5f) else primary500,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
                     ),
-                decorator = { innerTextField ->
-                    Box(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        if (state.text.isEmpty()) {
-                            Text(
-                                placeholder,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = primary500.copy(alpha = 0.2f)
-                            )
+                    cursorBrush = SolidColor(if (error) red300 else primary500),
+                    modifier = commonModifier,
+                    decorator = { innerTextField ->
+                        Box(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            if (state.text.isEmpty()) {
+                                Text(
+                                    placeholder,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = primary500.copy(alpha = 0.2f),
+                                )
+                            }
+                            innerTextField()
                         }
-                        innerTextField()
-                    }
-                }
-            )
+                    },
+                )
+            } else {
+                BasicTextField(
+                    state = state,
+                    enabled = !disabled,
+                    keyboardOptions = if (onlyDigits) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default,
+                    inputTransformation = InputTransformation.maxLength(maxLength),
+                    lineLimits = TextFieldLineLimits.SingleLine,
+                    textStyle = LocalTextStyle.current.copy(
+                        color = if (error) red300 else if (disabled) purple50.copy(alpha = 0.5f) else primary500,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                    cursorBrush = SolidColor(if (error) red300 else primary500),
+                    modifier = commonModifier,
+                    decorator = { innerTextField ->
+                        Box(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            if (state.text.isEmpty()) {
+                                Text(
+                                    placeholder,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = primary500.copy(alpha = 0.2f),
+                                )
+                            }
+                            innerTextField()
+                        }
+                    },
+                )
+            }
 
             if (isSecure) Icon(
                 if (showText) Icons.Default.Visibility else Icons.Default.VisibilityOff,
@@ -133,7 +163,8 @@ fun BasicTextInput(
                 modifier = Modifier
                     .align(alignment = Alignment.CenterEnd)
                     .padding(end = 10.dp)
-                    .clickable { showText = !showText })
+                    .clickable { showText = !showText },
+            )
         }
     }
 }

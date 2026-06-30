@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import com.paymentoptions.pos.network.ConfigurationManager
 import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.ui.screens.authcheck.AuthCheckScreen
 import com.paymentoptions.pos.ui.screens.dashboard.DashboardScreen
@@ -43,7 +44,8 @@ import com.paymentoptions.pos.utils.TransactionAction
  */
 
 @Composable
-fun OpenSplashScreen(nav: NavHostController) = SplashScreen(nav, "DEV")
+fun OpenSplashScreen(nav: NavHostController) =
+    SplashScreen(nav, ConfigurationManager.buildEnvironment)
 
 @Composable
 fun OpenFingerprintScanScreen(nav: NavHostController) = FingerprintAutoLoginScreen(nav)

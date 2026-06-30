@@ -3,6 +3,7 @@ package com.paymentoptions.pos.network
 import com.paymentoptions.pos.platformLog
 import com.paymentoptions.pos.platformLogError
 import com.paymentoptions.pos.storage.AppStorage
+import com.paymentoptions.pos.utils.isAndroid
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.auth.providers.BearerTokens
@@ -47,7 +48,7 @@ object TokenRefreshService {
                 client.post(ConfigurationManager.url(ApiEndpoints.REFRESH_TOKEN)) {
                     contentType(ContentType.Application.Json)
                     setBody(RefreshTokenRequest(username, refreshToken))
-                    applyDaspaySignHeaders(true,AppStorage.deviceNumber?:"")
+                    applyDaspaySignHeaders(isAndroid(),AppStorage.deviceNumber?:"")
                 }
             } finally {
                 client.close()

@@ -3,6 +3,7 @@ package com.paymentoptions.pos.network.endpoints
 import com.paymentoptions.pos.getDeviceManufacturer
 import com.paymentoptions.pos.getDeviceOs
 import com.paymentoptions.pos.getDeviceOsVersion
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.ApiEndpoints
 import com.paymentoptions.pos.network.CompleteDeviceRegistrationRequest
 import com.paymentoptions.pos.network.CompleteDeviceRegistrationResponse
@@ -41,6 +42,8 @@ suspend fun completeDeviceRegistration(
             DeviceMetadata = deviceMetadata
         )
         AppStorage.deviceNumber = deviceNumber
+        
+        AppLogger.debug("completeDeviceRegistration: sending requestBody=$requestBody")
 
         val response = KtorClient.instance.post(ConfigurationManager.url(ApiEndpoints.COMPLETE_REGISTRATION)) {
             contentType(ContentType.Application.Json)

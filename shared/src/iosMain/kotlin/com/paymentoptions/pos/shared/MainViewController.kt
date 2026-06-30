@@ -4,40 +4,36 @@ import androidx.compose.ui.window.ComposeUIViewController
 import com.paymentoptions.pos.App
 import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.storage.createSettings
+import com.paymentoptions.pos.payment.MineSecPaymentProvider
+import com.paymentoptions.pos.payment.MineSecPlatform
 import platform.UIKit.UIViewController
 
 /**
  * iOS entry point for the shared Compose Multiplatform UI.
  *
- * Called from AppDelegate / SwiftUI:
+ * K2 Kotlin/Native only exports the first parameter of each primitive type to ObjC/Swift,
+ * so environment and isDebug are handled separately:
+ *   - environment is derived from the baseUrl hostname
+ *   - isDebug is set via setIsDebugBuild() before calling this function
  *
- * ```swift
- * import sharedKit
- *
- * struct ContentView: View {
- *     var body: some View {
- *         ComposeView()
- *             .ignoresSafeArea(.all)
- *     }
- * }
- *
- * struct ComposeView: UIViewControllerRepresentable {
- *     func makeUIViewController(context: Context) -> UIViewController {
- *         MainViewControllerKt.MainViewController()
- *     }
- *     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
- * }
- * ```
- *
- * @param baseUrl  The API base URL, read from Info.plist or injected at build time.
+ * @param baseUrl  The API base URL read from Info.plist at startup.
+ * @param mineSecProvider  Implementation of the MineSec SDK logic from Swift.
  */
 fun MainViewController(
-    baseUrl: String = "https://api-dev.paymentoptions.com/api/v1/",
+    baseUrl: String,
+    mineSecProvider: MineSecPaymentProvider?,
 ): UIViewController {
-    // Initialise storage before the first composition
     AppStorage.init(createSettings())
 
+    val environment = when {
+        baseUrl.contains("api-dev") -> "DEV"
+        baseUrl.contains("api-staging") -> "STAGING"
+        else -> "PROD"
+    }
+
+    MineSecPlatform.paymentProvider = mineSecProvider
+
     return ComposeUIViewController {
-        App(buildTimeBaseUrl = baseUrl)
+        App(buildTimeBaseUrl = baseUrl, environment = environment)
     }
 }

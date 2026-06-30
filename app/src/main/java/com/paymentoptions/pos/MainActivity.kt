@@ -37,7 +37,7 @@ class MainActivity : FragmentActivity() {
         setContent {
 
             AppTheme {
-                App(buildTimeBaseUrl = BuildConfig.CONFIG_BASE_URL)
+                App(buildTimeBaseUrl = BuildConfig.CONFIG_BASE_URL, environment = BuildConfig.ENVIRONMENT)
             }
         }
     }

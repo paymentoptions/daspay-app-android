@@ -4,5 +4,23 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>ConfigBaseURL</key>
+	<string>$(CONFIG_BASE_URL)</string>
+	<key>AppEnvironment</key>
+	<string>$(APP_ENVIRONMENT)</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Daspay uses Face ID for secure merchant sign-in.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Daspay needs camera access to capture product images.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Daspay needs photo library access to upload product images.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Daspay uses your location to verify regional payment compliance.</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>Daspay uses NFC to accept contactless payments.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

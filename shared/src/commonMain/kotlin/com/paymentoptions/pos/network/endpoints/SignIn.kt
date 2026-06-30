@@ -13,10 +13,10 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
-suspend fun signIn(username: String, password: String, deviceNumber: String): SignInResponse? {
+suspend fun signIn(username: String, password: String, deviceNumber: String, isAndroid: Boolean): SignInResponse? {
     val response = KtorClient.instance.post(ConfigurationManager.url(ApiEndpoints.SIGN_IN)) {
         contentType(ContentType.Application.Json)
-        applyDaspaySignHeaders(true, deviceNumber)
+        applyDaspaySignHeaders(isAndroid = isAndroid, deviceNumber)
         setBody(SignInRequest(username, password))
     }
     response.throwIfNotSuccess("signIn")

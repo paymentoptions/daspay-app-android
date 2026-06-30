@@ -171,9 +171,10 @@ fun MyBottomNavigationBar(
     } else {
         moreList.addAll(itemsInMoreStaff)
     }
-    if (isDebugBuild) {
-        moreList.add(sendLogs)
-    }
+//    if (isDebugBuild) {
+//        moreList.add(sendLogs)
+//    }
+    moreList.add(sendLogs)
 
     MyDialog(
         showDialog = showSignOutConfirmationDialog,
