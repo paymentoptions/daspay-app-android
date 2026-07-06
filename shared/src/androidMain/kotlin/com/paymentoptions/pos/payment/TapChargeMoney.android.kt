@@ -258,7 +258,7 @@ actual fun TapChargeMoney(
                                     BigDecimal(amountToCharge),
                                     Currency.getInstance(DPStorageManager.getTransactionCurrency()),
                                 ),
-                                profileId = "prof_01KH8NQC4PVFKRNH31ZPC2QJNN",
+                                profileId = MineSecPlatform.PROFILE_ID,
                                 posReference = it.transaction_details.id
                             )
                         )

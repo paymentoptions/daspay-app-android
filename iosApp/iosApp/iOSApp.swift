@@ -2,9 +2,6 @@ import SwiftUI
 import Headless
 import sharedKit
 
-// MineSec SoftPOS profile ID — must match the activated profile in the MineSec dashboard.
-private let MINESEC_PROFILE_ID = "prof_01KH8NQC4PVFKRNH31ZPC2QJNN"
-
 @main
 struct iOSApp: App {
     private let mineSecService = HeadlessService()
@@ -13,23 +10,41 @@ struct iOSApp: App {
     init() {
         self.bridgeProvider = SwiftMineSecProvider(service: mineSecService)
 
-        // Capture the actor reference directly to avoid escaping-closure-captures-self error
-        // (App is a struct, so self is mutating and cannot be captured by escaping closures).
         let svc = mineSecService
         Task {
+            // Initialize the MineSec Headless SDK v1.2.00
             let result = await svc.initSoftPOS(
-                profileId: MINESEC_PROFILE_ID,
-                licenseFile: "payment-options.license"
+                profileId: ConstantsKt.MINESEC_PROFILE_ID,
+                licenseFile: "payment-options.license"  // base name; SDK resolves payment-options.license
             )
 
             switch result {
             case .success(let info):
-                print("MineSec initialized: \(info.headlessId)")
+                print("MineSec initialized: \(info.headlessId) v\(info.headlessVersion)")
+
+                // Pre-warm the NFC reader so the first payment is faster.
+                let warmUpResult = await svc.warmUp()
+                switch warmUpResult {
+                case .success(let status):
+                    print("MineSec warm-up OK — readiness: \(status.readiness), account: \(status.accountStatus)")
+                    if status.accountStatus == .notLinked {
+                        let linkResult = await svc.linkAccount()
+                        switch linkResult {
+                        case .success(let s): print("MineSec account linked — \(s.accountStatus)")
+                        case .failure(let e): print("MineSec link account failed: \(e)")
+                        }
+                    }
+                case .failure(let e):
+                    print("MineSec warm-up failed: \(e)")
+                }
+
+                // Observe reader events for diagnostics.
                 Task {
                     for await event in svc.events {
                         print("MineSec Event: \(event)")
                     }
                 }
+
             case .failure(let error):
                 print("MineSec Init failed: \(error)")
             }
@@ -43,7 +58,7 @@ struct iOSApp: App {
     }
 }
 
-/// Bridges Kotlin [MineSecPaymentProvider] calls to the native MineSec Headless iOS SDK v1.0.3.
+/// Bridges Kotlin [MineSecPaymentProvider] calls to the native MineSec Headless iOS SDK v1.2.00.
 class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
     private let service: HeadlessService
 
@@ -63,22 +78,21 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
             let poi = PoiRequest(
                 tranType: .sale,
                 amount: Amount(value: amount, currency: currency),
-                profileId: MINESEC_PROFILE_ID,
+                profileId: ConstantsKt.MINESEC_PROFILE_ID,
                 description: description,
                 posReference: posReference,
                 cvmSignatureMode: .signOnPaper
             )
-            
+
             let result = await service.launchRequest(poi)
-            
+
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
-                    // Encode the response to JSON for the Kotlin mapper
                     let encoder = JSONEncoder()
                     let jsonData = try? encoder.encode(response)
-                    let jsonString = jsonData != nil ? String(data: jsonData!, encoding: .utf8) : nil
-                    
+                    let jsonString = jsonData.flatMap { String(data: $0, encoding: .utf8) }
+
                     onResult(MineSecTransactionResult(
                         success: true,
                         tranId: response.tranId,
@@ -87,7 +101,7 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         tranType: "SALE",
                         errorMessage: nil
                     ))
-                    
+
                 case .failure(let error):
                     onResult(MineSecTransactionResult(
                         success: false,

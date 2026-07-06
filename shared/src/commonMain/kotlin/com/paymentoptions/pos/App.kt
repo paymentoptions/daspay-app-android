@@ -15,14 +15,18 @@ import kotlinx.datetime.Clock
  * Called from [MainActivity] on Android and [MainViewController] on iOS.
  *
  * @param buildTimeBaseUrl  The compile-time base URL from BuildConfig / plist.
- *                          Defaults to production if not supplied.
+ * @param environment       Backend environment label (DEV, STAGING, PROD).
  */
 @Composable
-fun App(buildTimeBaseUrl: String = "https://api-dev.paymentoptions.com/api/v1/") {
+fun App(
+    buildTimeBaseUrl: String = "https://api-dev.paymentoptions.com/api/v1/",
+    environment: String = "DEV",
+) {
 
     // Inject build-time base URL so ConfigurationManager can resolve API calls
-    LaunchedEffect(Unit) {
+    LaunchedEffect(buildTimeBaseUrl, environment) {
         ConfigurationManager.buildTimeBaseUrl = buildTimeBaseUrl
+        ConfigurationManager.buildEnvironment = environment
 
         // Schedule proactive token refresh only if the token still has meaningful lifetime left.
         // Expired / near-expired tokens are handled reactively by the Ktor 401 refreshTokens path.

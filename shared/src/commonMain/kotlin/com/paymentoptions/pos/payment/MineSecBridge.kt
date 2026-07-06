@@ -1,5 +1,7 @@
 package com.paymentoptions.pos.payment
 
+import com.paymentoptions.pos.utils.MINESEC_PROFILE_ID
+
 /**
  * Result returned from native MineSec SDK operations (sale, void, refund).
  */
@@ -50,5 +52,5 @@ object MineSecPlatform {
     var paymentProvider: MineSecPaymentProvider? = null
 
     /** Profile ID used for MineSec POI requests — must match the activated SoftPOS profile. */
-    const val PROFILE_ID = "prof_01KH8NQC4PVFKRNH31ZPC2QJNN"
+    const val PROFILE_ID = MINESEC_PROFILE_ID
 }
