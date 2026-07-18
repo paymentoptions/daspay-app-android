@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
@@ -79,13 +80,18 @@ fun TransactionFailedBottomSectionContent(
         }
     }
 
-    if (paymentDetailsLatestResponse != null)
+    if (paymentDetailsLatestResponse != null) {
+        try{
         transactionAquirerResponse =
             paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
                 AppJson.decodeFromString<AquirerResponse>(
                     it
                 )
             }
+        } catch (ex: Exception){
+            AppLogger.error("Exception in Acquirer", ex)
+        }
+    }
 
     val dateString =
         paymentDetailsLatestResponse?.data?.Date ?: OffsetDateTime.now()
@@ -203,7 +209,7 @@ fun TransactionFailedBottomSectionContent(
                     )
                 }
 
-                if(transactionAquirerResponse?.trace?.isNotEmpty() == true)
+                if(transactionAquirerResponse?.trace?.isNotEmpty() == true){
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -220,7 +226,7 @@ fun TransactionFailedBottomSectionContent(
                         fontWeight = FontWeight.Medium,
                         color = primary500
                     )
-                }
+                }}
 
                if(transactionAquirerResponse?.approvalCode?.isNotEmpty() == true)
                 Row(
@@ -239,6 +245,27 @@ fun TransactionFailedBottomSectionContent(
                         fontWeight = FontWeight.Medium,
                         color = primary500
                     )
+                }
+
+                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Note", style = AppTheme.typography.footnote.copy(
+                                fontWeight = FontWeight.Normal, fontSize = 14.sp
+                            )
+                        )
+
+                        Text(
+                            text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary500
+                        )
+                    }
                 }
             }
 

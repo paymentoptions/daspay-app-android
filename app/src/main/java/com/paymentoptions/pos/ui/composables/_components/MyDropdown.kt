@@ -146,6 +146,7 @@ fun MyDropdown(
                             )
                             .clickable {
                                 onFilterChange(option)
+                                expanded = false
 //                            expanded = false
                             },
                         horizontalArrangement = Arrangement.SpaceBetween,

@@ -81,6 +81,7 @@ import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.services.apiService.endpoints.productList
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
+import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -941,6 +942,7 @@ fun FoodOrderFlow(
                     enableScrolling = false,
                     availablePaymentMethods = availablePaymentMethods,
                     amountToCharge = cartState.calculateGrandTotal().formatToPrecisionString(),
+                    gatewayNotes = cartState.additionalAmountNote,
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
                     onLoader = {
@@ -1054,12 +1056,7 @@ fun FoodOrderFlow(
                 enableScrollingOfBottomSectionContent = false,
                 enableZigZagContainerForBottomSection = true,
                 imageBelowLogo = {
-                    Text(
-                        text = "Receipt",
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    ShowReceiptView()
                 }) {
                 ReceiptBottomSectionContent(
                     navController,

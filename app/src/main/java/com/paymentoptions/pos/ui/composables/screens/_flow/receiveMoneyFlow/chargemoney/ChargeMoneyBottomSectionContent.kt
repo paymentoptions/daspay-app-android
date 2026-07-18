@@ -49,7 +49,7 @@ import com.paymentoptions.pos.services.apiService.PaymentResponse
 import com.paymentoptions.pos.services.apiService.PaymentReturnUrl
 import com.paymentoptions.pos.services.apiService.PaymentStatusRequest
 import com.paymentoptions.pos.services.apiService.endpoints.payment
-import com.paymentoptions.pos.services.apiService.endpoints.paymentStatus
+import com.paymentoptions.pos.services.apiService.endpoints.sendWebHookNotification
 import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
@@ -75,6 +75,7 @@ import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
 import com.paymentoptions.pos.services.apiService.toPaymentStatusRequest
+import com.paymentoptions.pos.utils.MINESEC_PROFILE_ID
 import com.theminesec.lib.dto.transaction.Transaction
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
@@ -124,11 +125,13 @@ fun ChargeMoneyBottomSectionContent(
     navController: NavController,
     enableScrolling: Boolean = false,
     amountToCharge: String,
+    gatewayNotes: String?,
     availablePaymentMethods: List<PaymentMethod>,
     selectedPaymentMethod: PaymentMethod,
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
     onLoader: (nextStage: () -> Unit) -> Unit = {},
     onSuccessUpdateFlowStage: () -> Unit = {},
+    onMandatorySignature: () -> Unit = {},
     onFailureUpdateFlowStage: () -> Unit = {},
     updateFailureMessage: (String?) -> Unit = {},
     onChangeAmount: () -> Unit,
@@ -192,8 +195,10 @@ fun ChargeMoneyBottomSectionContent(
             Tap_ChargeMoney(
                 navController = navController,
                 amountToCharge = amountToCharge,
+                gatewayNotes = gatewayNotes,
                 onLoader = onLoader,
                 onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
+                onMandatorySignature = onMandatorySignature,
                 onFailureUpdateFlowStage = onFailureUpdateFlowStage,
                 onFailureMessage = updateFailureMessage,
                 updateLatestTransaction = updateLatestTransaction
@@ -282,8 +287,10 @@ fun ChargeMoneyBottomSectionContent(
 fun Tap_ChargeMoney(
     navController: NavController,
     amountToCharge: String,
+    gatewayNotes: String?,
     onLoader: (nextStage: () -> Unit) -> Unit = {},
     onSuccessUpdateFlowStage: () -> Unit = {},
+    onMandatorySignature: () -> Unit = {},
     onFailureUpdateFlowStage: () -> Unit = {},
     onFailureMessage: (String) -> Unit = {},
     updateLatestTransaction: (id: String) -> Unit = {},
@@ -342,7 +349,7 @@ fun Tap_ChargeMoney(
                     "TapToPay MineSec success: tranType=${it.value.tranType}, tranStatus=${it.value.tranStatus}, tranId=${it.value.tranId}, posReference=${it.value.posReference}"
                 )
                 AppAnalytics.profileDownloadOrActivation(
-                    profileId = "prof_01KRMSZV8148Z2REJ43VW9HQNE",
+                    profileId = MINESEC_PROFILE_ID,
                     stage = "activation",
                     result = "completed"
                 )
@@ -374,14 +381,22 @@ fun Tap_ChargeMoney(
                     AppLogger.debug("TapToPay webhook call started")
                     try {
                         val paymentStatusResponse =
-                            paymentStatus(context = context, request = paymentStatusRequest, it.value.tranStatus)
+                            sendWebHookNotification(context = context, request = paymentStatusRequest, it.value.tranStatus)
 
                         showProcessingScreen = false
                         AppLogger.debug("TapToPay webhook response: success=$paymentStatusResponse, tranId=${paymentStatusRequest.tranId}")
                         if (paymentStatusResponse) {
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
                             AppLogger.debug("TapToPay flow moving to SUCCESS stage for tranId=${paymentStatusRequest.tranId}")
-                            onLoader { onSuccessUpdateFlowStage() }
+
+                            val cvmLimit = DPSharedPreferences.getCvmLimit(context)
+                            val amount = amountToCharge.toDoubleOrNull() ?: 0.0
+                            if (amount >= cvmLimit) {
+                                AppLogger.debug("TapToPay: Amount $amount >= CVM Limit $cvmLimit, moving to MANDATORY_SIGNATURE")
+                                onLoader { onMandatorySignature() }
+                            } else {
+                                onLoader { onSuccessUpdateFlowStage() }
+                            }
                         } else {
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
                             AppLogger.warn("TapToPay flow moving to FAILURE stage due to false webhook response for tranId=${paymentStatusRequest.tranId}")
@@ -469,7 +484,7 @@ fun Tap_ChargeMoney(
 
     if (!hasLaunchedPayment) {
         //prof_01KH8NQC4PVFKRNH31ZPC2QJNN
-        val profileId = "prof_01KRMSZV8148Z2REJ43VW9HQNE"
+        val profileId =  MINESEC_PROFILE_ID
         hasLaunchedPayment = true
         AppLogger.debug("TapToPay initial launch guard passed, starting payment API call with profileId=$profileId")
 
@@ -490,6 +505,7 @@ fun Tap_ChargeMoney(
                     navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                    return@launch
                 }
 
                 paymentResponse?.let {
@@ -511,6 +527,7 @@ fun Tap_ChargeMoney(
                                     Currency.getInstance(getTransactionCurrency(context)),
                                 ),
                                 profileId = profileId,
+                                description = gatewayNotes?.trim(),
                                 posReference = it.transaction_details.id
                             )
                         )

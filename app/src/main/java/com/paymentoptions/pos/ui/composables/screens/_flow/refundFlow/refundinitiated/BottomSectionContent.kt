@@ -113,15 +113,16 @@ fun BottomSectionContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            FilledButton(
-                text = "View Full Receipt",
-                onClick = { },
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .width(200.dp)
-                    .scale(0.7f)
-            )
+
+//            FilledButton(
+//                text = "View Full Receipt",
+//                onClick = { },
+//                fontSize = 18.sp,
+//                fontWeight = FontWeight.SemiBold,
+//                modifier = Modifier
+//                    .width(200.dp)
+//                    .scale(0.7f)
+//            )
         }
 
         Spacer(modifier = Modifier.height(32.dp))

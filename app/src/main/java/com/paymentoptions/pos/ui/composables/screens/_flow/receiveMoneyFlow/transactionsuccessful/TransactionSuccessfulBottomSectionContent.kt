@@ -55,12 +55,15 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import coil3.compose.AsyncImage
+import com.google.gson.Gson
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
+import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.getSignature
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
+import com.paymentoptions.pos.services.apiService.toTransactionListDataRecord
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
@@ -86,6 +89,9 @@ import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.utils.AppJson
+import com.paymentoptions.pos.utils.TransactionAction
+import com.paymentoptions.pos.utils.getAvailableAction
+import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -126,6 +132,18 @@ fun TransactionSuccessfulBottomSectionContent(
                     it
                 )
             }
+
+    fun navigateToVoidAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Gson().toJson(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "VOID"))
+    }
+
+    fun navigateToRefundAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Gson().toJson(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "REFUND"))
+    }
 
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
@@ -242,28 +260,43 @@ fun TransactionSuccessfulBottomSectionContent(
                 )
             )
 
-            Row(
-                modifier = Modifier.scale(0.7f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButton(
-                    text = "Refund",
-                    onClick = { },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
+            if (paymentDetailsLatestResponse?.data != null) {
+                val transaction = paymentDetailsLatestResponse?.data!!.toTransactionListDataRecord()
+                val availableAction = getAvailableAction(transaction)
+                Row(
+                    modifier = Modifier.scale(0.7f),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
-                Spacer(modifier = Modifier.width(10.dp))
+                    if(availableAction != TransactionAction.NONE){
+                        OutlinedButton(
+                            text = if(availableAction == TransactionAction.REFUND)"Refund" else "VOID",
+                            onClick = {
+                                when(availableAction){
+                                    TransactionAction.VOID -> navigateToVoidAction(transaction)
+                                    TransactionAction.REFUND -> navigateToRefundAction(transaction)
+                                    else ->{}
+                                }
+                            },
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                        )
+                    }
 
-                FilledButton(
-                    text = "View Full Receipt",
-                    onClick = { updateFlowToReceipt() },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                   if(shouldShowFullReceipt(transaction))
+                    FilledButton(
+                        text = "View Full Receipt",
+                        onClick = { updateFlowToReceipt() },
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                    )
+                }
             }
         }
 
@@ -379,6 +412,27 @@ fun TransactionSuccessfulBottomSectionContent(
                         fontWeight = FontWeight.Medium,
                         color = primary500
                     )
+                }
+
+                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Note", style = AppTheme.typography.footnote.copy(
+                                fontWeight = FontWeight.Normal, fontSize = 14.sp
+                            )
+                        )
+
+                        Text(
+                            transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary500
+                        )
+                    }
+
                 }
             }
 
