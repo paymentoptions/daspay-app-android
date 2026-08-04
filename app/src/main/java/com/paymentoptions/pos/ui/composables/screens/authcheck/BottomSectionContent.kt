@@ -21,7 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -35,13 +35,13 @@ fun BottomSectionContent(navController: NavController) {
     var authDetails by remember { mutableStateOf<SignInResponse?>(null) }
     var isTokenVerified by remember { mutableStateOf(false) }
     var isAuthenticated by remember { mutableStateOf(false) }
-    val biometricStatus = SharedPreferences.getBiometricsStatus(context)
+    val biometricStatus = DPSharedPreferences.getBiometricsStatus(context)
 
     LaunchedEffect(Unit) {
         isLoading = true
-        authDetails = SharedPreferences.getAuthDetails(context)
-        isTokenVerified = SharedPreferences.getTokenStatus(context = context)
-        isAuthenticated = authDetails?.success == true
+        authDetails = DPSharedPreferences.getAuthDetails(context)
+        isTokenVerified = DPSharedPreferences.getTokenStatus(context = context).first
+        isAuthenticated = authDetails?.success == true && isTokenVerified
         isLoading = false
     }
 
@@ -67,19 +67,21 @@ fun BottomSectionContent(navController: NavController) {
     } else if (isAuthenticated) {
 
         if (!isTokenVerified) navController.navigate(Screens.Token.route) {
-            popUpTo(Screens.SignIn.route) { inclusive = true }
+            popUpTo(Screens.AuthCheck.route) { inclusive = true }
         }
         else FingerprintScanScreen(
             navController = navController, onAuthSuccess = {
-            navController.navigate(Screens.Dashboard.route) {
-                popUpTo(Screens.SignIn.route) { inclusive = true }
-            }
+                navController.navigate(Screens.Dashboard.route)
+                {
+                    popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                }
             }, onAuthFailed = {
-            Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
             }, bypassBiometric = !biometricStatus
         )
     } else {
-        Toast.makeText(context, "You are signed out. Please sign in.", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(context, "You are signed out. Please sign in.", Toast.LENGTH_SHORT).show()
+        DPSharedPreferences.clearSharedPreferences(context)
         navController.navigate(Screens.SignIn.route) {
             popUpTo(0) { inclusive = true }
         }

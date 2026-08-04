@@ -30,9 +30,7 @@ fun ScanButton(text: String, modifier: Modifier = Modifier) {
             Icons.Outlined.QrCodeScanner,
             contentDescription = "Share via scan QR code",
             modifier = Modifier
-                .background(
-                    iconBackgroundColor, shape = RoundedCornerShape(50)
-                )
+                .background(iconBackgroundColor, shape = RoundedCornerShape(50))
                 .padding(16.dp)
         )
 

@@ -4,6 +4,7 @@ import android.os.Handler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,26 +44,48 @@ fun FoodSummary(
     updateCartSate: (Cart) -> Unit,
     createToast: (ToastData) -> Unit,
     setShowToast: (Boolean) -> Unit,
+    editProduct: (FoodItem) -> Unit,
 ) {
     val context = LocalContext.current
 
-    fun removeQuantity() {
-        if (foodItem.cartQuantity > 0) {
-            cartState.decreaseFoodItemQuantity(foodItem, context)
-            updateCartSate(cartState)
+    fun deleteQuantity() {
+        cartState.removeFoodItemQuantity(foodItem, context)
+        updateCartSate(cartState)
 
-            createToast(
-                ToastData(
-                    type = ToastType.ERROR,
-                    text = foodItem.item.ProductName + " removed",
-                    cartCount = foodItem.cartQuantity
-                )
+        createToast(
+            ToastData(
+                type = ToastType.ERROR,
+                text = foodItem.item.ProductName + " is deleted from Cart",
+                cartCount = foodItem.cartQuantity
             )
-            setShowToast(true)
+        )
+        setShowToast(true)
 
-            Handler().postDelayed({
-                setShowToast(false)
-            }, 1000)
+        Handler().postDelayed({
+            setShowToast(false)
+        }, 1000)
+    }
+
+    fun removeQuantity() {
+        if(foodItem.cartQuantity == 1){
+            deleteQuantity()
+        } else {
+            if (foodItem.cartQuantity > 0) {
+                cartState.decreaseFoodItemQuantity(foodItem, context)
+                updateCartSate(cartState)
+                createToast(
+                    ToastData(
+                        type = ToastType.ERROR,
+                        text = foodItem.item.ProductName + " removed",
+                        cartCount = foodItem.cartQuantity
+                    )
+                )
+                setShowToast(true)
+
+                Handler().postDelayed({
+                    setShowToast(false)
+                }, 1000)
+            }
         }
     }
 
@@ -87,7 +110,14 @@ fun FoodSummary(
     }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().combinedClickable(
+            onLongClick = {
+                editProduct(foodItem)
+            },
+            onClick = {
+
+            }
+        ),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -95,11 +125,13 @@ fun FoodSummary(
         FoodImage(
             foodItem.item.ProductName,
             imageUrl = foodItem.imageUrl(),
-            isVegetarian = !foodItem.isNonVeg(),
+            isVegetarian = false/*!foodItem.isNonVeg()*/,
             modifier = Modifier.size(44.dp)
         )
 
-        FoodDetail(foodItem, modifier = Modifier.weight(1f))
+        FoodDetail(foodItem, modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f))
 
         //Add to cart button
         Row(

@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
@@ -79,6 +79,13 @@ fun BottomSectionContent(
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
 
+    //Shareable text summary for the refund
+    val shareableRefundText = if (transaction != null) {
+        "Refund initiated for transaction #${transaction.TransactionID}\nAmount: ${transaction.amount} $currency\nDate: $dateStringFormatted"
+    } else {
+        "Refund initiated. Details are unavailable."
+    }
+
     LaunchedEffect(showRefundStatus) {
         scrollState.scrollTo(if (showRefundStatus) scrollState.maxValue else 0)
     }
@@ -106,15 +113,16 @@ fun BottomSectionContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            FilledButton(
-                text = "View Full Receipt",
-                onClick = { },
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .width(200.dp)
-                    .scale(0.7f)
-            )
+
+//            FilledButton(
+//                text = "View Full Receipt",
+//                onClick = { },
+//                fontSize = 18.sp,
+//                fontWeight = FontWeight.SemiBold,
+//                modifier = Modifier
+//                    .width(200.dp)
+//                    .scale(0.7f)
+//            )
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -241,7 +249,12 @@ fun BottomSectionContent(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     EmailButton(
-                        text = "Email", email = Email(), modifier = Modifier
+                        text = "Email",
+                        email = Email(
+                            subject = "Your DASPay Refund Confirmation",
+                            text = shareableRefundText
+                        ),
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,
@@ -253,7 +266,9 @@ fun BottomSectionContent(
                     )
 
                     ShareButton(
-                        text = "Share", modifier = Modifier
+                        text = "Share",
+                        shareContent = shareableRefundText,
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,

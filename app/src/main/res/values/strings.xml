@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">DASPay</string>
-    <string name="minesec_profile_id">prof_01K36002RM7DMMPHG0QEX3E9BR</string>
+    <string name="minesec_profile_id">prof_01KRMSZV8148Z2REJ43VW9HQNE</string>
+    <string name="session_expired">Your session has expired,or you do not have permission to perform this action.</string>
+    <string name="device_credential_missing">Secure your device by enabling a PIN, fingerprint, or face lock</string>
+    <string name="no_network">Unable to connect. Please check your internet connection and try again.</string>
 </resources>

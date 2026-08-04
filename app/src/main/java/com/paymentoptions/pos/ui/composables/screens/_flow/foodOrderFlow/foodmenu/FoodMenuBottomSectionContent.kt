@@ -1,7 +1,10 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,10 +12,16 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -25,22 +34,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.ProductListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
-import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoData
-import com.paymentoptions.pos.ui.composables._components.ZigZagContainer
+import com.paymentoptions.pos.ui.composables._components.ZigZagContainer1
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.SearchInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodItem
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlowStage
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.reviewcart.CurrencyRow
+import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.modifiers.FoodCategoryShimmer
+import com.paymentoptions.pos.utils.modifiers.FoodItemListShimmer
 import com.paymentoptions.pos.utils.modifiers.conditional
 
 fun searchLogic(foodItem: ProductListDataRecord, searchTerm: String): Boolean {
@@ -64,12 +79,13 @@ fun FoodMenuBottomSectionContent(
     updateFlowStage: (FoodOrderFlowStage) -> Unit,
     createToast: (ToastData) -> Unit,
     setShowToast: (Boolean) -> Unit,
+    editProduct: (FoodItem) -> Unit,
 ) {
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
     val scrollState = rememberScrollState()
-    var searchState = rememberTextFieldState()
-    var cartItemQuanitityState = remember {
+    val searchState = rememberTextFieldState()
+    val cartItemQuanitityState = remember {
         derivedStateOf { cartState.itemQuantity }
     }
 
@@ -106,8 +122,13 @@ fun FoodMenuBottomSectionContent(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        if (!foodCategoriesAvailable) MyCircularProgressIndicator(text = "Loading food categories...")
-        else if (foodCategories.isEmpty()) NoData(text = " No food categories available") else FoodCategories(
+        if (!foodCategoriesAvailable) FoodCategoryShimmer(
+            modifier = Modifier
+                .padding(start = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .fillMaxWidth()
+                .height(40.dp)
+        )
+        else if (foodCategories.isEmpty()) NoData(text = "No food categories available") else FoodCategories(
             foodCategories = foodCategories,
             selectedFoodCategory = selectedFoodCategory,
             onClick = { updateSelectedFoodCategory(it) },
@@ -135,12 +156,15 @@ fun FoodMenuBottomSectionContent(
                     ?: listOf<FoodItem>()
 
             val filteredFoodItems = foodItemsInCategory.filter { foodItem ->
-                searchLogic(
+                foodItem.item.ProductStatus && searchLogic(
                     foodItem.item, searchState.text.toString()
                 )
             }
 
-            if (!foodItemsAvailable) MyCircularProgressIndicator() else if (filteredFoodItems.isEmpty()) NoData(
+            if (!foodItemsAvailable) FoodItemListShimmer(
+                modifier = Modifier.padding(vertical = 8.dp),
+                itemCount = 4
+            ) else if (filteredFoodItems.isEmpty()) NoData(
                 text = if (foodItemsInCategory.isEmpty()) "No food items found in this category" else "No food items found matching your search"
             )
             else filteredFoodItems.forEachIndexed { index, foodItem ->
@@ -149,6 +173,7 @@ fun FoodMenuBottomSectionContent(
                     cartState,
                     updateCartSate = { updateCartSate(cartState) },
                     createToast = { createToast(it) },
+                    editProduct = editProduct,
                     setShowToast = { setShowToast(it) })
 
                 if (index + 1 < filteredFoodItems.size) HorizontalDivider(
@@ -156,12 +181,21 @@ fun FoodMenuBottomSectionContent(
                     color = Color.LightGray.copy(alpha = 0.2f),
                 )
             }
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            AddProductItemButton(
+                onClick = {
+                    updateFlowStage(FoodOrderFlowStage.ADD_PRODUCT)
+                },
+            )
+
         }
 
         Spacer(modifier = Modifier.height(10.dp))
 
         //Cart details
-        ZigZagContainer {
+        ZigZagContainer1 {
             Column(
                 modifier = Modifier
                     .background(brush = containerBackgroundGradientBrush)
@@ -200,17 +234,27 @@ fun FoodMenuBottomSectionContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primary500
+                        "Item Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primary500
                     )
 
-                    CurrencyText(
-                        currency = currency,
-                        amount = cartState.itemTotal.formatToPrecisionString(),
-                        fontSize = 14.sp,
-                        color = primary500,
-                        addSpaceAfterCurrency = true,
-                        fontWeight = FontWeight(980)
-                    )
+                    CurrencyRow(currency = currency, amount = cartState.itemTotal)
+
+                }
+
+                if(cartState.serviceCharge != 0f){
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Service Charge",
+                            style = AppTheme.typography.footnote.copy(
+                                fontSize = 14.sp, fontWeight = FontWeight.Normal
+                            )
+                        )
+
+                        CurrencyRow(currency = currency, amount = cartState.serviceCharge)
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -225,5 +269,73 @@ fun FoodMenuBottomSectionContent(
                 )
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun AddProductItemButton(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onClick)
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFF90CAF9),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .padding(horizontal = 30.dp, vertical = 6.dp), // small padding = wrap content
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            // a plus button and add text, give a off white background to look like button
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "",
+                tint = Color(0xFF90CAF9),
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.size(5.dp))
+            Text(
+                text = "Add New Item in this Category",
+                color = Color(0xFF90CAF9),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+
+}
+
+@Composable
+fun CurrencyRow(currency: String, amount: Float, width: Dp = 160.dp) {
+    Row(
+        modifier = Modifier.width(width),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+
+        CurrencyText(
+            currency = currency,
+            amount = "",
+            fontSize = 14.sp,
+            color = primary500,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
+        )
+
+        CurrencyText(
+            currency = "",
+            amount = "+" + amount.formatToPrecisionString(),
+            fontSize = 14.sp,
+            color = primary500,
+            fontWeight = FontWeight(980),
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
+        )
     }
 }

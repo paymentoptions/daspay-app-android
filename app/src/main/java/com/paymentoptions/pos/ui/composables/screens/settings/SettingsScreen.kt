@@ -7,7 +7,8 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 @Composable
 fun SettingsScreen(navController: NavController) {
-    SectionedLayout(navController = navController, bottomBarContent = BottomBarContent.NOTHING) {
+    SectionedLayout(navController = navController, bottomBarContent = BottomBarContent.NAVIGATION_BAR,//NOTHING
+    ) {
         BottomSectionContent(navController)
     }
 }

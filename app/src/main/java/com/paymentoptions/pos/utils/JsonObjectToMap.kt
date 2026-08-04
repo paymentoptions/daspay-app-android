@@ -2,7 +2,6 @@ package com.paymentoptions.pos.utils
 
 import org.json.JSONObject
 
-
 fun jsonObjectToMap(jsonObject: JSONObject): Map<String, Any?> {
     val map = mutableMapOf<String, Any?>()
     val keys = jsonObject.keys()

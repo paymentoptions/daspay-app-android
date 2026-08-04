@@ -1,7 +1,11 @@
 package com.paymentoptions.pos.services.apiService
 
+import com.theminesec.lib.dto.transaction.Transaction
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
 import org.json.JSONObject
+import kotlin.String
 
 @Serializable
 data class Token(
@@ -23,10 +27,15 @@ data class SignInData(
     val appLevel: String,
     val contactNo: String,
     val referralCode: String,
-    val accessLevel: String,
+    val accessLevel: AccessLevel?,
     val signInAsMerchant: Boolean,
     val passwordExpiry: String,
 )
+
+@Serializable
+enum class AccessLevel{
+    ADMIN, STAFF
+}
 
 data class SignInRequest(
     val username: String,
@@ -65,11 +74,13 @@ data class TransactionListV2RequestFilter(
     val field: String,
     val operator: String,
     val value: String,
+    val operand: String? = null
 )
 
 data class TransactionListV2Request(
     val take: Int,
     val skip: Int,
+    val totalRequired: Boolean = true,
     val TimeZone: String = "Indian/Mahe",
     val filter: List<TransactionListV2RequestFilter>,
 )
@@ -78,9 +89,9 @@ data class TransactionListDataRecord(
     val uuid: String,
     val MerchantRefID: String,
     val LegalName: String,
-    val LegalNameInEnglish: String,
+    val LegalNameInEnglish: String?,
     val DASMID: String,
-    val trackID: String,
+    val trackID: String?,
     val AcquirerMID: String,
     val TransactionType: String,
     val Scheme: String,
@@ -90,46 +101,53 @@ data class TransactionListDataRecord(
     val CardNumber: String,
     val AcquirerCode: String,
     val has3DS: Boolean,
-    val AuthCode: String,
+    val AuthCode: String?,
     val Isrecurring: Boolean,
     val Date: String,
-    val V2UUID: String,
+    val V2UUID: String?,
     val ProductType: String,
-    val SubscriptionId: String,
+    val SubscriptionId: String?,
     val UpdatedDate: String,
     val TerminalId: String,
     val TerminalName: String,
-    val PBLLinkName: String,
+    val PBLLinkName: String?,
     val IsWhitelisted: Boolean,
-    val GatewayResponse: String,
-    val ResponseCode: String,
+    val GatewayResponse: String?,
+    val ResponseCode: String?,
     val TransactionID: Int,
     val IntegrationType: String,
-    val PaymentType: String,
+    val PaymentType: String?,
+    val SettleStatus: String?,
+    val BatchID: String?,
+    val BatchNo: String?,
+    val SettledAt: String?,
+    val AcquirerTransactionID: String?,
+    val IsVoided: Boolean?,
+    val IsRefunded: Boolean?,
 )
+
+
+data class TransactionRequest(
+    val transactionId: String,
+    val merchant_id: String,
+    val amount: String? = null,
+    val notes: String? = null,
+    //val daspay_res: Transaction? = null,
+)
+
 
 data class TransactionListData(
     val total_count: Int,
-    val records: Array<TransactionListDataRecord>,
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+    val total_amount: String,
+    val records: List<TransactionListDataRecord?>,
 
-        other as TransactionListData
+    // Optional but useful
+    val total_sales: String? = null,
+    val total_refund: String? = null,
+    val approval_ratio: String? = null,
+    val decline_count: String? = null
+)
 
-        if (total_count != other.total_count) return false
-        if (!records.contentEquals(other.records)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = total_count
-        result = 31 * result + records.contentHashCode()
-        return result
-    }
-}
 
 data class TransactionListResponse(
     val statusCode: Int,
@@ -140,11 +158,11 @@ data class TransactionListResponse(
 )
 // -------------------------------------------------------
 
-data class RefundRequest(
-    val id: String,
-    val merchant_id: String,
-    val refundAmount: Float,
-)
+//data class RefundRequest(
+//    val id: String,
+//    val merchant_id: String,
+//    val refundAmount: Int,
+//)
 
 data class GatewayResponse(
     val version: String,
@@ -218,7 +236,7 @@ data class Refund_TransactionDetails(
     val merchant_txn_ref: String,
 )
 
-data class RefundResponse(
+data class RefundResponse (
     val success: Boolean,
     val status_code: Int,
     val is_live: Boolean,
@@ -312,55 +330,59 @@ data class PaymentResponse(
 // -------------------------------------------------------
 
 // Payment status related ----------------------------------
-
-data class PaymentStatusAmount(
-    val currency: String,
-    val value: Float,
-)
+//
+//@Serializable
+//data class PaymentStatusAmount(
+//    val currency: String,
+//    val value: Float,
+//)
 
 data class PaymentStatusRequest(
-    val tranId: String,
-    val cvmPerformed: String = "NO_CVM",
-    val tsi: String = "0000",
-    val mcc: String = "",
-    val merchantName: String = "2C2P",
-    val tranStatus: String = "APPROVED",
-    val tranType: String = "SALE",
-    val atc: String = "01B4",
-    val createdAt: String = "1719878285879",
-    val trace: String = "491586",
-    val acqMid: String = "065240116000002",
-    val callbackUrl: String = "https://webhook.site/cdaa023f-fd59-4286-a241-1b120fbf1454",
-    val entryMode: String = "NFC",
-    val updatedAt: String = "1719878291684",
-    val amount: PaymentStatusAmount,
-    val batchNo: String = "101318",
-    val appName: String = "5649534120435245444954",
-    val linkedTranId: String = "33961491-58f2-42e5-902e-f955d68d2a01",
-    val acqTid: String = "90004300",
-    val merchantAddr: String = "",
-    val rrn: String = "407020000174",
-    val tc: String = "437484CAB4A9557A",
-    val tvr: String = "0000000000",
-    val accountMasked: String = "**** **** **** 2377",
-    val sdkId: String = "515cd36f3f09bfc2",
-    val paymentMethod: String = "VISA",
-    val hostMessageFormat: String = "MS_ENABLER",
-    val notifyId: Int = 1433,
-    val aid: String = "A0000000031010",
+    val tranId: String?,
+    val cvmPerformed: String,
+    val tsi: String?,
+    val mcc: String,
+    val merchantName: String,
+    val tranStatus: String,
+    val tranType: String,
+    val atc: String?,
+    val createdAt: String,
+    val updatedAt: String,
+    val trace: String,
+    val callbackUrl: String?,
+    val entryMode: String,
+    val amount: String,
+    val batchNo: String,
+    val appName: String?,
+    val linkedTranId: String?,
+    val merchantAddr: String,
+    val rrn: String?,
+    val tc: String?,
+    val tvr: String?,
+    val accountMasked: String?,
+    val sdkId: String?,
+    val paymentMethod: String,
+    val hostMessageFormat: String,
+    val aid: String?,
+    val acqMid: String = "null",
+    val acqTid: String = "null",
+    val notifyId: Int = 0,
+    val acquirerResponse: String = "",
+    val parentUUID: String? = null,
+    val childUUID: String? = null,
 )
 
-data class PaymentStatusResponseData(
-    val foo: String,
-)
+//data class PaymentStatusResponseData(
+//    val foo: String,
+//)
 
-data class PaymentStatusResponse(
-    val statusCode: Int,
-    val message: String,
-    val messageCode: String,
-    val success: Boolean,
-    val data: PaymentStatusResponseData,
-)
+//data class PaymentStatusResponse(
+//    val statusCode: Int,
+//    val message: String,
+//    val messageCode: String,
+//    val success: Boolean,
+//    val data: PaymentStatusResponseData,
+//)
 // -------------------------------------------------------
 
 // PayByLink related ----------------------------------
@@ -376,6 +398,7 @@ data class PayByLinkRequest(
     val ExpiryDate: String,
     val PBLLinkName: String,
     val Product: List<PayByLinkRequestProduct>,
+    val isSourceMinesec: Boolean = true
 )
 
 data class PayByLinkResponseDataProduct(
@@ -388,7 +411,7 @@ data class PayByLinkResponseDataProduct(
 )
 
 data class PayByLinkResponseData(
-    val ProductId: String,
+    val ProductID: String,
     val DASMID: String,
     val Product: List<PayByLinkResponseDataProduct>,
     val Amount: Float,
@@ -445,21 +468,42 @@ data class CategoryListResponse(
 data class ProductListDataRecord(
     val CategoryID: String,
     val ProductName: String,
-    val ProductDesc: String,
+    val ProductDesc: String? = null,
     val ProductStatus: Boolean,
     val ProductPrice: Float,
     val ProductID: String,
-    val ProductImage: String?,
+    val ProductImage: String? = null,
     val ProductCode: String,
-    val ProductFoodType: String,
-    val ProductSize: String,
-    val CreatedAt: String?,
-    val UpdatedAt: String?,
-    val ProductStock: Int,
+    val ProductFoodType: String? = null,
+    val ProductSize: String? = null,
+    val CreatedAt: String? = null,
+    val UpdatedAt: String? = null,
+    val ProductStock: Int? = null,
     val MerchantID: String,
     val Currency: String,
-    val DeletedAt: String?,
-    val DeletedBy: String?,
+    val DeletedAt: String? = null,
+    val isDeleted: Boolean? = null,
+    val DeletedBy: String? = null,
+    val ServiceFeePerc: Float?,
+    val ServiceFeeEnabled: Boolean?,
+    val ServiceFeeAmount: Float?
+)
+
+@Serializable
+data class ProductRequest (
+    val ProductName: String?,
+    val ProductDesc: String?,
+    val ProductPrice: Float?,
+    val ProductFoodType: String? = null,
+    val ProductSize: String? = null,
+    val ProductCode: String?,
+    val ProductStatus: Boolean?,
+    val ProductStock: Long? = null,
+    val Currency: String?,
+    val MerchantID: String?,
+    val CategoryID: String?,
+    val ServiceFeePerc: Float?,
+    val ServiceFeeEnabled: Boolean?
 )
 
 data class ProductListResponseData(
@@ -500,6 +544,16 @@ data class ExternalConfigData(
     val paymentMethod: List<DevicePaymentMethod>,
 )
 
+
+@Serializable
+data class MerchantSetting(
+    val TaxRegistrationNumber: String?,
+    val TaxName: String?,
+    val TaxOnOtherFeesPerc: Int?,
+    val CatalogEnabled: Boolean?
+)
+
+
 @Serializable
 data class DeviceInfo(
     val DeviceID: String,
@@ -513,6 +567,7 @@ data class DeviceInfo(
     val CreatedAt: String,
     val UpdatedAt: String,
     val Location: String? = null,
+    val MerchantSetting: MerchantSetting?
 )
 
 @Serializable
@@ -551,6 +606,8 @@ data class DevicePaymentMethod(
     val SettlementCCY: String,
     val schemes: DevicePaymentMethod_Schemes,
     val apms: DevicePaymentMethod_Apms,
+    val Type: String,
+    val Status: String,
 )
 
 @Serializable
@@ -569,6 +626,489 @@ data class InsightsResponse(
     val message: String,
     val messageCode: String,
     val success: Boolean,
-//    val data: ExternalConfigData,
+    val data: InsightsResponseData,
+)
+
+data class InsightsResponseData(
+    val total: Int,
+    val skip: Int,
+    val take: Int,
+    val records: List<InsightsResponseDataRecord>,
+)
+
+data class InsightsResponseDataRecord(
+    val uuid: String,
+    val status: String, //"NOTSUCCESSFUL"
+    val TerminalID: String,
+    val ID: String,
+    val amount: Float,
+    val CurrencyCode: String,
+    val TransactionDate: String,
+    val paymentMethod: String,
+    val event: String,
+    val TransactionType: String,
+    val DASMID: String?,
+    val AcquirerTransactionID: String?,
+    val BatchID: String?,
+    val BatchNo: String?,
+    val SettleStatus: String?,
+    val UpdatedAt: String?,
+    val ProductType: String?,
+    val IsVoided: Boolean?,
+    val IsRefunded: Boolean?,
 )
 // -------------------------------------------------------
+
+// Stats v2 related ---------------------------------------
+data class StatsV2Request(
+    val TimeZone: String,
+    val Currency: String,
+)
+
+data class StatsV2Response(
+    val dummy: String,
+)
+// -------------------------------------------------------
+
+
+// Payment Details related ---------------------------------------
+data class PaymentDetailsResponse(
+    val statusCode: Int,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: PaymentDetailsResponseData,
+)
+
+data class PaymentDetailsResponseData(
+    val TransactionRefID: String,
+    val V2UUID: String?,
+    val MerchantID: String,
+    val Isrecurring: Boolean,
+    val TransactionType: String,
+    val Date: String,
+    val UpdatedDate: String,
+    val Amount: Float,
+    val DASMID: String,
+    val CurrencyCode: String,
+    val Response: Int,
+    val trackID: String,
+    val Status: String,
+    val AuthCode: String?,
+    val CardHolder: String,
+    val CVVResponse: String,
+    val ExpiryDate: String,
+    val Memo: String?,
+    val AcquirerReferenceNumber: String,
+    val Scheme: String,
+    val TransactionID: String,
+    val CardNumber: String,
+    val EmailAddress: String,
+    val Phone: String,
+    val BillingPostcode: String,
+    val BillingCountry: String,
+    val BillingAddress: String,
+    val BillingCity: String,
+    val ShippingAddress: String,
+    val ShippingCountry: String,
+    val ShippingCity: String,
+    val ShippingPostcode: String,
+    val CustomerIP: String,
+    val MerchantIP: String,
+    val AcquirerCode: String,
+    val AcquirerMID: String?,
+    val Event: String?,
+    val ACQError: String?,
+    val GatewayError: String?,
+    val BIN: String?,
+    val IssuingBank: String?,
+    val IssuingCountry: String?,
+    val MerchantRefNumber: String?,
+    val TransactionTimezone: String?,
+    val AcquirerID: String?,
+    val TerminalID: String?,
+    val browser_info: String?,
+    val MerchantCategoryCode: String,
+    val ProductType: String?,
+    val PrimaryAddress: PrimaryAddress?,
+    val Merchant: String?,
+    val Referenceremark: String,
+    val LegalNameInEnglish: String?,
+    val SecretKey: String?,
+    val TransactionLog: Any?, // []
+    val TokenizedTransactionHistory: Any?, // [],
+    val ProductDetails: Any?, // [],
+    val SubscriptionDetails: String?,
+    val PaymentType: String?,
+    val AcquirerResponse: List<String?>,
+    val TransactionHistory: List<TransactionHistory>?,
+    val CaptureRequestTransaction: List<Any>? = null,
+    val RefundRequestTransaction: List<Any>? = null,
+    val TerminalName: String?,
+    val PBLLinkName: String?,
+    val IsBlockRefund: Boolean?,
+
+
+)
+
+
+
+data class PrimaryAddress(
+    val Line1: String?,
+    val Line2: String?,
+    val Line3: String?,
+    val Line4: String?,
+    val Locality: String?,
+    val Region: String?,
+    val PostCode: String?,
+    val Country: String?
+)
+
+@Serializable
+data class AquirerResponse(
+    val tranId: String = "",
+    val tranType: String = "",
+    val tranStatus: String = "",
+    
+    val gatewayNotes: String = "",
+    
+    
+    val amount: AquirerResponseAmount = AquirerResponseAmount(),
+    val paymentMethod: String = "",
+    val entryMode: String = "",
+    val accountMasked: String = "",
+    val accountBin: String = "",
+    val accountLast4: String = "",
+    val issCountryCode: String = "",
+    val cvmPerformed: String? = null,
+    val aid: String = "",
+    val appName: String = "",
+    val hostRespMessage: String = "",
+    val tc: String = "",
+    val tvr: String = "",
+    val tsi: String = "",
+    val atc: String = "",
+    val profileId: String = "",
+    val acceptanceId: String = "",
+    val acptId: String = "",
+    val sdkId: String = "",
+    val posReference: String = "",
+    val trace: String = "",
+    val merchantName: String = "",
+    val merchantAddr: String = "",
+    val mcc: String = "",
+    val primaryMid: String = "",
+    val primaryTid: String = "",
+    val hostMessageFormat: String = "",
+    val providerReference: String = "",
+    val providerMchId: String = "",
+    val extraData: String = "",
+    val rrn: String = "",
+    val approvalCode: String = "",
+    val batchId: String = "",
+    val batchNo: String = "",
+    val actions: List<AquirerResponseAction> = listOf(AquirerResponseAction()),
+    val srsTranId: String = "",
+    val consumerPaymentDevice: String = "",
+    val createdAt: String = "",
+)
+
+@Serializable
+data class AquirerResponseAmount(
+    val value: String = "",
+    val currency: String = "",
+)
+
+@Serializable
+data class AquirerResponseAction(
+    val actionId: String = "",
+    val trace: String = "",
+    val actionType: String = "",
+    val actionStatus: String = "",
+    val requestId: String = "",
+    val amount: AquirerResponseAmount = AquirerResponseAmount(),
+    val tranId: String = "",
+    val reason: String = "",
+    val hostRespCode: String = "",
+    val hostRespMessage: String = "",
+    val posReference: String = "",
+    val extraData: String = "",
+    val createdAt: String = "",
+)
+
+@Serializable
+data class TransactionHistory(
+    val uuid: String,
+    val trackid: String?,
+    val event: String?,
+    val TransactionType: String,
+    val amount: Float,
+    val status: String,
+    val ResponseCodeID: Int,
+    val CreatedAt: String,
+    val CurrencyCode: String,
+    val Isrecurring: Boolean,
+)
+
+// -------------------------------------------------------
+//Signature API Models
+@Serializable
+data class UploadSignatureResponse(
+    val statusCode: Int,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+)
+@Serializable
+data class ProductImageRequest(
+    val ProductID: String,
+    val fileName: String,
+)
+
+
+@Serializable
+data class SettleBatchRequest(
+    val batchId: String,
+)
+
+
+data class UploadImageResponse (
+    val statusCode: Long,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: UploadImageData
+)
+
+data class UploadImageData (
+    val signedUrl: String,
+    val fileName: String
+)
+
+
+data class ProductResponse (
+    val statusCode: Long,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: ProductListDataRecord
+)
+
+data class AppConfigResponse (
+    val statusCode: Long,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: List<AppConfig>
+)
+
+data class AppConfig (
+    val ID: Long,
+    val AppENV: String,
+    val BaseAPIURL: String,
+    val RegistryLogin: String,
+    val RegistryToken: String,
+    val PrevAppVersion: Long,
+    val CurrAppVersion: Long,
+    val IsUpdateMandatory: Boolean,
+    val TransactionDetailsURL: String,
+    val CvmLimit: Float? = 200.0f
+)
+
+data class SettlementListResponse (
+    val statusCode: Long,
+    val success: Boolean,
+    val message: String,
+    val data: SettlementData
+)
+
+data class SettlementData (
+    val totalCount: Long,
+    val take: Long,
+    val skip: Long,
+    val records: List<SettlementRecord>
+)
+
+data class SettlementRecord  constructor(
+    val ID: Long,
+    val uuid: String,
+    val BatchID: String,
+    val BatchNo: String,
+    val SettleStatus: String,
+    val CreatedAt: String,
+    val UpdatedAt: String? = null,
+    val SettledAt: String? = null,
+    val Capture: Long,
+    val CaptureAmount: Double,
+    val Sale: Long,
+    val SaleAmount: Double,
+    val Refund: Long,
+    val RefundAmount: Double,
+    val Voided: Long,
+    val VoidedAmount: Double
+)
+
+data class SettleBatchResponse (
+    val status_code: Long,
+    val BatchID: String,
+    val SettleStatus: String,
+    val SettlementRes: String
+)
+
+data class GetSignatureResponse (
+    val statusCode: Long,
+    val message: String,
+    val messageCode: String,
+    val success: Boolean,
+    val data: SignatureData
+)
+
+data class SignatureData (
+    val imageExists: Boolean,
+    val signatureURL: Any? = null
+)
+
+fun PaymentDetailsResponseData.toTransactionListDataRecord(): TransactionListDataRecord {
+    return TransactionListDataRecord(
+        uuid = this.TransactionRefID, // Assuming TransactionRefID maps to uuid
+        MerchantRefID = this.MerchantRefNumber ?: this.MerchantID,
+        LegalName = this.LegalNameInEnglish ?: this.Merchant ?: "",
+        LegalNameInEnglish = this.LegalNameInEnglish,
+        DASMID = this.DASMID,
+        trackID = this.trackID,
+        AcquirerMID = this.AcquirerMID ?: "",
+        TransactionType = this.TransactionType,
+        Scheme = this.Scheme,
+        amount = this.Amount.toString(), // Float to String
+        CurrencyCode = this.CurrencyCode,
+        status = this.Status,
+        CardNumber = this.CardNumber,
+        AcquirerCode = this.AcquirerCode,
+        has3DS = false, // Defaulting to false as it's missing in source
+        AuthCode = this.AuthCode,
+        Isrecurring = this.Isrecurring,
+        Date = this.Date,
+        V2UUID = this.V2UUID,
+        ProductType = this.ProductType ?: "",
+        SubscriptionId = this.SubscriptionDetails,
+        UpdatedDate = this.UpdatedDate,
+        TerminalId = this.TerminalID ?: "",
+        TerminalName = this.TerminalName ?: "",
+        PBLLinkName = this.PBLLinkName,
+        IsWhitelisted = false, // Defaulting to false as it's missing in source
+        GatewayResponse = this.GatewayError ?: this.ACQError,
+        ResponseCode = this.Response.toString(), // Int to String
+        TransactionID = this.TransactionID.toIntOrNull() ?: 0, // String to Int safely
+        IntegrationType = "", // Missing in source, providing empty string
+        PaymentType = this.PaymentType,
+        SettleStatus = null, // Missing in source
+        BatchID = null, // Missing in source
+        BatchNo = null, // Missing in source
+        SettledAt = null, // Missing in source
+        AcquirerTransactionID = this.AcquirerReferenceNumber,
+        IsVoided = null, // Missing in source
+        IsRefunded = null // Missing in source
+    )
+}
+
+fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDataRecord {
+    return TransactionListDataRecord(
+        uuid = this.uuid,
+        V2UUID = this.uuid,
+
+        TransactionType = this.TransactionType,
+        amount = this.amount.toString(),
+        CurrencyCode = this.CurrencyCode,
+        status = this.status,
+
+        PaymentType = this.paymentMethod,
+        ProductType = this.ProductType ?: "",
+
+        Date = this.TransactionDate,
+        UpdatedDate = this.TransactionDate,
+
+        TerminalId = this.TerminalID,
+        TerminalName = this.TerminalID,
+
+        TransactionID = this.ID.toIntOrNull() ?: 0,
+
+        SettleStatus = this.SettleStatus,
+
+        BatchID = this.BatchID,
+        BatchNo = this.BatchNo,
+        AcquirerTransactionID = this.AcquirerTransactionID,
+        DASMID = this.DASMID ?: "",
+        IsVoided = this.IsVoided,
+        IsRefunded = this.IsRefunded,
+
+        // ---- Fields not available → defaults ----
+        Isrecurring = false,
+        IsWhitelisted = false,
+        MerchantRefID = "",
+        LegalName = "",
+        LegalNameInEnglish = "",
+        trackID = "",
+        AcquirerMID = "",
+        Scheme = "",
+        CardNumber = "",
+        AcquirerCode = "",
+        AuthCode = "",
+        SettledAt = "N/A",
+        SubscriptionId = "",
+        PBLLinkName = "N/A",
+        GatewayResponse = "",
+        ResponseCode = "",
+        IntegrationType = "",
+        has3DS = false,
+    )
+}
+
+fun Transaction.toPaymentStatusRequest(
+    parentUUID: String? = null,
+    childUUID: String? = null,
+    gateWayNotes: String? = null// only on Refund
+): PaymentStatusRequest {
+    val transactionJson = JSONObject(Json.encodeToString(this))
+    if (transactionJson.has("description")) {
+        val descriptionValue = transactionJson.opt("description")
+        transactionJson.remove("description")
+        transactionJson.put("gatewayNotes", descriptionValue)
+    }
+
+    if(gateWayNotes?.isNotBlank() == true){
+        transactionJson.put("gatewayNotes", gateWayNotes.trim())
+    }
+
+
+    return PaymentStatusRequest(
+        tranId = this.posReference.toString(),
+        cvmPerformed = this.cvmPerformed.toString(),
+        tsi = this.tsi.toString(),
+        mcc = this.mcc,
+        merchantName = this.merchantName,
+        tranStatus = this.tranStatus.toString(),
+        tranType = this.tranType.toString(),
+        atc = this.atc.toString(),
+        createdAt = this.createdAt.toEpochMilliseconds().toString(),
+        updatedAt = this.updatedAt?.toEpochMilliseconds().toString(),
+        trace = this.trace,
+        callbackUrl = this.callbackUrl.toString(),
+        entryMode = this.entryMode.toString(),
+        amount = "{\"currency\":\"${this.amount.currency}\",\"value\":${this.amount.value.toFloat()}}",
+        batchNo = this.batchNo.toString(),
+        appName = this.appName.toString(),
+        linkedTranId = this.posReference.toString(),
+        merchantAddr = this.merchantAddr.toString(),
+        rrn = this.rrn.toString(),
+        tc = this.tc.toString(),
+        tvr = this.tvr.toString(),
+        accountMasked = this.accountMasked.toString(),
+        sdkId = this.sdkId.toString(),
+        paymentMethod = this.paymentMethod.toString(),
+        hostMessageFormat = this.hostMessageFormat.toString(),
+        aid = this.aid.toString(),
+        acquirerResponse = transactionJson.toString(),
+        parentUUID = parentUUID,
+        childUUID = childUUID,
+    )
+}

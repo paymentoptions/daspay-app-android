@@ -1,28 +1,114 @@
+import java.io.FileInputStream
+import java.time.LocalDate
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.datadoghq.dd-sdk-android-gradle-plugin")
 
     kotlin("plugin.serialization") version "2.0.21"
     id("com.google.gms.google-services")
 }
 
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(FileInputStream(localPropertiesFile))
+    }
+}
+
+val datadogClientToken = (
+    localProperties.getProperty("DATADOG_CLIENT_TOKEN")
+        ?: System.getenv("DATADOG_CLIENT_TOKEN")
+        ?: ""
+).trim()
+
+val datadogApplicationId = (
+    localProperties.getProperty("DATADOG_APPLICATION_ID")
+        ?: System.getenv("DATADOG_APPLICATION_ID")
+        ?: ""
+).trim()
+
+if (datadogClientToken.isBlank() || datadogApplicationId.isBlank()) {
+    println("WARNING: Datadog credentials are missing. Set DATADOG_CLIENT_TOKEN and DATADOG_APPLICATION_ID in local.properties or env vars.")
+}
+
+
+val keystoreProperties = Properties().apply {
+    // Use the correct relative path to your keystore.properties file
+    val keystoreFile = rootProject.file(".sign/keystore.properties") // Change path if your file is elsewhere
+    if (keystoreFile.exists()) {
+        load(FileInputStream(keystoreFile))
+    } else {
+        println("WARNING: keystore.properties file not found at: ${keystoreFile.absolutePath}")
+    }
+}
+
 android {
     namespace = "com.paymentoptions.pos"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.paymentoptions.pos"
         minSdk = 29
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        targetSdk = 36
+        versionCode = 12
+        versionName = "12.0"
 
+
+        val appName = "Daspay"
+        base.archivesName.set("$appName-${versionName}-${versionCode}-${LocalDate.now()}")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "DATADOG_CLIENT_TOKEN", "\"$datadogClientToken\"")
+        buildConfigField("String", "DATADOG_APPLICATION_ID", "\"$datadogApplicationId\"")
+    }
+
+    flavorDimensions += "environment"
+    productFlavors {
+        create("dev") {
+            dimension = "environment"
+           // buildConfigField("String", "CURRENCY", "\"SGD\"")
+            buildConfigField("String", "ENVIRONMENT", "\"DEV\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-uat.paymentoptions.com/api/v1/\"")
+            versionNameSuffix = "-dev"
+        }
+        create("uat") {
+            dimension = "environment"
+           // buildConfigField("String", "CURRENCY", "\"SGD\"")
+            buildConfigField("String", "ENVIRONMENT", "\"UAT\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-uat.paymentoptions.com/api/v1/\"")
+            versionNameSuffix = "-uat"
+        }
+        create("production") {
+            dimension = "environment"
+            //buildConfigField("String", "CURRENCY", "\"SGD\"")
+            buildConfigField("String", "ENVIRONMENT", "\"PROD\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api.paymentoptions.com/api/v1/\"")
+        }
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            storeFile = keystoreProperties["storeFile"]?.let { rootProject.file(it as String) }
+            storePassword = keystoreProperties["storePassword"] as String?
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+        }
+
+        create("release") {
+            storeFile = keystoreProperties["storeFile"]?.let { rootProject.file(it as String) }
+            storePassword = keystoreProperties["storePassword"] as String?
+            keyAlias = keystoreProperties["keyAlias"] as String?
+            keyPassword = keystoreProperties["keyPassword"] as String?
+        }
     }
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -39,6 +125,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -73,6 +160,8 @@ dependencies {
     implementation(libs.androidx.material3.lint)
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.androidx.runtime)
+    implementation(libs.androidx.lifecycle.process)
+    implementation(libs.androidx.compose.foundation)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -91,9 +180,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-
-//    Minesec
-//    releaseImplementation("com.theminesec.sdk:headless:1.0.17")
+    releaseImplementation(libs.headless.release)
     debugImplementation(libs.headless.stage)
 
     //Firebase
@@ -110,4 +197,28 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.coil.gif)
+
+    implementation(libs.kotlinx.datetime)
+
+    // QR Code Generation (ZXing)
+    implementation(libs.core)
+
+    // For logging API requests and responses
+    implementation(libs.logging.interceptor)
+
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
+
+    implementation(libs.mpandroidchart)
+
+    implementation(platform(libs.log4j.bom))
+    implementation(libs.log4j.api)
+    implementation(libs.log4j.core)
+    implementation(libs.androidx.security.crypto)
+
+    // WorkManager for background task scheduling
+    implementation(libs.androidx.work.runtime.ktx)
+
+    implementation(libs.accompanist.swiperefresh)
+    implementation(libs.dd.sdk.android.rum)
 }

@@ -4,7 +4,9 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,20 +14,37 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -33,18 +52,31 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.R
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import coil3.compose.AsyncImage
+import com.google.gson.Gson
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.services.apiService.AquirerResponse
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.endpoints.getSignature
+import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
+import com.paymentoptions.pos.services.apiService.toTransactionListDataRecord
+import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.NoteChip
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
+import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
-import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlowStage
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.green500
@@ -52,41 +84,165 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
+import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.AppJson
+import com.paymentoptions.pos.utils.TransactionAction
+import com.paymentoptions.pos.utils.getAvailableAction
+import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionSuccessfulBottomSectionContent(
     navController: NavController,
-    transaction: TransactionListDataRecord?,
+    transactionId: String,
     enableScrolling: Boolean = false,
-    amountToCharge: String,
     signatureBitmap: Bitmap?,
     signatureDate: Date,
-    updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
+    updateFlowToDigitalSignature: () -> Unit = {},
+    updateFlowToReceipt: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
     val scrollState = rememberScrollState()
+    var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
+    var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
+
+    LaunchedEffect(Unit) {
+        paymentDetailsLatestResponse = try {
+            paymentDetails(
+                context = context,
+                paymentId = transactionId
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    if (paymentDetailsLatestResponse != null)
+        transactionAquirerResponse =
+            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
+                AppJson.decodeFromString<AquirerResponse>(
+                    it
+                )
+            }
+
+    fun navigateToVoidAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Gson().toJson(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "VOID"))
+    }
+
+    fun navigateToRefundAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Gson().toJson(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "REFUND"))
+    }
+
+    val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
+    val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
+        "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
+    } else {
+        null
+    }
+
     val dateString =
-        transaction?.Date ?: OffsetDateTime.now().toString()  //"2025-04-23T03:38:57.349+00:00"
-    val dateTime = OffsetDateTime.parse(dateString)
+        paymentDetailsLatestResponse?.data?.Date ?: OffsetDateTime.now()
+            .toString()
+    val dateTime = safeParseOffsetDateTime(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted: String = SimpleDateFormat("dd MMMM YYYY").format(date)
+
+    var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+
+    if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
+        modifier = Modifier.fillMaxWidth(),
+        onDismissRequest = { showQrCodeBottomSheetExpanded = false },
+        sheetState = sheetState,
+        containerColor = Color.White,
+        contentColor = primary500,
+        dragHandle = {}) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 20.dp)
+        ) {
+
+            Icon(
+                painter = painterResource(R.drawable.logo),
+                contentDescription = "DASPay Logo",
+                tint = primary500,
+                modifier = Modifier
+                    .height(
+                        com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP.div(
+                            1.5f
+                        )
+                    )
+                    .align(Alignment.Center)
+            )
+
+            IconButton(
+                modifier = Modifier.align(alignment = Alignment.CenterEnd), onClick = {
+                    showQrCodeBottomSheetExpanded = false
+                }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            val linkQrBitmap = generateQrCode(transactionDetailUrl ?: "")
+
+            PaymentQrCodeImage(
+                qrBitmap = linkQrBitmap,
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(shape = RoundedCornerShape(16.dp))
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            NoteChip(
+                text = "Scan with your device",
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            )
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            .padding(bottom = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            ScreenTitleWithCloseButton(navController = navController)
+        ScreenTitleWithCloseButton(
+            navController = navController,
+            fontSize = 8.sp,
+            onClose = { navController.navigate(Screens.Dashboard.route) {
+                popUpTo(Screens.AuthCheck.route) { inclusive = true }
+            } })
 
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.offset(y = 20.dp.times(-1))
+        ) {
             Text(
                 text = "Transaction Successful",
                 fontSize = 16.sp,
@@ -94,37 +250,55 @@ fun TransactionSuccessfulBottomSectionContent(
                 color = green500,
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-            CurrencyText(currency = currency, amount = amountToCharge.toString())
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.scale(0.7f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButton(
-                    text = "Refund",
-                    onClick = { },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
+            CurrencyText(
+                currency = currency,
+//                amount = paymentDetailsLatestResponse?.data?.Amount.toString()
+                amount = String.format(
+                    Locale.US,
+                    "%.2f",
+                    paymentDetailsLatestResponse?.data?.Amount ?: 0.00
                 )
+            )
 
-                Spacer(modifier = Modifier.width(10.dp))
+            if (paymentDetailsLatestResponse?.data != null) {
+                val transaction = paymentDetailsLatestResponse?.data!!.toTransactionListDataRecord()
+                val availableAction = getAvailableAction(transaction)
+                Row(
+                    modifier = Modifier.scale(0.7f),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
-                FilledButton(
-                    text = "View Full Receipt",
-                    onClick = { },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
+                    if(availableAction != TransactionAction.NONE){
+                        OutlinedButton(
+                            text = if(availableAction == TransactionAction.REFUND)"Refund" else "VOID",
+                            onClick = {
+                                when(availableAction){
+                                    TransactionAction.VOID -> navigateToVoidAction(transaction)
+                                    TransactionAction.REFUND -> navigateToRefundAction(transaction)
+                                    else ->{}
+                                }
+                            },
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                        )
+                    }
+
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                   if(shouldShowFullReceipt(transaction))
+                    FilledButton(
+                        text = "View Full Receipt",
+                        onClick = { updateFlowToReceipt() },
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                    )
+                }
             }
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
 
         Column(
             modifier = Modifier
@@ -146,16 +320,20 @@ fun TransactionSuccessfulBottomSectionContent(
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
                 ) {
                     Text(
                         "Reference No.", style = AppTheme.typography.footnote.copy(
                             fontWeight = FontWeight.Normal, fontSize = 14.sp
-                        )
+                        ),
+                        modifier = Modifier.padding(end = 8.dp)
                     )
 
                     Text(
-                        transaction?.TransactionID.toString(),
+                        paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                        modifier = Modifier.weight(1f),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -191,7 +369,10 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        "null", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                        text = transactionAquirerResponse?.trace.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
                     )
                 }
 
@@ -206,12 +387,54 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        "null", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = primary500
+                        text = transactionAquirerResponse?.approvalCode.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Aggregator", style = AppTheme.typography.footnote.copy(
+                            fontWeight = FontWeight.Normal, fontSize = 14.sp
+                        )
+                    )
+
+                    Text(
+//                        paymentDetailsLatestResponse?.data?.Scheme.toString(),
+                        transactionAquirerResponse?.paymentMethod.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+
+                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Note", style = AppTheme.typography.footnote.copy(
+                                fontWeight = FontWeight.Normal, fontSize = 14.sp
+                            )
+                        )
+
+                        Text(
+                            transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary500
+                        )
+                    }
+
+                }
+            }
 
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
@@ -239,7 +462,12 @@ fun TransactionSuccessfulBottomSectionContent(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     EmailButton(
-                        text = "Email", email = Email(), modifier = Modifier
+                        text = "Email",
+                        email = Email(
+                            subject = "Your DASPay Transaction Receipt",
+                            text = transactionDetailUrl ?: "Transaction details unavailable"
+                        ),
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,
@@ -251,7 +479,10 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     ShareButton(
-                        text = "Share", modifier = Modifier
+                        text = "Share",
+//                        shareContent = shareableSuccessText,
+                        shareContent = transactionDetailUrl ?: "Transaction details unavailable",
+                        modifier = Modifier
                             .weight(1f)
                             .border(
                                 2.dp,
@@ -272,20 +503,21 @@ fun TransactionSuccessfulBottomSectionContent(
                             )
                             .background(Color.White)
                             .padding(horizontal = 10.dp, vertical = 20.dp)
+                            .clickable { showQrCodeBottomSheetExpanded = true }
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 //Show Signature
                 if (signatureBitmap != null) {
                     Column(
                         modifier = Modifier
-                            .background(Color.White)
                             .fillMaxWidth()
-                            .aspectRatio(16 / 9f)
+//                            .height(200.dp)
                             .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
-                            .padding(8.dp)
+                            .padding(4.dp)
+//                            .clickable { updateFlowStage(ReceiveMoneyFlowStage.DIGITAL_SIGNATURE) }
                     ) {
                         Row(
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -319,22 +551,37 @@ fun TransactionSuccessfulBottomSectionContent(
 
                         }
 
-                        Image(
-                            bitmap = signatureBitmap.asImageBitmap(),
-                            contentDescription = "Customer signature"
-                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(16 / 9f)
+//                                .background(Color.Green)
+                        ) {
+                            Image(
+                                modifier = Modifier.padding(8.dp),//added padding to center signature
+//                                modifier = Modifier.scale(0.9f),
+                                bitmap = signatureBitmap.asImageBitmap(),
+                                contentDescription = "Customer signature",
+//                                contentScale = ContentScale.FillBounds,
+                                contentScale = ContentScale.Fit,
+                                alignment = Alignment.Center,
+//                                modifier = Modifier.rotate(270f)
+                            )
+                        }
                     }
 
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 FilledButton(
                     text = if (signatureBitmap != null) "View Transaction Details" else "Take Digital Signature",
                     onClick = {
                         if (signatureBitmap != null) {
-                            updateFlowStage(ReceiveMoneyFlowStage.RECEIPT)
-                        } else updateFlowStage(ReceiveMoneyFlowStage.DIGITAL_SIGNATURE)
+                            updateFlowToReceipt()
+                        } else updateFlowToDigitalSignature()
                     },
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,

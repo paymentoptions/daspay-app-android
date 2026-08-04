@@ -1,33 +1,27 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
-import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.device.getDasmid
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
-import com.paymentoptions.pos.services.apiService.generateRequestHeaders
-import com.paymentoptions.pos.services.apiService.shouldRefreshToken
+import com.paymentoptions.pos.services.apiService.TokenRepository
+import com.paymentoptions.pos.services.apiService.generateRequestHeader
 
 suspend fun payByLink(
     context: Context,
     payByLinkRequest: PayByLinkRequest,
+    dasmid: String,
 ): PayByLinkResponse? {
     try {
-        var authDetails = SharedPreferences.getAuthDetails(context)
-        val username = authDetails?.data?.email ?: ""
-        val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
+        val tokenRepository = TokenRepository.getInstance(context)
+        val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
 
-        if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
+        val idToken = authDetails.data.token.idToken
+        val requestHeaders = generateRequestHeader(idToken)
 
-        val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generateRequestHeaders(idToken ?: "")
-
-        val dasmid = getDasmid(context)
-
-        println("payByLink: $payByLinkRequest")
-        var response: PayByLinkResponse = RetrofitClient.api.payByLink(
+//      val dasmid = getPayByLinkDasmid(context)
+        var response: PayByLinkResponse = RetrofitClient.getApi(context).payByLink(
             headers = requestHeaders,
             dasmid = dasmid,
             request = payByLinkRequest
@@ -35,7 +29,7 @@ suspend fun payByLink(
 
         return response
     } catch (e: Exception) {
-        println("payByLinkError: $e")
+        AppLogger.error("payByLinkError: $e")
         throw e
     }
 }

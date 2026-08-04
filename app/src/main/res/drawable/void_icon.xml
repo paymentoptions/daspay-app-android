@@ -1,0 +1,37 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="25dp"
+    android:height="27dp"
+    android:viewportWidth="25"
+    android:viewportHeight="27">
+
+    <!-- Outer Circle -->
+    <path
+        android:pathData="M12.5,2.5
+                          A12,12 0 1,1 12.49,2.5"
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#6C6C6C"
+        android:strokeWidth="1"/>
+
+    <!-- Diagonal Line -->
+    <path
+        android:pathData="M20.3737,5.33218 L4.3737,23.3322"
+        android:strokeColor="#6C6C6C"
+        android:strokeWidth="1"
+        android:fillColor="@android:color/transparent"/>
+
+    <!-- Small Horizontal Pill -->
+    <path
+        android:pathData="M16.4398 15.6387H13.5066C13.0924 15.6387 12.7566 15.9745 12.7566 16.3887C12.7566 16.8029 13.0924 17.1387 13.5066 17.1387H16.4398C16.8541 17.1387 17.1898 16.8029 17.1898 16.3887C17.1898 15.9745 16.8541 15.6387 16.4398 15.6387Z"
+        android:fillColor="#6C6C6C"/>
+
+    <!-- Rectangle Body -->
+    <path
+        android:pathData="M17.4523 20.253H7.70075C6.212 20.253 5 19.0417 5 17.5522V11.7007C5 10.212 6.21125 9 7.70075 9H17.4523C18.941 9 20.153 10.2112 20.153 11.7007V17.5522C20.153 19.041 18.9418 20.253 17.4523 20.253ZM7.70075 10.5007C7.0385 10.5007 6.5 11.0392 6.5 11.7015V17.553C6.5 18.2145 7.0385 18.7538 7.70075 18.7538H17.4523C18.1145 18.7538 18.653 18.2153 18.653 17.553V11.7015C18.653 11.04 18.1145 10.5007 17.4523 10.5007H7.70075Z"
+        android:fillColor="#6C6C6C"/>
+
+    <!-- Inner Horizontal Bar -->
+    <path
+        android:pathData="M5.74854 12.3398H19.4015V13.8398H5.74854Z"
+        android:fillColor="#6C6C6C"/>
+
+</vector>

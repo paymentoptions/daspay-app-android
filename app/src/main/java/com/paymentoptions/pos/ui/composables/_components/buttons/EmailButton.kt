@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.ui.composables._components.buttons
 
 import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
@@ -37,7 +38,8 @@ import com.paymentoptions.pos.utils.validation.validateEmail
 data class Email(
     val id: String = "",
     val subject: String = "Shared via DASPay",
-    val text: String = "",
+    //val text: String = "",
+    val text: String,
 )
 
 @Composable
@@ -53,15 +55,13 @@ fun EmailButton(text: String, email: Email, modifier: Modifier = Modifier) {
     }
 
     fun emailAction() {
-        val sendIntent = Intent(Intent.ACTION_SEND).apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_EMAIL, arrayOf<String>(emailState.text.toString()))
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "message/rfc822"
+            putExtra(Intent.EXTRA_EMAIL, arrayOf(emailState.text.toString()))
             putExtra(Intent.EXTRA_SUBJECT, email.subject)
             putExtra(Intent.EXTRA_TEXT, email.text)
-            type = "text/plain"
         }
-        val shareIntent = Intent.createChooser(sendIntent, null)
-        startActivity(context, shareIntent, null)
+        startActivity(context, Intent.createChooser(intent, "Send Email"), null)
     }
 
     if (showDialog) AlertDialog(

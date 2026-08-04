@@ -15,6 +15,7 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
+        maven { url = uri("https://jitpack.io") }
         mavenCentral()
 
         // MineSec's maven registry
@@ -41,7 +42,7 @@ dependencyResolutionManagement {
             url = uri("https://maven.pkg.github.com/theminesec/ms-registry-client")
             credentials {
                 username = MINESEC_REGISTRY_LOGIN
-                password = MINESEC_REGISTRY_TOKEN
+                password = "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"
             }
         }
 
@@ -50,4 +51,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Payment Options POS"
 include(":app")
- 
+include(":shared")

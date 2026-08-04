@@ -18,13 +18,14 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Fastfood
+import androidx.compose.material.icons.outlined.Filter
 import androidx.compose.material.icons.outlined.Handshake
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Money
-import androidx.compose.material.icons.outlined.MoneyOff
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
@@ -50,10 +51,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.paymentoptions.pos.R
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignOutResponse
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -76,8 +81,11 @@ val home = BottomNavigationBarItem(
     title = "Home", icon = Icons.Outlined.Dashboard, route = Screens.Dashboard.route
 )
 
-val foodMenu = BottomNavigationBarItem(
-    title = "Food Menu", icon = Icons.Outlined.Fastfood, route = Screens.FoodOrderFlow.route
+val catalogMenu = BottomNavigationBarItem(
+    title = "Catalog",
+    svgIcon = R.drawable.catalog_icon,
+    icon = Icons.Outlined.Book,
+    route = Screens.FoodOrderFlow.route
 )
 
 val receiveMoney = BottomNavigationBarItem(
@@ -97,17 +105,17 @@ val more = BottomNavigationBarItem(
     title = "More", icon = Icons.Outlined.MoreHoriz, route = "More"
 )
 
-val refund = BottomNavigationBarItem(
-    title = "Refund",
-    icon = Icons.Outlined.MoneyOff,
-    svgIcon = R.drawable.refund,
-    route = Screens.Refund.route
+val query = BottomNavigationBarItem(
+    title = "Query",
+    svgIcon = R.drawable.query_icon,
+    icon = Icons.Outlined.Filter,
+    route = Screens.QueryScreen.route
 )
 
 val transactionHistory = BottomNavigationBarItem(
     title = "Transaction History",
     icon = Icons.Outlined.CreditCard,
-    route = Screens.TransactionHistory.route
+    route = "${Screens.TransactionHistory.route}?showBarChart=${false}"
 )
 
 val settlement = BottomNavigationBarItem(
@@ -122,9 +130,19 @@ val helpAndSupport = BottomNavigationBarItem(
     title = "Help & Support", icon = Icons.Outlined.Info, route = Screens.HelpAndSupport.route
 )
 
-val itemsInMore = listOf<BottomNavigationBarItem>(
+val sendLogs = BottomNavigationBarItem(
+    title = "Send Logs", icon = Icons.Outlined.Info, route = Screens.SendLogs.route
+)
+
+val itemsInMoreAdmin = listOf<BottomNavigationBarItem>(
     transactionHistory,
 //    notifications,
+    settlement,
+    settings,
+    helpAndSupport,
+)
+
+val itemsInMoreStaff = listOf<BottomNavigationBarItem>(
     settlement,
     settings,
     helpAndSupport,
@@ -147,12 +165,24 @@ fun MyBottomNavigationBar(
     var signOutResponse: SignOutResponse? = null
 //    var selected by remember { mutableStateOf<BottomNavigationBarItem>(home) }
 
+    val moreList : ArrayList<BottomNavigationBarItem> = arrayListOf()
+    if (DPSharedPreferences.isAdmin(context)) {
+        moreList.addAll(itemsInMoreAdmin)
+    } else {
+        moreList.addAll(itemsInMoreStaff)
+    }
+    if(AppLogger.IS_DEBUG_ENABLED){
+        moreList.add(sendLogs)
+    }
+
     MyDialog(
         showDialog = showSignOutConfirmationDialog,
         title = "Confirmation Required",
         text = "Do you want to log out?",
         acceptButtonText = "Log Out",
         onAcceptFn = {
+            AppAnalytics.criticalButtonClick(buttonName = "logout_confirm", screen = "more_menu")
+            AppAnalytics.logout(result = "initiated", source = "bottom_navigation_more")
             scope.launch {
                 signOutLoader = true
 
@@ -161,22 +191,29 @@ fun MyBottomNavigationBar(
                     println("signOutResponse: $signOutResponse")
 
                     if (signOutResponse == null) {
-                        navController.navigate(Screens.SignIn.route) {
+                        AppAnalytics.logout(result = "success", source = "bottom_navigation_more")
+                        TokenAutoRefresher.getInstance(context).onUserSignedOut()
+                        DPSharedPreferences.clearSharedPreferences(context)
+                        navController.navigate(Screens.AuthCheck.route) {
                             popUpTo(0) { inclusive = true }
                         }
                     }
 
                     signOutResponse?.let {
                         if (it.success) {
-                            SharedPreferences.clearSharedPreferences(context)
-                            navController.navigate(Screens.SignIn.route) {
+                            AppAnalytics.logout(result = "success", source = "bottom_navigation_more")
+                            TokenAutoRefresher.getInstance(context).onUserSignedOut()
+                            DPSharedPreferences.clearSharedPreferences(context)
+                            navController.navigate(Screens.AuthCheck.route) {
                                 popUpTo(0) { inclusive = true }
                             }
                         }
                     }
                 } catch (e: Exception) {
-                    SharedPreferences.clearSharedPreferences(context)
-                    navController.navigate(Screens.SignIn.route) {
+                    AppAnalytics.logout(result = "failed", source = "bottom_navigation_more")
+                    TokenAutoRefresher.getInstance(context).onUserSignedOut()
+                    DPSharedPreferences.clearSharedPreferences(context)
+                    navController.navigate(Screens.AuthCheck.route) {
                         popUpTo(0) { inclusive = true }
                     }
 
@@ -189,6 +226,20 @@ fun MyBottomNavigationBar(
             showSignOutConfirmationDialog = false
         },
         onDismissFn = { showSignOutConfirmationDialog = false })
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route.orEmpty()
+
+    val isHomeSelected = currentRoute.startsWith(Screens.Dashboard.route) && !showMoreItems
+    val isFoodSelected = currentRoute.startsWith(Screens.FoodOrderFlow.route) && !showMoreItems
+    val isReceiveMoneySelected = currentRoute.startsWith(Screens.ReceiveMoneyFlow.route) && !showMoreItems
+    val isQuerySelected = currentRoute.startsWith(Screens.QueryScreen.route) && !showMoreItems
+    val isMoreRoute = currentRoute.startsWith(Screens.TransactionHistory.route) ||
+        currentRoute.startsWith(Screens.Settlement.route) ||
+        currentRoute.startsWith(Screens.Settings.route) ||
+        currentRoute.startsWith(Screens.HelpAndSupport.route) ||
+        currentRoute.startsWith(Screens.SendLogs.route)
+    val isMoreSelected = showMoreItems || isMoreRoute
 
     Column(modifier = modifier) {
 
@@ -211,13 +262,11 @@ fun MyBottomNavigationBar(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(16.dp)
             ) {
-                items(itemsInMore.size) {
-
+                items(moreList.size) {
                     MyElevatedCard {
                         Item(
-                            itemsInMore[it],
-                            more,
-                            onSelected = { navController.navigate(itemsInMore[it].route) },
+                            moreList[it],
+                            onSelected = { navController.navigate(moreList[it].route) },
                             modifier = Modifier
                                 .fillMaxSize()
                                 .padding(16.dp),
@@ -236,7 +285,6 @@ fun MyBottomNavigationBar(
                                 icon = Icons.AutoMirrored.Outlined.Logout,
                                 route = "Dummy"
                             ),
-                            more,
                             onSelected = { showSignOutConfirmationDialog = true },
                             modifier = Modifier
                                 .fillMaxSize()
@@ -261,53 +309,126 @@ fun MyBottomNavigationBar(
 
             Item(
                 home,
-                selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
+                isSelected = isHomeSelected,
                 onSelected = {
-//                    if (selectedBottomNavigationBarItem !== home) {
-                    selectedBottomNavigationBarItem = home
-                    navController.navigate(selectedBottomNavigationBarItem.route)
-//                    }
+                    AppAnalytics.criticalButtonClick(buttonName = "nav_home", screen = "bottom_nav")
+                    val currentRoute =
+                        navController.currentBackStackEntry?.destination?.route
+
+                    if (currentRoute != home.route) {
+                        selectedBottomNavigationBarItem = home
+                        AppAnalytics.dashboardNavigation(destination = home.route, source = "bottom_nav")
+                        navController.navigate(selectedBottomNavigationBarItem.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                        }
+                        if(showMoreItems){
+                            onClickShowMoreItems()
+                        }
+                    }
                 })
 
             Item(
-                foodMenu,
-                selectedBottomNavigationBarItem,
+                catalogMenu,
                 modifier = Modifier.weight(1f),
+                isSelected = isFoodSelected,
                 onSelected = {
-//                    if (selectedBottomNavigationBarItem !== foodMenu) {
-                    selectedBottomNavigationBarItem = foodMenu
-                    navController.navigate(selectedBottomNavigationBarItem.route)
-//                    }
+                    AppAnalytics.criticalButtonClick(buttonName = "nav_catalog", screen = "bottom_nav")
+                    val currentRoute =
+                        navController.currentBackStackEntry?.destination?.route
+
+                    if (currentRoute != catalogMenu.route) {
+                        selectedBottomNavigationBarItem = catalogMenu
+                        AppAnalytics.dashboardNavigation(destination = catalogMenu.route, source = "bottom_nav")
+                        navController.navigate(selectedBottomNavigationBarItem.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                        }
+                    } else {
+                        // User is already on food menu - reset to initial stage
+                        selectedBottomNavigationBarItem = catalogMenu
+                        navController.navigate(catalogMenu.route) {
+                            launchSingleTop = true
+                            popUpTo(catalogMenu.route) { inclusive = true }
+                        }
+                    }
+                    if(showMoreItems){
+                        onClickShowMoreItems()
+                    }
                 })
 
             Item(
                 receiveMoney,
-                selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1.5f),
+                isSelected = isReceiveMoneySelected,
                 onSelected = {
-//                    if (selectedBottomNavigationBarItem !== receiveMoney) {
-                    selectedBottomNavigationBarItem = receiveMoney
-                    navController.navigate(selectedBottomNavigationBarItem.route)
-//                    }
+                    AppAnalytics.criticalButtonClick(buttonName = "nav_receive_money", screen = "bottom_nav")
+                    val currentRoute =
+                        navController.currentBackStackEntry?.destination?.route
+
+                    if (currentRoute != receiveMoney.route) {
+                        selectedBottomNavigationBarItem = receiveMoney
+                        AppAnalytics.dashboardNavigation(destination = receiveMoney.route, source = "bottom_nav")
+                        navController.navigate(selectedBottomNavigationBarItem.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                        }
+                        if(showMoreItems){
+                            onClickShowMoreItems()
+                        }
+                    }
                 })
 
             Item(
-                refund,
-                selectedBottomNavigationBarItem,
+                query,
                 modifier = Modifier.weight(1f),
+                isSelected = isQuerySelected,
                 onSelected = {
-                    selectedBottomNavigationBarItem = refund
-                    navController.navigate(selectedBottomNavigationBarItem.route)
-                })
+                    AppAnalytics.criticalButtonClick(buttonName = "nav_query", screen = "bottom_nav")
+
+                    val currentRoute =
+                        navController.currentBackStackEntry?.destination?.route
+
+                    if (currentRoute != query.route) {
+                        selectedBottomNavigationBarItem = query
+                        AppAnalytics.dashboardNavigation(destination = query.route, source = "bottom_nav")
+                        navController.navigate(selectedBottomNavigationBarItem.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                        }
+                        if(showMoreItems){
+                            onClickShowMoreItems()
+                        }
+                    }
+                }
+            )
 
             Item(
                 more,
-                selectedBottomNavigationBarItem,
                 modifier = Modifier.weight(1f),
+                isSelected = isMoreSelected,
                 onSelected = {
-                    selectedBottomNavigationBarItem = more
-                    onClickShowMoreItems()
+                    AppAnalytics.criticalButtonClick(buttonName = "nav_more", screen = "bottom_nav")
+                    val currentRoute =
+                        navController.currentBackStackEntry?.destination?.route
+
+                    if (currentRoute != more.route) {
+                        selectedBottomNavigationBarItem = more
+                        onClickShowMoreItems()
+                    }
                 })
         }
     }
@@ -316,12 +437,12 @@ fun MyBottomNavigationBar(
 @Composable
 fun Item(
     item: BottomNavigationBarItem,
-    selected: BottomNavigationBarItem,
     onSelected: () -> Unit,
     modifier: Modifier = Modifier,
     minLines: Int = 1,
     maxLines: Int = 1,
     inMore: Boolean = false,
+    isSelected: Boolean = false,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.clickable {
@@ -333,20 +454,27 @@ fun Item(
             modifier = Modifier
                 .size(if (inMore) 51.dp else 39.dp)
                 .clip(RoundedCornerShape(50))
-                .background(if (item.hideIcon || !inMore) Color.Transparent else iconBackgroundColor),
+                .background(
+                    when {
+                        inMore -> iconBackgroundColor
+                        item.hideIcon -> Color.Transparent
+                      //  isSelected -> iconBackgroundColor
+                        else -> Color.Transparent
+                    }
+                ),
             contentAlignment = Alignment.Center
         ) {
             if (!item.hideIcon) if (item.svgIcon != null) Icon(
-                painter = painterResource(R.drawable.refund),
+                painter = painterResource(item.svgIcon),
                 contentDescription = item.title,
                 modifier = Modifier.size(24.dp),
-                tint = primary500
+                tint =  if (isSelected) primary100 else primary500
             )
             else Icon(
                 imageVector = item.icon,
                 contentDescription = item.title,
                 modifier = Modifier.size(24.dp),
-                tint = primary500
+                tint = if (isSelected) primary100 else primary500
             )
         }
 
@@ -358,8 +486,13 @@ fun Item(
             minLines = minLines,
             maxLines = maxLines,
             fontSize = if (inMore) 14.sp else 12.sp,
-            fontWeight = if (inMore) FontWeight.Normal else FontWeight.SemiBold,
-            color = if (item.hideIcon) primary100 else primary500,
+            fontWeight = if (inMore) FontWeight.Normal else if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = when {
+                inMore -> primary500
+                item.hideIcon -> if (isSelected) primary100 else primary500
+                isSelected -> primary100
+                else -> primary500
+            },
         )
     }
 }

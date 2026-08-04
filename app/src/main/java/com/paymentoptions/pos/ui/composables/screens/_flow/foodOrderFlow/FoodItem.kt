@@ -13,6 +13,10 @@ class FoodItem(
         this.cartQuantity--
     }
 
+    fun deleteQuantity() {
+        this.cartQuantity = 0
+    }
+
     fun increaseQuantity() {
         this.cartQuantity++
     }
@@ -21,9 +25,9 @@ class FoodItem(
         this.cartQuantity = f.cartQuantity
     }
 
-    fun isNonVeg(): Boolean {
-        return this.item.ProductFoodType == "NONVEG"
-    }
+//    fun isNonVeg(): Boolean {
+//        return this.item.ProductFoodType == "NONVEG"
+//    }
 
     fun imageUrl(): String {
         return if (this.item.ProductImage.isNotNull()) this.item.ProductImage!! else ""

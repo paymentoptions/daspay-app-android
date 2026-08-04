@@ -15,7 +15,7 @@ fun NotificationsScreen(navController: NavController) {
         bottomSectionMaxHeightRatio = 0.85f,
         alwaysShowLogo = false,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
-        bottomBarContent = BottomBarContent.NOTHING,
+        bottomBarContent = BottomBarContent.NAVIGATION_BAR,//NOTHING
         blurTopSection = true
     ) {
         BottomSectionContent(

@@ -19,7 +19,7 @@ fun RefundInitiatedScreen(navController: NavController) {
 
     SectionedLayout(
         navController = navController,
-        bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+        bottomBarContent = BottomBarContent.NAVIGATION_BAR,
         bottomSectionPaddingInDp = 0.dp,
         bottomSectionMaxHeightRatio = 0.95f,
         imageBelowLogo = {

@@ -3,6 +3,8 @@ package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow
 import MyDialog
 import android.content.Intent
 import android.graphics.Bitmap
+import com.paymentoptions.pos.device.GeoRestrictionManager
+import android.os.Handler
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
@@ -17,32 +19,45 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,55 +66,67 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DeveloperOptions
 import com.paymentoptions.pos.device.Nfc
-import com.paymentoptions.pos.device.getApms
-import com.paymentoptions.pos.device.getSchemes
-import com.paymentoptions.pos.device.getTransactionCurrency
-import com.paymentoptions.pos.device.screenRatioToDp
+import com.paymentoptions.pos.device.ScreenRatioToDp
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences.getApms
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
-import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.endpoints.payByLink
+import com.paymentoptions.pos.services.apiService.endpoints.payByQr
+import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
+import com.paymentoptions.pos.services.analytics.AppAnalytics
+import com.paymentoptions.pos.services.analytics.AnalyticsEvent
+import com.paymentoptions.pos.services.analytics.AnalyticsHelper
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
+import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
-import com.paymentoptions.pos.ui.composables._components.images.CreditCardImage
 import com.paymentoptions.pos.ui.composables._components.images.PayByLinkImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables._components.images.PaymentTapToPayImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.AmexImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.JcbImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.MastercardImage
-import com.paymentoptions.pos.ui.composables._components.images.cardpayment.VisaImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.AliPayImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.ApplePayImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.GrabPayImage
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment2
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.QrPayment3
-import com.paymentoptions.pos.ui.composables._components.images.qrpayment.WechatPayImage
+import com.paymentoptions.pos.ui.composables._components.paymentimagerow.PaymentApmsRow
+import com.paymentoptions.pos.ui.composables._components.paymentimagerow.PaymentSchemesRow
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.services.apiService.endpoints.void
+import com.paymentoptions.pos.device.DPSharedPreferences.getTapPayDasmid
+import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
+import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
+import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.chargemoney.ChargeMoneyBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.inputnoney.InputMoneyBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionfailed.TransactionFailedBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.transactionsuccessful.TransactionSuccessfulBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
+import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
+import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.primary100
+import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.cashPaymentMethod
+import com.paymentoptions.pos.utils.generateQrCode
+import com.paymentoptions.pos.utils.inProduction
 import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.paymentoptions.pos.utils.viaLinkPaymentMethod
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.time.OffsetDateTime
 import java.util.Date
 
 fun formatAmount(input: String): String {
@@ -110,36 +137,88 @@ fun formatAmount(input: String): String {
     return "$dollars.$centPortion"
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReceiveMoneyFlow(
     navController: NavController,
     initialReceiveMoneyFlowStage: ReceiveMoneyFlowStage = ReceiveMoneyFlowStage.INPUT_MONEY,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val currency = getTransactionCurrency(context)
-
+    var failureProceedFlag by remember { mutableStateOf(false) }
+    var successProceedFlag by remember { mutableStateOf(false) }
     val enableScrollingInsideBottomSectionContent = false
     val scrollState = rememberScrollState()
+    var latestTransactionId by remember { mutableStateOf<String?>(null) }
+    var transactionFailureMessage by remember { mutableStateOf<String?>(null) }
 
     var receiveMoneyFlowStage by remember {
-        mutableStateOf<ReceiveMoneyFlowStage>(
-            initialReceiveMoneyFlowStage
-        )
+        mutableStateOf(initialReceiveMoneyFlowStage)
     }
     var amountToChargeState by remember { mutableStateOf("") }
     var noteState by remember { mutableStateOf("") }
 
-    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(paymentMethods.first()) }
     var nfcStatusPair by remember { mutableStateOf(Nfc.getStatus(context)) }
 
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
-    var showNFCNotPresent by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
 
-    var transaction: TransactionListDataRecord? = null
     var signatureBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var signatureDate by remember { mutableStateOf(Date()) }
     var signaturePath by remember { mutableStateOf(Path()) }
+    var apms by remember { mutableStateOf(getApms(context)) }
+    var startTapAndPay by remember { mutableStateOf(false) }
+    var paymentUrl by remember { mutableStateOf("") }
+
+    var paymentDetailsResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
+
+    LaunchedEffect(Unit) {
+        AnalyticsHelper.track(AnalyticsEvent.ScreenViewed("ReceiveMoneyFlow"))
+    }
+
+    val availablePaymentMethods = remember(nfcStatusPair) {
+        val (isNfcSupported, _) = nfcStatusPair
+        if (isNfcSupported) {
+            // If NFC is supported (even if disabled), show all payment methods
+            paymentMethods(context)
+        } else {
+            // If NFC is not supported, filter out the 'Tap' payment method
+            paymentMethods(context).filter { it != tapPaymentMethod }
+        }
+    }
+    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(availablePaymentMethods.first()) }
+
+    LaunchedEffect(availablePaymentMethods) {
+        // If the currently selected method is no longer available, default to the first available one.
+        if (selectedPaymentMethod !in availablePaymentMethods) {
+            selectedPaymentMethod = availablePaymentMethods.first()
+        }
+    }
+
+    LaunchedEffect(selectedPaymentMethod) {
+        val paymentType = selectedPaymentMethod.text
+        val dasmid = when (selectedPaymentMethod) {
+            tapPaymentMethod -> DPSharedPreferences.getTapPayDasmid(context)
+            qrCodePaymentMethod -> DPSharedPreferences.getQRDasmid(context)
+            viaLinkPaymentMethod -> DPSharedPreferences.getPayByLinkDasmid(context)
+            else -> ""
+        }
+        AppAnalytics.merchantSelection(paymentType = paymentType, dasmid = dasmid)
+    }
+
+    latestTransactionId?.let {
+        LaunchedEffect(latestTransactionId) {
+            try {
+                paymentDetailsResponse = paymentDetails(
+                    context = context, paymentId = latestTransactionId.toString()
+                )
+            } catch (e: Exception) {
+                paymentDetailsResponse = null
+                AppLogger.debug("Failed to fetch payment details for transaction ID $latestTransactionId: ${e.message}")
+            }
+        }
+    }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -148,26 +227,67 @@ fun ReceiveMoneyFlow(
             if (event == Lifecycle.Event.ON_RESUME) {
                 //when app resumes check NFC status again
                 val currentNfcStatus = Nfc.getStatus(context)
+                nfcStatusPair = currentNfcStatus
                 if (currentNfcStatus.second) {
                     showNFCNotEnabled = false //hide the dialog
                 }
+                //Developer's option check
+                if (!DeveloperOptions.isEnabled(context)) {
+                    showDeveloperOptionsEnabled = false //hide the dialog
+                }
             }
         }
-        //adding observer to the lifecycel
+        //adding observer to the lifecycle
         lifecycleOwner.lifecycle.addObserver(observer)
         //removing the observer when the screen is closed
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
 
+    /*
     if (!nfcStatusPair.first) {
-        showNFCNotPresent = true
         tapPaymentMethod.setIsEnabled(false)
+        Toast.makeText(context, "Your device does not support NFC", Toast.LENGTH_SHORT).show()
+    }
+    */
+    if (availablePaymentMethods.contains(qrCodePaymentMethod) && !apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
+        qrCodePaymentMethod.setIsEnabled(false)
+        Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
+    }
+
+    // Geo-restriction state
+    var showGeoRestrictionDialog by remember { mutableStateOf(false) }
+    var geoRestrictionMessage by remember { mutableStateOf("") }
+
+    var ignoreGeoDialog by remember { mutableStateOf(false) }
+
+    if (showGeoRestrictionDialog && !ignoreGeoDialog) {
+        AlertDialog(
+             onDismissRequest = { showGeoRestrictionDialog = false },
+             title = { Text("Device Restricted") },
+             text = { Text(geoRestrictionMessage) },
+             confirmButton = {
+                 TextButton(onClick = {
+                     showGeoRestrictionDialog = false
+                     ignoreGeoDialog = true
+                     receiveMoneyFlowStage = ReceiveMoneyFlowStage.CHARGE_MONEY
+                 }) {
+                     Text("OK")
+                 }
+             }
+         )
     }
 
     fun updateFlowStage(newFoodOrderFlowStage: ReceiveMoneyFlowStage) {
+        // Check geo-restriction before allowing transaction stages
+        if (!ignoreGeoDialog && newFoodOrderFlowStage == ReceiveMoneyFlowStage.CHARGE_MONEY) {
+            val geoResult = GeoRestrictionManager.checkRestriction(context)
+            if (geoResult.isRestricted) {
+                geoRestrictionMessage = geoResult.message
+                showGeoRestrictionDialog = true
+                return
+            }
+        }
         receiveMoneyFlowStage = newFoodOrderFlowStage
     }
 
@@ -175,7 +295,7 @@ fun ReceiveMoneyFlow(
         ReceiveMoneyFlowStage.INPUT_MONEY -> SectionedLayout(
             navController = navController,
             bottomSectionMaxHeightRatio = 0.95f,
-            bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+            bottomBarContent = BottomBarContent.NAVIGATION_BAR,
             bottomSectionPaddingInDp = 0.dp,
             enableScrollingOfBottomSectionContent = false
         ) {
@@ -192,11 +312,12 @@ fun ReceiveMoneyFlow(
             SectionedLayout(
                 navController = navController,
                 bottomSectionMinHeightRatio = 0.25f,
-                bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
                 enableScrollingOfBottomSectionContent = false,
                 imageBelowLogo = {
-                    val paymentMethodIndices = paymentMethods.map { it.text }
+//                    val paymentMethodIndices = paymentMethods.map { it.text }
+                    val paymentMethodIndices = availablePaymentMethods.map { it.text }
                     AnimatedContent(
                         targetState = selectedPaymentMethod,
                         label = "payment_method_animation",
@@ -235,7 +356,7 @@ fun ReceiveMoneyFlow(
                         }) { paymentMethod ->
                         Column(
                             modifier = Modifier
-                                .height(screenRatioToDp(0.5f))
+                                .height(ScreenRatioToDp(0.5f))
                                 .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                                 .verticalScroll(scrollState),
                             verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -244,24 +365,20 @@ fun ReceiveMoneyFlow(
                             //when (selectedPaymentMethod) {
                             when (paymentMethod) {
                                 tapPaymentMethod -> {
-                                    val currentNfcStatus = Nfc.getStatus(context)
+                                    Nfc.getStatus(context)
 
-                                    if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
-                                        true
-                                    else if (!nfcStatusPair.second) showNFCNotEnabled = true
-                                    else if (!currentNfcStatus.second) {//check the fresh status
-                                        showNFCNotEnabled = true
-                                    }
+//                                    if (DeveloperOptions.isEnabled(context)) showDeveloperOptionsEnabled =
+//                                        true
+//                                    else if (!nfcStatusPair.second) showNFCNotEnabled = true
+//                                    else if (!currentNfcStatusPair.second) showNFCNotEnabled = true
 
                                     MyDialog(
-                                        showDialog = false,
-//                                    showDialog = showDeveloperOptionsEnabled,
+                                        showDialog = if (inProduction) showDeveloperOptionsEnabled else false,
                                         title = "Caution",
                                         text = "You need to disable developer options to proceed further.",
                                         acceptButtonText = "Developer Options",
                                         cancelButtonText = "Cancel",
                                         onAcceptFn = {
-                                            showDeveloperOptionsEnabled = false
                                             val intent =
                                                 Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)
                                             context.startActivity(intent)
@@ -279,7 +396,7 @@ fun ReceiveMoneyFlow(
                                         acceptButtonText = "Go to Settings",
                                         cancelButtonText = "Cancel",
                                         onAcceptFn = {
-                                            showNFCNotEnabled = false
+//                                            showNFCNotEnabled = false
                                             val intent = Intent(Settings.ACTION_NFC_SETTINGS)
                                             context.startActivity(intent)
                                         },
@@ -293,75 +410,139 @@ fun ReceiveMoneyFlow(
                                         modifier = Modifier
                                             .padding(horizontal = 20.dp)
                                             .fillMaxWidth()
-                                            .height(230.dp)
-                                            .clip(
-                                                shape = RoundedCornerShape(16.dp)
+                                            .height(180.dp)
+                                            .clip(shape = RoundedCornerShape(16.dp))
+                                            .clickable {
+                                                AppAnalytics.criticalButtonClick(
+                                                    buttonName = "tap_to_pay_image",
+                                                    screen = "receive_money"
+                                                )
+                                                if (inProduction)
+                                                    if (DeveloperOptions.isEnabled(context)) {
+                                                        showDeveloperOptionsEnabled = true
+                                                    } else if (!Nfc.getStatus(context).second) {
+                                                        showNFCNotEnabled = true
+                                                    } else {
+                                                        startTapAndPay = true
+                                                    }
+                                                else startTapAndPay = true
+                                            })
+
+                                    FilledButton(
+                                        text = "Tap here to start Tap To Pay",
+                                        onClick = {
+                                            AppAnalytics.criticalButtonClick(
+                                                buttonName = "tap_to_pay_start",
+                                                screen = "receive_money"
                                             )
-//                                        .clickable{
-//                                            Tap_ChargeMoney(navController=navController, amountToCharge = formatAmount(amountToChargeState))
-//                                        }
+                                            if (inProduction)
+                                                if (DeveloperOptions.isEnabled(context)) {
+                                                    showDeveloperOptionsEnabled = true
+                                                } else if (!Nfc.getStatus(context).second) {
+                                                    showNFCNotEnabled = true
+                                                } else {
+                                                    startTapAndPay = true
+                                                }
+                                            else startTapAndPay = true
+                                        },
+                                        modifier = Modifier
+                                            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                            .height(59.dp)
+                                            .scale(0.8f)
                                     )
 
-                                    Text(
-                                        text = "Tap To Pay",
-                                        color = Color.White,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 18.sp,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-
-                                    var schemes by remember { mutableStateOf(getSchemes(context)) }
-
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.height(60.dp)
-                                    ) {
-                                        if (schemes.hasVISA) VisaImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(8.dp))
-                                                .weight(1f)
-                                                .clickable {
-                                                    TODO()
-                                                })
-
-                                        if (schemes.hasMastercard) MastercardImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(8.dp))
-                                                .weight(1f)
-                                                .clickable {
-                                                    TODO()
-                                                })
-
-                                        if (schemes.hasAmex) AmexImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(8.dp))
-                                                .weight(1f)
-                                                .clickable {
-                                                    TODO()
-                                                })
-
-                                        if (schemes.hasJCB) JcbImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(8.dp))
-                                                .weight(1f)
-                                                .clickable {
-                                                    TODO()
-                                                })
-
-                                        if (schemes.hasUnionPay) {
-                                            //Union pay image not provided
-                                            TODO()
-                                        }
-                                    }
+                                    PaymentSchemesRow(modifier = Modifier.height(50.dp))
                                 }
 
                                 qrCodePaymentMethod -> {
+
+                                    startTapAndPay = false
+
+                                    var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                                    var qrCodeLoading by remember { mutableStateOf(false) }
+                                    var qrCodeError by remember { mutableStateOf<String?>(null) }
+
+                                    // This effect runs the API call once when the screen appears
+                                    LaunchedEffect(Unit) {
+                                        qrCodeLoading = true
+                                        qrCodeError = null
+                                        try {
+                                            val amountValue =
+                                                amountToChargeState.toLongOrNull()?.div(100f) ?: 0f
+                                            AppAnalytics.qrPaymentInitiated(
+                                                amount = amountValue.toString(),
+                                                currency = currency
+                                            )
+                                            AnalyticsHelper.track(
+                                                AnalyticsEvent.PaymentStarted(
+                                                    paymentType = "QR",
+                                                    amount = amountValue.toString(),
+                                                    currency = currency
+                                                )
+                                            )
+                                            val request = PayByLinkRequest(
+                                                PBLLinkName = "QR Payment",
+                                                ExpiryDate = SimpleDateFormat("dd MMMM, YYYY HH:mm:ss").format(
+                                                    Date()
+                                                ),
+                                                Product = listOf(
+                                                    PayByLinkRequestProduct(
+                                                        Currency = currency,
+                                                        Name = "POS Sale",
+                                                        Quantity = 1,
+                                                        Price = amountValue,
+                                                        TotalPrice = amountValue.toString()
+                                                    )
+                                                )
+                                            )
+
+                                            val response = payByQr(context, request)
+                                            if (response != null && response.success) {
+                                                val paymentUrl =
+                                                    "https://api-dev.paymentoptions.com/paybylink/" + response.data.ProductID
+                                                qrCodeBitmap = generateQrCode(paymentUrl)
+                                                AnalyticsHelper.track(
+                                                    AnalyticsEvent.Custom(
+                                                        name = "qr_code_generated",
+                                                        attributes = mapOf(
+                                                            "product_id" to response.data.ProductID,
+                                                            "amount" to amountValue,
+                                                            "currency" to currency
+                                                        )
+                                                    )
+                                                )
+                                            } else {
+                                                qrCodeError = "Failed to generate QR code."
+                                                AnalyticsHelper.trackError(
+                                                    message = "qr_code_generation_failed",
+                                                    attributes = mapOf("amount" to amountValue, "currency" to currency)
+                                                )
+                                            }
+                                        } catch (e: Exception) {
+                                            qrCodeError =
+                                                "Your session has expired. Please log in again to continue."
+                                            e.printStackTrace()
+                                            AnalyticsHelper.trackError(
+                                                message = "qr_code_generation_exception",
+                                                throwable = e,
+                                                attributes = mapOf("currency" to currency)
+                                            )
+
+                                            if (e.toString().contains("HTTP 401")) {
+                                                Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.session_expired),
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                navController.navigate(Screens.FingerprintScan.route){
+                                                    // Clear back stack to prevent going back to authenticated screens
+                                                    popUpTo(0) { inclusive = true }
+                                                }
+                                            }
+                                        } finally {
+                                            qrCodeLoading = false
+                                        }
+                                    }
 
                                     Text(
                                         text = "Scan QR Code",
@@ -371,75 +552,39 @@ fun ReceiveMoneyFlow(
                                         textAlign = TextAlign.Center,
                                     )
 
-                                    PaymentQrCodeImage(
-                                        modifier = Modifier
-                                            .padding(horizontal = 20.dp)
-                                            .fillMaxWidth()
-                                            //.height(240.dp)
-                                            .height(220.dp)
-                                            .clip(
-                                                shape = RoundedCornerShape(16.dp)
-                                            )
-                                    )
-
-                                    Row(
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.height(50.dp)
-                                    ) {
-                                        var apms by remember { mutableStateOf(getApms(context)) }
-
-                                        GrabPayImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
+                                    // This block handles showing the Loader, Error, or QR Code
+                                    if (qrCodeLoading) {
+                                        MyCircularProgressIndicator(useWhiteLoader = true)
+                                    } else if (qrCodeError != null) {
+                                        Text(
+                                            text = qrCodeError!!,
+                                            color = red300,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.padding(16.dp)
                                         )
-
-                                        QrPayment2(
+                                    } else {
+                                        PaymentQrCodeImage(
+                                            qrBitmap = qrCodeBitmap, // generated bitmap here
                                             modifier = Modifier
-                                                .fillMaxHeight()
+                                                .padding(horizontal = 20.dp)
+                                                .fillMaxWidth()
+                                                .height(220.dp)
                                                 .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
-                                        )
-
-                                        QrPayment3(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
-                                        )
-
-                                        if (apms.hasAlipay) AliPayImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
-                                        )
-
-                                        if (apms.hasApplePay) ApplePayImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
-                                        )
-
-                                        if (apms.hasWechatpay) WechatPayImage(
-                                            modifier = Modifier
-                                                .fillMaxHeight()
-                                                .clip(shape = RoundedCornerShape(16.dp))
-                                                .weight(1f)
                                         )
                                     }
 
+                                    PaymentApmsRow(modifier = Modifier.height(50.dp))
+
                                     NoteChip(
-                                        text = "Ask customer to scan with GrabPay",
+                                        text = "Ask customer to scan with their payment app",
                                         color = Color.White,
                                         modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                                     )
                                 }
 
                                 cashPaymentMethod -> {
+                                    startTapAndPay = false
+
                                     Text(
                                         text = "Please pay cash",
                                         color = Color.White,
@@ -451,41 +596,81 @@ fun ReceiveMoneyFlow(
                                 }
 
                                 viaLinkPaymentMethod -> {
+                                    startTapAndPay = false
 
-                                    var payByLinkRequest = PayByLinkRequest(
+                                    val amountValue =
+                                        amountToChargeState.toLongOrNull()?.div(100f) ?: 0f
+
+                                    val payByLinkRequest = PayByLinkRequest(
                                         PBLLinkName = "PayByLink Test",
-                                        ExpiryDate = SimpleDateFormat("YYYY-dd MMMM, YYYY HH:mm:ss").format(
-                                            Date()
-                                        ), //Date().toString(),
-                                        Product = listOf<PayByLinkRequestProduct>(
+                                        ExpiryDate = OffsetDateTime.now().toString(),
+                                        Product = listOf(
                                             PayByLinkRequestProduct(
                                                 Currency = currency,
-                                                Name = "No Name",
+                                                Name = "Charge Money Test",
                                                 Quantity = 1,
-                                                Price = 100f,
-                                                TotalPrice = "100"
+                                                Price = amountValue,
+                                                TotalPrice = amountValue.toString()
                                             )
                                         )
                                     )
                                     var payByLinkResponse by remember {
-                                        mutableStateOf<PayByLinkResponse?>(
-                                            null
-                                        )
+                                        mutableStateOf<PayByLinkResponse?>(null)
                                     }
                                     var payByLinkApiResponseLoading by remember {
-                                        mutableStateOf(
-                                            false
-                                        )
+                                        mutableStateOf(false)
                                     }
+                                    var payByLinkScanCodeBottomSheetExpanded by remember {
+                                        mutableStateOf(false)
+                                    }
+                                    val sheetState = rememberModalBottomSheetState()
+                                    //added a state variable to hold the generated QR bitmap
+                                    var viaLinkQrBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
                                     LaunchedEffect(Unit) {
                                         try {
                                             payByLinkApiResponseLoading = true
-                                            payByLinkResponse = payByLink(context, payByLinkRequest)
-
-                                            println("payByLinkResponse: $payByLinkResponse")
-
+                                            AnalyticsHelper.track(
+                                                AnalyticsEvent.PaymentStarted(
+                                                    paymentType = "PBL",
+                                                    amount = amountValue.toString(),
+                                                    currency = currency
+                                                )
+                                            )
+                                            val dasmid =
+                                                DPSharedPreferences.getPayByLinkDasmid(
+                                                    context
+                                                )
+                                            payByLinkResponse =
+                                                payByLink(context, payByLinkRequest, dasmid)
+                                            if (payByLinkResponse != null && payByLinkResponse!!.success) {
+//                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
+                                                paymentUrl =
+                                                    "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID
+                                                viaLinkQrBitmap = generateQrCode(paymentUrl)
+                                                AppAnalytics.payByLinkCreated(
+                                                    productId = payByLinkResponse!!.data.ProductID,
+                                                    amount = amountValue,
+                                                    currency = currency
+                                                )
+                                                AnalyticsHelper.track(
+                                                    AnalyticsEvent.Custom(
+                                                        name = "pay_by_link_generated",
+                                                        attributes = mapOf(
+                                                            "product_id" to payByLinkResponse!!.data.ProductID,
+                                                            "dasmid" to dasmid,
+                                                            "amount" to amountValue,
+                                                            "currency" to currency
+                                                        )
+                                                    )
+                                                )
+                                            }
                                         } catch (e: Exception) {
+                                            AnalyticsHelper.trackError(
+                                                message = "pay_by_link_generation_exception",
+                                                throwable = e,
+                                                attributes = mapOf("currency" to currency)
+                                            )
                                             Toast.makeText(
                                                 context,
                                                 "Error generating payment link...",
@@ -496,8 +681,70 @@ fun ReceiveMoneyFlow(
                                         }
                                     }
 
-                                    if (payByLinkApiResponseLoading) MyCircularProgressIndicator()
+                                    if (payByLinkApiResponseLoading) MyCircularProgressIndicator(
+                                        useWhiteLoader = true
+                                    )
                                     else if (payByLinkResponse.isNotNull()) {
+
+                                        if (payByLinkScanCodeBottomSheetExpanded) ModalBottomSheet(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            onDismissRequest = {
+                                                payByLinkScanCodeBottomSheetExpanded = false
+                                            },
+                                            sheetState = sheetState,
+                                            containerColor = Color.White,
+                                            contentColor = primary500,
+                                            dragHandle = {}) {
+
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 20.dp)
+                                            ) {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.logo),
+                                                    contentDescription = "DASPay Logo",
+                                                    tint = primary500,
+                                                    modifier = Modifier
+                                                        .height(LOGO_HEIGHT_IN_DP.div(1.5f))
+                                                        .align(Alignment.Center)
+                                                )
+
+                                                IconButton(
+                                                    modifier = Modifier.align(alignment = Alignment.CenterEnd),
+                                                    onClick = {
+                                                        payByLinkScanCodeBottomSheetExpanded = false
+                                                    }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Close,
+                                                        contentDescription = "Close",
+                                                        modifier = Modifier.size(28.dp)
+                                                    )
+                                                }
+                                            }
+
+                                            Column(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+
+                                                PaymentQrCodeImage(
+                                                    qrBitmap = viaLinkQrBitmap,
+                                                    modifier = Modifier
+                                                        .padding(horizontal = 20.dp)
+                                                        .fillMaxWidth()
+                                                        .height(220.dp)
+                                                        .clip(shape = RoundedCornerShape(16.dp))
+                                                )
+
+                                                Spacer(modifier = Modifier.height(10.dp))
+
+                                                NoteChip(
+                                                    text = "Scan with your device",
+                                                    modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                                )
+                                            }
+                                        }
 
                                         Column(
                                             modifier = Modifier
@@ -521,14 +768,11 @@ fun ReceiveMoneyFlow(
                                                 modifier = Modifier
                                                     .padding(horizontal = 20.dp)
                                                     .fillMaxWidth()
-                                                    .height(100.dp)
-                                                    .clip(
-                                                        shape = RoundedCornerShape(16.dp)
-                                                    )
+                                                    .height(70.dp)
+                                                    .clip(shape = RoundedCornerShape(16.dp))
                                             )
 
                                             Spacer(modifier = Modifier.height(10.dp))
-
 
                                             SelectionContainer(
                                                 modifier = Modifier
@@ -540,7 +784,7 @@ fun ReceiveMoneyFlow(
                                                     .padding(vertical = 16.dp, horizontal = 12.dp),
                                             ) {
                                                 Text(
-                                                    text = "https://daspay/" + payByLinkResponse!!.data.ID,
+                                                    text = "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID,
                                                     fontWeight = FontWeight.SemiBold,
                                                     fontSize = 16.sp,
                                                     color = primary900,
@@ -563,9 +807,10 @@ fun ReceiveMoneyFlow(
                                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                                             ) {
                                                 EmailButton(
-                                                    text = "Email",
-                                                    email = Email(),
-                                                    modifier = Modifier
+                                                    text = "Email", email = Email(
+                                                        subject = "DASPay payment link",
+                                                        text = paymentUrl
+                                                    ), modifier = Modifier
                                                         .weight(1f)
                                                         .border(
                                                             2.dp,
@@ -576,7 +821,6 @@ fun ReceiveMoneyFlow(
                                                             Color.White,
                                                             shape = RoundedCornerShape(10.dp)
                                                         )
-                                                        //.padding(horizontal = 10.dp, vertical = 20.dp)
                                                         .padding(
                                                             horizontal = 10.dp, vertical = 16.dp
                                                         )
@@ -584,6 +828,7 @@ fun ReceiveMoneyFlow(
 
                                                 ShareButton(
                                                     text = "Share",
+                                                    shareContent = paymentUrl,
                                                     modifier = Modifier
                                                         .weight(1f)
                                                         .border(
@@ -595,7 +840,6 @@ fun ReceiveMoneyFlow(
                                                             Color.White,
                                                             shape = RoundedCornerShape(10.dp)
                                                         )
-                                                        //.padding(horizontal = 10.dp, vertical = 20.dp)
                                                         .padding(
                                                             horizontal = 10.dp, vertical = 16.dp
                                                         )
@@ -614,11 +858,13 @@ fun ReceiveMoneyFlow(
                                                             Color.White,
                                                             shape = RoundedCornerShape(10.dp)
                                                         )
-                                                        //.padding(horizontal = 10.dp, vertical = 20.dp)
                                                         .padding(
                                                             horizontal = 10.dp, vertical = 16.dp
                                                         )
-                                                )
+                                                        .clickable {
+                                                            payByLinkScanCodeBottomSheetExpanded =
+                                                                true
+                                                        })
                                             }
                                         }
                                     } else {
@@ -641,109 +887,201 @@ fun ReceiveMoneyFlow(
                     navController,
                     enableScrolling = false,
                     amountToCharge = formatAmount(amountToChargeState),
+                    gatewayNotes = noteState,
+                    availablePaymentMethods = availablePaymentMethods,
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
-                    updateFlowStage = { updateFlowStage(it as ReceiveMoneyFlowStage) },
-                    onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) })
+                    onLoader = {
+                        AnalyticsHelper.track(
+                            AnalyticsEvent.PaymentStarted(
+                                paymentType = selectedPaymentMethod.text,
+                                amount = formatAmount(amountToChargeState),
+                                currency = currency
+                            )
+                        )
+                        updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_PROCESSING)
 
+                        Handler().postDelayed({
+                            Handler().postDelayed({ it() }, 1000)
+                        }, 2000)
+                    },
+                    onSuccessUpdateFlowStage = {
+                        AnalyticsHelper.track(
+                            AnalyticsEvent.PaymentCompleted(
+                                paymentType = selectedPaymentMethod.text,
+                                transactionId = latestTransactionId ?: "unknown",
+                                status = "SUCCESS"
+                            )
+                        )
+                        updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL)
+                    },
+                    onMandatorySignature = {
+                        updateFlowStage(ReceiveMoneyFlowStage.MANDATORY_SIGNATURE)
+                    },
+                    onFailureUpdateFlowStage = {
+                        AnalyticsHelper.track(
+                            AnalyticsEvent.PaymentCompleted(
+                                paymentType = selectedPaymentMethod.text,
+                                transactionId = latestTransactionId ?: "unknown",
+                                status = "FAILED"
+                            )
+                        )
+                        updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
+                    },
+                    updateFailureMessage = { transactionFailureMessage = it },
+                    onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) },
+                    startTapAndPay = startTapAndPay,
+                    updateLatestTransaction = { latestTransactionId = it })
             }
         }
 
+        ReceiveMoneyFlowStage.TRANSACTION_PROCESSING -> {
+
+            val dataMessage = MessageForStatusScreen(
+                text = "Processing...", statusScreenType = StatusScreenType.PROCESSING
+            )
+            StatusScreen(navController, dataMessage, strategyFn = { })
+        }
+
         ReceiveMoneyFlowStage.TRANSACTION_FAILED -> {
-            SectionedLayout(
+            val dataMessage = MessageForStatusScreen(
+                text = transactionFailureMessage ?: "Payment Failed",
+                statusScreenType = StatusScreenType.ERROR
+            )
+            StatusScreen(navController, dataMessage, strategyFn = {
+                Handler().postDelayed({
+                    failureProceedFlag = true
+                }, 2000)
+            })
+
+            if (failureProceedFlag) SectionedLayout(
                 navController = navController,
                 bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
                 bottomSectionMaxHeightRatio = 0.95f,
-                imageBelowLogo = {
-                    CreditCardImage(
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .fillMaxWidth()
-                            .height(100.dp)
-                            .clip(
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                    )
-                },
-                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
+                enableScrollingOfBottomSectionContent = false
             ) {
                 TransactionFailedBottomSectionContent(
                     navController,
-                    enableScrolling = enableScrollingInsideBottomSectionContent,
-                    amountToCharge = formatAmount(amountToChargeState),
-                    transaction = transaction,
-                    updateFlowStage = { updateFlowStage(it) })
+                    enableScrolling = true,
+                    transactionId = latestTransactionId.toString(),
+                    failureMessage = transactionFailureMessage,
+                    updateFlowStage = { })
+            }
+        }
+
+        ReceiveMoneyFlowStage.MANDATORY_SIGNATURE -> {
+            SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.95f,
+                bottomSectionMaxHeightRatio = 0.95f,
+                enableScrollingOfBottomSectionContent = false,
+            ) {
+                TakeDigitalSignatureBottomSectionContent(
+                    navController,
+                    enableScrolling = false,
+                    signaturePath = signaturePath,
+                    signatureDate = signatureDate,
+                    paymentDetailsResponse = paymentDetailsResponse,
+                    isMandatory = true,
+                    onCancelMandatory = {
+                        // User cancelled signature for high-amount transaction.
+                        // We must VOID the transaction.
+                        scope.launch {
+                            try {
+                                // Call void API
+                                void(
+                                    context = context,
+                                    transactionId = latestTransactionId.toString(),
+                                    merchantId = getTapPayDasmid(context)
+                                )
+                                transactionFailureMessage = "Transaction voided because cardholder signature was not provided."
+                                updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
+                            } catch (e: Exception) {
+                                AppLogger.error("Void failed after mandatory signature cancel: ${e.message}")
+                                transactionFailureMessage = "Transaction failed and could not be voided automatically. Please check status."
+                                updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
+                            }
+                        }
+                    },
+                    updateSignature = { path, bitmap, signDate ->
+                        signaturePath = path
+                        signatureBitmap = bitmap
+                        signatureDate = signDate
+                    },
+                    updateFlowStageToSuccess = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) })
             }
         }
 
         ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL -> {
+            val dataMessage = MessageForStatusScreen(
+                text = "Payment Successful", statusScreenType = StatusScreenType.SUCCESS
+            )
+            StatusScreen(
+                navController, dataMessage, strategyFn = {
+                    Handler().postDelayed({ successProceedFlag = true }, 2000)
+                })
 
-            SectionedLayout(
+            if (successProceedFlag) SectionedLayout(
                 navController = navController,
                 bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMaxHeightRatio = 0.95f,
-                imageBelowLogo = {
-                    CreditCardImage(
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .fillMaxWidth()
-                            .height(100.dp)
-                            .clip(
-                                shape = RoundedCornerShape(16.dp)
-                            )
-                    )
-                },
+                bottomSectionMinHeightRatio = 0.6f,
                 enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent
             ) {
                 TransactionSuccessfulBottomSectionContent(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
-                    transaction = transaction,
-                    amountToCharge = formatAmount(amountToChargeState),
+                    transactionId = latestTransactionId.toString(),
                     signatureBitmap = signatureBitmap,
                     signatureDate = signatureDate,
-                    updateFlowStage = { updateFlowStage(it) })
+                    updateFlowToDigitalSignature = { updateFlowStage(ReceiveMoneyFlowStage.DIGITAL_SIGNATURE) },
+                    updateFlowToReceipt = { updateFlowStage(ReceiveMoneyFlowStage.RECEIPT) })
             }
         }
 
         ReceiveMoneyFlowStage.DIGITAL_SIGNATURE -> {
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.NOTHING,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,//NOTHING
                 bottomSectionPaddingInDp = 0.dp,
                 bottomSectionMinHeightRatio = 0.95f,
                 bottomSectionMaxHeightRatio = 0.95f,
-                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                enableScrollingOfBottomSectionContent = false,
             ) {
                 TakeDigitalSignatureBottomSectionContent(
                     navController,
-                    enableScrolling = enableScrollingInsideBottomSectionContent,
+                    enableScrolling = false,
                     signaturePath = signaturePath,
                     signatureDate = signatureDate,
+                    paymentDetailsResponse = paymentDetailsResponse,
                     updateSignature = { path, bitmap, signDate ->
                         signaturePath = path
                         signatureBitmap = bitmap
                         signatureDate = signDate
                     },
-                    updateFlowStage = { updateFlowStage(it) })
+                    updateFlowStageToSuccess = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) })
             }
         }
 
         ReceiveMoneyFlowStage.RECEIPT -> {
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.NOTHING,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMinHeightRatio = 0.95f,
-                bottomSectionMaxHeightRatio = 0.95f,
+                bottomSectionMinHeightRatio = 0.75f,
+                bottomSectionMaxHeightRatio = 0.75f,
                 enableScrollingOfBottomSectionContent = false,
-            ) {
+                enableZigZagContainerForBottomSection = true,
+                imageBelowLogo = {
+                    ShowReceiptView()
+                }) {
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,
-                    transaction = transaction,
+                    transactionId = latestTransactionId.toString(),
                     signatureBitmap = signatureBitmap,
                     signatureDate = signatureDate,
                 )
@@ -751,3 +1089,6 @@ fun ReceiveMoneyFlow(
         }
     }
 }
+
+
+

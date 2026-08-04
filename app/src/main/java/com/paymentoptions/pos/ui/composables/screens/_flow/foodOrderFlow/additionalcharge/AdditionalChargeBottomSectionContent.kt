@@ -1,6 +1,5 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.additionalcharge
 
-import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -26,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,12 +34,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.DashedBorderInput
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
@@ -90,19 +88,19 @@ fun AdditionalChargeBottomSectionContent(
         listOf("00", "0", "←"),
     )
     val context = LocalContext.current
-    context as? Activity
-    rememberCoroutineScope()
-
-    val authDetails = SharedPreferences.getAuthDetails(context)
-
+    val authDetails = DPSharedPreferences.getAuthDetails(context)
     val noteState = rememberTextFieldState()
 
     if (authDetails == null) {
-        Toast.makeText(context, "Token invalid! Please login again.", Toast.LENGTH_LONG).show()
-        navController.navigate(Screens.SignIn.route) {
+        Toast.makeText(
+            context,
+            "Your session has expired. Please log in again to continue.",
+            Toast.LENGTH_LONG
+        ).show()
+        DPSharedPreferences.clearSharedPreferences(context)
+        navController.navigate(Screens.AuthCheck.route) {
             popUpTo(0) { inclusive = true }
         }
-        return
     }
 
     val currency = getTransactionCurrency(context)
@@ -252,9 +250,8 @@ fun AdditionalChargeBottomSectionContent(
                 .fillMaxWidth()
                 .height(59.dp),
             onClick = {
-                cartState.additionalAmountNote = noteState.text.toString()
-                cartState.additionalCharge =
-                    if (rawInput.isEmpty()) 0.0f else rawInput.toFloat().div(100)
+                val amount = if (rawInput.isEmpty()) 0.0f else rawInput.toFloat().div(100)
+                cartState.updateAdditionalCharge(amount, noteState.text.toString(), context)
                 updateCartSate(cartState)
                 updateFlowStage(FoodOrderFlowStage.REVIEW_CART)
             })

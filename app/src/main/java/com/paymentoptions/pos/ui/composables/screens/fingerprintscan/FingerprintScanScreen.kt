@@ -1,6 +1,9 @@
 package com.paymentoptions.pos.ui.composables.screens.fingerprintscan
 
+import android.app.KeyguardManager
 import android.content.Context
+import android.os.Build
+import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.background
@@ -24,7 +27,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.LifecycleOwner
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.theme.red500
 
@@ -36,25 +38,21 @@ fun FingerprintScanScreen(
     bypassBiometric: Boolean = false,
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-    var hasPrompted by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-
-        if (!hasPrompted) {
-            hasPrompted = true
-
-            if (bypassBiometric) onAuthSuccess()
-            else authenticateUser(
-                context = context,
-                lifecycleOwner = lifecycleOwner,
-                onAuthSuccess = onAuthSuccess,
-                onAuthFailed = { error ->
-                    errorText = error
-                    onAuthFailed()
-                })
-        }
+        if (bypassBiometric) onAuthSuccess()
+        authenticateUser(
+            context = context,
+            onAuthSuccess = onAuthSuccess,
+            onAuthFailed = { error ->
+                errorText = error
+                onAuthFailed()
+            },
+            onNoDeviceSecurity = {
+                Toast.makeText(context, "Please enable device security using a PIN, fingerprint, or face lock.", Toast.LENGTH_SHORT).show()
+            }
+        )
     }
 
     errorText?.let {
@@ -79,42 +77,73 @@ fun FingerprintScanScreen(
 
 fun authenticateUser(
     context: Context,
-    lifecycleOwner: LifecycleOwner,
     onAuthSuccess: () -> Unit,
     onAuthFailed: (String) -> Unit,
+    onNoDeviceSecurity: (() -> Unit)
 ) {
-    val biometricManager = BiometricManager.from(context)
     val activity = context as FragmentActivity
+    val biometricManager = BiometricManager.from(context)
+    val keyguardManager =
+        context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 
-    if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG) != BiometricManager.BIOMETRIC_SUCCESS) {
-        onAuthFailed("Biometric not available")
-        return
+    val hasBiometric =
+        biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)== BiometricManager.BIOMETRIC_SUCCESS
+
+    val hasDeviceCredential = keyguardManager.isDeviceSecure
+
+    println("hasBiometric: $hasBiometric, hasDeviceCredential: $hasDeviceCredential")
+
+    if (hasBiometric || hasDeviceCredential) {
+
+        val executor = ContextCompat.getMainExecutor(context)
+        val biometricPrompt = BiometricPrompt(
+            activity,
+            executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    onAuthSuccess()
+                }
+
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                    // Optional: handle cancel / lockout
+                    onAuthFailed("Auth failed : $errString")
+                }
+
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                    onAuthFailed("Auth failed")
+                }
+            }
+        )
+
+        val promptInfoBuilder = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Authenticate")
+            .setSubtitle("Verify your identity to proceed")
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            promptInfoBuilder.setAllowedAuthenticators(
+                if (hasBiometric)
+                    BiometricManager.Authenticators.BIOMETRIC_STRONG
+                else
+                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            )
+            // Only set negative button text if device credential is NOT allowed
+            if (hasBiometric) {
+                promptInfoBuilder.setNegativeButtonText("Cancel")
+            }
+        } else {
+            if (hasBiometric) {
+                promptInfoBuilder.setNegativeButtonText("Cancel")
+            } else {
+                promptInfoBuilder.setDeviceCredentialAllowed(true)
+                // Do NOT set negative button text if device credential is allowed
+            }
+        }
+        biometricPrompt.authenticate(promptInfoBuilder.build())
+    } else {
+        Toast.makeText(context, com.paymentoptions.pos.R.string.device_credential_missing, Toast.LENGTH_SHORT).show()
     }
-
-    val executor = ContextCompat.getMainExecutor(context)
-
-    val biometricPrompt = BiometricPrompt(
-        activity, executor, object : BiometricPrompt.AuthenticationCallback() {
-
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                super.onAuthenticationSucceeded(result)
-                onAuthSuccess()
-            }
-
-            override fun onAuthenticationFailed() {
-                super.onAuthenticationFailed()
-                onAuthFailed("Auth failed")
-            }
-
-            override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                super.onAuthenticationError(errorCode, errString)
-                onAuthFailed("Error: $errString")
-            }
-
-        })
-
-    val promptInfo = BiometricPrompt.PromptInfo.Builder().setTitle("Authenticate")
-        .setSubtitle("Verify your identity to proceed").setNegativeButtonText("Cancel").build()
-
-    biometricPrompt.authenticate(promptInfo)
 }

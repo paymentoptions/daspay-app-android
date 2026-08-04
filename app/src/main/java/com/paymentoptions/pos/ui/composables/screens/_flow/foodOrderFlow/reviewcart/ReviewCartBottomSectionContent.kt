@@ -37,9 +37,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.getTransactionCurrency
+import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
-import com.paymentoptions.pos.ui.composables._components.ZigZagContainer
+import com.paymentoptions.pos.ui.composables._components.ZigZagContainer1
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
@@ -70,8 +70,6 @@ fun ReviewCartBottomSectionContent(
     val currency = getTransactionCurrency(context)
     val scrollState = rememberScrollState()
     var longClickedFoodItem by remember { mutableStateOf<FoodItem?>(null) }
-
-    println("currency: $currency")
 
     Column(
         modifier = Modifier
@@ -182,7 +180,7 @@ fun ReviewCartBottomSectionContent(
                     }, verticalArrangement = Arrangement.Center
             ) {
 
-                if (cartState.additionalCharge.toFloat() == 0.0f) {
+                if (cartState.additionalCharge == 0.0f) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -230,7 +228,7 @@ fun ReviewCartBottomSectionContent(
 
                         CurrencyText(
                             "",
-                            cartState.additionalCharge.toString(),
+                            cartState.additionalCharge.formatToPrecisionString(),
                             fontSize = 12.sp,
                             textAlign = TextAlign.End,
                             addSpaceAfterCurrency = true
@@ -240,7 +238,7 @@ fun ReviewCartBottomSectionContent(
             }
         }
 
-        ZigZagContainer {
+        ZigZagContainer1 {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -277,13 +275,13 @@ fun ReviewCartBottomSectionContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Service Charge (${cartState.serviceChargePercentage}%)",
+                        "Service Charge",
                         style = AppTheme.typography.footnote.copy(
                             fontSize = 14.sp, fontWeight = FontWeight.Normal
                         )
                     )
 
-                    CurrencyRow(currency = currency, amount = cartState.calculateServiceCharge())
+                    CurrencyRow(currency = currency, amount = cartState.serviceCharge)
                 }
 
                 Row(
@@ -305,13 +303,13 @@ fun ReviewCartBottomSectionContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "GST (${cartState.gstPercentage}%)",
+                        "GST (${cartState.merchantSetting?.TaxOnOtherFeesPerc?:0f}%)",
                         style = AppTheme.typography.footnote.copy(
                             fontSize = 14.sp, fontWeight = FontWeight.Normal
                         )
                     )
 
-                    CurrencyRow(currency = currency, amount = cartState.calculateGstCharge())
+                    CurrencyRow(currency = currency, amount = cartState.gstCharge)
                 }
 
                 HorizontalDivider(
@@ -328,7 +326,7 @@ fun ReviewCartBottomSectionContent(
                         )
                     )
 
-                    CurrencyRow(currency = currency, amount = cartState.calculateGrandTotal())
+                    CurrencyRow(currency = currency, amount = cartState.grandTotal)
                 }
             }
         }
@@ -341,7 +339,7 @@ fun ReviewCartBottomSectionContent(
             onClick = { updateFlowStage(FoodOrderFlowStage.CHARGE_MONEY) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP, vertical = 10.dp)
                 .height(59.dp)
         )
     }

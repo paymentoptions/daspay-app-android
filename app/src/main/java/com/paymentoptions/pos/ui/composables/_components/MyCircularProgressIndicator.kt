@@ -13,19 +13,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.paymentoptions.pos.ui.composables._components.images.loaders.LoaderImage
+import com.paymentoptions.pos.ui.composables._components.images.loaders.LoaderWhiteImage
 import com.paymentoptions.pos.ui.theme.primary100
 
 @Composable
-fun MyCircularProgressIndicator(text: String? = null, color: Color = primary100) {
+fun MyCircularProgressIndicator(text: String? = null,
+                                color: Color = primary100,
+                                useWhiteLoader: Boolean = false) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (useWhiteLoader) {
+            LoaderWhiteImage(modifier = Modifier.height(72.dp))
+        } else {
 
-        LoaderImage(
-            modifier = Modifier.height(72.dp)
-        )
+        LoaderImage(modifier = Modifier.height(72.dp))
+        }
 //        CircularProgressIndicator(
 //            modifier = Modifier.height(36.dp),
 //            color = color,

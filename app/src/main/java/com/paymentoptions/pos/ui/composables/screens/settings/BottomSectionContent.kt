@@ -27,13 +27,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignOutResponse
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
 import com.paymentoptions.pos.ui.composables._components.MySwitch
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.theme.primary500
@@ -51,17 +54,21 @@ fun BottomSectionContent(navController: NavController) {
     var signOutResponse: SignOutResponse? = null
     val scope = rememberCoroutineScope()
     var showBiometricScreen by remember { mutableStateOf(false) }
-    var biometricsEnabled by remember { mutableStateOf(SharedPreferences.getBiometricsStatus(context)) }
+    var biometricsEnabled by remember { mutableStateOf(DPSharedPreferences.getBiometricsStatus(context)) }
     val isBiometricsAvailable = isBiometricAvailable(context)
 
-    var authDetails = SharedPreferences.getAuthDetails(context)
+    var authDetails = DPSharedPreferences.getAuthDetails(context)
     val username = authDetails?.data?.name ?: ""
     val email = authDetails?.data?.email ?: ""
     rememberSystemUiController()
 //    var immersiveMode by remember { mutableStateOf(systemUiController.isSystemBarsVisible) }
 
     val lastLoginString: String =
-        SimpleDateFormat("DD MMMM YYYY | hh:mm a").format(authDetails?.data?.auth_time ?: "")
+        SimpleDateFormat("dd MMMM YYYY | hh:mm a").format(
+            authDetails?.data?.auth_time?.times(
+                1000
+            ) ?: 0
+        )
 
     MyDialog(
         showDialog = showSignOutConfirmationDialog,
@@ -69,54 +76,45 @@ fun BottomSectionContent(navController: NavController) {
         text = "Do you want to log out?",
         acceptButtonText = "Log Out",
         onAcceptFn = {
+            AppAnalytics.criticalButtonClick(buttonName = "logout_confirm", screen = "settings")
+            AppAnalytics.logout(result = "initiated", source = "settings")
             scope.launch {
                 signOutLoader = true
 
                 try {
                     signOutResponse = signOut(context)
-                    println("signOutResponse: $signOutResponse")
-
-                    if (signOutResponse == null) {
-                        navController.navigate(Screens.SignIn.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-
-                    signOutResponse?.let {
-                        if (it.success) {
-                            SharedPreferences.clearSharedPreferences(context)
-                            navController.navigate(Screens.SignIn.route) {
-                                popUpTo(0) { inclusive = true }
-                            }
-                        }
+                    if (signOutResponse?.success == true || signOutResponse == null) {
+                        AppAnalytics.logout(result = "success", source = "settings")
+                    } else {
+                        AppAnalytics.logout(result = "failed", source = "settings")
                     }
                 } catch (e: Exception) {
-//                            Toast.makeText(context, "Unable to sign out", Toast.LENGTH_LONG).show()
+                    AppLogger.error("Error: ${e.toString()}")
+                    AppAnalytics.logout(result = "failed", source = "settings")
+                } finally {
+                    // Stop token auto refresh on sign out
+                    TokenAutoRefresher.getInstance(context).onUserSignedOut()
 
-                    SharedPreferences.clearSharedPreferences(context)
-                    navController.navigate(Screens.SignIn.route) {
+                    DPSharedPreferences.clearSharedPreferences(context)
+                    navController.navigate(Screens.Splash.route) {
                         popUpTo(0) { inclusive = true }
                     }
-
-                    println("Error: ${e.toString()}")
-                } finally {
                     signOutLoader = false
+                    showSignOutConfirmationDialog = false
                 }
             }
-
-            showSignOutConfirmationDialog = false
         },
         onDismissFn = { showSignOutConfirmationDialog = false })
 
     if (showBiometricScreen) FingerprintScanScreen(
         navController = navController, onAuthSuccess = {
-            SharedPreferences.saveBiometricsStatus(context, !biometricsEnabled)
+            DPSharedPreferences.saveBiometricsStatus(context, !biometricsEnabled)
             biometricsEnabled = !biometricsEnabled
             showBiometricScreen = false
         }, onAuthFailed = {
             //SharedPreferences.saveBiometricsStatus(context, false)
             showBiometricScreen = false
-        }, bypassBiometric = false
+        },
     )
     else
 
@@ -239,6 +237,7 @@ fun BottomSectionContent(navController: NavController) {
 
                 FilledButton(
                     text = "Logout", onClick = {
+                        AppAnalytics.criticalButtonClick(buttonName = "logout", screen = "settings")
                         showSignOutConfirmationDialog = true
                     }, isLoading = signOutLoader, modifier = Modifier
                         .fillMaxWidth()

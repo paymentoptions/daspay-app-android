@@ -1,19 +1,17 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.refundFlow.refund
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,33 +21,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.R
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.transactionListV2
-import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.dashboard.Transactions
-import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.utils.isScrolledToTheEnd
+import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
 import kotlin.math.ceil
 
 @Composable
 fun BottomSectionContent(navController: NavController, enableScrolling: Boolean = false) {
     val context = LocalContext.current
-    var receivalAmount: Float by remember { mutableFloatStateOf(0.0f) }
-    var currency by remember { mutableStateOf("") }
+    var firstPageFetch by remember { mutableStateOf(false) }
     var apiResponseAvailable by remember { mutableStateOf(false) }
     var transactions by remember { mutableStateOf<List<TransactionListDataRecord>>(listOf()) }
-    var take: Int by remember { mutableIntStateOf(100) }
-    var currentPage: Int by remember { mutableIntStateOf(1) }
-    var maxPage: Int by remember { mutableIntStateOf(1) }
-    val scrollState = rememberScrollState()
+    var take by remember { mutableIntStateOf(20) }
+    var currentPage by remember { mutableIntStateOf(1) }
+    var maxPage by remember { mutableIntStateOf(0) }
+    val lazyColumnState = rememberLazyListState()
 
-    fun updateReceivalAmount(newAmount: Float) {
-        receivalAmount = newAmount
+    val scrollingEndReached by remember {
+        derivedStateOf { lazyColumnState.isScrolledToTheEnd() }
     }
 
-    LaunchedEffect(currentPage) {
+    var totalTransactionCount by remember { mutableIntStateOf(take) }
+
+    fun nextPageHandler() {
+        if (currentPage < maxPage) currentPage++
+    }
+
+    LaunchedEffect(currentPage, take) {
         apiResponseAvailable = false
         try {
             val skip = (currentPage - 1) * take
@@ -59,59 +63,63 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 maxPage =
                     ceil(transactionListFromAPI.data.total_count.toDouble() / take.toDouble()).toInt()
 
-                transactions = transactions.plus(transactionListFromAPI.data.records)
+                totalTransactionCount = transactionListFromAPI.data.total_count
+
+                //Logic to filter in transactions that can be refunded
+                transactions = transactions.plus(transactionListFromAPI.data.records.filterNotNull().filter {
+                    it.status == "SUCCESSFUL" && it.TransactionType == "PURCHASE"
+                })
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "Error fetching next page from API", Toast.LENGTH_SHORT).show()
-
-            if (e.toString().contains("HTTP 401")) navController.navigate(Screens.SignIn.route) {
-                popUpTo(0) { inclusive = true }
+            if (e.toString().contains("HTTP 401")) {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.session_expired),
+                    Toast.LENGTH_SHORT
+                ).show()
+                navController.navigate(Screens.FingerprintScan.route){
+                    // Clear back stack to prevent going back to authenticated screens
+                    popUpTo(0) { inclusive = true }
+                }
             }
         } finally {
             apiResponseAvailable = true
+            firstPageFetch = true
         }
     }
 
-    if (!apiResponseAvailable) Column(
+    if (scrollingEndReached) LaunchedEffect(Unit) {
+        nextPageHandler()
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+            .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
     ) {
-        MyCircularProgressIndicator()
-    } else {
-        currency = transactions.firstOrNull()?.CurrencyCode ?: ""
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        ScreenTitleWithCloseButton(
+            navController = navController,
+            title = "Refund",
+            modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+        )
 
-            ScreenTitleWithCloseButton(
-                navController = navController,
-                title = "Refund",
-                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+        Spacer(modifier = Modifier.height(10.dp))
+
+        if (!firstPageFetch && !apiResponseAvailable) {
+            TransactionListShimmer(
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                itemCount = 5
             )
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            var transactions = transactions.filter {
-                it.status == "SUCCESSFUL" && it.TransactionType == "PURCHASE"
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .conditional(enableScrolling) { verticalScroll(scrollState) }) {
-                Transactions(
-                    navController,
-                    transactions = transactions,
-                    updateReceivalAmount = { updateReceivalAmount(it) })
-            }
+        } else Column(modifier = Modifier.fillMaxWidth())
+        {
+            Transactions(
+                navController,
+                transactions = transactions,
+                updateReceivalAmount = { },
+                lazyColumnState = lazyColumnState
+            )
         }
     }
-
 }

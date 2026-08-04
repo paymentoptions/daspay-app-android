@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
 import androidx.compose.foundation.text.input.OutputTransformation
 import androidx.compose.foundation.text.input.TextFieldLineLimits
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +51,8 @@ fun BasicTextInput(
     isSecure: Boolean = false,
     textFieldHeight: Dp = 46.dp,
     maxLength: Int = 50,
+    onlyDigits: Boolean = false,
+    disabled: Boolean = false
 ) {
     var showText by remember { mutableStateOf(false) }
     var wasFocusedAtLeastOnce by remember { mutableStateOf(false) }
@@ -70,9 +74,10 @@ fun BasicTextInput(
 
         Box {
             TextField(
+                enabled = !disabled,
                 state = state,
                 isError = error,
-
+                keyboardOptions = if (onlyDigits) KeyboardOptions(keyboardType = KeyboardType.Number) else KeyboardOptions.Default,
                 placeholder = {
                     Text(
                         placeholder,
@@ -123,6 +128,8 @@ fun BasicTextInput(
                     .align(alignment = Alignment.CenterEnd)
                     .padding(end = 10.dp)
                     .clickable { showText = !showText })
+
+
         }
     }
 }

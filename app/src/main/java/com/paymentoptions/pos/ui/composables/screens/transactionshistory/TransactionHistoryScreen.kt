@@ -9,7 +9,7 @@ import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 
 
 @Composable
-fun TransactionHistoryScreen(navController: NavController) {
+fun TransactionHistoryScreen(navController: NavController, showBarChart: Boolean) {
     val enableScrollingInsideBottomSectionContent = true
 
     SectionedLayout(
@@ -17,12 +17,13 @@ fun TransactionHistoryScreen(navController: NavController) {
         bottomSectionMinHeightRatio = 0.9f,
         bottomSectionMaxHeightRatio = 0.9f,
         bottomSectionPaddingInDp = 0.dp,
-        bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+        bottomBarContent = BottomBarContent.NAVIGATION_BAR,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
         blurTopSection = true
     ) {
         BottomSectionContent(
-            navController, enableScrolling = enableScrollingInsideBottomSectionContent
+            navController, enableScrolling = enableScrollingInsideBottomSectionContent,
+            showBarChart
         )
     }
 }

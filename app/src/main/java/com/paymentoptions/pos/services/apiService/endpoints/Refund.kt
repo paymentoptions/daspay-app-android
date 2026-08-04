@@ -1,37 +1,40 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
-import com.paymentoptions.pos.device.SharedPreferences
-import com.paymentoptions.pos.services.apiService.RefundRequest
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.RefundResponse
 import com.paymentoptions.pos.services.apiService.RetrofitClient
-import com.paymentoptions.pos.services.apiService.generateRefundRequestHeaders
-import com.paymentoptions.pos.services.apiService.shouldRefreshToken
+import com.paymentoptions.pos.services.apiService.TokenRepository
+import com.paymentoptions.pos.services.apiService.generateRefundRequestHeader
 
 suspend fun refund(
     context: Context,
-    refundRequest: RefundRequest,
+    transactionId: String,
+    merchantId: String,
+    amount: String,
+    notes: String?,
 ): RefundResponse? {
 
-    try {
-        var authDetails = SharedPreferences.getAuthDetails(context)
-        val username = authDetails?.data?.email ?: ""
-        val refreshToken = authDetails?.data?.token?.refreshToken ?: ""
-        val shouldRefreshToken = shouldRefreshToken(authDetails?.data?.exp)
+        val tokenRepository = TokenRepository.getInstance(context)
+        val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
 
-        if (shouldRefreshToken) authDetails = refreshTokens(context, username, refreshToken)
+        val idToken = authDetails.data.token.idToken
+        val requestHeaders = generateRefundRequestHeader(idToken)
 
-        val idToken = authDetails?.data?.token?.idToken
-        val requestHeaders = generateRefundRequestHeaders(idToken ?: "")
-
-        println("refundRequest: $refundRequest | $authDetails")
+        //AppLogger.debug("refund request: $transaction | $authDetails")
         val refundResponse: RefundResponse =
-            RetrofitClient.api.refund(headers = requestHeaders, request = refundRequest)
+            RetrofitClient.getApi(context).refund(
+                headers = requestHeaders,
+                request = com.paymentoptions.pos.services.apiService.TransactionRequest(
+                    transactionId = transactionId,
+                    merchant_id = merchantId,
+                   // daspay_res = transaction,
+                    amount = amount,
+                    notes = if(notes?.isBlank() == true) "Refund from DASPay App" else notes!!
+                )
+            )
 
-        println("refundResponse: $refundResponse")
+
+        AppLogger.debug("refund response: $refundResponse")
         return refundResponse
-    } catch (e: Exception) {
-        println("RefundError: $e")
-        throw e
-    }
 }

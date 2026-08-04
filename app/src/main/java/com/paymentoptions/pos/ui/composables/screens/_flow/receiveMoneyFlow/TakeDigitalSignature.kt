@@ -1,12 +1,15 @@
 package com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow
 
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.graphics.Paint
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,9 +19,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +37,8 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asAndroidPath
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -41,15 +48,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
 import androidx.navigation.NavController
+import com.google.gson.Gson
+import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
+import com.paymentoptions.pos.services.apiService.endpoints.uploadSignature
+import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
+import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
-import com.paymentoptions.pos.ui.composables._components.screentitle.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import kotlin.math.roundToInt
@@ -61,16 +74,35 @@ fun TakeDigitalSignatureBottomSectionContent(
     enableScrolling: Boolean = false,
     signaturePath: Path,
     signatureDate: Date,
+    paymentDetailsResponse: PaymentDetailsResponse?,
+    isMandatory: Boolean = false,
+    onCancelMandatory: () -> Unit = {},
     updateSignature: (Path, Bitmap?, Date) -> Unit = { _, _, _ -> },
-    updateFlowStage: (ReceiveMoneyFlowStage) -> Unit = {},
+    updateFlowStageToSuccess: () -> Unit = {},
 ) {
-
     var path by remember { mutableStateOf(signaturePath) }
-    var saveBitmap by remember { mutableStateOf(false) }
     var isSigned by remember { mutableStateOf(false) }
     var currentPosition by remember { mutableStateOf(Offset.Unspecified) }
-    val density = LocalDensity.current
-    val canvasHeight = 300.dp
+    LocalDensity.current
+//    val canvasHeight = 300.dp
+    var canvasWith by remember { mutableStateOf(0f) }
+    var canvasHeight by remember { mutableStateOf(0) }
+    var startY by remember { mutableStateOf(0f) }
+    var isDrawnTopToBottom by remember { mutableStateOf(true) }
+
+    var isLoading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+
+    fun resetPath() {
+        path = Path()
+        updateSignature(path, null, signatureDate)
+        isSigned = false
+    }
+
+    LaunchedEffect(Unit) {
+        resetPath()
+    }
 
     Column(
         modifier = Modifier
@@ -81,7 +113,13 @@ fun TakeDigitalSignatureBottomSectionContent(
 
         ScreenTitleWithCloseButton(
             navController = navController,
-            onClose = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) })
+            onClose = {
+                if (isMandatory) {
+                    onCancelMandatory()
+                } else {
+                    updateFlowStageToSuccess()
+                }
+            })
 
         Text(
             text = "Signature",
@@ -90,64 +128,69 @@ fun TakeDigitalSignatureBottomSectionContent(
             color = primary900,
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp)
-                .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
-                .padding(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
+                .weight(1f)
+                .dashedBorder(color = Color.Gray, shape = RoundedCornerShape(8.dp))
+                .padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(
                 text = "Sign Again",
-                onClick = {
-                    path = Path()
-                    updateSignature(path, null, signatureDate)
-                },
+                onClick = { resetPath() },
                 modifier = Modifier
                     .align(alignment = Alignment.End)
                     .height(35.dp)
                     .scale(0.8f)
-                    .offset(x = 20.dp)
+                    .offset(x = 10.dp)
             )
 
             Canvas(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White, RoundedCornerShape(4.dp))
+                    .weight(1f)
+                    .background(Color.Black.copy(alpha = 0.03f), RoundedCornerShape(4.dp))
                     .clipToBounds()
+                    .onSizeChanged {
+                        canvasWith = it.width.toFloat()
+                        canvasHeight = it.height
+
+                    }
                     .pointerInput(true) {
                         detectDragGestures(onDragStart = { offset ->
                             path.moveTo(offset.x, offset.y)
-                            isSigned = true
                             currentPosition = offset
+                            isSigned = true
+                            startY = offset.y //record the starting Y position
                         }, onDrag = { change, _ ->
                             path.lineTo(change.position.x, change.position.y)
                             currentPosition = change.position
                             isSigned = true
                         }, onDragEnd = {
-                            saveBitmap = true
+//                            saveBitmap = true
+                            isDrawnTopToBottom =
+                                currentPosition.y > startY //determine direction when user lifts their finger
                         })
                     }) {
 
-//                if (currentPosition != Offset.Unspecified) {
-                drawPath(
-                    path = path, color = primary500, style = Stroke(
-                        width = 4.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round
+                if (currentPosition != Offset.Unspecified) {
+                    drawPath(
+                        path = path, color = primary500, style = Stroke(
+                            width = 8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round
+                        )
                     )
-                )
-//                }
+                }
 
-                if (saveBitmap) {
+                /*if (saveBitmap) {
                     updateSignature(
                         path, createSignatureBitmap(
                             path, size.width, with(density) { canvasHeight.toPx() }.toInt()
                         ), signatureDate
-
                     )
                     saveBitmap = false
-                }
+                }*/
             }
         }
 
@@ -171,39 +214,254 @@ fun TakeDigitalSignatureBottomSectionContent(
             }, style = AppTheme.typography.footnote
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        FilledButton(
-            text = "Confirm", onClick = {
-                saveBitmap = true
-                updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL)
-            }, modifier = Modifier.fillMaxWidth()
-        )
+        if (isLoading) {
+            MyCircularProgressIndicator()
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (isMandatory) {
+                    OutlinedButton(
+                        text = "Cancel",
+                        onClick = onCancelMandatory,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                FilledButton(
+                    text = "Confirm",
+                    onClick = {
+                        val transactionId = resolveTransactionId(paymentDetailsResponse)
+
+                        if (isSigned && transactionId != null) {
+                            val signatureBitmap = createSignatureBitmap(
+                                path,
+                                canvasWith,
+                                canvasHeight,
+                                isDrawnTopToBottom
+                            )
+                            updateSignature(path, signatureBitmap, signatureDate)
+
+                            scope.launch {
+                                isLoading = true
+                                try {
+                                    val response = uploadSignature(
+                                        context = context,
+                                        signatureBitmap = signatureBitmap,
+                                        transactionId = transactionId
+                                    )
+
+                                    if (response != null && response.success) {
+                                        AppLogger.info(
+                                            "TakeDigitalSignature",
+                                            "Signature upload success for transactionId=$transactionId"
+                                        )
+                                        Toast.makeText(
+                                            context,
+                                            "Signature Uploaded Successfully",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        updateFlowStageToSuccess()
+                                    } else {
+                                        AppLogger.warn(
+                                            "TakeDigitalSignature",
+                                            "Signature upload failed for transactionId=$transactionId, responseSuccess=${response?.success}"
+                                        )
+                                        Toast.makeText(
+                                            context,
+                                            "Signature upload failed. Please try again.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                } catch (e: Exception) {
+                                    AppLogger.error(
+                                        "TakeDigitalSignature",
+                                        "Signature upload exception for transactionId=$transactionId",
+                                        e
+                                    )
+                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG)
+                                        .show()
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+
+                        } else if (transactionId == null) {
+                            AppLogger.warn(
+                                "TakeDigitalSignature",
+                                "Missing transaction id in payment details payload. payloadPresent=${paymentDetailsResponse != null}"
+                            )
+                            Toast.makeText(
+                                context,
+                                "Error: Transaction ID not found.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            if (isMandatory && !isSigned) {
+                                Toast.makeText(context, "Signature is required", Toast.LENGTH_SHORT).show()
+                            } else {
+                                updateFlowStageToSuccess()
+                            }
+                        }
+                    },
+                    modifier = Modifier.weight(if (isMandatory) 1f else 2f)
+                )
+            }
+        }
     }
-
 }
 
+
+private fun resolveTransactionId(
+    response: PaymentDetailsResponse?
+): String? {
+
+    if(response?.data == null){
+        AppLogger.warn(
+            "TakeDigitalSignature",
+            "PaymentDetailsResponse data is null. Cannot resolve transaction ID."
+        )
+    }
+    val data = response?.data ?: return null
+
+    data.TransactionRefID
+        .takeIf { it.isNotBlank() }
+        ?.let {
+            AppLogger.debug(
+                "TakeDigitalSignature",
+                "Resolved from TransactionRefID=$it"
+            )
+            return it
+        }
+
+    // 2. Check V2UUID
+    if (!data.V2UUID.isNullOrBlank()) {
+        AppLogger.debug(
+            "TakeDigitalSignature",
+            "Resolved from V2UUID"
+        )
+        return data.V2UUID
+    }
+
+    val uuid = data.TransactionHistory
+        ?.firstOrNull()
+        ?.uuid
+        ?.takeIf { it.isNotBlank() }
+
+    AppLogger.debug(
+        "TakeDigitalSignature",
+        "Resolved from TransactionHistory.uuid=$uuid"
+    )
+
+    return uuid
+}
+
+
+
+/*
 fun createSignatureBitmap(
     path: Path,
     width: Float,
     height: Int,
+    isDrawnTopToBottom: Boolean,
 ): Bitmap {
-    val bitmap = createBitmap(width.roundToInt(), height)
+    //get the actual bounds of the signature drawing
+    val bounds = path.getBounds()
 
-    // Create a Canvas to draw on the Bitmap
-    val canvas = android.graphics.Canvas(bitmap)
-    canvas.drawColor(android.graphics.Color.WHITE)
+    //create a clean bitmap that is tightly cropped to the signature
+    val croppedBitmap = createBitmap(
+        bounds.width.roundToInt(),
+        bounds.height.roundToInt()
+    )
+    val canvas = android.graphics.Canvas(croppedBitmap)
+    canvas.drawColor(android.graphics.Color.TRANSPARENT)
 
-    // Set up paint for the drawing
+    //Move the signature path to the top left corner
+    val croppedPath = Path().apply { addPath(path) }
+
+    croppedPath.translate(Offset(-bounds.left, -bounds.top))
+    //Set up the paint for drawing
     val paint = Paint().apply {
         color = android.graphics.Color.BLACK
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
         strokeJoin = Paint.Join.ROUND
+        strokeWidth = 8f
+        isAntiAlias = true
+    }
+    canvas.drawPath(croppedPath.asAndroidPath(), paint)
+
+    //if the signature is taller than it is wide
+    if (bounds.height > bounds.width) {
+        val matrix = Matrix().apply {
+            if (isDrawnTopToBottom) {
+                //For toptobottom, rotate counter clockwise
+                postRotate(270f)
+            } else {
+                //For bottomtotop, rotate clockwise
+                postRotate(90f)
+            }
+        }
+        return Bitmap.createBitmap(
+            croppedBitmap, 0, 0, croppedBitmap.width, croppedBitmap.height, matrix, true
+        )
+    } else {
+        //If signature is already landscape return it as it is
+        return croppedBitmap
+    }
+}
+*/
+
+fun createSignatureBitmap(
+    path: Path,
+    width: Float,
+    height: Int,
+    isDrawnTopToBottom: Boolean,
+): Bitmap {
+    val bounds = path.getBounds()
+
+    val croppedBitmap = createBitmap(
+        bounds.width.roundToInt(),
+        bounds.height.roundToInt()
+    )
+    val canvas = android.graphics.Canvas(croppedBitmap)
+    canvas.drawColor(android.graphics.Color.TRANSPARENT)
+
+    val croppedPath = Path().apply { addPath(path) }
+    croppedPath.translate(Offset(-bounds.left, -bounds.top))
+
+    val paint = Paint().apply {
+        color = android.graphics.Color.BLACK
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+        strokeJoin = Paint.Join.ROUND
+        strokeWidth = 8f
+        isAntiAlias = true
+    }
+    canvas.drawPath(croppedPath.asAndroidPath(), paint)
+
+    // aspect ratio with threshold to determine if signature is vertical
+    val aspectRatio = bounds.height / bounds.width
+
+    // If signature is significantly taller than wide threshold of 1.2 or higher
+    if (aspectRatio > 1.2f) {
+        val signatureCenterX = bounds.left + (bounds.width / 2f)
+        val canvasCenterX = width / 2f
+
+        val matrix = Matrix().apply {
+            if (signatureCenterX < canvasCenterX) {
+                postRotate(270f)
+            } else {
+                postRotate(90f)
+            }
+        }
+
+        return Bitmap.createBitmap(
+            croppedBitmap, 0, 0, croppedBitmap.width, croppedBitmap.height, matrix, true
+        )
     }
 
-    // Draw the signature path onto the Android Canvas
-    canvas.drawPath(path.asAndroidPath(), paint)
-
-    return bitmap
+    return croppedBitmap
 }

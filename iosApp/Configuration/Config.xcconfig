@@ -1,0 +1,11 @@
+TEAM_ID=
+
+PRODUCT_NAME=Daspayappandroid
+PRODUCT_BUNDLE_IDENTIFIER=com.paymentoptions.pos.Daspayappandroid$(TEAM_ID)
+
+CURRENT_PROJECT_VERSION=1
+MARKETING_VERSION=1.0
+
+// Kotlin Framework Search Paths
+FRAMEWORK_SEARCH_PATHS = $(inherited) "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
+OTHER_LDFLAGS = $(inherited) -framework sharedKit

@@ -2,10 +2,10 @@ package com.paymentoptions.pos
 
 import android.content.pm.ActivityInfo
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -13,10 +13,11 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.paymentoptions.pos.device.LockScreenOrientation
 import com.paymentoptions.pos.device.NetworkStatusComposable
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
+import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.theminesec.sdk.headless.HeadlessSetup
 import kotlinx.coroutines.launch
-import androidx.core.graphics.drawable.toDrawable
 
 class MainActivity : FragmentActivity() {
 
@@ -40,7 +41,9 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         immersiveMode()
-        setup()
+        TokenRepository.getInstance(this.application)
+        TokenAutoRefresher.getInstance(this.application)
+//        setup()
 
         setContent {
 //            SystemUiController()
@@ -57,9 +60,7 @@ class MainActivity : FragmentActivity() {
     }
 
     fun setup() = lifecycleScope.launch {
-        HeadlessSetup.initialSetup(this@MainActivity) {
-            withTestCapk = true
-        }
+        HeadlessSetup.initialSetup(this@MainActivity)
 
         HeadlessSetup.getEmvParams()
         HeadlessSetup.getCapks()

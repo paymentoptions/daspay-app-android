@@ -16,7 +16,7 @@ fun SettlementScreen(navController: NavController) {
         navController = navController,
         bottomSectionMinHeightRatio = 0.9f,
         bottomSectionMaxHeightRatio = 0.9f,
-        bottomBarContent = BottomBarContent.TOGGLE_BUTTON,
+        bottomBarContent = BottomBarContent.NAVIGATION_BAR,
         bottomSectionPaddingInDp = 0.dp,
         enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
     ) {

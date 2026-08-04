@@ -11,17 +11,21 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Backspace
+import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,28 +38,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.paymentoptions.pos.device.SharedPreferences
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.services.apiService.endpoints.completeDeviceRegistration
 import com.paymentoptions.pos.services.apiService.endpoints.getExternalDeviceConfiguration
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
-import com.paymentoptions.pos.ui.composables._components.dialogs.AlertDialogType
-import com.paymentoptions.pos.ui.composables._components.dialogs.MyAlertDialog
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.composables.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.innerShadow
-import com.paymentoptions.pos.ui.theme.linkColor
 import com.paymentoptions.pos.ui.theme.noBorder
 import com.paymentoptions.pos.ui.theme.primary300
 import com.paymentoptions.pos.ui.theme.primary50
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.modifiers.innerShadow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
@@ -67,18 +68,25 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val scrollState = rememberScrollState()
     var openFingerprintScan by remember { mutableStateOf(false) }
     var lastClicked by remember { mutableStateOf<Int?>(null) }
-    var scope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            delay(4000)
+            errorMessage = null
+        }
+    }
+
     if (openFingerprintScan) FingerprintScanScreen(navController = navController, onAuthSuccess = {
         navController.navigate(Screens.Dashboard.route) {
-            popUpTo(Screens.SignIn.route) { inclusive = true }
+            popUpTo(Screens.AuthCheck.route) { inclusive = true }
         }
         openFingerprintScan = false
 
     }, onAuthFailed = {
-        Toast.makeText(context, "Cancelled", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, com.paymentoptions.pos.R.string.device_credential_missing, Toast.LENGTH_LONG).show()
         openFingerprintScan = false
     })
 
@@ -91,25 +99,45 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        MyAlertDialog(
-            showDialog = errorMessage != null,
-            text = errorMessage.toString(),
-            actionButtonText = "Try Again",
-            type = AlertDialogType.ERROR,
-            onActionFn = {
-                errorMessage = null
-                otp.value = ""
-                lastClicked = null
-            })
+        // create an error indicator  here
+        Spacer(modifier = Modifier.height(6.dp))
+        if (errorMessage != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .background(
+                        color = Color(0xFFEB5757).copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(8.dp)
+                    )
+                    .padding(vertical = 12.dp, horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Error,
+                    contentDescription = "Error",
+                    tint = Color(0xFFEB5757),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = errorMessage.toString(),
+                    color = Color(0xFFEB5757),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
 
         Text(
-            text = "Enter Token", style = AppTheme.typography.screenTitle
+            text = "Enter Device PIN", style = AppTheme.typography.screenTitle
         )
 
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Enter the Token sent by Payment Options",
+            text = "Enter the PIN provided by your administrator.",
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = purple50
@@ -173,28 +201,28 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Row(
-            modifier = Modifier.align(alignment = Alignment.End),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "Didn't receive the code?",
-                color = purple50,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                "Resend Code",
-                fontSize = 12.sp,
-                textDecoration = TextDecoration.Underline,
-                color = linkColor
-            )
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
+//        Row(
+//            modifier = Modifier.align(alignment = Alignment.End),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            Text(
+//                "Didn't receive the code?",
+//                color = purple50,
+//                fontSize = 12.sp,
+//                fontWeight = FontWeight.Medium
+//            )
+//            Spacer(modifier = Modifier.width(4.dp))
+//            Text(
+//                "Resend Code",
+//                fontSize = 12.sp,
+//                textDecoration = TextDecoration.Underline,
+//                color = linkColor
+//            )
+//        }
+//
+//        Spacer(modifier = Modifier.height(24.dp))
 
         Column(
             modifier = Modifier
@@ -565,7 +593,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(59.dp),
-                text = "Confirm",
+                text = "Continue",
                 disabled = otp.value.length < 6 || isLoading,
                 onClick = {
                     // special version for debugging
@@ -588,8 +616,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                     "Step 3: Proceeding to get external device configuration."
                                 )
 
-                                SharedPreferences.saveTokenStatus(
-                                    context = context, isVerified = true
+                                DPSharedPreferences.saveTokenStatus(
+                                    context = context, tokenCode = otp.value, isVerified = true
                                 )
 
                                 getExternalDeviceConfiguration(
@@ -599,7 +627,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                         "DEBUG_TOKEN",
                                         "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
                                     )
-                                    SharedPreferences.saveDeviceConfiguration(
+                                    DPSharedPreferences.saveDeviceConfiguration(
                                         context, configResponse
                                     )
                                     openFingerprintScan = true
@@ -622,51 +650,63 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         }.onFailure { exception ->
                             //if (json)
                             try {
-                                val jsonPart = exception.message?.substringAfter(":")?.trim()
-                                val jsonObject = JSONObject(jsonPart)
-                                val exceptionMessage = jsonObject.getString("message")
+                                val jsonPart = exception.message
 
-                                Log.e(
-                                    "Step 2 FAILED: completeDeviceRegistration.", exceptionMessage
-                                )
-                                if (exceptionMessage == "Device already registered") {
-                                    getExternalDeviceConfiguration(
-                                        context, otp.value
-                                    ).onSuccess { configResponse ->
+                                if (!jsonPart.isNullOrEmpty() && jsonPart.trim().startsWith("{")) {
+                                    val jsonObject = JSONObject(jsonPart)
+                                    val exceptionMessage = jsonObject.optString("message")
 
-                                        SharedPreferences.saveTokenStatus(
-                                            context = context, isVerified = true
-                                        )
 
-                                        Log.d(
-                                            "DEBUG_TOKEN",
-                                            "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
-                                        )
-                                        SharedPreferences.saveDeviceConfiguration(
-                                            context, configResponse
-                                        )
-                                        openFingerprintScan = true
-                                    }.onFailure { exception ->
-                                        Log.e(
-                                            "DEBUG_TOKEN",
-                                            "Step 4 FAILED: getExternalDeviceConfiguration.",
-                                            exception
-                                        )
+                                    Log.e(
+                                        "Step 2 FAILED: completeDeviceRegistration.",
+                                        exceptionMessage
+                                    )
+                                    if (exceptionMessage == "Device already registered") {
+                                        getExternalDeviceConfiguration(
+                                            context, otp.value
+                                        ).onSuccess { configResponse ->
+
+                                            DPSharedPreferences.saveTokenStatus(
+                                                context = context,
+                                                tokenCode = otp.value,
+                                                isVerified = true
+                                            )
+
+                                            Log.d(
+                                                "DEBUG_TOKEN",
+                                                "Step 4: getExternalDeviceConfiguration SUCCEEDED. Response: $configResponse"
+                                            )
+                                            DPSharedPreferences.saveDeviceConfiguration(
+                                                context, configResponse
+                                            )
+                                            openFingerprintScan = true
+                                        }.onFailure { exception ->
+                                            Log.e(
+                                                "DEBUG_TOKEN",
+                                                "Step 4 FAILED: getExternalDeviceConfiguration.",
+                                                exception
+                                            )
+                                            errorMessage =
+                                                exception.message ?: "Failed to fetch configuration"
+                                        }
+                                    } else if (exceptionMessage.lowercase()
+                                            .contains("unauthorized")
+                                    ) {
+                                        Toast.makeText(
+                                            context,
+                                            "Token expired. Please sign in again.",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        DPSharedPreferences.clearSharedPreferences(context)
+                                        navController.navigate(Screens.AuthCheck.route) {
+                                            popUpTo(Screens.AuthCheck.route) { inclusive = true }
+                                        }
+                                    } else {
                                         errorMessage =
-                                            exception.message ?: "Failed to fetch configuration"
-                                    }
-                                } else if (exceptionMessage.lowercase().contains("unauthorized")) {
-                                    Toast.makeText(
-                                        context,
-                                        "Token expired. Please sign in again.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-
-                                    navController.navigate(Screens.SignIn.route) {
-                                        popUpTo(Screens.SignIn.route) { inclusive = true }
+                                            exceptionMessage ?: "An unknown error occurred"
                                     }
                                 } else {
-                                    errorMessage = exceptionMessage ?: "An unknown error occurred"
+                                    Log.d("DEBUG_TOKEN", "Step 7: JSON error.")
                                 }
                             } catch (e: Exception) {
                                 errorMessage = e.message.toString()
@@ -676,6 +716,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                         Log.d("DEBUG_TOKEN", "Step 5: Process finished.")
                     }
                 })
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }
