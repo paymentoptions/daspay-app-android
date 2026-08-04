@@ -250,9 +250,8 @@ fun AdditionalChargeBottomSectionContent(
                 .fillMaxWidth()
                 .height(59.dp),
             onClick = {
-                cartState.additionalAmountNote = noteState.text.toString()
-                cartState.additionalCharge =
-                    if (rawInput.isEmpty()) 0.0f else rawInput.toFloat().div(100)
+                val amount = if (rawInput.isEmpty()) 0.0f else rawInput.toFloat().div(100)
+                cartState.updateAdditionalCharge(amount, noteState.text.toString(), context)
                 updateCartSate(cartState)
                 updateFlowStage(FoodOrderFlowStage.REVIEW_CART)
             })

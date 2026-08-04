@@ -44,16 +44,19 @@ class ClientApp : Application() {
             try {
                 AppLogger.info("MineSec bootstrap started")
                 val hasLicenseAsset = try {
-                    assets.list("")?.contains(MINESEC_LICENCE_FILE) == true
+                    assets.list("")?.contains("payment-options.license") == true
                 } catch (e: Exception) {
                     AppLogger.error("MineSec bootstrap: failed while checking license asset presence: ${e.message}", e)
                     false
                 }
-                AppLogger.debug("MineSec bootstrap context: package=${packageName}, process=${android.os.Process.myPid()}, flavor=${BuildConfig.FLAVOR}, buildType=${BuildConfig.BUILD_TYPE}, licenseAssetPresent=$hasLicenseAsset")
+
+                AppLogger.debug("MineSec bootstrap context: package=${packageName}, " +
+                        "process=${android.os.Process.myPid()}, flavor=${BuildConfig.FLAVOR}, " +
+                        "buildType=${BuildConfig.BUILD_TYPE}, licenseAssetPresent=$hasLicenseAsset")
 
                 AppAnalytics.mineSecSdkInitialization(step = "init_soft_pos", result = "started")
                 val clientAppInitRes =
-                    HeadlessSetup.initSoftPos(this@ClientApp, MINESEC_LICENCE_FILE)
+                    HeadlessSetup.initSoftPos(this@ClientApp, "payment-options.license")
                 when (clientAppInitRes) {
                     is WrappedResult.Success -> {
                         AppLogger.info("MineSec initSoftPos success: ${clientAppInitRes.value}")

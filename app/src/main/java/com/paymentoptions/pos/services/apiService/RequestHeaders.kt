@@ -3,6 +3,7 @@ package com.paymentoptions.pos.services.apiService
 import android.content.Context
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.utils.getDeviceIdentifier
+import com.paymentoptions.pos.utils.X_API_KEY
 
 fun generateRequestHeader(authToken: String = ""): Map<String, String> {
     val headers = mapOf<String, String>(
@@ -23,7 +24,7 @@ fun generateRequestHeader(authToken: String = ""): Map<String, String> {
         "sec-fetch-mode" to "cors",
         "sec-fetch-site" to "cross-site",
         "user-agent" to "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "x-api-key" to "bLm8c1C0fL3FtPzrjSr0",
+        "x-api-key" to X_API_KEY,
         "x-authorization" to "F_FvwWj_L1wHkrMeg2c3Iv0Te52j_aJm",
 
         "authorization" to authToken
@@ -52,7 +53,7 @@ fun generateSignedRequestHeader(context: Context): Map<String, String> {
         "sec-fetch-mode" to "cors",
         "sec-fetch-site" to "cross-site",
         "user-agent" to "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "x-api-key" to "bLm8c1C0fL3FtPzrjSr0",
+        "x-api-key" to X_API_KEY,
         "x-authorization" to "F_FvwWj_L1wHkrMeg2c3Iv0Te52j_aJm",
     )
 
@@ -79,7 +80,7 @@ fun generateRefundRequestHeader(authToken: String = ""): Map<String, String> {
         "sec-fetch-mode" to "cors",
         "sec-fetch-site" to "cross-site",
         "user-agent" to "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "x-api-key" to "bLm8c1C0fL3FtPzrjSr0",
+        "x-api-key" to X_API_KEY,
         "x-authorization" to "-Qt4aQg9lb4I1rOTJGZdFXTXCh13UjcS",
         "Cookie" to "reqid=5ddc7193-ac13-4517-a104-2ec6f2057215",
 
@@ -93,7 +94,7 @@ fun generateRefundRequestHeader(authToken: String = ""): Map<String, String> {
 fun generatePaymentRequestHeader(authToken: String = ""): Map<String, String> {
     val headers = mapOf<String, String>(
         "x-secret-key" to "We@ve",
-        "x-api-key" to "bLm8c1C0fL3FtPzrjSr0",
+        "x-api-key" to X_API_KEY,
         "content-type" to "application/json",
         "Cookie" to "reqid=9ba02754-19cb-4b47-ba3b-e656f04cd7d7",
         "Authorization" to authToken
@@ -131,7 +132,7 @@ fun generateSignatureUploadHeader(authToken: String = ""): Map<String, String> {
         "sec-fetch-mode" to "cors",
         "sec-fetch-site" to "cross-site",
         "user-agent" to "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "x-api-key" to "bLm8c1C0fL3FtPzrjSr0",
+        "x-api-key" to X_API_KEY,
         "x-authorization" to "F_FvwWj_L1wHkrMeg2c3Iv0Te52j_aJm", // generateRequestHeader
         "authorization" to authToken
     )

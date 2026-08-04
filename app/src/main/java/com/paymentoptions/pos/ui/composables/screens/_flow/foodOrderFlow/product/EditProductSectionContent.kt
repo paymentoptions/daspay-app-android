@@ -49,6 +49,7 @@ import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.endpoints.editProduct
+import com.paymentoptions.pos.ui.composables._components.RectangleCheckbox
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -58,8 +59,10 @@ import com.paymentoptions.pos.ui.theme.borderThin
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.Locale
@@ -78,6 +81,9 @@ fun EditProductSectionContent(
     val scope = rememberCoroutineScope()
     var productName = rememberTextFieldState(initialText = selectedFoodItem.item.ProductName)
     var productDescription = rememberTextFieldState(initialText = selectedFoodItem.item.ProductDesc?:"")
+
+    val serviceFees = rememberTextFieldState(initialText = String.format(Locale.US, "%.2f", selectedFoodItem.item.ServiceFeePerc))
+    var enabled by remember { mutableStateOf(selectedFoodItem.item.ServiceFeeEnabled ?: false) }
     var productPrice = rememberTextFieldState(initialText = String.format(Locale.US, "%.2f", selectedFoodItem.item.ProductPrice))
     //var productType by remember { mutableStateOf(selectedFoodItem.item.ProductFoodType) }
     //var productSize by remember { mutableStateOf(selectedFoodItem.item.ProductSize) }
@@ -88,6 +94,13 @@ fun EditProductSectionContent(
     var showMediaSheet by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            delay(4000)
+            errorMessage = null
+        }
+    }
 
     // Image picker launcher
     val imagePickerLauncher =
@@ -261,6 +274,34 @@ fun EditProductSectionContent(
 //                    )
 //                }
 //            }
+
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                // Product Service Fees
+                Column(modifier = Modifier.weight(0.5f)) {
+                    OutlinedTextInput(
+                        state = serviceFees,
+                        placeholder = "Enter Service Fees",
+                        modifier = Modifier.fillMaxWidth(),
+                        label = "Service fees",
+                        onlyDigits = true
+                    )
+                }
+
+                // Product Enabled
+                Column(modifier = Modifier.weight(0.5f)) {
+                    RectangleCheckbox(
+                        checked = enabled,
+                        onCheckedChange = { enabled = it }
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
             Row(
@@ -541,6 +582,13 @@ fun EditProductSectionContent(
                             return@launch
                         }
 
+                        val serviceFeesAmount = serviceFees.text.toString().trim()
+                        if(serviceFeesAmount.isNotBlank() && !priceRegex.matches(serviceFeesAmount)){
+                            errorMessage = "Enter a valid service fees (up to 2 decimal places)."
+                            isLoading = false
+                            return@launch
+                        }
+
                         // Safe conversion + rounding to 2 decimals
                         val priceFloat = priceText.toFloat()
                         val finalPrice = String.format(Locale.US,"%.2f", priceFloat).toFloat()
@@ -558,15 +606,17 @@ fun EditProductSectionContent(
 //                                    productSize,
                                     productCode,
                                    // productStock,
-                                    selectedFoodItem
+                                    selectedFoodItem,
+                                    serviceFees,
+                                    enabled ?: false
                                 ),
                                 foodItem = selectedFoodItem,
                                 selectedFile = uriToTempFile(context, imageUri),
                                 )
                             addFoodResponse?.statusCode == 200L || addFoodResponse?.statusCode == 201L // success
                         } catch (e: retrofit2.HttpException) {
-                            errorMessage = "Something went wrong.."
-                            AppLogger.error("edit product HTTP error ${e.code()}: ${e.message()}")
+                            errorMessage = parseApiErrorMessage(e, "Something went wrong..")
+                            AppLogger.error("edit product HTTP error $errorMessage")
                             false
                         } catch (e: Exception) {
                             errorMessage = e.message ?: "Failed to add product."
@@ -600,7 +650,9 @@ private fun getProductRequest(
 //    productSize: String,
     productCode: TextFieldState,
     //productStock: Int,
-    selectedFoodItem: FoodItem
+    selectedFoodItem: FoodItem,
+    serviceFeesPerc: TextFieldState,
+    serviceEnabled: Boolean,
 ): ProductRequest {
     if (DPSharedPreferences.isAdmin(context)) return ProductRequest(
         ProductName = productName.text.toString(),
@@ -614,6 +666,8 @@ private fun getProductRequest(
         Currency = DPSharedPreferences.getTransactionCurrency(context),
         MerchantID = selectedFoodItem.item.MerchantID,
         CategoryID = selectedFoodItem.item.CategoryID,
+        ServiceFeeEnabled = serviceEnabled,
+        ServiceFeePerc = serviceFeesPerc.text.toString().toFloat()
     ) else {
         return ProductRequest(
             ProductName = productName.text.toString(),
@@ -627,6 +681,8 @@ private fun getProductRequest(
             CategoryID = selectedFoodItem.item.CategoryID,
             ProductPrice = null,
             ProductCode = null,
+            ServiceFeeEnabled = serviceEnabled,
+            ServiceFeePerc = serviceFeesPerc.text.toString().toFloat()
         )
 
     }

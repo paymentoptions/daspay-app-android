@@ -39,9 +39,8 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            if(foodItem.item.ProductDesc != null)
             Text(
-                foodItem.item.ProductDesc,
+                foodItem.item.ProductDesc ?: "  ",
                 fontSize = 11.sp,
                 fontWeight = FontWeight(480),
                 fontStyle = FontStyle.Italic,
@@ -49,6 +48,25 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+
+            if((foodItem.item.ServiceFeeEnabled == true) && foodItem.item.ServiceFeePerc != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        "Service fee",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500.copy(alpha = 0.5f)
+                    )
+
+                    Text(
+                        "${foodItem.item.ServiceFeePerc.formatToPrecisionString()}/%",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight(980),
+                        color = primary500
+                    )
+                }
+            }
         }
 
         Column(
@@ -69,6 +87,16 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
                 fontWeight = FontWeight(980),
                 color = primary500
             )
+
+                if((foodItem.item.ServiceFeeEnabled == true) && foodItem.item.ServiceFeeAmount != null){
+                    Text(
+                        "+${foodItem.item.ServiceFeeAmount.formatToPrecisionString()}",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500.copy(alpha = 0.5f)
+                    )
+               }
         }
     }
+
 }

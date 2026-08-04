@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +56,7 @@ import com.paymentoptions.pos.ui.theme.primary50
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.modifiers.innerShadow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
@@ -69,6 +71,13 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     val scope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            delay(4000)
+            errorMessage = null
+        }
+    }
 
     if (openFingerprintScan) FingerprintScanScreen(navController = navController, onAuthSuccess = {
         navController.navigate(Screens.Dashboard.route) {

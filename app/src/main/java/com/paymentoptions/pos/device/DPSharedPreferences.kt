@@ -10,6 +10,7 @@ import com.paymentoptions.pos.services.apiService.AppConfig
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Apms
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Schemes
 import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
+import com.paymentoptions.pos.services.apiService.MerchantSetting
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
 import com.paymentoptions.pos.utils.PaymentMethod
@@ -149,16 +150,32 @@ object DPSharedPreferences {
             }
         }
 
-        fun clearSharedPreferences(context: Context) = runBlocking {
-            val sharedPreferences = getSecurePrefs(context)
+    fun clearSharedPreferences(context: Context) = runBlocking {
+        val sharedPreferences = getSecurePrefs(context)
 
-            with(sharedPreferences.edit()) {
-                remove("auth_details")
-                apply()
-            }
-            accessLevel = null
+        with(sharedPreferences.edit()) {
+            // Authentication & Session
+            remove("auth_details")
+            remove("token_verified")
+            remove("token_code")
+            remove("saved_password")
 
+            // Configuration & Merchant Data
+            remove("device_config")
+            remove("biometrics")
+
+            // Transaction Data
+            remove("cart")
+
+            apply()
         }
+
+        // Reset in-memory cached variables
+        accessLevel = null
+        transactionCurrency = null
+
+        AppLogger.debug("SharedPreferences and in-memory session cleared")
+    }
 
         fun saveFcmToken(context: Context, token: String) {
             val sharedPref = getSecurePrefs(context)
@@ -381,6 +398,11 @@ object DPSharedPreferences {
         return dasmid
     }
 
+    fun getMerchantSettings(context: Context) : MerchantSetting? {
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
+        return externalDeviceConfiguration?.data?.deviceInfo?.MerchantSetting
+    }
+
     //this function will extract schemes from the external device configuration in which the payment method type is SOFTPOS
     fun getSchemes(context: Context): DevicePaymentMethod_Schemes {
         val externalDeviceConfiguration = getDeviceConfiguration(context)
@@ -429,6 +451,7 @@ object DPSharedPreferences {
         with(sharedPreferences.edit()) {
             putString("BaseAPIURL", appConfig.BaseAPIURL)
             putString("TransactionDetailsURL", appConfig.TransactionDetailsURL)
+            appConfig.CvmLimit?.let { putFloat("cvm_limit", it) }
             apply()
         }
     }
@@ -446,6 +469,17 @@ object DPSharedPreferences {
         return url
     }
 
+    fun saveCvmLimit(context: Context, limit: Float) {
+        val sharedPref = getSecurePrefs(context)
+        with(sharedPref.edit()) {
+            putFloat("cvm_limit", limit)
+            apply()
+        }
+    }
 
+    fun getCvmLimit(context: Context): Float {
+        val sharedPref = getSecurePrefs(context)
+        return sharedPref.getFloat("cvm_limit", 200.0f)
+    }
 
 }

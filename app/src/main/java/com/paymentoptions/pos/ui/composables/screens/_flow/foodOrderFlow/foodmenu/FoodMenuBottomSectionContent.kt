@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -46,6 +47,10 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodItem
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlowStage
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
+import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.reviewcart.CurrencyRow
+import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.utils.formatToPrecisionString
@@ -229,17 +234,27 @@ fun FoodMenuBottomSectionContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primary500
+                        "Item Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primary500
                     )
 
-                    CurrencyText(
-                        currency = currency,
-                        amount = cartState.itemTotal.formatToPrecisionString(),
-                        fontSize = 14.sp,
-                        color = primary500,
-                        addSpaceAfterCurrency = true,
-                        fontWeight = FontWeight(980)
-                    )
+                    CurrencyRow(currency = currency, amount = cartState.itemTotal)
+
+                }
+
+                if(cartState.serviceCharge != 0f){
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Service Charge",
+                            style = AppTheme.typography.footnote.copy(
+                                fontSize = 14.sp, fontWeight = FontWeight.Normal
+                            )
+                        )
+
+                        CurrencyRow(currency = currency, amount = cartState.serviceCharge)
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -293,4 +308,34 @@ fun AddProductItemButton(onClick: () -> Unit) {
         }
     }
 
+}
+
+@Composable
+fun CurrencyRow(currency: String, amount: Float, width: Dp = 160.dp) {
+    Row(
+        modifier = Modifier.width(width),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+
+        CurrencyText(
+            currency = currency,
+            amount = "",
+            fontSize = 14.sp,
+            color = primary500,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
+        )
+
+        CurrencyText(
+            currency = "",
+            amount = "+" + amount.formatToPrecisionString(),
+            fontSize = 14.sp,
+            color = primary500,
+            fontWeight = FontWeight(980),
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
+        )
+    }
 }

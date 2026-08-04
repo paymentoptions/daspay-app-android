@@ -55,8 +55,8 @@ android {
         applicationId = "com.paymentoptions.pos"
         minSdk = 29
         targetSdk = 36
-        versionCode = 4
-        versionName = "4.0"
+        versionCode = 12
+        versionName = "12.0"
 
 
         val appName = "Daspay"
@@ -72,15 +72,15 @@ android {
             dimension = "environment"
            // buildConfigField("String", "CURRENCY", "\"SGD\"")
             buildConfigField("String", "ENVIRONMENT", "\"DEV\"")
-            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-dev.paymentoptions.com/api/v1/\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-uat.paymentoptions.com/api/v1/\"")
             versionNameSuffix = "-dev"
         }
-        create("staging") {
+        create("uat") {
             dimension = "environment"
            // buildConfigField("String", "CURRENCY", "\"SGD\"")
-            buildConfigField("String", "ENVIRONMENT", "\"STAGING\"")
-            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-staging.paymentoptions.com/api/v1/\"")
-            versionNameSuffix = "-staging"
+            buildConfigField("String", "ENVIRONMENT", "\"UAT\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-uat.paymentoptions.com/api/v1/\"")
+            versionNameSuffix = "-uat"
         }
         create("production") {
             dimension = "environment"
@@ -180,18 +180,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-
-//    Minesec - using local AAR since remote registry is unavailable
     releaseImplementation(libs.headless.release)
     debugImplementation(libs.headless.stage)
-
-//    releaseImplementation(files("libs/minehades-stage-1.10.105.12.61.aar"))
-//    debugImplementation(files("libs/minehades-stage-1.10.105.12.61.aar"))
-//    releaseImplementation(files("libs/headless-stage-1.2.17-stage-release.aar"))
-//    debugImplementation(files("libs/headless-stage-1.2.17-stage-release.aar"))
-
-
-
 
     //Firebase
     implementation(platform(libs.firebase.bom))

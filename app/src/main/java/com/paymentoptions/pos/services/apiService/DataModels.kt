@@ -484,6 +484,9 @@ data class ProductListDataRecord(
     val DeletedAt: String? = null,
     val isDeleted: Boolean? = null,
     val DeletedBy: String? = null,
+    val ServiceFeePerc: Float?,
+    val ServiceFeeEnabled: Boolean?,
+    val ServiceFeeAmount: Float?
 )
 
 @Serializable
@@ -498,7 +501,9 @@ data class ProductRequest (
     val ProductStock: Long? = null,
     val Currency: String?,
     val MerchantID: String?,
-    val CategoryID: String?
+    val CategoryID: String?,
+    val ServiceFeePerc: Float?,
+    val ServiceFeeEnabled: Boolean?
 )
 
 data class ProductListResponseData(
@@ -539,6 +544,16 @@ data class ExternalConfigData(
     val paymentMethod: List<DevicePaymentMethod>,
 )
 
+
+@Serializable
+data class MerchantSetting(
+    val TaxRegistrationNumber: String?,
+    val TaxName: String?,
+    val TaxOnOtherFeesPerc: Int?,
+    val CatalogEnabled: Boolean?
+)
+
+
 @Serializable
 data class DeviceInfo(
     val DeviceID: String,
@@ -552,6 +567,7 @@ data class DeviceInfo(
     val CreatedAt: String,
     val UpdatedAt: String,
     val Location: String? = null,
+    val MerchantSetting: MerchantSetting?
 )
 
 @Serializable
