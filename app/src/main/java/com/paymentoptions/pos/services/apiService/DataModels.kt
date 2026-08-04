@@ -484,6 +484,9 @@ data class ProductListDataRecord(
     val DeletedAt: String? = null,
     val isDeleted: Boolean? = null,
     val DeletedBy: String? = null,
+    val ServiceFeePerc: Float?,
+    val ServiceFeeEnabled: Boolean?,
+    val ServiceFeeAmount: Float?
 )
 
 @Serializable
@@ -498,7 +501,9 @@ data class ProductRequest (
     val ProductStock: Long? = null,
     val Currency: String?,
     val MerchantID: String?,
-    val CategoryID: String?
+    val CategoryID: String?,
+    val ServiceFeePerc: Float?,
+    val ServiceFeeEnabled: Boolean?
 )
 
 data class ProductListResponseData(
@@ -539,6 +544,16 @@ data class ExternalConfigData(
     val paymentMethod: List<DevicePaymentMethod>,
 )
 
+
+@Serializable
+data class MerchantSetting(
+    val TaxRegistrationNumber: String?,
+    val TaxName: String?,
+    val TaxOnOtherFeesPerc: Int?,
+    val CatalogEnabled: Boolean?
+)
+
+
 @Serializable
 data class DeviceInfo(
     val DeviceID: String,
@@ -552,6 +567,7 @@ data class DeviceInfo(
     val CreatedAt: String,
     val UpdatedAt: String,
     val Location: String? = null,
+    val MerchantSetting: MerchantSetting?
 )
 
 @Serializable
@@ -700,32 +716,42 @@ data class PaymentDetailsResponseData(
     val CustomerIP: String,
     val MerchantIP: String,
     val AcquirerCode: String,
-    val AcquirerMID: String,
-    val Event: String,
-    val ACQError: String,
-    val GatewayError: String,
-    val BIN: Int,
-    val IssuingBank: String,
-    val IssuingCountry: String,
-    val MerchantRefNumber: String,
-    val TransactionTimezone: String,
-    val AcquirerID: String,
-    val TerminalID: String,
+    val AcquirerMID: String?,
+    val Event: String?,
+    val ACQError: String?,
+    val GatewayError: String?,
+    val BIN: String?,
+    val IssuingBank: String?,
+    val IssuingCountry: String?,
+    val MerchantRefNumber: String?,
+    val TransactionTimezone: String?,
+    val AcquirerID: String?,
+    val TerminalID: String?,
     val browser_info: String?,
     val MerchantCategoryCode: String,
-    val ProductType: String,
+    val ProductType: String?,
     val PrimaryAddress: PrimaryAddress?,
-    val Merchant: String,
+    val Merchant: String?,
     val Referenceremark: String,
-    val LegalNameInEnglish: String,
-    val SecretKey: String,
-    val TransactionLog: Any, // []
-    val TokenizedTransactionHistory: Any, // [],
-    val ProductDetails: Any, // [],
+    val LegalNameInEnglish: String?,
+    val SecretKey: String?,
+    val TransactionLog: Any?, // []
+    val TokenizedTransactionHistory: Any?, // [],
+    val ProductDetails: Any?, // [],
     val SubscriptionDetails: String?,
-    val PaymentType: String,
+    val PaymentType: String?,
     val AcquirerResponse: List<String?>,
+    val TransactionHistory: List<TransactionHistory>?,
+    val CaptureRequestTransaction: List<Any>? = null,
+    val RefundRequestTransaction: List<Any>? = null,
+    val TerminalName: String?,
+    val PBLLinkName: String?,
+    val IsBlockRefund: Boolean?,
+
+
 )
+
+
 
 data class PrimaryAddress(
     val Line1: String?,
@@ -743,6 +769,10 @@ data class AquirerResponse(
     val tranId: String = "",
     val tranType: String = "",
     val tranStatus: String = "",
+    
+    val gatewayNotes: String = "",
+    
+    
     val amount: AquirerResponseAmount = AquirerResponseAmount(),
     val paymentMethod: String = "",
     val entryMode: String = "",
@@ -807,7 +837,7 @@ data class AquirerResponseAction(
 )
 
 @Serializable
-data class PaymentDetailsResponseData_TransactionHistory(
+data class TransactionHistory(
     val uuid: String,
     val trackid: String?,
     val event: String?,
@@ -881,7 +911,8 @@ data class AppConfig (
     val PrevAppVersion: Long,
     val CurrAppVersion: Long,
     val IsUpdateMandatory: Boolean,
-    val TransactionDetailsURL: String
+    val TransactionDetailsURL: String,
+    val CvmLimit: Float? = 200.0f
 )
 
 data class SettlementListResponse (
@@ -937,6 +968,49 @@ data class SignatureData (
     val signatureURL: Any? = null
 )
 
+fun PaymentDetailsResponseData.toTransactionListDataRecord(): TransactionListDataRecord {
+    return TransactionListDataRecord(
+        uuid = this.TransactionRefID, // Assuming TransactionRefID maps to uuid
+        MerchantRefID = this.MerchantRefNumber ?: this.MerchantID,
+        LegalName = this.LegalNameInEnglish ?: this.Merchant ?: "",
+        LegalNameInEnglish = this.LegalNameInEnglish,
+        DASMID = this.DASMID,
+        trackID = this.trackID,
+        AcquirerMID = this.AcquirerMID ?: "",
+        TransactionType = this.TransactionType,
+        Scheme = this.Scheme,
+        amount = this.Amount.toString(), // Float to String
+        CurrencyCode = this.CurrencyCode,
+        status = this.Status,
+        CardNumber = this.CardNumber,
+        AcquirerCode = this.AcquirerCode,
+        has3DS = false, // Defaulting to false as it's missing in source
+        AuthCode = this.AuthCode,
+        Isrecurring = this.Isrecurring,
+        Date = this.Date,
+        V2UUID = this.V2UUID,
+        ProductType = this.ProductType ?: "",
+        SubscriptionId = this.SubscriptionDetails,
+        UpdatedDate = this.UpdatedDate,
+        TerminalId = this.TerminalID ?: "",
+        TerminalName = this.TerminalName ?: "",
+        PBLLinkName = this.PBLLinkName,
+        IsWhitelisted = false, // Defaulting to false as it's missing in source
+        GatewayResponse = this.GatewayError ?: this.ACQError,
+        ResponseCode = this.Response.toString(), // Int to String
+        TransactionID = this.TransactionID.toIntOrNull() ?: 0, // String to Int safely
+        IntegrationType = "", // Missing in source, providing empty string
+        PaymentType = this.PaymentType,
+        SettleStatus = null, // Missing in source
+        BatchID = null, // Missing in source
+        BatchNo = null, // Missing in source
+        SettledAt = null, // Missing in source
+        AcquirerTransactionID = this.AcquirerReferenceNumber,
+        IsVoided = null, // Missing in source
+        IsRefunded = null // Missing in source
+    )
+}
+
 fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDataRecord {
     return TransactionListDataRecord(
         uuid = this.uuid,
@@ -991,8 +1065,21 @@ fun InsightsResponseDataRecord.toTransactionListDataRecord(): TransactionListDat
 
 fun Transaction.toPaymentStatusRequest(
     parentUUID: String? = null,
-    childUUID: String? = null
+    childUUID: String? = null,
+    gateWayNotes: String? = null// only on Refund
 ): PaymentStatusRequest {
+    val transactionJson = JSONObject(Json.encodeToString(this))
+    if (transactionJson.has("description")) {
+        val descriptionValue = transactionJson.opt("description")
+        transactionJson.remove("description")
+        transactionJson.put("gatewayNotes", descriptionValue)
+    }
+
+    if(gateWayNotes?.isNotBlank() == true){
+        transactionJson.put("gatewayNotes", gateWayNotes.trim())
+    }
+
+
     return PaymentStatusRequest(
         tranId = this.posReference.toString(),
         cvmPerformed = this.cvmPerformed.toString(),
@@ -1007,7 +1094,7 @@ fun Transaction.toPaymentStatusRequest(
         trace = this.trace,
         callbackUrl = this.callbackUrl.toString(),
         entryMode = this.entryMode.toString(),
-        amount = "{\"currency\":\"${this.amount.currency}\",\"value\":${this.amount.value.toFloat()}",
+        amount = "{\"currency\":\"${this.amount.currency}\",\"value\":${this.amount.value.toFloat()}}",
         batchNo = this.batchNo.toString(),
         appName = this.appName.toString(),
         linkedTranId = this.posReference.toString(),
@@ -1020,7 +1107,7 @@ fun Transaction.toPaymentStatusRequest(
         paymentMethod = this.paymentMethod.toString(),
         hostMessageFormat = this.hostMessageFormat.toString(),
         aid = this.aid.toString(),
-        acquirerResponse = Json.encodeToString(this),
+        acquirerResponse = transactionJson.toString(),
         parentUUID = parentUUID,
         childUUID = childUUID,
     )

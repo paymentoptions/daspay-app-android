@@ -19,13 +19,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -35,16 +33,13 @@ import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.services.apiService.ProductRequest
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.addProduct
-import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.PhotoAlbum
 import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Remove
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -62,22 +57,21 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import androidx.core.content.FileProvider
-import com.paymentoptions.pos.BuildConfig
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.ui.composables._components.RectangleCheckbox
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
 import com.paymentoptions.pos.ui.theme.AppTheme
-import com.paymentoptions.pos.ui.theme.disabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.innerShadow
-import com.paymentoptions.pos.ui.theme.shadowColor
-import com.paymentoptions.pos.ui.theme.shadowColor2
 import com.paymentoptions.pos.utils.modifiers.innerShadow
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import java.util.Locale
 
 @OptIn(
@@ -93,6 +87,8 @@ fun AddProductSectionContent(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val productName = rememberTextFieldState()
+    val serviceFees = rememberTextFieldState()
+    var enabled by remember { mutableStateOf(false) }
     val productDescription = rememberTextFieldState()
     val productPrice = rememberTextFieldState()
     //var productType by remember { mutableStateOf("NONVEG") }
@@ -104,6 +100,17 @@ fun AddProductSectionContent(
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            delay(4000)
+            errorMessage = null
+        }
+    }
+
+    LaunchedEffect(serviceFees.text) {
+        enabled = serviceFees.text.isNotBlank()
+    }
 
     // Image picker launcher
     val imagePickerLauncher =
@@ -251,40 +258,32 @@ fun AddProductSectionContent(
 //                    )
 //                }
             }
-//            Spacer(modifier = Modifier.height(8.dp))
-//            Row(
-//                modifier = Modifier.fillMaxWidth(),
-//                horizontalArrangement = Arrangement.spacedBy(12.dp),
-//                verticalAlignment = Alignment.CenterVertically
-//            ) {
-//
-//                // Product Code
-//                Column(modifier = Modifier.weight(0.5f)) {
-//                    OutlinedTextInput(
-//                        state = productCode,
-//                        placeholder = "Enter Unique Product code",
-//                        modifier = Modifier.fillMaxWidth(),
-//                        label = "Product Code * (Unique)",
-//                    )
-//                }
-//
-//                // Product Size
-//                Column(modifier = Modifier.weight(0.5f)) {
-//                    Text(
-//                        "Product Size",
-//                        fontSize = 14.sp,
-//                        fontWeight = FontWeight.Medium,
-//                        color = purple50
-//                    )
-//                    Spacer(modifier = Modifier.height(4.dp))
-//                    RectangularDropdownMenu(
-//                        options = listOf("REGULAR", "LARGE", "SMALL"),
-//                        selected = productSize,
-//                        onSelected = { productSize = it },
-//                        modifier = Modifier.fillMaxWidth()
-//                    )
-//                }
-//            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                // Product Service Fees
+                Column(modifier = Modifier.weight(0.5f)) {
+                    OutlinedTextInput(
+                        state = serviceFees,
+                        placeholder = "Enter Product Fees",
+                        modifier = Modifier.fillMaxWidth(),
+                        label = "Service fees",
+                        onlyDigits = true,
+                    )
+                }
+
+                // Product Enabled
+                Column(modifier = Modifier.weight(0.5f)) {
+                    RectangleCheckbox(
+                        checked = enabled,
+                        onCheckedChange = { enabled = it }
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
             Row(
@@ -552,6 +551,13 @@ fun AddProductSectionContent(
                             return@launch
                         }
 
+                        val serviceFeesAmount = serviceFees.text.toString().trim()
+                        if(serviceFeesAmount.isNotBlank() && !priceRegex.matches(serviceFeesAmount)){
+                            errorMessage = "Enter a valid service fees (up to 2 decimal places)."
+                            isLoading = false
+                            return@launch
+                        }
+
                         // Safe conversion + rounding to 2 decimals
                         val priceFloat = priceText.toFloat()
                         val finalPrice = String.format(Locale.US, "%.2f", priceFloat).toFloat()
@@ -570,13 +576,15 @@ fun AddProductSectionContent(
                                     Currency = DPSharedPreferences.getTransactionCurrency(context),
                                     MerchantID = categorySelected?.MerchantID ?: "",
                                     CategoryID = categorySelected?.CategoryID ?: "",
+                                    ServiceFeePerc = if (serviceFeesAmount.isNotBlank()) serviceFeesAmount.toFloat() else 0.0f,
+                                    ServiceFeeEnabled = enabled
                                 ),
                                 selectedFile = uriToTempFile(context, imageUri)
                             )
                             addFoodResponse?.statusCode == 200L || addFoodResponse?.statusCode == 201L // success
                         } catch (e: retrofit2.HttpException) {
-                            errorMessage = "Something went wrong.."
-                            AppLogger.error("add product HTTP error ${e.code()}: ${e.message()}")
+                            errorMessage = parseApiErrorMessage(e, "Something went wrong..")
+                            AppLogger.error("add product HTTP error $errorMessage")
                             false
                         } catch (e: Exception) {
                             errorMessage = e.message ?: "Failed to add product."

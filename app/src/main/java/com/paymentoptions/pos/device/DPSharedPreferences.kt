@@ -10,6 +10,7 @@ import com.paymentoptions.pos.services.apiService.AppConfig
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Apms
 import com.paymentoptions.pos.services.apiService.DevicePaymentMethod_Schemes
 import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
+import com.paymentoptions.pos.services.apiService.MerchantSetting
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
 import com.paymentoptions.pos.utils.PaymentMethod
@@ -24,6 +25,8 @@ import kotlinx.serialization.json.Json
 object DPSharedPreferences {
         private var accessLevel: AccessLevel? = null
         private var transactionCurrency: String? = null
+        private const val DATADOG_CLIENT_TOKEN_KEY = "datadog_client_token"
+        private const val DATADOG_APPLICATION_ID_KEY = "datadog_application_id"
 
         const val sharedPreferencesLabel: String = "my_prefs"
 
@@ -147,16 +150,32 @@ object DPSharedPreferences {
             }
         }
 
-        fun clearSharedPreferences(context: Context) = runBlocking {
-            val sharedPreferences = getSecurePrefs(context)
+    fun clearSharedPreferences(context: Context) = runBlocking {
+        val sharedPreferences = getSecurePrefs(context)
 
-            with(sharedPreferences.edit()) {
-                remove("auth_details")
-                apply()
-            }
-            accessLevel = null
+        with(sharedPreferences.edit()) {
+            // Authentication & Session
+            remove("auth_details")
+            remove("token_verified")
+            remove("token_code")
+            remove("saved_password")
 
+            // Configuration & Merchant Data
+            remove("device_config")
+            remove("biometrics")
+
+            // Transaction Data
+            remove("cart")
+
+            apply()
         }
+
+        // Reset in-memory cached variables
+        accessLevel = null
+        transactionCurrency = null
+
+        AppLogger.debug("SharedPreferences and in-memory session cleared")
+    }
 
         fun saveFcmToken(context: Context, token: String) {
             val sharedPref = getSecurePrefs(context)
@@ -164,6 +183,23 @@ object DPSharedPreferences {
                 putString("fcm_token", token)
                 apply()
             }
+        }
+
+        fun saveDatadogCredentials(context: Context, clientToken: String, applicationId: String) {
+            val sharedPreferences = getSecurePrefs(context)
+            with(sharedPreferences.edit()) {
+                putString(DATADOG_CLIENT_TOKEN_KEY, clientToken)
+                putString(DATADOG_APPLICATION_ID_KEY, applicationId)
+                apply()
+            }
+        }
+
+        fun getDatadogClientToken(context: Context): String? {
+            return getSecurePrefs(context).getString(DATADOG_CLIENT_TOKEN_KEY, null)
+        }
+
+        fun getDatadogApplicationId(context: Context): String? {
+            return getSecurePrefs(context).getString(DATADOG_APPLICATION_ID_KEY, null)
         }
 
         fun getFcmToken(context: Context): String? {
@@ -362,6 +398,11 @@ object DPSharedPreferences {
         return dasmid
     }
 
+    fun getMerchantSettings(context: Context) : MerchantSetting? {
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
+        return externalDeviceConfiguration?.data?.deviceInfo?.MerchantSetting
+    }
+
     //this function will extract schemes from the external device configuration in which the payment method type is SOFTPOS
     fun getSchemes(context: Context): DevicePaymentMethod_Schemes {
         val externalDeviceConfiguration = getDeviceConfiguration(context)
@@ -410,6 +451,7 @@ object DPSharedPreferences {
         with(sharedPreferences.edit()) {
             putString("BaseAPIURL", appConfig.BaseAPIURL)
             putString("TransactionDetailsURL", appConfig.TransactionDetailsURL)
+            appConfig.CvmLimit?.let { putFloat("cvm_limit", it) }
             apply()
         }
     }
@@ -422,9 +464,22 @@ object DPSharedPreferences {
     fun getTransactionDetailsUrl(context: Context): String?
     {
         val sharedPreferences = getSecurePrefs(context)
-        return sharedPreferences.getString("TransactionDetailsURL", "")
+        val url =  sharedPreferences.getString("TransactionDetailsURL", "https://dev.paymentoptions.com/daspay-transaction-details")
+        AppLogger.debug("getTransactionDetailsUrl: $url")
+        return url
     }
 
+    fun saveCvmLimit(context: Context, limit: Float) {
+        val sharedPref = getSecurePrefs(context)
+        with(sharedPref.edit()) {
+            putFloat("cvm_limit", limit)
+            apply()
+        }
+    }
 
+    fun getCvmLimit(context: Context): Float {
+        val sharedPref = getSecurePrefs(context)
+        return sharedPref.getFloat("cvm_limit", 200.0f)
+    }
 
 }

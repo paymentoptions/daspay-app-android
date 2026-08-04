@@ -55,12 +55,15 @@ import androidx.navigation.NavController
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import coil3.compose.AsyncImage
+import com.google.gson.Gson
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AquirerResponse
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
-import com.paymentoptions.pos.services.apiService.SignatureData
+import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
 import com.paymentoptions.pos.services.apiService.endpoints.getSignature
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
+import com.paymentoptions.pos.services.apiService.toTransactionListDataRecord
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
@@ -86,6 +89,9 @@ import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.utils.AppJson
+import com.paymentoptions.pos.utils.TransactionAction
+import com.paymentoptions.pos.utils.getAvailableAction
+import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -107,8 +113,6 @@ fun TransactionSuccessfulBottomSectionContent(
     val scrollState = rememberScrollState()
     var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
-    var signatureData by remember { mutableStateOf<SignatureData?>(null) }
-    var isSignatureLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         paymentDetailsLatestResponse = try {
@@ -121,19 +125,6 @@ fun TransactionSuccessfulBottomSectionContent(
         }
     }
 
-    LaunchedEffect(transactionId) {
-        if (transactionId.isNotBlank()) {
-            isSignatureLoading = true
-            signatureData = try {
-                getSignature(context = context, uuid = transactionId)?.data
-            } catch (e: Exception) {
-                AppLogger.error("GetSignature error: ${e.message}")
-                null
-            }
-            isSignatureLoading = false
-        }
-    }
-
     if (paymentDetailsLatestResponse != null)
         transactionAquirerResponse =
             paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
@@ -142,9 +133,21 @@ fun TransactionSuccessfulBottomSectionContent(
                 )
             }
 
+    fun navigateToVoidAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Gson().toJson(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "VOID"))
+    }
+
+    fun navigateToRefundAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Gson().toJson(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "REFUND"))
+    }
+
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
-        "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
+        "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
     } else {
         null
     }
@@ -257,28 +260,43 @@ fun TransactionSuccessfulBottomSectionContent(
                 )
             )
 
-            Row(
-                modifier = Modifier.scale(0.7f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButton(
-                    text = "Refund",
-                    onClick = { },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
+            if (paymentDetailsLatestResponse?.data != null) {
+                val transaction = paymentDetailsLatestResponse?.data!!.toTransactionListDataRecord()
+                val availableAction = getAvailableAction(transaction)
+                Row(
+                    modifier = Modifier.scale(0.7f),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
-                Spacer(modifier = Modifier.width(10.dp))
+                    if(availableAction != TransactionAction.NONE){
+                        OutlinedButton(
+                            text = if(availableAction == TransactionAction.REFUND)"Refund" else "VOID",
+                            onClick = {
+                                when(availableAction){
+                                    TransactionAction.VOID -> navigateToVoidAction(transaction)
+                                    TransactionAction.REFUND -> navigateToRefundAction(transaction)
+                                    else ->{}
+                                }
+                            },
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                        )
+                    }
 
-                FilledButton(
-                    text = "View Full Receipt",
-                    onClick = { updateFlowToReceipt() },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                   if(shouldShowFullReceipt(transaction))
+                    FilledButton(
+                        text = "View Full Receipt",
+                        onClick = { updateFlowToReceipt() },
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                    )
+                }
             }
         }
 
@@ -394,6 +412,27 @@ fun TransactionSuccessfulBottomSectionContent(
                         fontWeight = FontWeight.Medium,
                         color = primary500
                     )
+                }
+
+                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Note", style = AppTheme.typography.footnote.copy(
+                                fontWeight = FontWeight.Normal, fontSize = 14.sp
+                            )
+                        )
+
+                        Text(
+                            transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary500
+                        )
+                    }
+
                 }
             }
 
@@ -533,75 +572,6 @@ fun TransactionSuccessfulBottomSectionContent(
                         }
                     }
 
-                }
-
-                // ── Server Signature Section ─────────────────────────────
-                if (isSignatureLoading) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Box(
-                            modifier = Modifier
-                                .width(150.dp)
-                                .height(14.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .shimmerEffect()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .shimmerEffect()
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
-                } else {
-                    val signatureUrl = signatureData?.signatureURL?.toString()
-                    if (signatureData?.imageExists == true && !signatureUrl.isNullOrBlank()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Customer Signature",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = primary900
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(150.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .dashedBorder(
-                                        color = Color.LightGray,
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .background(Color.White),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                AsyncImage(
-                                    model = signatureUrl,
-                                    contentDescription = "Transaction Signature",
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(140.dp)
-                                        .padding(8.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                        }
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))

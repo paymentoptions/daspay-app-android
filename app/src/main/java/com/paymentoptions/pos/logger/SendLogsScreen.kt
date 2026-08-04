@@ -8,9 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Color
+import com.paymentoptions.pos.BuildConfig
 
 @Composable
 fun SendLogsScreen(navController: NavHostController) {
@@ -40,6 +40,12 @@ fun SendLogsScreen(navController: NavHostController) {
         Button(
             onClick = {
                 AppLogger.debug(logMessage)
+
+                // Include build metadata to help correlate exported logs with app/runtime config.
+                AppLogger.info("Build info -> versionName=${BuildConfig.VERSION_NAME}, versionCode=${BuildConfig.VERSION_CODE}, " +
+                        "buildType=${BuildConfig.BUILD_TYPE}, flavor=${BuildConfig.FLAVOR}, environment=${BuildConfig.ENVIRONMENT}")
+                AppLogger.info("Build info -> bootstrapBaseUrl=${BuildConfig.CONFIG_BASE_URL}")
+
                 showConfirmation = true
                 ExportLogs.sendLogsToSdkTeam(context)
                 navController.popBackStack()

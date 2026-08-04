@@ -32,8 +32,8 @@ suspend fun settlementList(
             val settlementListResponse: SettlementListResponse =
                 RetrofitClient.getApi(context).getSettlementList(
                     headers = requestHeaders,
-                    deviceNumber = "12345678kg15",
-                    uniqueCode = "300415"
+                    deviceNumber = deviceNumber,
+                    uniqueCode = uniqueCode
                 )
 
             return settlementListResponse

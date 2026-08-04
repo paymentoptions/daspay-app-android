@@ -12,6 +12,7 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.logger.SendLogsScreen
 import com.paymentoptions.pos.services.apiService.AuthEventManager
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodOrderFlow
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.ReceiveMoneyFlow
 import com.paymentoptions.pos.ui.composables.screens._flow.refundFlow.refundinitiated.RefundInitiatedScreen
@@ -49,6 +50,10 @@ fun Navigator() {
                 is AuthEventManager.AuthEvent.RequireReAuthentication -> {
                     // Navigate to fingerprint scan for auto sign-in
                     AppLogger.debug("Navigator: Received RequireReAuthentication event, navigating to FingerprintScan")
+                    AppAnalytics.screenNavigation(
+                        route = Screens.FingerprintScan.route,
+                        previousRoute = navController.currentBackStackEntry?.destination?.route
+                    )
                     navController.navigate(Screens.FingerprintScan.route) {
                         // Clear back stack to prevent going back to authenticated screens
                         popUpTo(0) { inclusive = true }
@@ -57,12 +62,25 @@ fun Navigator() {
                 is AuthEventManager.AuthEvent.RequireManualSignIn -> {
                     // Navigate to sign-in screen for manual authentication
                     AppLogger.debug("Navigator: Received RequireManualSignIn event, navigating to SignIn")
+                    AppAnalytics.screenNavigation(
+                        route = Screens.SignIn.route,
+                        previousRoute = navController.currentBackStackEntry?.destination?.route
+                    )
                     navController.navigate(Screens.SignIn.route) {
                         // Clear back stack to prevent going back to authenticated screens
                         popUpTo(0) { inclusive = true }
                     }
                 }
             }
+        }
+    }
+
+    LaunchedEffect(navController) {
+        var previousRoute: String? = null
+        navController.currentBackStackEntryFlow.collectLatest { entry ->
+            val route = entry.destination.route ?: return@collectLatest
+            AppAnalytics.screenNavigation(route = route, previousRoute = previousRoute)
+            previousRoute = route
         }
     }
 

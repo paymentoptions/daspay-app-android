@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -121,6 +122,7 @@ fun StatusBottomSectionContent(
                 paymentId = transactionId
             )
         } catch (e: Exception) {
+            AppLogger.error("PaymentDetails error: ${e.message}")
             null
         }
         isLoading = false
@@ -140,7 +142,8 @@ fun StatusBottomSectionContent(
     }
 
 
-    if (paymentDetailsLatestResponse != null)
+    if (paymentDetailsLatestResponse != null) {
+        try {
         transactionAquirerResponse =
             paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
                 AppJson.decodeFromString<AquirerResponse>(
@@ -148,7 +151,12 @@ fun StatusBottomSectionContent(
                 )
             }
 
-    val transactionDetailUrl = "https://dev.paymentoptions.com/daspay-transaction-details/$transactionId"
+        } catch (ex: Exception){
+            AppLogger.error("Exception in Acquirer", ex)
+        }
+    }
+
+    val transactionDetailUrl = "${DPSharedPreferences.getTransactionDetailsUrl(context)}$transactionId"
 
     if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),
@@ -185,7 +193,10 @@ fun StatusBottomSectionContent(
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
 //            val linkQrBitmap = generateQrCode("http://www.google.com")
@@ -302,6 +313,13 @@ fun StatusBottomSectionContent(
                         label = "Aggregator",
                         value = aggregator
                     )
+
+                    if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                        TransactionDetailRow(
+                            label = "Note",
+                            value = transactionAquirerResponse?.gatewayNotes!!.trim()
+                        )
+                    }
                 }
 
                 HorizontalDivider(
@@ -496,13 +514,19 @@ private fun ReceiptContentForPDF(
         "Address unavailable"
     }
 
-    if (paymentDetailsLatestResponse != null)
+    if (paymentDetailsLatestResponse != null) {
+        try {
         transactionAquirerResponse =
             paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()?.let {
                 AppJson.decodeFromString<AquirerResponse>(
                     it
                 )
             }
+        } catch (ex: Exception){
+            AppLogger.error("Exception in Acquirer", ex)
+        }
+
+    }
 
     Column(
         modifier = Modifier

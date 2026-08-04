@@ -58,6 +58,7 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.SignOutResponse
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.services.apiService.endpoints.signOut
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
 import com.paymentoptions.pos.ui.composables._components.MyElevatedCard
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -180,6 +181,8 @@ fun MyBottomNavigationBar(
         text = "Do you want to log out?",
         acceptButtonText = "Log Out",
         onAcceptFn = {
+            AppAnalytics.criticalButtonClick(buttonName = "logout_confirm", screen = "more_menu")
+            AppAnalytics.logout(result = "initiated", source = "bottom_navigation_more")
             scope.launch {
                 signOutLoader = true
 
@@ -188,6 +191,7 @@ fun MyBottomNavigationBar(
                     println("signOutResponse: $signOutResponse")
 
                     if (signOutResponse == null) {
+                        AppAnalytics.logout(result = "success", source = "bottom_navigation_more")
                         TokenAutoRefresher.getInstance(context).onUserSignedOut()
                         DPSharedPreferences.clearSharedPreferences(context)
                         navController.navigate(Screens.AuthCheck.route) {
@@ -197,6 +201,7 @@ fun MyBottomNavigationBar(
 
                     signOutResponse?.let {
                         if (it.success) {
+                            AppAnalytics.logout(result = "success", source = "bottom_navigation_more")
                             TokenAutoRefresher.getInstance(context).onUserSignedOut()
                             DPSharedPreferences.clearSharedPreferences(context)
                             navController.navigate(Screens.AuthCheck.route) {
@@ -205,6 +210,7 @@ fun MyBottomNavigationBar(
                         }
                     }
                 } catch (e: Exception) {
+                    AppAnalytics.logout(result = "failed", source = "bottom_navigation_more")
                     TokenAutoRefresher.getInstance(context).onUserSignedOut()
                     DPSharedPreferences.clearSharedPreferences(context)
                     navController.navigate(Screens.AuthCheck.route) {
@@ -306,11 +312,13 @@ fun MyBottomNavigationBar(
                 modifier = Modifier.weight(1f),
                 isSelected = isHomeSelected,
                 onSelected = {
+                    AppAnalytics.criticalButtonClick(buttonName = "nav_home", screen = "bottom_nav")
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
                     if (currentRoute != home.route) {
                         selectedBottomNavigationBarItem = home
+                        AppAnalytics.dashboardNavigation(destination = home.route, source = "bottom_nav")
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
                             restoreState = true
@@ -329,11 +337,13 @@ fun MyBottomNavigationBar(
                 modifier = Modifier.weight(1f),
                 isSelected = isFoodSelected,
                 onSelected = {
+                    AppAnalytics.criticalButtonClick(buttonName = "nav_catalog", screen = "bottom_nav")
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
                     if (currentRoute != catalogMenu.route) {
                         selectedBottomNavigationBarItem = catalogMenu
+                        AppAnalytics.dashboardNavigation(destination = catalogMenu.route, source = "bottom_nav")
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
                             restoreState = true
@@ -359,11 +369,13 @@ fun MyBottomNavigationBar(
                 modifier = Modifier.weight(1.5f),
                 isSelected = isReceiveMoneySelected,
                 onSelected = {
+                    AppAnalytics.criticalButtonClick(buttonName = "nav_receive_money", screen = "bottom_nav")
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
                     if (currentRoute != receiveMoney.route) {
                         selectedBottomNavigationBarItem = receiveMoney
+                        AppAnalytics.dashboardNavigation(destination = receiveMoney.route, source = "bottom_nav")
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
                             restoreState = true
@@ -382,12 +394,14 @@ fun MyBottomNavigationBar(
                 modifier = Modifier.weight(1f),
                 isSelected = isQuerySelected,
                 onSelected = {
+                    AppAnalytics.criticalButtonClick(buttonName = "nav_query", screen = "bottom_nav")
 
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 
                     if (currentRoute != query.route) {
                         selectedBottomNavigationBarItem = query
+                        AppAnalytics.dashboardNavigation(destination = query.route, source = "bottom_nav")
                         navController.navigate(selectedBottomNavigationBarItem.route) {
                             launchSingleTop = true
                             restoreState = true
@@ -407,6 +421,7 @@ fun MyBottomNavigationBar(
                 modifier = Modifier.weight(1f),
                 isSelected = isMoreSelected,
                 onSelected = {
+                    AppAnalytics.criticalButtonClick(buttonName = "nav_more", screen = "bottom_nav")
                     val currentRoute =
                         navController.currentBackStackEntry?.destination?.route
 

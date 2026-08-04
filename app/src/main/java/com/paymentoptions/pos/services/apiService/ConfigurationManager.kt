@@ -104,16 +104,16 @@ object ConfigurationManager {
         return isInitialized
     }
 
-    /**
-     * Get the base URL being used (from preferences or BuildConfig)
-     */
-    fun getEffectiveBaseUrl(context: Context): String {
-        val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
-        return if (!savedBaseUrl.isNullOrEmpty()) {
-            savedBaseUrl
-        } else {
-            BuildConfig.CONFIG_BASE_URL
-        }
-    }
+//    /**
+//     * Get the base URL being used (from preferences or BuildConfig)
+//     */
+//    fun getEffectiveBaseUrl(context: Context): String {
+//        val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+//        return if (!savedBaseUrl.isNullOrEmpty()) {
+//            savedBaseUrl
+//        } else {
+//            BuildConfig.CONFIG_BASE_URL
+//        }
+//    }
 }
 

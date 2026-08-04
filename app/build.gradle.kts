@@ -6,9 +6,34 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.datadoghq.dd-sdk-android-gradle-plugin")
 
     kotlin("plugin.serialization") version "2.0.21"
     id("com.google.gms.google-services")
+}
+
+
+val localProperties = Properties().apply {
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        load(FileInputStream(localPropertiesFile))
+    }
+}
+
+val datadogClientToken = (
+    localProperties.getProperty("DATADOG_CLIENT_TOKEN")
+        ?: System.getenv("DATADOG_CLIENT_TOKEN")
+        ?: ""
+).trim()
+
+val datadogApplicationId = (
+    localProperties.getProperty("DATADOG_APPLICATION_ID")
+        ?: System.getenv("DATADOG_APPLICATION_ID")
+        ?: ""
+).trim()
+
+if (datadogClientToken.isBlank() || datadogApplicationId.isBlank()) {
+    println("WARNING: Datadog credentials are missing. Set DATADOG_CLIENT_TOKEN and DATADOG_APPLICATION_ID in local.properties or env vars.")
 }
 
 
@@ -30,13 +55,15 @@ android {
         applicationId = "com.paymentoptions.pos"
         minSdk = 29
         targetSdk = 36
-        versionCode = 3
-        versionName = "3.0"
+        versionCode = 12
+        versionName = "12.0"
 
 
         val appName = "Daspay"
         base.archivesName.set("$appName-${versionName}-${versionCode}-${LocalDate.now()}")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "DATADOG_CLIENT_TOKEN", "\"$datadogClientToken\"")
+        buildConfigField("String", "DATADOG_APPLICATION_ID", "\"$datadogApplicationId\"")
     }
 
     flavorDimensions += "environment"
@@ -45,15 +72,15 @@ android {
             dimension = "environment"
            // buildConfigField("String", "CURRENCY", "\"SGD\"")
             buildConfigField("String", "ENVIRONMENT", "\"DEV\"")
-            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-dev.paymentoptions.com/api/v1/\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-uat.paymentoptions.com/api/v1/\"")
             versionNameSuffix = "-dev"
         }
-        create("staging") {
+        create("uat") {
             dimension = "environment"
            // buildConfigField("String", "CURRENCY", "\"SGD\"")
-            buildConfigField("String", "ENVIRONMENT", "\"STAGING\"")
-            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-staging.paymentoptions.com/api/v1/\"")
-            versionNameSuffix = "-staging"
+            buildConfigField("String", "ENVIRONMENT", "\"UAT\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-uat.paymentoptions.com/api/v1/\"")
+            versionNameSuffix = "-uat"
         }
         create("production") {
             dimension = "environment"
@@ -153,18 +180,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-
-//    Minesec - using local AAR since remote registry is unavailable
-    releaseImplementation(libs.headless.stage)
+    releaseImplementation(libs.headless.release)
     debugImplementation(libs.headless.stage)
-
-//    releaseImplementation(files("libs/minehades-stage-1.10.105.12.61.aar"))
-//    debugImplementation(files("libs/minehades-stage-1.10.105.12.61.aar"))
-//    releaseImplementation(files("libs/headless-stage-1.2.17-stage-release.aar"))
-//    debugImplementation(files("libs/headless-stage-1.2.17-stage-release.aar"))
-
-
-
 
     //Firebase
     implementation(platform(libs.firebase.bom))
@@ -192,15 +209,16 @@ dependencies {
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
 
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation(libs.mpandroidchart)
 
     implementation(platform(libs.log4j.bom))
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation(libs.androidx.security.crypto)
 
     // WorkManager for background task scheduling
-    implementation("androidx.work:work-runtime-ktx:2.9.0")
+    implementation(libs.androidx.work.runtime.ktx)
 
     implementation(libs.accompanist.swiperefresh)
+    implementation(libs.dd.sdk.android.rum)
 }

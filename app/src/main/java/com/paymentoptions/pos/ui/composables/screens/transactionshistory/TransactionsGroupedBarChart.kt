@@ -49,6 +49,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.getTransactionAmount
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -119,6 +120,7 @@ fun TransactionsGroupedBarChart(
 ) {
     var earningTransactionCount = 0
     var earningAmount = 0.0f
+    var totalAmount = 0.0f
     var refundTransactionCount = 0
     var refundAmount = 0.0f
 
@@ -254,6 +256,7 @@ fun TransactionsGroupedBarChart(
             if (slotIndex in 0 until numSlots) {
                 // Add transaction to the slot's list
                 transactionsBySlot[slotIndex]?.add(transaction)
+                totalAmount += getTransactionAmount(transaction.toTransactionListDataRecord())
                 when (transaction.TransactionType) {
                     "PURCHASE" -> {
                         earningTransactionCount++
@@ -270,7 +273,7 @@ fun TransactionsGroupedBarChart(
         }
     }
 
-    updateReceivalAmount(earningAmount)
+    updateReceivalAmount(totalAmount)
 
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
 
@@ -302,22 +305,22 @@ fun TransactionsGroupedBarChart(
 
                                 // Get transactions for this slot
                                 val slotTransactions = transactionsBySlot[slotIndex]
-                                if (!slotTransactions.isNullOrEmpty()) {
-                                    // Filter by transaction type based on which bar was clicked
-                                    val filteredTransactions = if (dataSetIndex == 0) {
-                                        // Earnings bar clicked - get PURCHASE transactions
-                                        slotTransactions.filter { it.TransactionType == "PURCHASE" }
-                                    } else {
-                                        // Refunds bar clicked - get REFUND transactions
-                                        slotTransactions.filter { it.TransactionType == "REFUND" }
-                                    }
-
-                                    // Navigate to the first transaction details
-                                    val transaction = filteredTransactions.firstOrNull() ?: slotTransactions.first()
-                                    val transactionListDataRecord = transaction.toTransactionListDataRecord()
-                                    val transactionJson = Gson().toJson(transactionListDataRecord)
-                                    navController.navigate(Screens.TransactionDetails.createRoute(transactionJson))
-                                }
+//                                if (!slotTransactions.isNullOrEmpty()) {
+//                                    // Filter by transaction type based on which bar was clicked
+//                                    val filteredTransactions = if (dataSetIndex == 0) {
+//                                        // Earnings bar clicked - get PURCHASE transactions
+//                                        slotTransactions.filter { it.TransactionType == "PURCHASE" }
+//                                    } else {
+//                                        // Refunds bar clicked - get REFUND transactions
+//                                        slotTransactions.filter { it.TransactionType == "REFUND" }
+//                                    }
+//
+//                                    // Navigate to the first transaction details
+//                                    val transaction = filteredTransactions.firstOrNull() ?: slotTransactions.first()
+//                                    val transactionListDataRecord = transaction.toTransactionListDataRecord()
+//                                    val transactionJson = Gson().toJson(transactionListDataRecord)
+//                                    navController.navigate(Screens.TransactionDetails.createRoute(transactionJson))
+//                                }
                             }
                         }
 

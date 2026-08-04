@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -47,6 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
 import androidx.navigation.NavController
+import com.google.gson.Gson
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.endpoints.uploadSignature
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
@@ -72,6 +75,8 @@ fun TakeDigitalSignatureBottomSectionContent(
     signaturePath: Path,
     signatureDate: Date,
     paymentDetailsResponse: PaymentDetailsResponse?,
+    isMandatory: Boolean = false,
+    onCancelMandatory: () -> Unit = {},
     updateSignature: (Path, Bitmap?, Date) -> Unit = { _, _, _ -> },
     updateFlowStageToSuccess: () -> Unit = {},
 ) {
@@ -108,7 +113,13 @@ fun TakeDigitalSignatureBottomSectionContent(
 
         ScreenTitleWithCloseButton(
             navController = navController,
-            onClose = { updateFlowStageToSuccess() })
+            onClose = {
+                if (isMandatory) {
+                    onCancelMandatory()
+                } else {
+                    updateFlowStageToSuccess()
+                }
+            })
 
         Text(
             text = "Signature",
@@ -208,67 +219,147 @@ fun TakeDigitalSignatureBottomSectionContent(
         if (isLoading) {
             MyCircularProgressIndicator()
         } else {
-            FilledButton(
-                text = "Confirm",
-                onClick = {
-                    val transactionId_value = paymentDetailsResponse?.data?.TransactionRefID
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (isMandatory) {
+                    OutlinedButton(
+                        text = "Cancel",
+                        onClick = onCancelMandatory,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                FilledButton(
+                    text = "Confirm",
+                    onClick = {
+                        val transactionId = resolveTransactionId(paymentDetailsResponse)
 
-                    if (isSigned && transactionId_value != null) {
-                        val signatureBitmap = createSignatureBitmap(
-                            path,
-                            canvasWith,
-                            canvasHeight,
-                            isDrawnTopToBottom
-                        )
-                        updateSignature(path, signatureBitmap, signatureDate)
+                        if (isSigned && transactionId != null) {
+                            val signatureBitmap = createSignatureBitmap(
+                                path,
+                                canvasWith,
+                                canvasHeight,
+                                isDrawnTopToBottom
+                            )
+                            updateSignature(path, signatureBitmap, signatureDate)
 
-                        scope.launch {
-                            isLoading = true
-                            try {
-                                val response = uploadSignature(
-                                    context = context,
-                                    signatureBitmap = signatureBitmap,
-                                    transactionId = transactionId_value
-                                )
+                            scope.launch {
+                                isLoading = true
+                                try {
+                                    val response = uploadSignature(
+                                        context = context,
+                                        signatureBitmap = signatureBitmap,
+                                        transactionId = transactionId
+                                    )
 
-                                if (response != null && response.success) {
-                                    Toast.makeText(
-                                        context,
-                                        "Signature Uploaded Successfully",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                    updateFlowStageToSuccess()
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Signature upload failed. Please try again.",
-                                        Toast.LENGTH_LONG
-                                    ).show()
+                                    if (response != null && response.success) {
+                                        AppLogger.info(
+                                            "TakeDigitalSignature",
+                                            "Signature upload success for transactionId=$transactionId"
+                                        )
+                                        Toast.makeText(
+                                            context,
+                                            "Signature Uploaded Successfully",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        updateFlowStageToSuccess()
+                                    } else {
+                                        AppLogger.warn(
+                                            "TakeDigitalSignature",
+                                            "Signature upload failed for transactionId=$transactionId, responseSuccess=${response?.success}"
+                                        )
+                                        Toast.makeText(
+                                            context,
+                                            "Signature upload failed. Please try again.",
+                                            Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                } catch (e: Exception) {
+                                    AppLogger.error(
+                                        "TakeDigitalSignature",
+                                        "Signature upload exception for transactionId=$transactionId",
+                                        e
+                                    )
+                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG)
+                                        .show()
+                                } finally {
+                                    isLoading = false
                                 }
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG)
-                                    .show()
-                            } finally {
-                                isLoading = false
+                            }
+
+                        } else if (transactionId == null) {
+                            AppLogger.warn(
+                                "TakeDigitalSignature",
+                                "Missing transaction id in payment details payload. payloadPresent=${paymentDetailsResponse != null}"
+                            )
+                            Toast.makeText(
+                                context,
+                                "Error: Transaction ID not found.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            if (isMandatory && !isSigned) {
+                                Toast.makeText(context, "Signature is required", Toast.LENGTH_SHORT).show()
+                            } else {
+                                updateFlowStageToSuccess()
                             }
                         }
-
-                    } else if (transactionId_value == null) {
-                        // should not happen just for check
-                        Toast.makeText(
-                            context,
-                            "Error: Transaction ID not found.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        updateFlowStageToSuccess()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+                    },
+                    modifier = Modifier.weight(if (isMandatory) 1f else 2f)
+                )
+            }
         }
     }
 }
+
+
+private fun resolveTransactionId(
+    response: PaymentDetailsResponse?
+): String? {
+
+    if(response?.data == null){
+        AppLogger.warn(
+            "TakeDigitalSignature",
+            "PaymentDetailsResponse data is null. Cannot resolve transaction ID."
+        )
+    }
+    val data = response?.data ?: return null
+
+    data.TransactionRefID
+        .takeIf { it.isNotBlank() }
+        ?.let {
+            AppLogger.debug(
+                "TakeDigitalSignature",
+                "Resolved from TransactionRefID=$it"
+            )
+            return it
+        }
+
+    // 2. Check V2UUID
+    if (!data.V2UUID.isNullOrBlank()) {
+        AppLogger.debug(
+            "TakeDigitalSignature",
+            "Resolved from V2UUID"
+        )
+        return data.V2UUID
+    }
+
+    val uuid = data.TransactionHistory
+        ?.firstOrNull()
+        ?.uuid
+        ?.takeIf { it.isNotBlank() }
+
+    AppLogger.debug(
+        "TakeDigitalSignature",
+        "Resolved from TransactionHistory.uuid=$uuid"
+    )
+
+    return uuid
+}
+
+
+
 /*
 fun createSignatureBitmap(
     path: Path,

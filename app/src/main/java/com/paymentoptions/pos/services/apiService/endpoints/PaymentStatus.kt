@@ -7,7 +7,7 @@ import com.paymentoptions.pos.services.apiService.RetrofitClient
 import com.paymentoptions.pos.services.apiService.generatePaymentStatusHeader
 import com.theminesec.lib.dto.transaction.TranStatus
 
-suspend fun paymentStatus(
+suspend fun sendWebHookNotification(
     context: Context,
     request: PaymentStatusRequest,
     tranStatus: TranStatus,

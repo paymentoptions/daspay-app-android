@@ -203,6 +203,7 @@ val logging = HttpLoggingInterceptor { message -> AppLogger.info(message) }
 fun provideOkHttpClient(context: android.content.Context): OkHttpClient {
     return OkHttpClient.Builder()
         .addInterceptor(logging)
+        .addInterceptor(ApiErrorTrackingInterceptor())
         .authenticator(TokenAuthenticator(context))
         .connectTimeout(retrofitTimeout, TimeUnit.SECONDS)
         .readTimeout(retrofitTimeout, TimeUnit.SECONDS)

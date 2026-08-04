@@ -46,7 +46,7 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.services.apiService.endpoints.paymentStatus
+import com.paymentoptions.pos.services.apiService.endpoints.sendWebHookNotification
 import com.paymentoptions.pos.services.apiService.endpoints.refund
 import com.paymentoptions.pos.services.apiService.endpoints.void
 import com.paymentoptions.pos.services.apiService.toPaymentStatusRequest
@@ -64,6 +64,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.TransactionAction
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
@@ -148,50 +149,65 @@ fun TransactionActionScreen(
                 val paymentStatusRequest = sdkTransaction.toPaymentStatusRequest(
                     parentUUID = parentUUID,
                     childUUID = childUUID,
+                    gateWayNotes = notesInput.text.toString()
                 )
 
 
                 AppLogger.debug("Webhook request for $actionLabel: parentUUID=$parentUUID, childUUID=$childUUID and paymentStatusRequest: $paymentStatusRequest")
 
-                val webhookSuccess = paymentStatus(
+                val webhookSuccess = sendWebHookNotification(
                     context = context,
                     request = paymentStatusRequest,
-                    tranStatus = TranStatus.APPROVED
+                    tranStatus = sdkTransaction.tranStatus
                 )
 
                 AppLogger.debug("Webhook response for $actionLabel: $webhookSuccess")
 
-                // Show success
-                withContext(Dispatchers.Main) {
-                    processingScreenType = StatusScreenType.SUCCESS
-                    processingMessage = "$actionLabel Completed"
-                }
-                delay(delayTime)
+                if (webhookSuccess) {
+                    // Show success
+                    withContext(Dispatchers.Main) {
+                        processingScreenType = StatusScreenType.SUCCESS
+                        processingMessage = "$actionLabel Completed"
+                    }
+                    delay(delayTime)
 
-                withContext(Dispatchers.Main) {
-                    navController.navigate(
-                        "${Screens.TransactionReceipt.route}?transactionId=$childUUID" +
-                                "&title=Your transaction is ${actionLabel}ed&amount=${transaction.amount}&refrenceId=$childUUID" +
-                                "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}"
-                    ) {
-                        popUpTo(Screens.TransactionAction.route) { inclusive = true }
+                    withContext(Dispatchers.Main) {
+                        navController.navigate(
+                            "${Screens.TransactionReceipt.route}?transactionId=$childUUID" +
+                                    "&title=Your transaction is ${actionLabel}ed&amount=${transaction.amount}&refrenceId=$childUUID" +
+                                    "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}"
+                        ) {
+                            popUpTo(Screens.TransactionAction.route) { inclusive = true }
+                        }
+                    }
+                } else {
+                    errorMessage = sdkTransaction.actions.firstOrNull()?.hostRespMessage ?: "$actionLabel Failed"
+                    withContext(Dispatchers.Main) {
+                        showTransactionFailure()
                     }
                 }
             } catch (e: Exception) {
                 AppLogger.error("Webhook notification failed for $actionLabel: ${e.message}", e)
-                // Still show success since the void/refund API already succeeded
-                withContext(Dispatchers.Main) {
-                    processingScreenType = StatusScreenType.SUCCESS
-                    processingMessage = "$actionLabel Completed"
-                }
-                delay(delayTime)
-                withContext(Dispatchers.Main) {
-                    navController.navigate(
-                        "${Screens.TransactionReceipt.route}?transactionId=$childUUID" +
-                                "&title=Your transaction is ${actionLabel}ed&amount=${transaction.amount}&refrenceId=$childUUID" +
-                                "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}"
-                    ) {
-                        popUpTo(Screens.TransactionAction.route) { inclusive = true }
+                // If webhook fails, we still show the result based on sdkTransaction
+                if (sdkTransaction.tranStatus == TranStatus.APPROVED) {
+                    withContext(Dispatchers.Main) {
+                        processingScreenType = StatusScreenType.SUCCESS
+                        processingMessage = "$actionLabel Completed"
+                    }
+                    delay(delayTime)
+                    withContext(Dispatchers.Main) {
+                        navController.navigate(
+                            "${Screens.TransactionReceipt.route}?transactionId=$childUUID" +
+                                    "&title=Your transaction is ${actionLabel}ed&amount=${transaction.amount}&refrenceId=$childUUID" +
+                                    "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}"
+                        ) {
+                            popUpTo(Screens.TransactionAction.route) { inclusive = true }
+                        }
+                    }
+                } else {
+                    errorMessage = sdkTransaction.actions.firstOrNull()?.hostRespMessage ?: "$actionLabel Failed"
+                    withContext(Dispatchers.Main) {
+                        showTransactionFailure()
                     }
                 }
             }
@@ -236,26 +252,20 @@ fun TransactionActionScreen(
                         notes = notesInput.text.toString()
                     )
 
-                    if (response != null) {
+                    if (response != null && response.success) {
                         AppLogger.debug("Refund successful on attempt $currentAttempt: $response")
+                        break
+                    } else if (response != null && !response.success) {
+                        errorMessage = response.gateway_response.message
+                        AppLogger.error("Refund API returned failure: $errorMessage")
                         break
                     } else {
                         lastError = Exception("API returned null response")
                     }
                 } catch (e: retrofit2.HttpException) {
-                    errorMessage = try {
-                        val errorJson = e.response()?.errorBody()?.string()
-                        if (errorJson != null) {
-                            val jsonObj = org.json.JSONObject(errorJson)
-                            jsonObj.optJSONObject("gateway_response")?.optString("message")
-                                ?: e.message()
-                        } else {
-                            e.message()
-                        }
-                    } catch (e: Exception) {
-                        e.message.toString()
-                    }
-                    AppLogger.error("Refund HTTP error ${e.code()}: $errorMessage")
+                    errorMessage = parseApiErrorMessage(e, "Something went wrong..")
+                    AppLogger.error("Refund HTTP error $errorMessage")
+
                 } catch (e: Exception) {
                     AppLogger.error("Refund attempt $currentAttempt failed: ${e.message}", e)
                     lastError = e
@@ -265,7 +275,7 @@ fun TransactionActionScreen(
                 }
             }
 
-            if (response != null) {
+            if (response != null && response.success) {
                 withContext(Dispatchers.Main) {
                     processingScreenType = StatusScreenType.SUCCESS
                     processingMessage = "Refund Completed"
@@ -281,7 +291,11 @@ fun TransactionActionScreen(
                     }
                 }
             } else {
-                AppLogger.error("Refund failed after $maxRetries attempts. Last error: ${lastError?.message}")
+                if (response != null && !response.success) {
+                    errorMessage = response.gateway_response.message
+                } else {
+                    AppLogger.error("Refund failed after $maxRetries attempts. Last error: ${lastError?.message}")
+                }
                 withContext(Dispatchers.Main) {
                     processingScreenType = StatusScreenType.ERROR
                     processingMessage = "Refund failed"
@@ -351,7 +365,7 @@ fun TransactionActionScreen(
                     merchantId = transaction.DASMID,
                 )
 
-                if (response != null) {
+                if (response != null && response.success) {
                     AppLogger.debug("Void API successful, childUUID: ${response.transaction_details.id}")
                     withContext(Dispatchers.Main) {
                         voidChildUUID = response.transaction_details.id
@@ -359,26 +373,16 @@ fun TransactionActionScreen(
                         launcher.launch(input = PoiRequest.ActionVoid(transaction.AcquirerTransactionID!!))
                     }
                 } else {
-                    AppLogger.error("Void API returned null")
+                    errorMessage = response?.gateway_response?.message ?: "Void request failed"
+                    AppLogger.error("Void API returned failure: $errorMessage")
                     withContext(Dispatchers.Main) {
-                        errorMessage = "Void request failed"
                         showTransactionFailure()
                     }
                 }
             } catch (e: retrofit2.HttpException) {
-                errorMessage = try {
-                    val errorJson = e.response()?.errorBody()?.string()
-                    if (errorJson != null) {
-                        val jsonObj = org.json.JSONObject(errorJson)
-                        jsonObj.optJSONObject("gateway_response")?.optString("message")
-                            ?: e.message()
-                    } else {
-                        e.message()
-                    }
-                } catch (ex: Exception) {
-                    ex.message.toString()
-                }
                 AppLogger.error("Void API HTTP error ${e.code()}: $errorMessage")
+                errorMessage = parseApiErrorMessage(e, "Something went wrong..")
+                AppLogger.error("Void HTTP error $errorMessage")
                 withContext(Dispatchers.Main) { showTransactionFailure() }
             } catch (e: Exception) {
                 AppLogger.error("Void API failed: ${e.message}", e)
@@ -409,40 +413,30 @@ fun TransactionActionScreen(
                             notes = notesInput.text.toString()
                         )
 
-                        if (response != null) {
+                        if (response != null && response.success) {
                             AppLogger.debug("Refund API successful, childUUID: ${response.transaction_details.id}")
                             withContext(Dispatchers.Main) {
                                 refundChildUUID = response.transaction_details.id
                                 // Step 2: Launch MineSec SDK
                                 launcher.launch(
                                     input = PoiRequest.ActionLinkedRefund(
-                                        transaction.AcquirerTransactionID!!,
-                                        Amount(BigDecimal(transaction.amount),
-                                            Currency.getInstance(DPSharedPreferences.getTransactionCurrency(context),))
+                                        tranId = transaction.AcquirerTransactionID!!,
+                                        amount = Amount(BigDecimal(transaction.amount),
+                                            Currency.getInstance(DPSharedPreferences.getTransactionCurrency(context),)),
                                     )
                                 )
                             }
                         } else {
-                            AppLogger.error("Refund API returned null")
+                            errorMessage = response?.gateway_response?.message ?: "Refund request failed"
+                            AppLogger.error("Refund API returned failure: $errorMessage")
                             withContext(Dispatchers.Main) {
-                                errorMessage = "Refund request failed"
                                 showTransactionFailure()
                             }
                         }
                     } catch (e: retrofit2.HttpException) {
-                        errorMessage = try {
-                            val errorJson = e.response()?.errorBody()?.string()
-                            if (errorJson != null) {
-                                val jsonObj = org.json.JSONObject(errorJson)
-                                jsonObj.optJSONObject("gateway_response")?.optString("message")
-                                    ?: e.message()
-                            } else {
-                                e.message()
-                            }
-                        } catch (ex: Exception) {
-                            ex.message.toString()
-                        }
                         AppLogger.error("Refund API HTTP error ${e.code()}: $errorMessage")
+                        errorMessage = parseApiErrorMessage(e, "Something went wrong..")
+                        AppLogger.error("Refund HTTP error $errorMessage")
                         withContext(Dispatchers.Main) { showTransactionFailure() }
                     } catch (e: Exception) {
                         AppLogger.error("Refund API failed: ${e.message}", e)

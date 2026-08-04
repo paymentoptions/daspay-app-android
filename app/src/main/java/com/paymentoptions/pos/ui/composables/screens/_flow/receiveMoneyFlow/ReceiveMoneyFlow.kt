@@ -47,6 +47,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,6 +73,7 @@ import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getApms
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
 import com.paymentoptions.pos.services.apiService.PayByLinkResponse
@@ -79,6 +81,9 @@ import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.endpoints.payByLink
 import com.paymentoptions.pos.services.apiService.endpoints.payByQr
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
+import com.paymentoptions.pos.services.analytics.AppAnalytics
+import com.paymentoptions.pos.services.analytics.AnalyticsEvent
+import com.paymentoptions.pos.services.analytics.AnalyticsHelper
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
@@ -93,6 +98,9 @@ import com.paymentoptions.pos.ui.composables._components.paymentimagerow.Payment
 import com.paymentoptions.pos.ui.composables._components.paymentimagerow.PaymentSchemesRow
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.services.apiService.endpoints.void
+import com.paymentoptions.pos.device.DPSharedPreferences.getTapPayDasmid
+import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
 import com.paymentoptions.pos.ui.composables.layout.sectioned.LOGO_HEIGHT_IN_DP
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.composables.navigation.Screens
@@ -116,6 +124,7 @@ import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.paymentoptions.pos.utils.viaLinkPaymentMethod
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -135,12 +144,14 @@ fun ReceiveMoneyFlow(
     initialReceiveMoneyFlowStage: ReceiveMoneyFlowStage = ReceiveMoneyFlowStage.INPUT_MONEY,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val currency = getTransactionCurrency(context)
     var failureProceedFlag by remember { mutableStateOf(false) }
     var successProceedFlag by remember { mutableStateOf(false) }
     val enableScrollingInsideBottomSectionContent = false
     val scrollState = rememberScrollState()
     var latestTransactionId by remember { mutableStateOf<String?>(null) }
+    var transactionFailureMessage by remember { mutableStateOf<String?>(null) }
 
     var receiveMoneyFlowStage by remember {
         mutableStateOf(initialReceiveMoneyFlowStage)
@@ -162,6 +173,10 @@ fun ReceiveMoneyFlow(
 
     var paymentDetailsResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
 
+    LaunchedEffect(Unit) {
+        AnalyticsHelper.track(AnalyticsEvent.ScreenViewed("ReceiveMoneyFlow"))
+    }
+
     val availablePaymentMethods = remember(nfcStatusPair) {
         val (isNfcSupported, _) = nfcStatusPair
         if (isNfcSupported) {
@@ -181,14 +196,26 @@ fun ReceiveMoneyFlow(
         }
     }
 
+    LaunchedEffect(selectedPaymentMethod) {
+        val paymentType = selectedPaymentMethod.text
+        val dasmid = when (selectedPaymentMethod) {
+            tapPaymentMethod -> DPSharedPreferences.getTapPayDasmid(context)
+            qrCodePaymentMethod -> DPSharedPreferences.getQRDasmid(context)
+            viaLinkPaymentMethod -> DPSharedPreferences.getPayByLinkDasmid(context)
+            else -> ""
+        }
+        AppAnalytics.merchantSelection(paymentType = paymentType, dasmid = dasmid)
+    }
+
     latestTransactionId?.let {
         LaunchedEffect(latestTransactionId) {
             try {
                 paymentDetailsResponse = paymentDetails(
                     context = context, paymentId = latestTransactionId.toString()
                 )
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 paymentDetailsResponse = null
+                AppLogger.debug("Failed to fetch payment details for transaction ID $latestTransactionId: ${e.message}")
             }
         }
     }
@@ -386,6 +413,10 @@ fun ReceiveMoneyFlow(
                                             .height(180.dp)
                                             .clip(shape = RoundedCornerShape(16.dp))
                                             .clickable {
+                                                AppAnalytics.criticalButtonClick(
+                                                    buttonName = "tap_to_pay_image",
+                                                    screen = "receive_money"
+                                                )
                                                 if (inProduction)
                                                     if (DeveloperOptions.isEnabled(context)) {
                                                         showDeveloperOptionsEnabled = true
@@ -400,6 +431,10 @@ fun ReceiveMoneyFlow(
                                     FilledButton(
                                         text = "Tap here to start Tap To Pay",
                                         onClick = {
+                                            AppAnalytics.criticalButtonClick(
+                                                buttonName = "tap_to_pay_start",
+                                                screen = "receive_money"
+                                            )
                                             if (inProduction)
                                                 if (DeveloperOptions.isEnabled(context)) {
                                                     showDeveloperOptionsEnabled = true
@@ -434,6 +469,17 @@ fun ReceiveMoneyFlow(
                                         try {
                                             val amountValue =
                                                 amountToChargeState.toLongOrNull()?.div(100f) ?: 0f
+                                            AppAnalytics.qrPaymentInitiated(
+                                                amount = amountValue.toString(),
+                                                currency = currency
+                                            )
+                                            AnalyticsHelper.track(
+                                                AnalyticsEvent.PaymentStarted(
+                                                    paymentType = "QR",
+                                                    amount = amountValue.toString(),
+                                                    currency = currency
+                                                )
+                                            )
                                             val request = PayByLinkRequest(
                                                 PBLLinkName = "QR Payment",
                                                 ExpiryDate = SimpleDateFormat("dd MMMM, YYYY HH:mm:ss").format(
@@ -455,13 +501,32 @@ fun ReceiveMoneyFlow(
                                                 val paymentUrl =
                                                     "https://api-dev.paymentoptions.com/paybylink/" + response.data.ProductID
                                                 qrCodeBitmap = generateQrCode(paymentUrl)
+                                                AnalyticsHelper.track(
+                                                    AnalyticsEvent.Custom(
+                                                        name = "qr_code_generated",
+                                                        attributes = mapOf(
+                                                            "product_id" to response.data.ProductID,
+                                                            "amount" to amountValue,
+                                                            "currency" to currency
+                                                        )
+                                                    )
+                                                )
                                             } else {
                                                 qrCodeError = "Failed to generate QR code."
+                                                AnalyticsHelper.trackError(
+                                                    message = "qr_code_generation_failed",
+                                                    attributes = mapOf("amount" to amountValue, "currency" to currency)
+                                                )
                                             }
                                         } catch (e: Exception) {
                                             qrCodeError =
                                                 "Your session has expired. Please log in again to continue."
                                             e.printStackTrace()
+                                            AnalyticsHelper.trackError(
+                                                message = "qr_code_generation_exception",
+                                                throwable = e,
+                                                attributes = mapOf("currency" to currency)
+                                            )
 
                                             if (e.toString().contains("HTTP 401")) {
                                                 Toast.makeText(
@@ -565,6 +630,13 @@ fun ReceiveMoneyFlow(
                                     LaunchedEffect(Unit) {
                                         try {
                                             payByLinkApiResponseLoading = true
+                                            AnalyticsHelper.track(
+                                                AnalyticsEvent.PaymentStarted(
+                                                    paymentType = "PBL",
+                                                    amount = amountValue.toString(),
+                                                    currency = currency
+                                                )
+                                            )
                                             val dasmid =
                                                 DPSharedPreferences.getPayByLinkDasmid(
                                                     context
@@ -576,8 +648,29 @@ fun ReceiveMoneyFlow(
                                                 paymentUrl =
                                                     "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID
                                                 viaLinkQrBitmap = generateQrCode(paymentUrl)
+                                                AppAnalytics.payByLinkCreated(
+                                                    productId = payByLinkResponse!!.data.ProductID,
+                                                    amount = amountValue,
+                                                    currency = currency
+                                                )
+                                                AnalyticsHelper.track(
+                                                    AnalyticsEvent.Custom(
+                                                        name = "pay_by_link_generated",
+                                                        attributes = mapOf(
+                                                            "product_id" to payByLinkResponse!!.data.ProductID,
+                                                            "dasmid" to dasmid,
+                                                            "amount" to amountValue,
+                                                            "currency" to currency
+                                                        )
+                                                    )
+                                                )
                                             }
-                                        } catch (_: Exception) {
+                                        } catch (e: Exception) {
+                                            AnalyticsHelper.trackError(
+                                                message = "pay_by_link_generation_exception",
+                                                throwable = e,
+                                                attributes = mapOf("currency" to currency)
+                                            )
                                             Toast.makeText(
                                                 context,
                                                 "Error generating payment link...",
@@ -794,18 +887,48 @@ fun ReceiveMoneyFlow(
                     navController,
                     enableScrolling = false,
                     amountToCharge = formatAmount(amountToChargeState),
+                    gatewayNotes = noteState,
                     availablePaymentMethods = availablePaymentMethods,
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
                     onLoader = {
+                        AnalyticsHelper.track(
+                            AnalyticsEvent.PaymentStarted(
+                                paymentType = selectedPaymentMethod.text,
+                                amount = formatAmount(amountToChargeState),
+                                currency = currency
+                            )
+                        )
                         updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_PROCESSING)
 
                         Handler().postDelayed({
                             Handler().postDelayed({ it() }, 1000)
                         }, 2000)
                     },
-                    onSuccessUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) },
-                    onFailureUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED) },
+                    onSuccessUpdateFlowStage = {
+                        AnalyticsHelper.track(
+                            AnalyticsEvent.PaymentCompleted(
+                                paymentType = selectedPaymentMethod.text,
+                                transactionId = latestTransactionId ?: "unknown",
+                                status = "SUCCESS"
+                            )
+                        )
+                        updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL)
+                    },
+                    onMandatorySignature = {
+                        updateFlowStage(ReceiveMoneyFlowStage.MANDATORY_SIGNATURE)
+                    },
+                    onFailureUpdateFlowStage = {
+                        AnalyticsHelper.track(
+                            AnalyticsEvent.PaymentCompleted(
+                                paymentType = selectedPaymentMethod.text,
+                                transactionId = latestTransactionId ?: "unknown",
+                                status = "FAILED"
+                            )
+                        )
+                        updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
+                    },
+                    updateFailureMessage = { transactionFailureMessage = it },
                     onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) },
                     startTapAndPay = startTapAndPay,
                     updateLatestTransaction = { latestTransactionId = it })
@@ -822,7 +945,8 @@ fun ReceiveMoneyFlow(
 
         ReceiveMoneyFlowStage.TRANSACTION_FAILED -> {
             val dataMessage = MessageForStatusScreen(
-                text = "Payment Failed", statusScreenType = StatusScreenType.ERROR
+                text = transactionFailureMessage ?: "Payment Failed",
+                statusScreenType = StatusScreenType.ERROR
             )
             StatusScreen(navController, dataMessage, strategyFn = {
                 Handler().postDelayed({
@@ -841,7 +965,53 @@ fun ReceiveMoneyFlow(
                     navController,
                     enableScrolling = true,
                     transactionId = latestTransactionId.toString(),
+                    failureMessage = transactionFailureMessage,
                     updateFlowStage = { })
+            }
+        }
+
+        ReceiveMoneyFlowStage.MANDATORY_SIGNATURE -> {
+            SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.95f,
+                bottomSectionMaxHeightRatio = 0.95f,
+                enableScrollingOfBottomSectionContent = false,
+            ) {
+                TakeDigitalSignatureBottomSectionContent(
+                    navController,
+                    enableScrolling = false,
+                    signaturePath = signaturePath,
+                    signatureDate = signatureDate,
+                    paymentDetailsResponse = paymentDetailsResponse,
+                    isMandatory = true,
+                    onCancelMandatory = {
+                        // User cancelled signature for high-amount transaction.
+                        // We must VOID the transaction.
+                        scope.launch {
+                            try {
+                                // Call void API
+                                void(
+                                    context = context,
+                                    transactionId = latestTransactionId.toString(),
+                                    merchantId = getTapPayDasmid(context)
+                                )
+                                transactionFailureMessage = "Transaction voided because cardholder signature was not provided."
+                                updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
+                            } catch (e: Exception) {
+                                AppLogger.error("Void failed after mandatory signature cancel: ${e.message}")
+                                transactionFailureMessage = "Transaction failed and could not be voided automatically. Please check status."
+                                updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
+                            }
+                        }
+                    },
+                    updateSignature = { path, bitmap, signDate ->
+                        signaturePath = path
+                        signatureBitmap = bitmap
+                        signatureDate = signDate
+                    },
+                    updateFlowStageToSuccess = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) })
             }
         }
 
@@ -906,12 +1076,7 @@ fun ReceiveMoneyFlow(
                 enableScrollingOfBottomSectionContent = false,
                 enableZigZagContainerForBottomSection = true,
                 imageBelowLogo = {
-                    Text(
-                        text = "Receipt",
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    ShowReceiptView()
                 }) {
                 ReceiptBottomSectionContent(
                     navController,

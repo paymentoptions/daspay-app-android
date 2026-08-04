@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -48,13 +49,16 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.google.gson.Gson
 import com.paymentoptions.pos.R
+import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.services.apiService.AquirerResponse
+import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.SignatureData
 import com.paymentoptions.pos.services.apiService.TransactionListDataRecord
-import com.paymentoptions.pos.utils.getStatusColor
-import com.paymentoptions.pos.utils.getStatusText
 import com.paymentoptions.pos.services.apiService.endpoints.getSignature
+import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
+import com.paymentoptions.pos.utils.AppJson
 import com.paymentoptions.pos.utils.getStatusColor
 import com.paymentoptions.pos.utils.getStatusText
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
@@ -82,6 +86,7 @@ import com.paymentoptions.pos.utils.getAvailableAction
 import com.paymentoptions.pos.utils.getTransactionTypeLabel
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
+import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -103,17 +108,34 @@ fun TransactionBottomSectionContent(
 
     val transactionUuid = transaction?.uuid
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
-        "https://dev.paymentoptions.com/daspay-transaction-details/$transactionUuid"
+        "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
     } else {
         null
     }
 
     var signatureData by remember { mutableStateOf<SignatureData?>(null) }
     var isSignatureLoading by remember { mutableStateOf(false) }
+    var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
+    var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(null) }
 
     LaunchedEffect(transactionUuid) {
         if (!transactionUuid.isNullOrBlank()) {
             isSignatureLoading = true
+            paymentDetailsLatestResponse = try {
+                paymentDetails(context = context, paymentId = transactionUuid)
+            } catch (e: Exception) {
+                AppLogger.error("Exception in paymentDetailsLatestResponse", e)
+                null
+            }
+
+            try{
+            transactionAquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
+                AppJson.decodeFromString<AquirerResponse>(it)
+            }
+            } catch (ex: Exception){
+                AppLogger.error("Exception in Acquirer", ex)
+            }
+
             signatureData = try {
                 getSignature(context = context, uuid = transactionUuid)?.data
             } catch (e: Exception) {
@@ -125,7 +147,7 @@ fun TransactionBottomSectionContent(
     }
 
     val dateString =
-        transaction?.Date /*?: paymentDetailsLatestResponse?.data?.Date */ ?: OffsetDateTime.now()
+        transaction?.Date ?: paymentDetailsLatestResponse?.data?.Date  ?: OffsetDateTime.now()
             .toString()
     val dateTime = safeParseOffsetDateTime(dateString)
     val date: Date = Date.from(dateTime.toInstant())
@@ -133,18 +155,7 @@ fun TransactionBottomSectionContent(
     val timeStringFormatted: String = SimpleDateFormat("hh:mm:ss a", Locale.US).format(date)
 
     val transactionStatus =
-        transaction?.status/* ?: paymentDetailsLatestResponse?.data?.Status*/ ?: ""
-    val transactionType =
-        transaction?.TransactionType /*?: paymentDetailsLatestResponse?.data?.TransactionType*/
-            ?: ""
-//    val transactionAmount =
-//        transaction?.amount?.toDoubleOrNull() /*?: paymentDetailsLatestResponse?.data?.Amount*/
-//            ?: 0.0
-//    val transactionCurrencyCode =
-//        transaction?.CurrencyCode /*?: paymentDetailsLatestResponse?.data?.CurrencyCode */
-//            ?: currency
-//    val transactionRefId =
-//        transaction?.uuid /*?: paymentDetailsLatestResponse?.data?.TransactionRefID.toString()*/
+        transaction?.status ?: paymentDetailsLatestResponse?.data?.Status?: ""
 
     val amountSign = getAmountSign(transaction)
     val availableAction = getAvailableAction(transaction)
@@ -224,7 +235,9 @@ fun TransactionBottomSectionContent(
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val linkQrBitmap = generateQrCode(transactionDetailUrl ?: "")
@@ -302,14 +315,15 @@ fun TransactionBottomSectionContent(
 
 
                 Spacer(modifier = Modifier.width(10.dp))
-
-                FilledButton(
-                    text = "View Full Receipt",
-                    onClick = { updateDetailsScreenType(TransactionDetailsScreenType.RECEIPT_SCREEN) },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
+                if(shouldShowFullReceipt(transaction)) {
+                    FilledButton(
+                        text = "View Full Receipt",
+                        onClick = { updateDetailsScreenType(TransactionDetailsScreenType.RECEIPT_SCREEN) },
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                    )
+                }
             }
         }
 
@@ -379,6 +393,13 @@ fun TransactionBottomSectionContent(
                     label = "Currency",
                     value = currency
                 )
+
+                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                    TransactionDetailRow(
+                        label = "Note",
+                        value = transactionAquirerResponse?.gatewayNotes!!.trim()
+                    )
+                }
             }
 
             HorizontalDivider(

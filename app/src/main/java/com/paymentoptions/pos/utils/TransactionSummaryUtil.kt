@@ -209,6 +209,21 @@ fun getTransactionTypeLabel(transaction: TransactionListDataRecord): String {
     }
 }
 
+fun shouldShowFullReceipt(transaction: TransactionListDataRecord): Boolean {
+    val transactionType = transaction.TransactionType.uppercase()
+    val status = transaction.status.uppercase()
+
+    return when {
+        // Unsettled Sale - Pending (Yellow)
+        transactionType == "REFUND"  -> false
+        transactionType == "VOIDAUTHORISATION" -> false
+        status == "NOTSUCCESSFUL" -> false
+
+        else -> true
+    }
+
+}
+
 fun getStatusText(transaction: TransactionListDataRecord): String {
     val transactionType = transaction.TransactionType.uppercase()
     val status = transaction.status.uppercase()

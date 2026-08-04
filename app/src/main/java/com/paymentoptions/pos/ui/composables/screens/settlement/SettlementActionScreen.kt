@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.endpoints.settleBatch
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.ui.composables.screens.status.MessageForStatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreen
 import com.paymentoptions.pos.ui.composables.screens.status.StatusScreenType
@@ -38,6 +39,7 @@ fun SettlementActionScreen(
             try {
                 val response = settleBatch(context, settleId)
                 if (response != null && response.SettleStatus == SETTLED_BATCH) {
+                    AppAnalytics.settlementResult(batchId = settleId, result = "successful")
                     withContext(Dispatchers.Main) {
                         processingScreenType = StatusScreenType.SUCCESS
                         processingMessage = "Settlement\n Completed"
@@ -52,6 +54,7 @@ fun SettlementActionScreen(
             } catch (e: retrofit2.HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
                 AppLogger.error("settle HTTP error ${e.code()}: $errorBody")
+                AppAnalytics.settlementResult(batchId = settleId, result = "failed")
                 withContext(Dispatchers.Main) {
                     processingScreenType = StatusScreenType.ERROR
                     processingMessage = "Settlement\n Failed"
@@ -64,6 +67,7 @@ fun SettlementActionScreen(
                 }
             } catch (e: Exception) {
                 AppLogger.error("settle: $e")
+                AppAnalytics.settlementResult(batchId = settleId, result = "failed")
                 withContext(Dispatchers.Main) {
                     processingScreenType = StatusScreenType.ERROR
                     processingMessage = "Settlement\n Failed"

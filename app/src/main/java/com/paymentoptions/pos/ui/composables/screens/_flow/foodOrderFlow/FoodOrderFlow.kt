@@ -81,6 +81,7 @@ import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.services.apiService.endpoints.productList
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
+import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -161,7 +162,7 @@ fun FoodOrderFlow(
     var startTapAndPay by remember { mutableStateOf(false) }
     var apms by remember { mutableStateOf(getApms(context)) }
     var paymentUrl by remember { mutableStateOf("") }
-    var cartState by remember { mutableStateOf<Cart>(Cart()) }
+    var cartState by remember { mutableStateOf<Cart>(Cart(merchantSetting = DPSharedPreferences.getMerchantSettings(context))) }
     var paymentDetailsResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var signatureBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var signatureDate by remember { mutableStateOf(Date()) }
@@ -551,8 +552,8 @@ fun FoodOrderFlow(
                                                     Currency = currency,
                                                     Name = "Service Charge",
                                                     Quantity = 1,
-                                                    Price = cartState.calculateServiceCharge(),
-                                                    TotalPrice = cartState.calculateServiceCharge()
+                                                    Price = cartState.serviceCharge,
+                                                    TotalPrice = cartState.serviceCharge
                                                         .formatToPrecisionString(),
                                                 )
                                             ).plus(
@@ -560,8 +561,8 @@ fun FoodOrderFlow(
                                                     Currency = currency,
                                                     Name = "GST Charge",
                                                     Quantity = 1,
-                                                    Price = cartState.calculateGstCharge(),
-                                                    TotalPrice = cartState.calculateGstCharge()
+                                                    Price = cartState.gstCharge,
+                                                    TotalPrice = cartState.gstCharge
                                                         .formatToPrecisionString(),
                                                 )
                                             ).plus(
@@ -678,8 +679,8 @@ fun FoodOrderFlow(
                                             Currency = currency,
                                             Name = "Service Charge",
                                             Quantity = 1,
-                                            Price = cartState.calculateServiceCharge(),
-                                            TotalPrice = cartState.calculateServiceCharge()
+                                            Price = cartState.serviceCharge,
+                                            TotalPrice = cartState.serviceCharge
                                                 .formatToPrecisionString(),
                                         )
                                     ).plus(
@@ -687,8 +688,8 @@ fun FoodOrderFlow(
                                             Currency = currency,
                                             Name = "GST Charge",
                                             Quantity = 1,
-                                            Price = cartState.calculateGstCharge(),
-                                            TotalPrice = cartState.calculateGstCharge()
+                                            Price = cartState.gstCharge,
+                                            TotalPrice = cartState.gstCharge
                                                 .formatToPrecisionString(),
                                         )
                                     ).plus(
@@ -940,7 +941,8 @@ fun FoodOrderFlow(
                     navController,
                     enableScrolling = false,
                     availablePaymentMethods = availablePaymentMethods,
-                    amountToCharge = cartState.calculateGrandTotal().formatToPrecisionString(),
+                    amountToCharge = cartState.grandTotal.formatToPrecisionString(),
+                    gatewayNotes = cartState.additionalAmountNote,
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
                     onLoader = {
@@ -1054,12 +1056,7 @@ fun FoodOrderFlow(
                 enableScrollingOfBottomSectionContent = false,
                 enableZigZagContainerForBottomSection = true,
                 imageBelowLogo = {
-                    Text(
-                        text = "Receipt",
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    ShowReceiptView()
                 }) {
                 ReceiptBottomSectionContent(
                     navController,
