@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.FoodItem
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.productDescription
+import com.paymentoptions.pos.utils.formatAmount
 import com.paymentoptions.pos.utils.formatToPrecisionString
 
 @Composable
@@ -60,7 +61,7 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
                     )
 
                     Text(
-                        "${foodItem.item.ServiceFeePerc.formatToPrecisionString()}/%",
+                        "${foodItem.item.ServiceFeePerc.formatAmount()}%",
                         fontSize = 12.sp,
                         fontWeight = FontWeight(980),
                         color = primary500

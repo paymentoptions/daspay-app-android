@@ -114,8 +114,8 @@ interface ApiService {
     @GET("daspay/transactions/list")
     suspend fun insights(
         @HeaderMap headers: Map<String, String>,
-        @Query("deviceNumber") deviceNumber: String? = "12345678kg1",
-        @Query("uniqueCode") uniqueCode: String? = "213fsdHJ51MOBILEKG1",
+        @Query("deviceNumber") deviceNumber: String?,
+        @Query("uniqueCode") uniqueCode: String?,
         @Query("startDate") startDate: String? = null,
         @Query("endDate") endDate: String? = null,
         @Query("take") take: Int,
@@ -168,7 +168,8 @@ interface ApiService {
 
     @GET("dasconfig/daspay-configuration?")
     suspend fun getAppConfiguration(
-        @Query("appenv") flavourName: String
+        @Query("appenv") flavourName: String,
+        @HeaderMap headers: Map<String, String>
     ): AppConfigResponse
 
 
@@ -222,7 +223,7 @@ object RetrofitClient {
         val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
 
         val effectiveBaseUrl = if (!savedBaseUrl.isNullOrEmpty()) {
-            "$savedBaseUrl/"
+            savedBaseUrl
         } else {
             AppLogger.debug("savedBaseUrl null: $savedBaseUrl")
             BuildConfig.CONFIG_BASE_URL

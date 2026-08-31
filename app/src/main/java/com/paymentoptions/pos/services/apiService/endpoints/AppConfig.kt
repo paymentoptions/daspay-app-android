@@ -1,11 +1,9 @@
 package com.paymentoptions.pos.services.apiService.endpoints
 
 import android.content.Context
-import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AppConfig
 import com.paymentoptions.pos.services.apiService.RetrofitClient
-import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generateRequestHeader
 
 suspend fun configDownload(
@@ -13,7 +11,9 @@ suspend fun configDownload(
     flavourName: String
 ): AppConfig? {
     try {
-        val appConfigResponse = RetrofitClient.getApi(context).getAppConfiguration(flavourName = flavourName)
+
+        val requestHeaders = generateRequestHeader("")
+        val appConfigResponse = RetrofitClient.getApi(context).getAppConfiguration(headers = requestHeaders,flavourName = flavourName)
 
         if (appConfigResponse.success && appConfigResponse.data.isNotEmpty()) {
             // Store app config base url in shared preference

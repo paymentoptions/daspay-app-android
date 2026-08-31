@@ -1,5 +1,11 @@
 package com.paymentoptions.pos.utils
 
+import com.google.gson.Gson
+import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.services.apiService.AquirerResponse
+import com.google.gson.JsonElement
+import com.google.gson.JsonObject
+import com.google.gson.JsonPrimitive
 import org.json.JSONObject
 
 fun jsonObjectToMap(jsonObject: JSONObject): Map<String, Any?> {
@@ -15,4 +21,25 @@ fun jsonObjectToMap(jsonObject: JSONObject): Map<String, Any?> {
         map[key] = value
     }
     return map
+}
+
+
+fun parseAcquirerResponse(raw: List<JsonElement>?): AquirerResponse? {
+    val gson = Gson()
+    return raw?.firstNotNullOfOrNull { element ->
+        try {
+            when (element) {
+                is JsonObject -> {
+                    gson.fromJson(element, AquirerResponse::class.java)
+                }
+                is JsonPrimitive -> {
+                     gson.fromJson(element.asString, AquirerResponse::class.java)
+                }
+                else -> null
+            }
+        } catch (e: Exception) {
+            AppLogger.error("parseAcquirerResponse Exception in parsing acquirerResponse: $e")
+            null
+        }
+    }
 }

@@ -13,6 +13,8 @@ import com.paymentoptions.pos.services.apiService.ExternalConfigurationResponse
 import com.paymentoptions.pos.services.apiService.MerchantSetting
 import com.paymentoptions.pos.services.apiService.SignInResponse
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
+import com.paymentoptions.pos.utils.BASEAPI_URL
+import com.paymentoptions.pos.utils.MINESEC_PROFILE_ID
 import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
@@ -158,7 +160,6 @@ object DPSharedPreferences {
             remove("auth_details")
             remove("token_verified")
             remove("token_code")
-            remove("saved_password")
 
             // Configuration & Merchant Data
             remove("device_config")
@@ -225,8 +226,12 @@ object DPSharedPreferences {
         }
 
         fun clearSavedCart(context: Context) {
-            getSecurePrefs(context).apply {
-                edit().remove("cart")
+            val sharedPreferences = getSecurePrefs(context)
+
+            with(sharedPreferences.edit()) {
+                // Transaction Data
+                remove("cart")
+                apply()
             }
 
             AppLogger.debug("cart cleared ->")
@@ -398,9 +403,29 @@ object DPSharedPreferences {
         return dasmid
     }
 
+    fun getTapsToPayDasmid(context: Context): String {
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
+        var dasmid = ""
+
+        externalDeviceConfiguration?.let {
+            for (paymentMethod in it.data.paymentMethod) {
+                if (paymentMethod.Type == "SOFTPOS") {
+                    dasmid = paymentMethod.DASMID
+                    break
+                }
+            }
+        }
+        return dasmid
+    }
+
     fun getMerchantSettings(context: Context) : MerchantSetting? {
         val externalDeviceConfiguration = getDeviceConfiguration(context)
         return externalDeviceConfiguration?.data?.deviceInfo?.MerchantSetting
+    }
+
+    fun getMerchantProfileId(context: Context): String {
+        val externalDeviceConfiguration = getDeviceConfiguration(context)
+        return externalDeviceConfiguration?.data?.deviceInfo?.MinesecDeviceId ?: MINESEC_PROFILE_ID
     }
 
     //this function will extract schemes from the external device configuration in which the payment method type is SOFTPOS
@@ -457,8 +482,9 @@ object DPSharedPreferences {
     }
 
     fun getBaseUrl(context: Context): String?{
-        val sharedPreferences = getSecurePrefs(context)
-        return  sharedPreferences.getString("BaseAPIURL", "")
+//        val sharedPreferences = getSecurePrefs(context)
+//        return  sharedPreferences.getString("BaseAPIURL", "")
+        return BASEAPI_URL
     }
 
     fun getTransactionDetailsUrl(context: Context): String?

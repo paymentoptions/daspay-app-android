@@ -32,11 +32,13 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -64,6 +66,7 @@ import androidx.navigation.NavController
 import co.yml.charts.common.extensions.isNotNull
 import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DeveloperOptions
+import com.paymentoptions.pos.device.GeoRestrictionManager
 import com.paymentoptions.pos.device.Nfc
 import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.device.DPSharedPreferences
@@ -119,6 +122,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red300
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.utils.PBL_URL
 import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.formatToPrecisionString
@@ -132,7 +136,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
 import kotlin.math.roundToInt
@@ -168,6 +171,10 @@ fun FoodOrderFlow(
     var signatureDate by remember { mutableStateOf(Date()) }
     var signaturePath by remember { mutableStateOf(Path()) }
     var foodItemSelected by remember { mutableStateOf<FoodItem?>(null) }
+
+    var showGeoRestrictionDialog by remember { mutableStateOf(false) }
+    var geoRestrictionMessage by remember { mutableStateOf("") }
+    var ignoreGeoDialog by remember { mutableStateOf(false) }
 
     latestTransactionId?.let {
         LaunchedEffect(latestTransactionId) {
@@ -257,7 +264,33 @@ fun FoodOrderFlow(
     }
 
     fun updateFlowStage(newFoodOrderFlowStage: FoodOrderFlowStage) {
+        // Check geo-restriction before allowing transaction stages
+        if (!ignoreGeoDialog && newFoodOrderFlowStage == FoodOrderFlowStage.CHARGE_MONEY) {
+            val geoResult = GeoRestrictionManager.checkRestriction(context)
+            if (geoResult.isRestricted) {
+                geoRestrictionMessage = geoResult.message
+                showGeoRestrictionDialog = true
+                return
+            }
+        }
         foodOrderFlowStage = newFoodOrderFlowStage
+    }
+
+    if (showGeoRestrictionDialog && !ignoreGeoDialog) {
+        AlertDialog(
+            onDismissRequest = { showGeoRestrictionDialog = false },
+            title = { Text("Device Restricted") },
+            text = { Text(geoRestrictionMessage) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showGeoRestrictionDialog = false
+                    ignoreGeoDialog = true
+                    updateFlowStage(FoodOrderFlowStage.CHARGE_MONEY)
+                }) {
+                    Text("OK")
+                }
+            }
+        )
     }
 
     fun openEditPage(it: FoodItem) {
@@ -532,55 +565,14 @@ fun FoodOrderFlow(
                                     qrCodeLoading = true
                                     qrCodeError = null
                                     try {
-                                        val request = PayByLinkRequest(
-                                            PBLLinkName = "Food Payment",
-                                            ExpiryDate = SimpleDateFormat("dd MMMM, YYYY HH:mm:ss").format(
-                                                Date()
-                                            ),
-                                            Product = cartState.getFoodItemsForReview().map {
-                                                val temp = PayByLinkRequestProduct(
-                                                    Currency = currency,
-                                                    Name = it.item.ProductName,
-                                                    Quantity = it.cartQuantity,
-                                                    Price = it.item.ProductPrice,
-                                                    TotalPrice = (it.cartQuantity * it.item.ProductPrice).formatToPrecisionString(),
-                                                )
-
-                                                temp
-                                            }.plus(
-                                                PayByLinkRequestProduct(
-                                                    Currency = currency,
-                                                    Name = "Service Charge",
-                                                    Quantity = 1,
-                                                    Price = cartState.serviceCharge,
-                                                    TotalPrice = cartState.serviceCharge
-                                                        .formatToPrecisionString(),
-                                                )
-                                            ).plus(
-                                                PayByLinkRequestProduct(
-                                                    Currency = currency,
-                                                    Name = "GST Charge",
-                                                    Quantity = 1,
-                                                    Price = cartState.gstCharge,
-                                                    TotalPrice = cartState.gstCharge
-                                                        .formatToPrecisionString(),
-                                                )
-                                            ).plus(
-                                                PayByLinkRequestProduct(
-                                                    Currency = currency,
-                                                    Name = "Additional Charge: ${cartState.additionalAmountNote}",
-                                                    Quantity = 1,
-                                                    Price = cartState.additionalCharge,
-                                                    TotalPrice = cartState.additionalCharge.formatToPrecisionString(),
-                                                )
-                                            )
-                                        )
+                                        val request = getPayByLinkRequest("Qr code Food Payment", cartState, currency)
 
                                         val response = payByQr(context, request)
                                         if (response != null && response.success) {
                                             val paymentUrl =
-                                                "https://api-dev.paymentoptions.com/paybylink/" + response.data.ProductID
+                                                PBL_URL + response.data.ProductID
                                             qrCodeBitmap = generateQrCode(paymentUrl)
+                                            DPSharedPreferences.clearSavedCart(context)
                                         } else {
                                             qrCodeError = "Failed to generate QR code."
                                         }
@@ -588,8 +580,6 @@ fun FoodOrderFlow(
                                         qrCodeError =
                                             "Your session has expired. Please log in again to continue."
                                         e.printStackTrace()
-
-
 
                                         if (e.toString().contains("HTTP 401")) {
                                             Toast.makeText(
@@ -661,47 +651,7 @@ fun FoodOrderFlow(
 
                                 startTapAndPay = false
 
-                                var payByLinkRequest = PayByLinkRequest(
-                                    PBLLinkName = "PayByLink for Food Test",
-                                    ExpiryDate = OffsetDateTime.now().toString(),
-                                    Product = cartState.getFoodItemsForReview().map {
-                                        val temp = PayByLinkRequestProduct(
-                                            Currency = currency,
-                                            Name = it.item.ProductName,
-                                            Quantity = it.cartQuantity,
-                                            Price = it.item.ProductPrice,
-                                            TotalPrice = (it.cartQuantity * it.item.ProductPrice).formatToPrecisionString(),
-                                        )
-
-                                        temp
-                                    }.plus(
-                                        PayByLinkRequestProduct(
-                                            Currency = currency,
-                                            Name = "Service Charge",
-                                            Quantity = 1,
-                                            Price = cartState.serviceCharge,
-                                            TotalPrice = cartState.serviceCharge
-                                                .formatToPrecisionString(),
-                                        )
-                                    ).plus(
-                                        PayByLinkRequestProduct(
-                                            Currency = currency,
-                                            Name = "GST Charge",
-                                            Quantity = 1,
-                                            Price = cartState.gstCharge,
-                                            TotalPrice = cartState.gstCharge
-                                                .formatToPrecisionString(),
-                                        )
-                                    ).plus(
-                                        PayByLinkRequestProduct(
-                                            Currency = currency,
-                                            Name = "Additional Charge: ${cartState.additionalAmountNote}",
-                                            Quantity = 1,
-                                            Price = cartState.additionalCharge,
-                                            TotalPrice = cartState.additionalCharge.formatToPrecisionString(),
-                                        )
-                                    )
-                                )
+                                var payByLinkRequest = getPayByLinkRequest("PayByLink for Food ", cartState, currency)
 
                                 var payByLinkResponse by remember {
                                     mutableStateOf<PayByLinkResponse?>(null)
@@ -725,8 +675,9 @@ fun FoodOrderFlow(
                                         if (payByLinkResponse != null && payByLinkResponse!!.success) {
 //                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
                                             paymentUrl =
-                                                "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID
+                                                PBL_URL + payByLinkResponse!!.data.ProductID
                                             viaLinkQrBitmap = generateQrCode(paymentUrl)
+                                            DPSharedPreferences.clearSavedCart(context)
                                         }
 
                                         println("payByLinkResponse: $payByLinkResponse")
@@ -847,7 +798,7 @@ fun FoodOrderFlow(
                                                 .padding(vertical = 16.dp, horizontal = 12.dp),
                                         ) {
                                             Text(
-                                                text = "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID,
+                                                text = PBL_URL + payByLinkResponse!!.data.ProductID,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 16.sp,
                                                 color = primary900,
@@ -939,10 +890,9 @@ fun FoodOrderFlow(
                 }) {
                 ChargeMoneyBottomSectionContent(
                     navController,
-                    enableScrolling = false,
-                    availablePaymentMethods = availablePaymentMethods,
                     amountToCharge = cartState.grandTotal.formatToPrecisionString(),
                     gatewayNotes = cartState.additionalAmountNote,
+                    availablePaymentMethods = availablePaymentMethods,
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
                     onLoader = {
@@ -956,7 +906,9 @@ fun FoodOrderFlow(
                     onFailureUpdateFlowStage = { updateFlowStage(FoodOrderFlowStage.RESULT_ERROR) },
                     onChangeAmount = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
                     startTapAndPay = startTapAndPay,
-                    updateLatestTransaction = { latestTransactionId = it })
+                    updateLatestTransaction = { latestTransactionId = it },
+                    cart = cartState
+                )
             }
         }
 
@@ -1119,6 +1071,62 @@ fun FoodOrderFlow(
         }
 
     }
+}
+
+fun getPayByLinkRequest(
+    pblLinkName: String,
+    cartState: Cart,
+    currency: String
+): PayByLinkRequest {
+    val payByLinkRequestProduct = buildList {
+        addAll(cartState.getFoodItemsForReview().map {
+            PayByLinkRequestProduct(
+                Currency = currency,
+                Name = it.item.ProductName,
+                Quantity = it.cartQuantity,
+                Price = it.item.ProductPrice,
+                TotalPrice = (it.cartQuantity * it.item.ProductPrice).formatToPrecisionString(),
+            )
+        })
+
+        add(
+            PayByLinkRequestProduct(
+                Currency = currency,
+                Name = "Total Service Charge",
+                Quantity = 1,
+                Price = cartState.serviceCharge,
+                TotalPrice = cartState.serviceCharge.formatToPrecisionString(),
+            )
+        )
+
+        add(
+            PayByLinkRequestProduct(
+                Currency = currency,
+                Name = "Additional Charge: ${cartState.additionalAmountNote}",
+                Quantity = 1,
+                Price = cartState.additionalCharge,
+                TotalPrice = cartState.additionalCharge.formatToPrecisionString(),
+            )
+        )
+
+        if (cartState.merchantSetting?.CatalogEnabled == true) {
+            add(
+                PayByLinkRequestProduct(
+                    Currency = currency,
+                    Name = "${cartState.merchantSetting?.TaxName ?: "GST"} (${cartState.merchantSetting?.TaxOnOtherFeesPerc ?: 0f}%)",
+                    Quantity = 1,
+                    Price = cartState.gstCharge,
+                    TotalPrice = cartState.gstCharge.formatToPrecisionString(),
+                )
+            )
+        }
+    }
+
+    return PayByLinkRequest(
+        PBLLinkName = pblLinkName,
+        ExpiryDate = OffsetDateTime.now().toString(),
+        Product = payByLinkRequestProduct
+    )
 }
 
 private suspend fun getProductsPerCategory(

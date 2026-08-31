@@ -52,6 +52,8 @@ import com.paymentoptions.pos.ui.theme.red500
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.utils.AppJson
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
 import java.util.Date
@@ -82,12 +84,13 @@ fun TransactionFailedBottomSectionContent(
 
     if (paymentDetailsLatestResponse != null) {
         try{
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(
-                    it
-                )
-            }
+//        transactionAquirerResponse =
+//            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
+//                AppJson.decodeFromString<AquirerResponse>(
+//                    it
+//                )
+//            }
+            transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse)
         } catch (ex: Exception){
             AppLogger.error("Exception in Acquirer", ex)
         }
@@ -247,7 +250,11 @@ fun TransactionFailedBottomSectionContent(
                     )
                 }
 
-                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+
+
+                val  gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data,
+                    transactionAquirerResponse)
+                if (gatewayNotes.isNotBlank()) {
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -260,7 +267,7 @@ fun TransactionFailedBottomSectionContent(
                         )
 
                         Text(
-                            text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            text = gatewayNotes.trim(),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = primary500

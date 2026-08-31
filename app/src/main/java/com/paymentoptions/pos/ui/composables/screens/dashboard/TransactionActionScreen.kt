@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
@@ -104,7 +105,7 @@ fun TransactionActionScreen(
     val dateTime = safeParseOffsetDateTime(dateString)
     val date: Date = Date.from(dateTime.toInstant())
     val dateStringFormatted = SimpleDateFormat("dd MMMM, YYYY", Locale.US).format(date)
-    val notesInput = remember { TextFieldState() }
+    val notesInput = rememberTextFieldState()
 
     fun showTransactionFailure() {
         CoroutineScope(Dispatchers.IO).launch {

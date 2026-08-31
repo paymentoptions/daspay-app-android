@@ -25,5 +25,5 @@ suspend fun sendWebHookNotification(
         throw e
     }
     AppLogger.debug("inThis PaymentStatus tranStatus -->: $tranStatus")
-    return tranStatus == TranStatus.APPROVED
+    return tranStatus == TranStatus.APPROVED || tranStatus == TranStatus.VOIDED || tranStatus == TranStatus.ADJUSTED
 }

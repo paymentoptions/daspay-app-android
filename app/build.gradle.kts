@@ -55,8 +55,8 @@ android {
         applicationId = "com.paymentoptions.pos"
         minSdk = 29
         targetSdk = 36
-        versionCode = 12
-        versionName = "12.0"
+        versionCode = 17
+        versionName = "16.0"
 
 
         val appName = "Daspay"
@@ -72,7 +72,7 @@ android {
             dimension = "environment"
            // buildConfigField("String", "CURRENCY", "\"SGD\"")
             buildConfigField("String", "ENVIRONMENT", "\"DEV\"")
-            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-uat.paymentoptions.com/api/v1/\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-dev.paymentoptions.com/api/v1/\"")
             versionNameSuffix = "-dev"
         }
         create("uat") {
@@ -86,7 +86,7 @@ android {
             dimension = "environment"
             //buildConfigField("String", "CURRENCY", "\"SGD\"")
             buildConfigField("String", "ENVIRONMENT", "\"PROD\"")
-            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api.paymentoptions.com/api/v1/\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-uat.paymentoptions.com/api/v1/\"")
         }
     }
 
@@ -180,7 +180,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
 
-    releaseImplementation(libs.headless.release)
+    releaseImplementation(libs.headless.stage) //TODO on app store build switch to headless release
     debugImplementation(libs.headless.stage)
 
     //Firebase

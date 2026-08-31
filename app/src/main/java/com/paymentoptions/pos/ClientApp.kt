@@ -14,7 +14,6 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.logger.Config
 import com.paymentoptions.pos.logger.LogConfig
 import com.paymentoptions.pos.services.analytics.AppAnalytics
-import com.paymentoptions.pos.utils.MINESEC_LICENCE_FILE
 import com.theminesec.sdk.headless.HeadlessSetup
 import com.theminesec.sdk.headless.model.WrappedResult
 import com.theminesec.sdk.headless.model.setup.SdkInitResp

@@ -10,7 +10,7 @@ import java.net.SocketTimeoutException
  * Parses the API error message from a Throwable.
  * It looks for JSON payloads in both ApiHttpException body and general exception messages.
  */
-fun parseApiErrorMessage(error: retrofit2.HttpException, fallback: String): String {
+fun parseApiErrorMessage(error: Exception, fallback: String): String {
     if (error.isTimeoutError()) {
         return "The request timed out. Please check your internet connection and try again."
     }
@@ -37,7 +37,11 @@ fun parseApiErrorMessage(error: retrofit2.HttpException, fallback: String): Stri
         }.getOrNull()
     }
 
-    val parsedMessage = parseGatewayMessage(error.response()?.errorBody()?.string()) ?: parseGatewayMessage(error.message)
+    val parsedMessage = if(error is retrofit2.HttpException){
+        parseGatewayMessage(error.response()?.errorBody()?.string()) ?: parseGatewayMessage(error.message)
+    } else {
+        parseGatewayMessage(error.message)
+    }
 
     return parsedMessage ?: error.message ?: fallback
 }

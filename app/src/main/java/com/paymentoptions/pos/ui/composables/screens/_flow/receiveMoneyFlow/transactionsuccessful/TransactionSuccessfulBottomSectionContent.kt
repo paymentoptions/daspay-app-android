@@ -91,6 +91,8 @@ import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.utils.AppJson
 import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.getAvailableAction
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
 import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import java.text.SimpleDateFormat
 import java.time.OffsetDateTime
@@ -126,12 +128,7 @@ fun TransactionSuccessfulBottomSectionContent(
     }
 
     if (paymentDetailsLatestResponse != null)
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(
-                    it
-                )
-            }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse)
 
     fun navigateToVoidAction(transaction: TransactionListDataRecord){
         AppLogger.debug("full transaction object: $transaction")
@@ -414,7 +411,9 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
                 }
 
-                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                val  gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data,
+                    transactionAquirerResponse)
+                if (gatewayNotes.isNotBlank()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -426,7 +425,7 @@ fun TransactionSuccessfulBottomSectionContent(
                         )
 
                         Text(
-                            transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            gatewayNotes.trim(),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = primary500

@@ -37,6 +37,7 @@ import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.composables.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.utils.inProduction
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import com.paymentoptions.pos.utils.validation.validateEmail
 import com.paymentoptions.pos.utils.validation.validatePassword
 import kotlinx.coroutines.launch
@@ -206,7 +207,12 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                                 AppAnalytics.login(result = "failed", email = emailState.text.toString())
                             }
                         }
-                    } catch (e: Exception){
+                    } catch (e: retrofit2.HttpException) {
+                        val errorMessage = parseApiErrorMessage(e, "Invalid Credentials")
+                        AppLogger.error("sign in  HTTP error $errorMessage")
+                        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show()
+                    }
+                    catch (e: Exception){
                         AppLogger.error("signIn error: $e")
                         AppAnalytics.login(result = "failed", email = emailState.text.toString())
                         Toast.makeText(context, "Invalid Credentials", Toast.LENGTH_LONG).show()

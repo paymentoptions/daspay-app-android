@@ -41,10 +41,10 @@ class Cart(
 
     fun calculateServiceCharge(): Float {
         var totalService = 0f
-        if(merchantSetting != null && merchantSetting!!.CatalogEnabled == true){
+        if (merchantSetting != null) {
             foodItemMapByCategoryId.forEach { (_, items) ->
                 items.forEach {
-                    if (it.cartQuantity > 0) {
+                    if ((it.item.ServiceFeeEnabled == true) && it.cartQuantity > 0) {
                         totalService += (it.item.ServiceFeeAmount ?: 0f) * it.cartQuantity
                     }
                 }
@@ -52,13 +52,15 @@ class Cart(
         }
         return totalService
     }
+
     fun calculateGstCharge(totalValue: Float): Float {
-        if(merchantSetting != null && merchantSetting!!.CatalogEnabled == true && merchantSetting!!.TaxOnOtherFeesPerc!= null){
+        if (merchantSetting != null && merchantSetting!!.CatalogEnabled == true &&
+            merchantSetting!!.TaxOnOtherFeesPerc != null
+        ) {
             return totalValue.times(merchantSetting!!.TaxOnOtherFeesPerc!!).div(100)
         } else {
             return 0f
         }
-
     }
 
     fun updateTotals() {

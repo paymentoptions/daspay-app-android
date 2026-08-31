@@ -297,19 +297,21 @@ fun ReviewCartBottomSectionContent(
                     CurrencyRow(currency = currency, amount = cartState.additionalCharge)
                 }
 
+                if(cartState.merchantSetting?.CatalogEnabled == true) {
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "GST (${cartState.merchantSetting?.TaxOnOtherFeesPerc?:0f}%)",
-                        style = AppTheme.typography.footnote.copy(
-                            fontSize = 14.sp, fontWeight = FontWeight.Normal
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "${cartState.merchantSetting?.TaxName ?: "GST"} (${cartState.merchantSetting?.TaxOnOtherFeesPerc ?: 0f}%)",
+                            style = AppTheme.typography.footnote.copy(
+                                fontSize = 14.sp, fontWeight = FontWeight.Normal
+                            )
                         )
-                    )
 
-                    CurrencyRow(currency = currency, amount = cartState.gstCharge)
+                        CurrencyRow(currency = currency, amount = cartState.gstCharge)
+                    }
                 }
 
                 HorizontalDivider(

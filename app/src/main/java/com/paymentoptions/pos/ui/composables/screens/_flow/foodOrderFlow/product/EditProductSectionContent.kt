@@ -289,7 +289,7 @@ fun EditProductSectionContent(
                         state = serviceFees,
                         placeholder = "Enter Service Fees",
                         modifier = Modifier.fillMaxWidth(),
-                        label = "Service fees",
+                        label = "Service fees (%)",
                         onlyDigits = true
                     )
                 }

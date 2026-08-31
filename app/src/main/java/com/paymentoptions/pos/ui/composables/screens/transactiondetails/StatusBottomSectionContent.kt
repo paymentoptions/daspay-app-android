@@ -57,6 +57,7 @@ import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import coil3.compose.AsyncImage
 import com.paymentoptions.pos.services.apiService.AquirerResponse
+import com.paymentoptions.pos.services.apiService.MerchantSetting
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.SignatureData
 import com.paymentoptions.pos.services.apiService.endpoints.getSignature
@@ -83,6 +84,9 @@ import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.utils.AppJson
+import com.paymentoptions.pos.utils.DashedDivider
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -144,12 +148,7 @@ fun StatusBottomSectionContent(
 
     if (paymentDetailsLatestResponse != null) {
         try {
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(
-                    it
-                )
-            }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse)
 
         } catch (ex: Exception){
             AppLogger.error("Exception in Acquirer", ex)
@@ -314,10 +313,13 @@ fun StatusBottomSectionContent(
                         value = aggregator
                     )
 
-                    if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                    val  gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data,
+                        transactionAquirerResponse)
+
+                    if (gatewayNotes.isNotBlank()) {
                         TransactionDetailRow(
                             label = "Note",
-                            value = transactionAquirerResponse?.gatewayNotes!!.trim()
+                            value = gatewayNotes.trim()
                         )
                     }
                 }
@@ -476,6 +478,7 @@ private fun ReceiptContentForPDF(
     paymentDetailsLatestResponse: PaymentDetailsResponse?,
     signatureBitmap: Bitmap?,
     signatureDate: Date,
+    merchantSetting : MerchantSetting?
 ) {
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
 
@@ -516,13 +519,8 @@ private fun ReceiptContentForPDF(
 
     if (paymentDetailsLatestResponse != null) {
         try {
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(
-                    it
-                )
-            }
-        } catch (ex: Exception){
+            transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse)
+        } catch (ex: Exception) {
             AppLogger.error("Exception in Acquirer", ex)
         }
 
@@ -613,330 +611,495 @@ private fun ReceiptContentForPDF(
             color = primary500
         )
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.LightGray.copy(alpha = 0.2f)
-        )
+        DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-        // Total Section
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Total",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                color = primary500
-            )
-            CurrencyText(
-                currency = paymentDetailsLatestResponse?.data?.CurrencyCode.toString(),
-                amount = paymentDetailsLatestResponse?.data?.Amount.formatToPrecisionString(),
-                fontSize = 20.sp,
-                color = primary500
-            )
-        }
-
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.LightGray.copy(alpha = 0.2f)
-        )
-
-        // Transaction Details
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "MID",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-//                    text = transactionAquirerResponse?.primaryMid.toString(),
-                    text = paymentDetailsLatestResponse?.data?.DASMID.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "TID",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-//                    text = transactionAquirerResponse?.primaryTid.toString(),
-                    text = paymentDetailsLatestResponse?.data?.TerminalID.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Batch",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = transactionAquirerResponse?.batchNo.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Trace",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = transactionAquirerResponse?.trace.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "RRN",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = transactionAquirerResponse?.rrn.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "Approval Code",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = transactionAquirerResponse?.approvalCode.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-        }
-
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.LightGray.copy(alpha = 0.2f)
-        )
-
-        // Additional Information
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = "Additional Information",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                color = primary500
-            )
-
-            Row(
+        // Section 1.5: Breakdown (if available)
+        val productDetails = paymentDetailsLatestResponse?.data?.DaspayProductDetails ?: emptyList()
+        if (productDetails.isNotEmpty()) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
-                Text(
-                    "TRANSACTION ID",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-//                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
-                    paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.End,
-                    modifier = Modifier.weight(1f),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "STATE",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-//                    paymentDetailsLatestResponse?.data?.Status.toString(),
-                    text = transactionAquirerResponse?.tranStatus.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = green500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "ATC",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = transactionAquirerResponse?.atc.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "TVR",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = transactionAquirerResponse?.tvr.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "APP NAME",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = transactionAquirerResponse?.appName.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "AID",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = transactionAquirerResponse?.aid.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    "TC",
-                    style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
-                    fontSize = 14.sp
-                )
-                Text(
-                    text = transactionAquirerResponse?.tc.toString(),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = primary500
-                )
-            }
-        }
-
-        // Signature
-        if (signatureBitmap != null) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .background(Color.White)
-                        .fillMaxWidth()
-                        .height(150.dp)
-                        //.aspectRatio(16 / 9f)
-                        .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
-                        .padding(8.dp)
+                val serviceChargeItem = productDetails.find { it.Name == "Total Service Charge" }
+                val additionalChargeItem =
+                    productDetails.find { it.Name.startsWith("Additional Charge") }
+                val taxItem = productDetails.find {
+                    it.Name.contains("GST", ignoreCase = true) ||
+                            it.Name.contains("JCT", ignoreCase = true) ||
+                            (merchantSetting?.TaxName != null && it.Name.contains(
+                                merchantSetting.TaxName,
+                                ignoreCase = true
+                            ))
+                }
+
+                val itemsTotal = productDetails
+                    .filter {
+                        it != serviceChargeItem && it != additionalChargeItem && it != taxItem && !it.Name.contains(
+                            "TAX",
+                            ignoreCase = true
+                        ) && !it.Name.contains("REGISTRATION", ignoreCase = true)
+                    }
+                    .sumOf { it.TotalPrice.toDoubleOrNull() ?: 0.0 }
+
+                if (itemsTotal > 0) {
+                    ReceiptBreakdownRow(
+                        label = "Total Item(s)",
+                        amount = String.format(Locale.US, "%.2f", itemsTotal)
+                    )
+                }
+
+                if (serviceChargeItem != null && (serviceChargeItem.TotalPrice.toDoubleOrNull()
+                        ?: 0.0) > 0
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Digital Signature",
-                            fontSize = 12.sp,
-                            color = primary500,
-                            fontWeight = FontWeight.Normal
-                        )
-                        Text(
-                            text = buildAnnotatedString {
-                                withStyle(SpanStyle(purple50, fontWeight = FontWeight.Medium)) {
-                                    append("Signing at ")
-                                }
-                                withStyle(SpanStyle(primary500)) {
-                                    append(SimpleDateFormat("dd MMMM, YYYY").format(signatureDate))
-                                }
-                            },
-                            style = AppTheme.typography.footnote
+                    ReceiptBreakdownRow(
+                        label = "Total Service Charge",
+                        amount = serviceChargeItem.TotalPrice
+                    )
+                }
+
+                if (additionalChargeItem != null && (additionalChargeItem.TotalPrice.toDoubleOrNull()
+                        ?: 0.0) > 0
+                ) {
+                    ReceiptBreakdownRow(
+                        label = "Additional Charge",
+                        amount = additionalChargeItem.TotalPrice
+                    )
+                }
+
+                if (taxItem != null) {
+                    ReceiptBreakdownRow(label = taxItem.Name, amount = taxItem.TotalPrice)
+                }
+            }
+
+            DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // PDF Breakdown Section
+            val pdfProductDetails =
+                paymentDetailsLatestResponse?.data?.DaspayProductDetails ?: emptyList()
+            if (pdfProductDetails.isNotEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val serviceChargeItem =
+                        pdfProductDetails.find { it.Name == "Total Service Charge" }
+                    val additionalChargeItem =
+                        pdfProductDetails.find { it.Name.startsWith("Additional Charge") }
+                    val taxItem = pdfProductDetails.find {
+                        it.Name.contains("GST", ignoreCase = true) ||
+                                it.Name.contains("JCT", ignoreCase = true) ||
+                                (merchantSetting?.TaxName != null && it.Name.contains(
+                                    merchantSetting.TaxName,
+                                    ignoreCase = true
+                                ))
+                    }
+
+                    val itemsTotal = pdfProductDetails
+                        .filter {
+                            it != serviceChargeItem && it != additionalChargeItem && it != taxItem && !it.Name.contains(
+                                "TAX",
+                                ignoreCase = true
+                            ) && !it.Name.contains("REGISTRATION", ignoreCase = true)
+                        }
+                        .sumOf { it.TotalPrice.toDoubleOrNull() ?: 0.0 }
+
+                    if (itemsTotal > 0) {
+                        ReceiptBreakdownRow(
+                            label = "Total Item(s)",
+                            amount = String.format(Locale.US, "%.2f", itemsTotal)
                         )
                     }
-                    Image(
-                        bitmap = signatureBitmap.asImageBitmap(),
-                        contentDescription = "Customer signature",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(110.dp)
+
+                    if (serviceChargeItem != null && (serviceChargeItem.TotalPrice.toDoubleOrNull()
+                            ?: 0.0) > 0
+                    ) {
+                        ReceiptBreakdownRow(
+                            label = "Total Service Charge",
+                            amount = serviceChargeItem.TotalPrice
+                        )
+                    }
+
+                    if (additionalChargeItem != null && (additionalChargeItem.TotalPrice.toDoubleOrNull()
+                            ?: 0.0) > 0
+                    ) {
+                        ReceiptBreakdownRow(
+                            label = "Additional Charge",
+                            amount = additionalChargeItem.TotalPrice
+                        )
+                    }
+
+                    if (taxItem != null) {
+                        ReceiptBreakdownRow(label = taxItem.Name, amount = taxItem.TotalPrice)
+                    }
+                }
+
+                DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
+            // Section 2 - Total
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Total",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
+                CurrencyText(
+                    currency = paymentDetailsLatestResponse?.data?.CurrencyCode.toString(),
+                    amount = paymentDetailsLatestResponse?.data?.Amount.formatToPrecisionString(),
+                    fontSize = 20.sp,
+                    color = primary500
+                )
+            }
+
+            DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Transaction Details
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "MID",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
                     )
+                    Text(
+//                    text = transactionAquirerResponse?.primaryMid.toString(),
+                        text = paymentDetailsLatestResponse?.data?.DASMID.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "TID",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+//                    text = transactionAquirerResponse?.primaryTid.toString(),
+                        text = paymentDetailsLatestResponse?.data?.TerminalID.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Batch",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.batchNo.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Trace",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.trace.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "RRN",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.rrn.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Approval Code",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.approvalCode.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+            }
+
+            DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Additional Information
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = "Additional Information",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        "TRANSACTION ID",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+//                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
+                        paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                        modifier = Modifier.weight(1f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "STATE",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+//                    paymentDetailsLatestResponse?.data?.Status.toString(),
+                        text = transactionAquirerResponse?.tranStatus.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = green500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "ATC",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.atc.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "TVR",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.tvr.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "APP NAME",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.appName.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "AID",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.aid.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "TC",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.tc.toString(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+
+                if (merchantSetting != null && (merchantSetting.CatalogEnabled == true)
+                    && merchantSetting.TaxRegistrationNumber != null
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "TAX REGISTRATION NO.", style = AppTheme.typography.footnote.copy(
+                                fontWeight = FontWeight.Normal, fontSize = 14.sp
+                            )
+                        )
+
+                        Text(
+                            merchantSetting.TaxRegistrationNumber,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary500
+                        )
+                    }
+                }
+            }
+
+            // Signature
+            if (signatureBitmap != null) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .background(Color.White)
+                            .fillMaxWidth()
+                            .height(150.dp)
+                            //.aspectRatio(16 / 9f)
+                            .dashedBorder(color = Color.LightGray, shape = RoundedCornerShape(8.dp))
+                            .padding(8.dp)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Digital Signature",
+                                fontSize = 12.sp,
+                                color = primary500,
+                                fontWeight = FontWeight.Normal
+                            )
+                            Text(
+                                text = buildAnnotatedString {
+                                    withStyle(SpanStyle(purple50, fontWeight = FontWeight.Medium)) {
+                                        append("Signing at ")
+                                    }
+                                    withStyle(SpanStyle(primary500)) {
+                                        append(
+                                            SimpleDateFormat("dd MMMM, YYYY").format(
+                                                signatureDate
+                                            )
+                                        )
+                                    }
+                                },
+                                style = AppTheme.typography.footnote
+                            )
+                        }
+                        Image(
+                            bitmap = signatureBitmap.asImageBitmap(),
+                            contentDescription = "Customer signature",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(110.dp)
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+    @Composable
+    fun ReceiptBreakdownRow(label: String, amount: String) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = label,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = primary500
+            )
+            Text(
+                text = "+$amount",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = primary500
+            )
+        }
+    }
 
 @Composable
 private fun ReceiptShimmerLoading() {

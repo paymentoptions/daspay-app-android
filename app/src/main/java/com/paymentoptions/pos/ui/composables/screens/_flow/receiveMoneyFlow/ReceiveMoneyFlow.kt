@@ -116,6 +116,7 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red300
+import com.paymentoptions.pos.utils.PBL_URL
 import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.generateQrCode
@@ -499,7 +500,7 @@ fun ReceiveMoneyFlow(
                                             val response = payByQr(context, request)
                                             if (response != null && response.success) {
                                                 val paymentUrl =
-                                                    "https://api-dev.paymentoptions.com/paybylink/" + response.data.ProductID
+                                                    PBL_URL + response.data.ProductID
                                                 qrCodeBitmap = generateQrCode(paymentUrl)
                                                 AnalyticsHelper.track(
                                                     AnalyticsEvent.Custom(
@@ -646,7 +647,7 @@ fun ReceiveMoneyFlow(
                                             if (payByLinkResponse != null && payByLinkResponse!!.success) {
 //                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
                                                 paymentUrl =
-                                                    "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID
+                                                    PBL_URL + payByLinkResponse!!.data.ProductID
                                                 viaLinkQrBitmap = generateQrCode(paymentUrl)
                                                 AppAnalytics.payByLinkCreated(
                                                     productId = payByLinkResponse!!.data.ProductID,
@@ -784,7 +785,7 @@ fun ReceiveMoneyFlow(
                                                     .padding(vertical = 16.dp, horizontal = 12.dp),
                                             ) {
                                                 Text(
-                                                    text = "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID,
+                                                    text = PBL_URL + payByLinkResponse!!.data.ProductID,
                                                     fontWeight = FontWeight.SemiBold,
                                                     fontSize = 16.sp,
                                                     color = primary900,
@@ -885,7 +886,6 @@ fun ReceiveMoneyFlow(
                 }) {
                 ChargeMoneyBottomSectionContent(
                     navController,
-                    enableScrolling = false,
                     amountToCharge = formatAmount(amountToChargeState),
                     gatewayNotes = noteState,
                     availablePaymentMethods = availablePaymentMethods,
@@ -931,7 +931,8 @@ fun ReceiveMoneyFlow(
                     updateFailureMessage = { transactionFailureMessage = it },
                     onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) },
                     startTapAndPay = startTapAndPay,
-                    updateLatestTransaction = { latestTransactionId = it })
+                    updateLatestTransaction = { latestTransactionId = it },
+                )
             }
         }
 

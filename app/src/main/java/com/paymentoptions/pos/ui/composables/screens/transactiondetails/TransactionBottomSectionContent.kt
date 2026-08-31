@@ -83,8 +83,10 @@ import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.getAmountSign
 import com.paymentoptions.pos.utils.getAvailableAction
+import com.paymentoptions.pos.utils.getGatewayNotes
 import com.paymentoptions.pos.utils.getTransactionTypeLabel
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
+import com.paymentoptions.pos.utils.parseAcquirerResponse
 import com.paymentoptions.pos.utils.safeParseOffsetDateTime
 import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import java.text.SimpleDateFormat
@@ -118,6 +120,8 @@ fun TransactionBottomSectionContent(
     var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(null) }
 
+    var  gatewayNotes by remember { mutableStateOf("") }
+
     LaunchedEffect(transactionUuid) {
         if (!transactionUuid.isNullOrBlank()) {
             isSignatureLoading = true
@@ -128,13 +132,16 @@ fun TransactionBottomSectionContent(
                 null
             }
 
-            try{
-            transactionAquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(it)
+            if (paymentDetailsLatestResponse != null) {
+                try{
+                    transactionAquirerResponse =parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse)
+                } catch (ex: Exception){
+                    AppLogger.error("Exception in Acquirer", ex)
+                }
             }
-            } catch (ex: Exception){
-                AppLogger.error("Exception in Acquirer", ex)
-            }
+
+            gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data,
+                transactionAquirerResponse)
 
             signatureData = try {
                 getSignature(context = context, uuid = transactionUuid)?.data
@@ -160,6 +167,8 @@ fun TransactionBottomSectionContent(
     val amountSign = getAmountSign(transaction)
     val availableAction = getAvailableAction(transaction)
     val transactionTypeLabel = getTransactionTypeLabel(transaction)
+    val merchantSetting = DPSharedPreferences.getMerchantSettings(context)
+
 
 
 
@@ -363,6 +372,7 @@ fun TransactionBottomSectionContent(
                     value = timeStringFormatted
                 )
 
+
                 TransactionDetailRow(
                     label = "Status",
                     value = transactionStatus,
@@ -374,10 +384,15 @@ fun TransactionBottomSectionContent(
                     value = transactionTypeLabel
                 )
 
-//                    TransactionDetailRow(
-//                        label = "Trace",
-//                        value = transactionAquirerResponse?.trace.toString()
-//                    )
+
+                if(transaction.TransactionType.uppercase() != "REFUND" && merchantSetting!= null &&
+                    (merchantSetting.CatalogEnabled == true)
+                    && merchantSetting.TaxRegistrationNumber != null) {
+                    TransactionDetailRow(
+                        label = "TAX REGISTRATION NO.",
+                        value = merchantSetting.TaxRegistrationNumber
+                    )
+                }
 //
 //                    TransactionDetailRow(
 //                        label = "Approval Code",
@@ -394,10 +409,11 @@ fun TransactionBottomSectionContent(
                     value = currency
                 )
 
-                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+
+                if (gatewayNotes.isNotBlank()) {
                     TransactionDetailRow(
                         label = "Note",
-                        value = transactionAquirerResponse?.gatewayNotes!!.trim()
+                        value = gatewayNotes
                     )
                 }
             }

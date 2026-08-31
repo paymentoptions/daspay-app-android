@@ -1,5 +1,6 @@
 package com.paymentoptions.pos.services.apiService
 
+import com.google.gson.JsonElement
 import com.theminesec.lib.dto.transaction.Transaction
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -279,6 +280,7 @@ data class PaymentRequest(
     val shipping_address: Address,
     val payment_method: PaymentMethod,
     val time_zone: String,
+    val cartID: String
 )
 
 data class Card(
@@ -326,6 +328,19 @@ data class PaymentResponse(
     val payment_details: PaymentDetails,
     val transaction_details: TransactionDetails,
     val risk_details: RiskDetails,
+)
+
+
+//{ "Id": "133caec4-ebfc-45bb-b6cd-6646f16468a8", "Name": "Coca Cola", "Price": 7, "Currency": "SGD",
+// "Quantity": 1, "TotalPrice": "7.00" },
+//
+data class DaspayProductDetailData(
+    val Id: String,
+    val Name: String,
+    val Price: Double,
+    val Currency: String,
+    val Quantity: Int,
+     val TotalPrice: String
 )
 // -------------------------------------------------------
 
@@ -567,7 +582,9 @@ data class DeviceInfo(
     val CreatedAt: String,
     val UpdatedAt: String,
     val Location: String? = null,
-    val MerchantSetting: MerchantSetting?
+    val MerchantSetting: MerchantSetting?,
+    val MinesecDeviceId: String? = null,
+    val MinesecMerchantId: String? = null
 )
 
 @Serializable
@@ -732,7 +749,7 @@ data class PaymentDetailsResponseData(
     val ProductType: String?,
     val PrimaryAddress: PrimaryAddress?,
     val Merchant: String?,
-    val Referenceremark: String,
+    val Referenceremark: String?,
     val LegalNameInEnglish: String?,
     val SecretKey: String?,
     val TransactionLog: Any?, // []
@@ -740,16 +757,17 @@ data class PaymentDetailsResponseData(
     val ProductDetails: Any?, // [],
     val SubscriptionDetails: String?,
     val PaymentType: String?,
-    val AcquirerResponse: List<String?>,
+    val AcquirerResponse: List<JsonElement>?,
     val TransactionHistory: List<TransactionHistory>?,
     val CaptureRequestTransaction: List<Any>? = null,
     val RefundRequestTransaction: List<Any>? = null,
     val TerminalName: String?,
     val PBLLinkName: String?,
     val IsBlockRefund: Boolean?,
+    val DaspayProductDetails:List<DaspayProductDetailData>,
 
 
-)
+    )
 
 
 

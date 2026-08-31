@@ -9,13 +9,8 @@ import com.paymentoptions.pos.services.apiService.generateRequestHeader
 import com.paymentoptions.pos.services.apiService.generateSignedRequestHeader
 
 suspend fun signIn(context: Context, username: String, password: String): SignInResponse? {
-    try {
-        val requestHeaders = generateSignedRequestHeader(context)
-        val signInRequest = SignInRequest(username, password)
-        val signInResponse = RetrofitClient.getApi(context).signIn(requestHeaders, signInRequest)
-        return signInResponse
-    } catch (e: Exception) {
-        AppLogger.debug("SignInError: ${e.message}")
-        throw e
-    }
+    val requestHeaders = generateSignedRequestHeader(context)
+    val signInRequest = SignInRequest(username, password)
+    val signInResponse = RetrofitClient.getApi(context).signIn(requestHeaders, signInRequest)
+    return signInResponse
 }

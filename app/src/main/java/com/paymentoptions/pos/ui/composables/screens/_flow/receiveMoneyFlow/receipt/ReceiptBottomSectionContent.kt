@@ -64,6 +64,7 @@ import com.paymentoptions.pos.R
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AquirerResponse
+import com.paymentoptions.pos.services.apiService.MerchantSetting
 import com.paymentoptions.pos.services.apiService.PaymentDetailsResponse
 import com.paymentoptions.pos.services.apiService.endpoints.paymentDetails
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
@@ -91,6 +92,9 @@ import com.paymentoptions.pos.utils.topdf.ComposePdfExporter
 import com.paymentoptions.pos.utils.topdf.PageSize
 import com.paymentoptions.pos.utils.topdf.PdfExportProgress
 import com.paymentoptions.pos.utils.AppJson
+import com.paymentoptions.pos.utils.DashedDivider
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -117,6 +121,7 @@ fun ReceiptBottomSectionContent(
     var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
     var isLoading by remember { mutableStateOf(true) }
+    val merchantSetting = DPSharedPreferences.getMerchantSettings(context)
 
     val dateFormatted = try {
         val dateString = paymentDetailsLatestResponse?.data?.Date.toString()
@@ -169,12 +174,7 @@ fun ReceiptBottomSectionContent(
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
 
     if (paymentDetailsLatestResponse != null)
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(
-                    it
-                )
-            }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse)
 
     val transactionDetailUrl = if (transactionUuid != null) {
         "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
@@ -353,9 +353,54 @@ fun ReceiptBottomSectionContent(
             )
         }
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
-        )
+//        HorizontalDivider(
+//            modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
+//        )
+            DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+        // Section 1.5: Breakdown (if available)
+        val productDetails = paymentDetailsLatestResponse?.data?.DaspayProductDetails ?: emptyList()
+        if (productDetails.isNotEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val serviceChargeItem = productDetails.find { it.Name == "Total Service Charge" }
+                val additionalChargeItem = productDetails.find { it.Name.startsWith("Additional Charge") }
+                val taxItem = productDetails.find {
+                    it.Name.contains("GST", ignoreCase = true) ||
+                            it.Name.contains("JCT", ignoreCase = true) ||
+                            (merchantSetting?.TaxName != null && it.Name.contains(merchantSetting.TaxName, ignoreCase = true))
+                }
+
+                val itemsTotal = productDetails
+                    .filter { it != serviceChargeItem && it != additionalChargeItem && it != taxItem && !it.Name.contains("TAX", ignoreCase = true) && !it.Name.contains("REGISTRATION", ignoreCase = true) }
+                    .sumOf { it.TotalPrice.toDoubleOrNull() ?: 0.0 }
+
+                if (itemsTotal > 0) {
+                    ReceiptBreakdownRow(label = "Total Item(s)", amount = String.format(Locale.US, "%.2f", itemsTotal))
+                }
+
+                if (serviceChargeItem != null && (serviceChargeItem.TotalPrice.toDoubleOrNull() ?: 0.0) > 0) {
+                    ReceiptBreakdownRow(label = "Total Service Charge", amount = serviceChargeItem.TotalPrice)
+                }
+
+                if (additionalChargeItem != null && (additionalChargeItem.TotalPrice.toDoubleOrNull() ?: 0.0) > 0) {
+                    ReceiptBreakdownRow(label = "Additional Charge", amount = additionalChargeItem.TotalPrice)
+                }
+
+                if (taxItem != null) {
+                    ReceiptBreakdownRow(label = taxItem.Name, amount = taxItem.TotalPrice)
+                }
+            }
+
+//            HorizontalDivider(
+//                modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
+//            )
+            DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
+        }
 
         //Section 2 : Total
         Row(
@@ -381,11 +426,13 @@ fun ReceiptBottomSectionContent(
             )
         }
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
-        )
+//        HorizontalDivider(
+//            modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
+//        )
+            DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
+        AppLogger.debug("Payment Details ProductResponse: ${paymentDetailsLatestResponse?.data?.DaspayProductDetails}")
 
-        Column(
+            Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
@@ -496,11 +543,9 @@ fun ReceiptBottomSectionContent(
             }
         }
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
-        )
+        DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-        //Additional Info
+        // Additional Information
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -661,7 +706,30 @@ fun ReceiptBottomSectionContent(
                 )
             }
 
-            if(transactionAquirerResponse?.gatewayNotes?.isNotBlank() == true){
+            if(merchantSetting!= null && (merchantSetting.CatalogEnabled == true)
+                && merchantSetting.TaxRegistrationNumber != null){
+                Row(
+                    modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "TAX REGISTRATION NO.", style = AppTheme.typography.footnote.copy(
+                            fontWeight = FontWeight.Normal, fontSize = 14.sp
+                        )
+                    )
+
+                    Text(
+                        merchantSetting.TaxRegistrationNumber,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+            }
+
+
+            val  gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data,
+                transactionAquirerResponse)
+            if(gatewayNotes.isNotBlank()){
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -672,7 +740,7 @@ fun ReceiptBottomSectionContent(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                        text = gatewayNotes.trim(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -820,7 +888,8 @@ fun ReceiptBottomSectionContent(
                                             ReceiptContentForPDF(
                                                 paymentDetailsLatestResponse = paymentDetailsLatestResponse,
                                                 signatureBitmap = signatureBitmap,
-                                                signatureDate = signatureDate
+                                                signatureDate = signatureDate,
+                                                merchantSetting = merchantSetting
                                             )
                                         }
                                     }
@@ -896,6 +965,7 @@ private fun ReceiptContentForPDF(
     paymentDetailsLatestResponse: PaymentDetailsResponse?,
     signatureBitmap: Bitmap?,
     signatureDate: Date,
+    merchantSetting: MerchantSetting?,
 ) {
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
 
@@ -936,12 +1006,7 @@ private fun ReceiptContentForPDF(
 
     if (paymentDetailsLatestResponse != null) {
         try{
-        transactionAquirerResponse =
-            paymentDetailsLatestResponse.data.AcquirerResponse.firstOrNull()?.let {
-                AppJson.decodeFromString<AquirerResponse>(
-                    it
-                )
-            }
+            transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse)
         } catch (ex: Exception){
             AppLogger.error("Exception in Acquirer", ex)
         }
@@ -1032,10 +1097,50 @@ private fun ReceiptContentForPDF(
             color = primary500
         )
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.LightGray.copy(alpha = 0.2f)
-        )
+//        HorizontalDivider(
+//            modifier = Modifier.fillMaxWidth(),
+//            color = Color.LightGray.copy(alpha = 0.2f)
+//        )
+
+        DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
+        // PDF Breakdown Section
+        val pdfProductDetails = paymentDetailsLatestResponse?.data?.DaspayProductDetails ?: emptyList()
+        if (pdfProductDetails.isNotEmpty()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val serviceChargeItem = pdfProductDetails.find { it.Name == "Total Service Charge" }
+                val additionalChargeItem = pdfProductDetails.find { it.Name.startsWith("Additional Charge") }
+                val taxItem = pdfProductDetails.find {
+                    it.Name.contains("GST", ignoreCase = true) ||
+                            it.Name.contains("JCT", ignoreCase = true) ||
+                            (merchantSetting?.TaxName != null && it.Name.contains(merchantSetting.TaxName, ignoreCase = true))
+                }
+
+                val itemsTotal = pdfProductDetails
+                    .filter { it != serviceChargeItem && it != additionalChargeItem && it != taxItem && !it.Name.contains("TAX", ignoreCase = true) && !it.Name.contains("REGISTRATION", ignoreCase = true) }
+                    .sumOf { it.TotalPrice.toDoubleOrNull() ?: 0.0 }
+
+                if (itemsTotal > 0) {
+                    ReceiptBreakdownRow(label = "Total Item(s)", amount = String.format(Locale.US, "%.2f", itemsTotal))
+                }
+
+                if (serviceChargeItem != null && (serviceChargeItem.TotalPrice.toDoubleOrNull() ?: 0.0) > 0) {
+                    ReceiptBreakdownRow(label = "Total Service Charge", amount = serviceChargeItem.TotalPrice)
+                }
+
+                if (additionalChargeItem != null && (additionalChargeItem.TotalPrice.toDoubleOrNull() ?: 0.0) > 0) {
+                    ReceiptBreakdownRow(label = "Additional Charge", amount = additionalChargeItem.TotalPrice)
+                }
+
+                if (taxItem != null) {
+                    ReceiptBreakdownRow(label = taxItem.Name, amount = taxItem.TotalPrice)
+                }
+            }
+
+            DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
+        }
 
         // Total Section
         Row(
@@ -1056,10 +1161,7 @@ private fun ReceiptContentForPDF(
             )
         }
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.LightGray.copy(alpha = 0.2f)
-        )
+        DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Transaction Details
         Column(
@@ -1166,10 +1268,7 @@ private fun ReceiptContentForPDF(
             }
         }
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.LightGray.copy(alpha = 0.2f)
-        )
+        DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Additional Information
         Column(
@@ -1305,7 +1404,29 @@ private fun ReceiptContentForPDF(
                 )
             }
 
-            if(transactionAquirerResponse?.gatewayNotes?.isNotBlank() == true){
+            if(merchantSetting!= null && (merchantSetting.CatalogEnabled == true)
+                && merchantSetting.TaxRegistrationNumber != null){
+                Row(
+                    modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "TAX REGISTRATION NO.", style = AppTheme.typography.footnote.copy(
+                            fontWeight = FontWeight.Normal, fontSize = 14.sp
+                        )
+                    )
+
+                    Text(
+                        merchantSetting.TaxRegistrationNumber,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
+            }
+
+            val  gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data,
+                transactionAquirerResponse)
+            if(gatewayNotes.isNotBlank()){
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -1316,7 +1437,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                        text = gatewayNotes.trim(),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -1374,6 +1495,28 @@ private fun ReceiptContentForPDF(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ReceiptBreakdownRow(label: String, amount: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = primary500
+        )
+        Text(
+            text = "+$amount",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = primary500
+        )
     }
 }
 
@@ -1471,10 +1614,7 @@ private fun ReceiptShimmerLoading() {
             )
         }
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.LightGray.copy(alpha = 0.2f)
-        )
+        DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Section 2 - Total shimmer
         Row(
@@ -1499,10 +1639,7 @@ private fun ReceiptShimmerLoading() {
             )
         }
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.LightGray.copy(alpha = 0.2f)
-        )
+        DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Section 3 - Details shimmer
         Column(
@@ -1534,10 +1671,7 @@ private fun ReceiptShimmerLoading() {
             }
         }
 
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.LightGray.copy(alpha = 0.2f)
-        )
+        DashedDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         // Section 4 - Signature shimmer
         Column(

@@ -51,6 +51,7 @@ import com.paymentoptions.pos.services.apiService.PaymentStatusRequest
 import com.paymentoptions.pos.services.apiService.endpoints.payment
 import com.paymentoptions.pos.services.apiService.endpoints.sendWebHookNotification
 import com.paymentoptions.pos.services.analytics.AppAnalytics
+import com.paymentoptions.pos.services.apiService.endpoints.payByLink
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.dialogs.AlertDialogType
@@ -75,7 +76,9 @@ import com.theminesec.lib.dto.common.Amount
 import com.theminesec.lib.dto.poi.PoiRequest
 import com.theminesec.lib.dto.transaction.TranType
 import com.paymentoptions.pos.services.apiService.toPaymentStatusRequest
-import com.paymentoptions.pos.utils.MINESEC_PROFILE_ID
+import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.Cart
+import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.getPayByLinkRequest
+import com.paymentoptions.pos.utils.parseApiErrorMessage
 import com.theminesec.lib.dto.transaction.Transaction
 import com.theminesec.sdk.headless.HeadlessActivity
 import com.theminesec.sdk.headless.model.WrappedResult
@@ -83,6 +86,7 @@ import kotlinx.coroutines.launch
 
 import java.math.BigDecimal
 import java.util.Currency
+
 
 @Composable
 fun PaymentMethodButton(
@@ -137,6 +141,7 @@ fun ChargeMoneyBottomSectionContent(
     onChangeAmount: () -> Unit,
     startTapAndPay: Boolean = false,
     updateLatestTransaction: (id: String) -> Unit,
+    cart: Cart? = null,
 ) {
     val context = LocalContext.current
     val currency = getTransactionCurrency(context)
@@ -201,7 +206,8 @@ fun ChargeMoneyBottomSectionContent(
                 onMandatorySignature = onMandatorySignature,
                 onFailureUpdateFlowStage = onFailureUpdateFlowStage,
                 onFailureMessage = updateFailureMessage,
-                updateLatestTransaction = updateLatestTransaction
+                updateLatestTransaction = updateLatestTransaction,
+                cartState = cart
             )
         }
     }
@@ -288,16 +294,17 @@ fun Tap_ChargeMoney(
     navController: NavController,
     amountToCharge: String,
     gatewayNotes: String?,
+
     onLoader: (nextStage: () -> Unit) -> Unit = {},
     onSuccessUpdateFlowStage: () -> Unit = {},
     onMandatorySignature: () -> Unit = {},
     onFailureUpdateFlowStage: () -> Unit = {},
     onFailureMessage: (String) -> Unit = {},
     updateLatestTransaction: (id: String) -> Unit = {},
+    cartState: Cart? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var rawInput = ""
     var paymentLoader by remember { mutableStateOf(false) }
     var showProcessingScreen by remember { mutableStateOf(false) }
     var transactionDetailsText by remember { mutableStateOf("") }
@@ -349,7 +356,7 @@ fun Tap_ChargeMoney(
                     "TapToPay MineSec success: tranType=${it.value.tranType}, tranStatus=${it.value.tranStatus}, tranId=${it.value.tranId}, posReference=${it.value.posReference}"
                 )
                 AppAnalytics.profileDownloadOrActivation(
-                    profileId = MINESEC_PROFILE_ID,
+                    profileId = DPSharedPreferences.getMerchantProfileId(context) ?:"",
                     stage = "activation",
                     result = "completed"
                 )
@@ -371,7 +378,6 @@ fun Tap_ChargeMoney(
                     "TapToPay MineSec sale extracted: saleTranId=$completedSaleTranId, salePosReference=$completedSalePosReference, saleRequestId=$completedSaleRequestId"
                 )
 
-                rawInput = ""
 
                 val paymentStatusRequest = createPaymentRequest(it.value)
                 AppLogger.debug("TapToPay webhook payload built: $paymentStatusRequest")
@@ -460,19 +466,6 @@ fun Tap_ChargeMoney(
 
     val paymentMethod = com.paymentoptions.pos.services.apiService.PaymentMethod(type = "daspay")
 
-    val paymentRequest = PaymentRequest(
-        amount = amountToCharge,
-        currency = currency,
-        merchant_txn_ref = "TEST00989012878787878787878787",
-        customer_ip = getDeviceIpAddress(),
-        merchant_id = merchant["dasmid"]!!,
-        return_url = paymentReturnUrl,
-        billing_address = billingAddress,
-        shipping_address = billingAddress,
-        payment_method = paymentMethod,
-        time_zone = getDeviceTimeZone()
-    )
-    AppLogger.debug("TapToPay payment request prepared: amount=${paymentRequest.amount}, currency=${paymentRequest.currency}, merchantId=${paymentRequest.merchant_id}, tz=${paymentRequest.time_zone}")
 
     MyAlertDialog(
         showDialog = paymentLoader,
@@ -484,14 +477,56 @@ fun Tap_ChargeMoney(
 
     if (!hasLaunchedPayment) {
         //prof_01KH8NQC4PVFKRNH31ZPC2QJNN
-        val profileId =  MINESEC_PROFILE_ID
+        val profileId = DPSharedPreferences.getMerchantProfileId(context) ?: ""
         hasLaunchedPayment = true
-        AppLogger.debug("TapToPay initial launch guard passed, starting payment API call with profileId=$profileId")
+        AppLogger.debug("TapToPay launching MineSec payment API call with profileId=$profileId")
 
         scope.launch {
             paymentLoader = true
             AppLogger.debug("TapToPay loader enabled")
             try {
+                var productId = ""
+                if(cartState != null) {
+                    try {
+                        var payByLinkRequest = getPayByLinkRequest(
+                            "Tap to Pay ",
+                            cartState, currency
+                        )
+                        val dasmid = getTapPayDasmid(context)
+
+                        var payByLinkResponse = payByLink(context, payByLinkRequest, dasmid)
+
+                        println("payByLinkResponse: $payByLinkResponse")
+
+                        if (payByLinkResponse != null && payByLinkResponse.data.ProductID.isNotBlank()) {
+                            AppLogger.debug("TapToPay payment request added Product id $productId for $payByLinkResponse")
+                            productId = payByLinkResponse.data.ProductID
+                        }
+                        DPSharedPreferences.clearSavedCart(context)
+                    } catch (exception: Exception) {
+                        val errorMessage = parseApiErrorMessage(exception, "Tap to Pay failed to start. Please retry.")
+
+                        AppLogger.error("TapToPay error during payment setup: $errorMessage", errorMessage)
+                    }
+
+                }
+
+                val paymentRequest = PaymentRequest(
+                    amount = amountToCharge,
+                    currency = currency,
+                    merchant_txn_ref = "TEST00989012878787878787878787",
+                    customer_ip = getDeviceIpAddress(),
+                    merchant_id = merchant["dasmid"]!!,
+                    return_url = paymentReturnUrl,
+                    billing_address = billingAddress,
+                    shipping_address = billingAddress,
+                    payment_method = paymentMethod,
+                    time_zone = getDeviceTimeZone(),
+                    cartID = productId
+                )
+                AppLogger.debug("TapToPay payment request prepared: amount=${paymentRequest.amount}, currency=${paymentRequest.currency}, merchantId=${paymentRequest.merchant_id}, tz=${paymentRequest.time_zone}")
+
+
                 val paymentResponse: PaymentResponse? = payment(context, paymentRequest)
                 AppLogger.debug("TapToPay payment API response: $paymentResponse")
                 if (paymentResponse == null) {
@@ -539,21 +574,35 @@ fun Tap_ChargeMoney(
                         }
                     }
                 }
-            } catch (e: Exception) {
-                AppLogger.error("TapToPay fatal error during payment setup: ${e.message}", e)
+            } catch (e: retrofit2.HttpException) {
+                AppLogger.error("TapToPay HTTP error during payment setup: ${e.message}", e)
+                val errorMessage = parseApiErrorMessage(e, "Tap to Pay failed to start. Please retry.")
                 AppAnalytics.paymentStatus(
                     status = "FAILED",
                     paymentType = "SOFTPOS",
                     transactionId = null
                 )
-                onFailureMessage(e.message ?: "Tap to Pay failed to start. Please retry.")
+                onFailureMessage(errorMessage)
                 onLoader {
                     onFailureUpdateFlowStage()
                 }
-                DPSharedPreferences.clearSharedPreferences(context)
-                navController.navigate(Screens.AuthCheck.route) {
-                    popUpTo(0) { inclusive = true }
+            }
+            catch (e: Exception) {
+                AppLogger.error("TapToPay fatal error during payment setup: ${e.message}", e)
+                val errorMessage = parseApiErrorMessage(e, "Tap to Pay failed to start. Please retry.")
+                AppAnalytics.paymentStatus(
+                    status = "FAILED",
+                    paymentType = "SOFTPOS",
+                    transactionId = null
+                )
+                onFailureMessage(errorMessage)
+                onLoader {
+                    onFailureUpdateFlowStage()
                 }
+//                DPSharedPreferences.clearSharedPreferences(context)
+//                navController.navigate(Screens.AuthCheck.route) {
+//                    popUpTo(0) { inclusive = true }
+//                }
             } finally {
                 paymentLoader = false
                 AppLogger.debug("TapToPay loader disabled")

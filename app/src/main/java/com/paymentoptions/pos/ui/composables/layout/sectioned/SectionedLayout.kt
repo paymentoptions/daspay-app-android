@@ -54,7 +54,7 @@ import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 
-val LOGO_TOP_PADDING_IN_DP = 45.dp
+val LOGO_TOP_PADDING_IN_DP = 35.dp
 val LOGO_HEIGHT_IN_DP = 50.dp
 val RECEIVE_MONEY_BUTTON_HEIGHT_IN_DP = 60.dp
 val DEFAULT_BOTTOM_SECTION_PADDING_IN_DP = 16.dp
@@ -134,7 +134,7 @@ fun SectionedLayout(
                         .height(LOGO_HEIGHT_IN_DP)
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 imageBelowLogo()
             }

@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun ShowReceiptView(){
-    Row(modifier = Modifier.padding(bottom = 5.dp)) {
+    Row(modifier = Modifier) {
         Text(
             text = "Receipt",
             color = Color.White,
