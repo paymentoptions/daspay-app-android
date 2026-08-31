@@ -58,6 +58,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
@@ -76,6 +77,8 @@ fun TakeDigitalSignatureBottomSectionContent(
     paymentDetailsResponse: PaymentDetailsResponse?,
     updateSignature: (Path, ImageBitmap?, Instant) -> Unit = { _, _, _ -> },
     updateFlowStageToSuccess: () -> Unit = {},
+    isMandatory: Boolean = false,
+    onCancelMandatory: () -> Unit = {},
 ) {
     var path by remember { mutableStateOf(signaturePath) }
     var isSigned by remember { mutableStateOf(false) }
@@ -83,7 +86,7 @@ fun TakeDigitalSignatureBottomSectionContent(
     var canvasWith by remember { mutableStateOf(0f) }
     var canvasHeight by remember { mutableStateOf(0) }
     var startY by remember { mutableStateOf(0f) }
-    var isDrawnTopToBottom by remember { mutableStateOf(true) }
+    var isDrawnTopToBottom by remember { mutableStateOf(isMandatory) }
 
     var isLoading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -145,16 +148,16 @@ fun TakeDigitalSignatureBottomSectionContent(
                         canvasWith = it.width.toFloat()
                         canvasHeight = it.height
                     }
-                    .pointerInput(true) {
+                    .pointerInput(isMandatory) {
                         detectDragGestures(onDragStart = { offset ->
                             path.moveTo(offset.x, offset.y)
                             currentPosition = offset
-                            isSigned = true
+                            isSigned = isMandatory
                             startY = offset.y
                         }, onDrag = { change, _ ->
                             path.lineTo(change.position.x, change.position.y)
                             currentPosition = change.position
-                            isSigned = true
+                            isSigned = isMandatory
                         }, onDragEnd = {
                             isDrawnTopToBottom = currentPosition.y > startY
                         })
@@ -203,7 +206,7 @@ fun TakeDigitalSignatureBottomSectionContent(
                         updateSignature(path, signatureBitmap, signatureDate)
 
                         scope.launch {
-                            isLoading = true
+                            isLoading = isMandatory
                             try {
                                 if (signatureBitmap != null) {
                                     val signatureBytes = imageBitmapToByteArray(signatureBitmap)

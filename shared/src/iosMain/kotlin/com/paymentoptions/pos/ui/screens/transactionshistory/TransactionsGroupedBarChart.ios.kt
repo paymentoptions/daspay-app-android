@@ -42,6 +42,7 @@ import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.utils.formatEpochMillis
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.getTransactionAmount
 import com.paymentoptions.pos.utils.safeParseDateTime
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -90,6 +91,7 @@ actual fun TransactionsGroupedBarChart(
 
     var earningTransactionCount = 0
     var earningAmount = 0.0f
+    var totalAmount = 0.0f
     var refundTransactionCount = 0
     var refundAmount = 0.0f
 
@@ -178,11 +180,13 @@ actual fun TransactionsGroupedBarChart(
 
             if (slotIndex in 0 until numSlots) {
                 transactionsBySlot[slotIndex]?.add(transaction)
+                totalAmount += getTransactionAmount(transaction.toTransactionListDataRecord())
                 when (transaction.TransactionType) {
                     "PURCHASE" -> {
                         earningTransactionCount++
                         earningAmount += transaction.amount
                         earningsBySlot[slotIndex] += transaction.amount
+
                     }
                     "REFUND" -> {
                         refundTransactionCount++
@@ -194,7 +198,7 @@ actual fun TransactionsGroupedBarChart(
         }
     }
 
-    updateReceivalAmount(earningAmount)
+    updateReceivalAmount(totalAmount)
 
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
 

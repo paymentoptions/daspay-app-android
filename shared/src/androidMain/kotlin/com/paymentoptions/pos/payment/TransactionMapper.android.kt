@@ -4,11 +4,25 @@ import com.paymentoptions.pos.network.PaymentStatusRequest
 import com.theminesec.lib.dto.transaction.Transaction
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.json.JSONObject
 
 fun Transaction.toPaymentStatusRequest(
     parentUUID: String? = null,
     childUUID: String? = null,
+    gateWayNotes: String? = null
 ): PaymentStatusRequest {
+
+    val transactionJson = JSONObject(Json.encodeToString(this))
+    if (transactionJson.has("description")) {
+        val descriptionValue = transactionJson.opt("description")
+        transactionJson.remove("description")
+        transactionJson.put("gatewayNotes", descriptionValue)
+    }
+
+    if(gateWayNotes?.isNotBlank() == true){
+        transactionJson.put("gatewayNotes", gateWayNotes.trim())
+    }
+
     return PaymentStatusRequest(
         tranId = this.posReference.toString(),
         cvmPerformed = this.cvmPerformed.toString(),
@@ -36,7 +50,7 @@ fun Transaction.toPaymentStatusRequest(
         paymentMethod = this.paymentMethod.toString(),
         hostMessageFormat = this.hostMessageFormat.toString(),
         aid = this.aid.toString(),
-        acquirerResponse = Json.encodeToString(this),
+        acquirerResponse = transactionJson.toString(),
         parentUUID = parentUUID,
         childUUID = childUUID,
     )

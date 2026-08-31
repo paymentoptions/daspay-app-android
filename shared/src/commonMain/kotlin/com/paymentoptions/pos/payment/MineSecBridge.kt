@@ -18,6 +18,9 @@ data class MineSecTransactionResult(
  * Interface to bridge Kotlin calls to the native MineSec iOS SDK.
  */
 interface MineSecPaymentProvider {
+    /** True once [initSoftPOS] has completed successfully on the Swift side. */
+    val isInitialized: Boolean
+
     /**
      * Triggers a sale request.
      * @param onResult Callback with a single [MineSecTransactionResult] object.

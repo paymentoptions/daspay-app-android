@@ -12,7 +12,7 @@ import android.net.Uri as AndroidUri
 import android.net.wifi.WifiManager
 import android.os.Build
 import android.provider.Settings
-import android.util.Log
+import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -38,6 +38,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.Uri
+import coil3.toAndroidUri
 import coil3.toCoilUri
 import com.google.firebase.messaging.FirebaseMessaging
 import com.paymentoptions.pos.logger.AppLogger
@@ -56,6 +57,14 @@ import kotlin.math.roundToInt
 // MainActivity sets this during onCreate so platform functions can use it.
 var currentActivity: FragmentActivity? = null
 
+actual fun Uri.readBytes(context: Any?): ByteArray? {
+    val androidContext = context as? Context ?: return null
+    val androidUri = this.toAndroidUri()
+
+    return androidContext.contentResolver.openInputStream(androidUri)?.use { inputStream ->
+        inputStream.readBytes()
+    }
+}
 // ── Biometrics ────────────────────────────────────────────────────────────────
 
 actual fun getBiometricAuthenticator(): BiometricAuthenticator = object : BiometricAuthenticator {
@@ -65,7 +74,8 @@ actual fun getBiometricAuthenticator(): BiometricAuthenticator = object : Biomet
         val manager = BiometricManager.from(activity)
         return manager.canAuthenticate(
             BiometricManager.Authenticators.BIOMETRIC_STRONG or
-                    BiometricManager.Authenticators.BIOMETRIC_WEAK
+                    BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                    BiometricManager.Authenticators.DEVICE_CREDENTIAL
         ) == BiometricManager.BIOMETRIC_SUCCESS
     }
 
@@ -87,17 +97,25 @@ actual fun getBiometricAuthenticator(): BiometricAuthenticator = object : Biomet
                     onSuccess()
                 }
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                    onError(errString.toString())
+                    if (errorCode != BiometricPrompt.ERROR_USER_CANCELED &&
+                        errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON
+                    ) {
+                        onError(errString.toString())
+                    }
                 }
                 override fun onAuthenticationFailed() {
-                    onError("Authentication failed")
+                    // intermediate failure — BiometricPrompt retries automatically
                 }
             }
         )
         val info = BiometricPrompt.PromptInfo.Builder()
             .setTitle(title)
             .setSubtitle(subtitle)
-            .setNegativeButtonText("Cancel")
+            .setAllowedAuthenticators(
+                BiometricManager.Authenticators.BIOMETRIC_STRONG or
+                        BiometricManager.Authenticators.BIOMETRIC_WEAK or
+                        BiometricManager.Authenticators.DEVICE_CREDENTIAL
+            )
             .build()
         prompt.authenticate(info)
     }

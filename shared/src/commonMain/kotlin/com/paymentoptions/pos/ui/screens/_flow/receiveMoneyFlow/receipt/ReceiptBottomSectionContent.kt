@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -207,7 +208,9 @@ fun ReceiptBottomSectionContent(
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxWidth()
+                .navigationBarsPadding()
+            , horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
 //            val linkQrBitmap = generateQrCode("http://www.google.com")
@@ -258,7 +261,7 @@ fun ReceiptBottomSectionContent(
             ) {
                 SelectionContainer {
                     Text(
-                        text = "tx# " + paymentDetailsLatestResponse?.data?.TransactionRefID,
+                        text = "tx# " + paymentDetailsLatestResponse?.data?.TransactionID,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Normal,
                         color = purple50
@@ -506,7 +509,7 @@ fun ReceiptBottomSectionContent(
                 verticalAlignment = Alignment.Top
             ) {
                 Text(
-                    "TRANSACTION ID", style = AppTheme.typography.footnote.copy(
+                    "TRANSACTION REF ID", style = AppTheme.typography.footnote.copy(
                         fontWeight = FontWeight.Normal, fontSize = 14.sp
                     ),
                     modifier = Modifier.padding(end = 8.dp)
@@ -642,6 +645,25 @@ fun ReceiptBottomSectionContent(
                     fontWeight = FontWeight.Medium,
                     color = primary500
                 )
+            }
+
+            if(transactionAquirerResponse?.gatewayNotes?.isNotBlank() == true){
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Notes",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
             }
         }
 
@@ -1227,6 +1249,25 @@ private fun ReceiptContentForPDF(
                     fontWeight = FontWeight.Medium,
                     color = primary500
                 )
+            }
+
+            if(transactionAquirerResponse?.gatewayNotes?.isNotBlank() == true){
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Notes",
+                        style = AppTheme.typography.footnote.copy(fontWeight = FontWeight.Normal),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = primary500
+                    )
+                }
             }
         }
 

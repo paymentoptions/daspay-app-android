@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.navigation.Screens
 
@@ -21,10 +22,10 @@ import com.paymentoptions.pos.ui.navigation.Screens
 fun AuthCheckScreen(navController: NavController) {
     LaunchedEffect(Unit) {
         val isLoggedIn = AppStorage.isLoggedIn()
-        val isTokenVerified = AppStorage.tokenVerified
+        val deviceConfiguration = DPStorageManager.getDeviceConfiguration()
 
         if (isLoggedIn) {
-            if (isTokenVerified) {
+            if (deviceConfiguration != null) {
                 // If logged in and token verified, go to dashboard
                 navController.navigate(Screens.Dashboard.route) {
                     popUpTo(Screens.Dashboard.route) { inclusive = true }

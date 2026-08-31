@@ -50,8 +50,8 @@ android {
         applicationId = "com.paymentoptions.pos"
         minSdk = 29
         targetSdk = 36
-        versionCode = 5
-        versionName = "5.0"
+        versionCode = 6
+        versionName = "6.0"
 
 
         val appName = "Daspay"
@@ -73,15 +73,15 @@ android {
             dimension = "environment"
            // buildConfigField("String", "CURRENCY", "\"SGD\"")
             buildConfigField("String", "ENVIRONMENT", "\"DEV\"")
-            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-dev.paymentoptions.com/api/v1/\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-uat.paymentoptions.com/api/v1/\"")
             versionNameSuffix = "-dev"
         }
-        create("staging") {
+        create("uat") {
             dimension = "environment"
            // buildConfigField("String", "CURRENCY", "\"SGD\"")
-            buildConfigField("String", "ENVIRONMENT", "\"STAGING\"")
-            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-staging.paymentoptions.com/api/v1/\"")
-            versionNameSuffix = "-staging"
+            buildConfigField("String", "ENVIRONMENT", "\"UAT\"")
+            buildConfigField("String", "CONFIG_BASE_URL", "\"https://api-uat.paymentoptions.com/api/v1/\"")
+            versionNameSuffix = "-uat"
         }
         create("production") {
             dimension = "environment"
@@ -197,7 +197,7 @@ dependencies {
     implementation(platform(libs.log4j.bom))
     implementation(libs.log4j.api)
     implementation(libs.log4j.core)
-    implementation("com.datadoghq:dd-sdk-android-rum:${libs.versions.datadogSdkAndroid.get()}")
+    implementation(libs.datadog.rum)
 
     // Accompanist (Android-only)
     implementation(libs.accompanist.systemuicontroller)

@@ -48,7 +48,7 @@ dependencyResolutionManagement {
             url = uri("https://maven.pkg.github.com/theminesec/ms-registry-client")
             credentials {
                 username = MINESEC_REGISTRY_LOGIN
-                password = MINESEC_REGISTRY_TOKEN
+                password = "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"
             }
         }
 

@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -68,6 +70,7 @@ fun SectionedLayout(
         )
     },
     enableScrollingOfBottomSectionContent: Boolean = true,
+    imePaddingEnabled: Boolean = false,
     blurTopSection: Boolean = false,
     enableZigZagContainerForBottomSection: Boolean = false,
     bottomSectionContent: @Composable () -> Unit = {},
@@ -84,7 +87,9 @@ fun SectionedLayout(
     val scrollState = rememberScrollState()
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .conditional(imePaddingEnabled) { imePadding() }
     ) {
 
         BackgroundImage(
@@ -245,6 +250,7 @@ fun SectionedLayout(
                     .background(if (showMoreItems) Color.White else Color.Transparent)
                     .conditional(showMoreItems) { background(primary100.copy(alpha = 0.04f)) }
                     .align(alignment = Alignment.BottomCenter)
+                    .navigationBarsPadding()
                     .zIndex(4f)
                     .conditional(showMoreItems) {
                         innerShadow(

@@ -4,6 +4,8 @@ import sharedKit
 
 struct ComposeView: UIViewControllerRepresentable {
     let provider: MineSecPaymentProvider
+    let keychainProvider: KeychainProvider
+    let tapToPayReaderStatusProvider: TapToPayReaderStatusProvider
 
     func makeUIViewController(context: Context) -> UIViewController {
         let bundle = Bundle.main
@@ -14,7 +16,9 @@ struct ComposeView: UIViewControllerRepresentable {
         // environment is derived from baseUrl in Kotlin; isDebug defaults to false.
         return MainViewControllerKt.MainViewController(
             baseUrl: baseUrl,
-            mineSecProvider: provider
+            mineSecProvider: provider,
+            keychainProvider: keychainProvider,
+            tapToPayReaderStatusProvider: tapToPayReaderStatusProvider
         )
     }
 
@@ -23,9 +27,15 @@ struct ComposeView: UIViewControllerRepresentable {
 
 struct ContentView: View {
     let provider: MineSecPaymentProvider
+    let keychainProvider: KeychainProvider
+    let tapToPayReaderStatusProvider: TapToPayReaderStatusProvider
 
     var body: some View {
-        ComposeView(provider: provider)
-            .ignoresSafeArea()
+        ComposeView(
+            provider: provider,
+            keychainProvider: keychainProvider,
+            tapToPayReaderStatusProvider: tapToPayReaderStatusProvider
+        )
+        .ignoresSafeArea()
     }
 }

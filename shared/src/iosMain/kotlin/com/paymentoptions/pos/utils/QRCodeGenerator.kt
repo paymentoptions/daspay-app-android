@@ -1,3 +1,4 @@
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class, kotlinx.cinterop.BetaInteropApi::class)
 package com.paymentoptions.pos.utils
 
 import androidx.compose.ui.graphics.ImageBitmap
@@ -5,7 +6,6 @@ import androidx.compose.ui.graphics.asComposeImageBitmap
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
-import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.ColorAlphaType
@@ -14,6 +14,7 @@ import platform.CoreGraphics.CGAffineTransformMakeScale
 import platform.CoreGraphics.CGBitmapContextCreate
 import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
 import platform.CoreGraphics.CGImageAlphaInfo
+import platform.CoreGraphics.CGRectGetWidth
 import platform.CoreGraphics.CGRectMake
 import platform.CoreImage.CIContext
 import platform.CoreImage.CIFilter
@@ -36,7 +37,7 @@ actual fun generateQrCode(text: String, size: Int): ImageBitmap? {
         ) ?: return null
 
         val outputImage = filter.outputImage ?: return null
-        val extentWidth = outputImage.extent.useContents { this.size.width }
+        val extentWidth = CGRectGetWidth(outputImage.extent)
         val scaleFactor = size.toDouble() / extentWidth.coerceAtLeast(1.0)
         val scaledImage = outputImage.imageByApplyingTransform(
             CGAffineTransformMakeScale(scaleFactor, scaleFactor)

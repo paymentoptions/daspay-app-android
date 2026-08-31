@@ -35,9 +35,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil3.Uri
 import coil3.compose.AsyncImage
+import coil3.filePath
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.editProduct
+import com.paymentoptions.pos.readBytes
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -373,8 +375,8 @@ fun EditProductSectionContent(
                                     selectedFoodItem
                                 ),
                                 productId = selectedFoodItem.item.ProductID,
-                                imageBytes = null, // Placeholder for now
-                                imageFileName = null
+                                imageBytes = imageUri?.readBytes() ,
+                                imageFileName = imageUri?.filePath
                                 )
                             addFoodResponse?.statusCode == 200L || addFoodResponse?.statusCode == 201L // success
                         } catch (e: Exception) {

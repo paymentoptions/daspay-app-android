@@ -30,6 +30,7 @@ import com.paymentoptions.pos.network.SignInResponse
 import com.paymentoptions.pos.network.endpoints.signIn
 import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
+import com.paymentoptions.pos.ui.composables._components.inputs.BasicPasswordTextInput
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -98,13 +99,11 @@ fun SignInBottomSectionContent(navController: NavController, enableScrolling: Bo
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        BasicTextInput(
+        BasicPasswordTextInput(
             state = passwordState,
             label = "Enter your password",
             placeholder = "Enter Password",
             modifier = Modifier.fillMaxWidth(),
-            isSecure = true,
-            maxLength = 32,
         )
 
         Spacer(modifier = Modifier.height(22.dp))
@@ -119,9 +118,12 @@ fun SignInBottomSectionContent(navController: NavController, enableScrolling: Bo
                 scope.launch {
                     isLoading = true
                     try {
+                        val passwordRaw = passwordState.text.toString()
+                        AppLogger.debug("Password debug: length=${passwordRaw.length}, firstChar='${passwordRaw.take(1)}'")
+
                         val signInResponse = signIn(
                             username = emailState.text.toString(),
-                            password = passwordState.text.toString(),
+                            password = passwordRaw,
                             deviceNumber = getDeviceIdentifier(),
                             isAndroid = isAndroid()
                         )

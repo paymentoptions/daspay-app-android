@@ -175,6 +175,7 @@ object AndroidAppStorage : StorageInterface {
         userUid         = null
         accessLevel     = null
         authDetailsJson = null
+        cartJson        = null
     }
 
     override fun clearAll() {

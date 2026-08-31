@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import coil3.Uri
+import coil3.filePath
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
@@ -54,6 +55,7 @@ import kotlinx.coroutines.withContext
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.addProduct
+import com.paymentoptions.pos.readBytes
 import com.paymentoptions.pos.ui.composables._components.inputs.OutlinedTextInput
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
@@ -361,6 +363,7 @@ fun AddProductSectionContent(
                         val result = try {
                             AppLogger.debug("categorySelected id: $categorySelected")
                             // Note: uriToTempFile logic might need similar KMP refactoring later
+
                             val addFoodResponse = addProduct(
                                 request = ProductRequest(
                                     ProductName = productName.text.toString(),
@@ -372,8 +375,8 @@ fun AddProductSectionContent(
                                     MerchantID = categorySelected?.MerchantID ?: "",
                                     CategoryID = categorySelected?.CategoryID ?: "",
                                 ),
-                                imageBytes = null, // Placeholder for now
-                                imageFileName = null
+                                imageBytes = imageUri?.readBytes(), // Placeholder for now
+                                imageFileName = imageUri?.filePath
                             )
                             addFoodResponse?.statusCode == 200L || addFoodResponse?.statusCode == 201L // success
                         } catch (e: Exception) {

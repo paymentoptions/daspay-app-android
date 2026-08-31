@@ -8,7 +8,7 @@ import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.ApiHttpException
-import com.paymentoptions.pos.network.endpoints.paymentStatus
+import com.paymentoptions.pos.network.endpoints.sendWebHookNotification
 import com.paymentoptions.pos.showToast
 import kotlinx.coroutines.launch
 
@@ -16,17 +16,20 @@ import kotlinx.coroutines.launch
 actual fun TapChargeMoney(
     navController: NavController,
     amountToCharge: String,
+    gatewayNotes: String?,
     onLoader: (nextStage: () -> Unit) -> Unit,
     onSuccessUpdateFlowStage: () -> Unit,
     onFailureUpdateFlowStage: () -> Unit,
     updateLatestTransaction: (id: String) -> Unit,
+    onFailureMessage: (String) -> Unit,
+    onMandatorySignature: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val provider = MineSecPlatform.paymentProvider
     val currency = DPStorageManager.getTransactionCurrency()
 
-    if (provider == null) {
-        showToast("MineSec SDK not initialized")
+    if (provider == null || !provider.isInitialized) {
+        showToast("MineSec SDK not ready. Please wait a moment and try again.")
         onFailureUpdateFlowStage()
         return
     }
@@ -57,7 +60,7 @@ actual fun TapChargeMoney(
                                 )
                                 AppLogger.debug("TapToPay iOS webhook payload built: $paymentStatusRequest")
                                 try {
-                                    val webhookSuccess = paymentStatus(request = paymentStatusRequest) != null
+                                    val webhookSuccess = sendWebHookNotification(request = paymentStatusRequest) != null
                                     val webhookTranId = paymentStatusRequest.tranId.orEmpty()
                                     AppLogger.debug("TapToPay iOS webhook response: success=$webhookSuccess, tranId=$webhookTranId")
 
@@ -75,6 +78,7 @@ actual fun TapChargeMoney(
                                             reason = "paymentStatus returned false",
                                             transactionId = webhookTranId,
                                         )
+                                        onFailureMessage("Tap to Pay failed while confirming payment status. Please retry.")
                                         onLoader {
                                             updateLatestTransaction(webhookTranId)
                                             onFailureUpdateFlowStage()
@@ -93,6 +97,7 @@ actual fun TapChargeMoney(
                                         message = e.message ?: "Payment status failed",
                                         throwable = e,
                                     )
+                                    onFailureMessage(e.message ?: "Tap to Pay failed during payment confirmation.")
                                     onLoader {
                                         updateLatestTransaction(paymentStatusRequest.tranId.orEmpty())
                                         onFailureUpdateFlowStage()
@@ -115,6 +120,7 @@ actual fun TapChargeMoney(
             onError = { error ->
                 AnalyticsHelper.trackPaymentFailed(reason = error)
                 showToast(error)
+                onFailureMessage(error)
                 onFailureUpdateFlowStage()
             },
         )

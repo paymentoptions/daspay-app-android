@@ -12,12 +12,12 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
-suspend fun paymentStatus(request: PaymentStatusRequest): String? {
-    val response = KtorClient.instance.post(ConfigurationManager.url(ApiEndpoints.PAYMENT_STATUS)) {
+suspend fun sendWebHookNotification(request: PaymentStatusRequest): String? {
+    val response = KtorClient.instance.post(ConfigurationManager.url(ApiEndpoints.WEBHOOK_NOTIFICATION)) {
         contentType(ContentType.Application.Json)
         applyPaymentStatusHeader()
         setBody(request)
     }
-    response.throwIfNotSuccess("paymentStatus")
+    response.throwIfNotSuccess("WebHookNotification")
     return response.body<String>()
 }

@@ -70,6 +70,7 @@ object DPStorageManager {
     fun getBaseUrl(): String? = dpGetBaseUrl()
 
     fun getTransactionDetailsUrl(): String? = dpGetTransactionDetailsUrl()
+    fun getCvmLimit(): Float = 200.0f
 }
 
 internal expect fun dpSaveBoolean(key: String, value: Boolean)

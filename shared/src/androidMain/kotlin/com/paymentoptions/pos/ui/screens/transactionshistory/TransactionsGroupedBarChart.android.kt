@@ -63,6 +63,7 @@ import kotlinx.datetime.yearsUntil
 import java.util.Locale
 import kotlin.math.absoluteValue
 import com.paymentoptions.pos.utils.formatEpochMillis
+import com.paymentoptions.pos.utils.getTransactionAmount
 
 // Chart colors matching the design
 private val earningsColor = Color(0xFF00C9A7) // Teal/Cyan color
@@ -115,6 +116,7 @@ actual fun TransactionsGroupedBarChart(
 
     var earningTransactionCount = 0
     var earningAmount = 0.0f
+    var totalAmount = 0.0f
     var refundTransactionCount = 0
     var refundAmount = 0.0f
 
@@ -239,6 +241,8 @@ actual fun TransactionsGroupedBarChart(
             if (slotIndex in 0 until numSlots) {
                 // Add transaction to the slot's list
                 transactionsBySlot[slotIndex]?.add(transaction)
+                totalAmount += getTransactionAmount(transaction.toTransactionListDataRecord())
+
                 when (transaction.TransactionType) {
                     "PURCHASE" -> {
                         earningTransactionCount++
@@ -255,7 +259,7 @@ actual fun TransactionsGroupedBarChart(
         }
     }
 
-    updateReceivalAmount(earningAmount)
+    updateReceivalAmount(totalAmount)
 
     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
 

@@ -73,13 +73,15 @@ fun SplashScreen(navController: NavController, environment: String) {
         if (signInResponse != null) {
             delay(1.seconds)
             // check if token is saved
-            val token = AppStorage.tokenCode
-            if(token?.isBlank() == true) {
-                AppLogger.warn("Token is blank, navigating to AuthCheck")
-                navController.navigate(Screens.AuthCheck.route) {
+            val deviceConfiguration = DPStorageManager.getDeviceConfiguration()
+            if(deviceConfiguration == null) {
+                AppLogger.warn("deviceConfiguration is blank, navigating to Token")
+                // If logged in but token not verified, go to token verification
+                navController.navigate(Screens.Token.route) {
                     popUpTo(Screens.AuthCheck.route) { inclusive = true }
                 }
             } else {
+                AppLogger.warn("deviceConfiguration is not null , navigating to Dashboard")
                 navController.navigate(Screens.Dashboard.route) {
                     popUpTo(Screens.Dashboard.route) { inclusive = true }
                 }

@@ -63,6 +63,8 @@ import com.paymentoptions.pos.network.endpoints.getSignature
 import com.paymentoptions.pos.network.AquirerResponse
 import com.paymentoptions.pos.network.PaymentDetailsResponse
 import com.paymentoptions.pos.network.SignatureData
+import com.paymentoptions.pos.network.TransactionListDataRecord
+import com.paymentoptions.pos.network.toTransactionListDataRecord
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
@@ -83,13 +85,17 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.purple50
+import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.getAvailableAction
 import com.paymentoptions.pos.utils.modifiers.conditional
 import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.safeParseDateTime
+import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.encodeToString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -140,6 +146,19 @@ fun TransactionSuccessfulBottomSectionContent(
             AquirerResponse()
         }
     }
+
+    fun navigateToVoidAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Json.encodeToString(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "VOID"))
+    }
+
+    fun navigateToRefundAction(transaction: TransactionListDataRecord){
+        AppLogger.debug("full transaction object: $transaction")
+        val transactionJson = Json.encodeToString(transaction)
+        navController.navigate(Screens.TransactionAction.createRoute(transactionJson, "REFUND"))
+    }
+
 
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
@@ -251,28 +270,43 @@ fun TransactionSuccessfulBottomSectionContent(
                 amount = paymentDetailsLatestResponse?.data?.Amount.formatToPrecisionString()
             )
 
-            Row(
-                modifier = Modifier.scale(0.7f),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButton(
-                    text = "Refund",
-                    onClick = { },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
+            if (paymentDetailsLatestResponse?.data != null) {
+                val transaction = paymentDetailsLatestResponse?.data!!.toTransactionListDataRecord()
+                val availableAction = getAvailableAction(transaction)
+                Row(
+                    modifier = Modifier.scale(0.7f),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
-                Spacer(modifier = Modifier.width(10.dp))
+                    if (availableAction != TransactionAction.NONE) {
+                        OutlinedButton(
+                            text = if (availableAction == TransactionAction.REFUND) "Refund" else "VOID",
+                            onClick = {
+                                when (availableAction) {
+                                    TransactionAction.VOID -> navigateToVoidAction(transaction)
+                                    TransactionAction.REFUND -> navigateToRefundAction(transaction)
+                                    else -> {}
+                                }
+                            },
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                        )
+                    }
 
-                FilledButton(
-                    text = "View Full Receipt",
-                    onClick = { updateFlowToReceipt() },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    if (shouldShowFullReceipt(transaction))
+                        FilledButton(
+                            text = "View Full Receipt",
+                            onClick = { updateFlowToReceipt() },
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                        )
+                }
             }
         }
 
@@ -388,6 +422,27 @@ fun TransactionSuccessfulBottomSectionContent(
                         fontWeight = FontWeight.Medium,
                         color = primary500
                     )
+                }
+
+                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Note", style = AppTheme.typography.footnote.copy(
+                                fontWeight = FontWeight.Normal, fontSize = 14.sp
+                            )
+                        )
+
+                        Text(
+                            transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary500
+                        )
+                    }
+
                 }
             }
 

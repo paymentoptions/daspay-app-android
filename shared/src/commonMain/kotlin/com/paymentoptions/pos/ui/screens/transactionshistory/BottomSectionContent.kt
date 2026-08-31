@@ -79,6 +79,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
     var showBarChart by remember { mutableStateOf(showBarChart) }
     var fromDateCustomFilter by remember { mutableStateOf<Long?>(null) }
     var toDateCustomFilter by remember { mutableStateOf<Long?>(null) }
+    var showCustomDatePicker by remember { mutableStateOf(false) }
 
     var receivalForText by remember { mutableStateOf("Receival for the day") }
     var receivalForTimePeriodText by remember { mutableStateOf("") }
@@ -103,25 +104,29 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         )
     }
 
-    if (selectedFilter.key == "Custom") {
-        if (fromDateCustomFilter == null) DateRangePickerModal(
+    if (showCustomDatePicker) {
+        DateRangePickerModal(
             title = "Start Date",
             onDateSelected = { startDateMillis, endDateMillis ->
                 if (startDateMillis == null || endDateMillis == null) {
-                    fromDateCustomFilter = null
-                    toDateCustomFilter = null
-                    selectedFilter = filters.entries.first()
-                    saveKeyValue(selectedFilterStorageKey, selectedFilter.key)
+                    if (fromDateCustomFilter == null) {
+                        selectedFilter = filters.entries.first()
+                    }
                 } else {
                     fromDateCustomFilter = startDateMillis
                     toDateCustomFilter = endDateMillis
                 }
+                showCustomDatePicker = false
             },
             onDismiss = {
-                selectedFilter = filters.entries.first()
-                saveKeyValue(selectedFilterStorageKey, selectedFilter.key)
+                showCustomDatePicker = false
+                if (fromDateCustomFilter == null) {
+                    selectedFilter = filters.entries.first()
+                }
             })
-    } else {
+    }
+
+    if (selectedFilter.key != "Custom") {
         fromDateCustomFilter = null
         toDateCustomFilter = null
     }
@@ -134,9 +139,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         val now = Clock.System.now()
         val timeZone = TimeZone.currentSystemDefault()
 
+        apiResponseAvailable = false
         when (selectedFilter.key) {
             "Today" -> {
-                apiResponseAvailable = false
                 receivalForText = "Receival for the day"
                 receivalForTimePeriodText = formatEpochMillis(now.toEpochMilliseconds(), "dd MMMM, YYYY")
                 receivalAmount = 0.0f
@@ -252,6 +257,9 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                     onFilterChange = {
                         selectedFilter = it
                         saveKeyValue(selectedFilterStorageKey, it.key)
+                        if (it.key == "Custom") {
+                            showCustomDatePicker = true
+                        }
                     },
                     icon = Icons.Default.CalendarMonth,
                     modifier = Modifier

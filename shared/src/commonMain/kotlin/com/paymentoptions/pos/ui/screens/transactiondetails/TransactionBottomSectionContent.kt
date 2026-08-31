@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -53,9 +54,12 @@ import com.paymentoptions.pos.formatDate
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.AquirerResponse
+import com.paymentoptions.pos.network.PaymentDetailsResponse
 import com.paymentoptions.pos.network.endpoints.getSignature
 import com.paymentoptions.pos.network.SignatureData
 import com.paymentoptions.pos.network.TransactionListDataRecord
+import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.utils.getStatusColor
 import com.paymentoptions.pos.utils.getStatusText
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
@@ -76,6 +80,7 @@ import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
+import com.paymentoptions.pos.utils.AppJson
 import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
@@ -84,6 +89,7 @@ import com.paymentoptions.pos.utils.getAvailableAction
 import com.paymentoptions.pos.utils.getTransactionTypeLabel
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.utils.safeParseDateTime
+import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
@@ -109,10 +115,27 @@ fun TransactionBottomSectionContent(
 
     var signatureData by remember { mutableStateOf<SignatureData?>(null) }
     var isSignatureLoading by remember { mutableStateOf(false) }
+    var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
+    var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(null) }
+
 
     LaunchedEffect(transactionUuid) {
         if (!transactionUuid.isNullOrBlank()) {
             isSignatureLoading = true
+            paymentDetailsLatestResponse = try {
+                paymentDetails(paymentId = transactionUuid)
+            } catch (e: Exception) {
+                AppLogger.error("Exception in paymentDetailsLatestResponse", e)
+                null
+            }
+
+            try{
+                transactionAquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
+                    AppJson.decodeFromString<AquirerResponse>(it)
+                }
+            } catch (ex: Exception){
+                AppLogger.error("Exception in Acquirer", ex)
+            }
             signatureData = try {
                 getSignature(uuid = transactionUuid)?.data
             } catch (e: Exception) {
@@ -124,25 +147,17 @@ fun TransactionBottomSectionContent(
     }
 
     val dateString =
-        transaction?.Date /*?: paymentDetailsLatestResponse?.data?.Date */ ?: Clock.System.now()
+        transaction?.Date ?: paymentDetailsLatestResponse?.data?.Date  ?: Clock.System.now()
             .toString()
     val dateTime = safeParseDateTime(dateString)
     val dateStringFormatted: String = formatDate(dateTime, "dd MMMM yyyy")
     val timeStringFormatted: String = formatDate(dateTime, "hh:mm:ss a")
 
     val transactionStatus =
-        transaction?.status/* ?: paymentDetailsLatestResponse?.data?.Status*/ ?: ""
+        transaction?.status ?: paymentDetailsLatestResponse?.data?.Status  ?: ""
     val transactionType =
         transaction?.TransactionType /*?: paymentDetailsLatestResponse?.data?.TransactionType*/
             ?: ""
-//    val transactionAmount =
-//        transaction?.amount?.toDoubleOrNull() /*?: paymentDetailsLatestResponse?.data?.Amount*/
-//            ?: 0.0
-//    val transactionCurrencyCode =
-//        transaction?.CurrencyCode /*?: paymentDetailsLatestResponse?.data?.CurrencyCode */
-//            ?: currency
-//    val transactionRefId =
-//        transaction?.uuid /*?: paymentDetailsLatestResponse?.data?.TransactionRefID.toString()*/
 
     val amountSign = getAmountSign(transaction)
     val availableAction = getAvailableAction(transaction)
@@ -222,8 +237,10 @@ fun TransactionBottomSectionContent(
         }
 
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxWidth()
+                .navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+
         ) {
             val linkQrBitmap = generateQrCode(transactionDetailUrl ?: "")
 
@@ -301,13 +318,15 @@ fun TransactionBottomSectionContent(
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                FilledButton(
-                    text = "View Full Receipt",
-                    onClick = { updateDetailsScreenType(TransactionDetailsScreenType.RECEIPT_SCREEN) },
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier
-                )
+                if(shouldShowFullReceipt(transaction)) {
+                    FilledButton(
+                        text = "View Full Receipt",
+                        onClick = { updateDetailsScreenType(TransactionDetailsScreenType.RECEIPT_SCREEN) },
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                    )
+                }
             }
         }
 
@@ -377,6 +396,13 @@ fun TransactionBottomSectionContent(
                     label = "Currency",
                     value = currency
                 )
+
+                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                    TransactionDetailRow(
+                        label = "Note",
+                        value = transactionAquirerResponse?.gatewayNotes!!.trim()
+                    )
+                }
             }
 
             HorizontalDivider(

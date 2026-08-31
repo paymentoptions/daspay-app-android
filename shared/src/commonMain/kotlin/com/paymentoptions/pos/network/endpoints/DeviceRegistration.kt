@@ -39,7 +39,7 @@ suspend fun completeDeviceRegistration(
         val requestBody = CompleteDeviceRegistrationRequest(
             UniqueCode = otp,
             DeviceNumber = deviceNumber,
-            DeviceMetadata = deviceMetadata
+            deviceMetadata = deviceMetadata
         )
         AppStorage.deviceNumber = deviceNumber
         

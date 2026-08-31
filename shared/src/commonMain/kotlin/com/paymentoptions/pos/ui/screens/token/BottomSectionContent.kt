@@ -336,8 +336,8 @@ private fun openBiometricAndNavigate(navController: NavController) {
                 launchSingleTop = true
             }
         },
-        onError = {
-            showToast("Authentication failed")
+        onError = { message ->
+            showToast(message)
         },
     )
 }

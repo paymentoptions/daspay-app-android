@@ -1,6 +1,7 @@
 package com.paymentoptions.pos
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import coil3.Uri
@@ -11,6 +12,8 @@ import kotlinx.datetime.Instant
  *
  * Each feature is an interface so callers can inject/mock easily.
  */
+
+
 
 // ── Biometric authentication ──────────────────────────────────────────────────
 
@@ -188,3 +191,5 @@ expect fun openPdf(filePath: String)
 
 /** Zips and shares application logs via email/chooser. */
 expect fun sendLogsToSdkTeam()
+
+expect fun Uri.readBytes(context: Any? = null): ByteArray?

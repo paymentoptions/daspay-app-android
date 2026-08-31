@@ -1,14 +1,42 @@
+@file:OptIn(ExperimentalForeignApi::class)
 package com.paymentoptions.pos.network.endpoints
 
-import kotlinx.cinterop.*
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
+import platform.CoreGraphics.CGImageGetHeight
+import platform.CoreGraphics.CGImageGetWidth
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
-import platform.Foundation.*
-import platform.UIKit.*
+import platform.Foundation.NSData
+import platform.UIKit.UIGraphicsBeginImageContextWithOptions
+import platform.UIKit.UIGraphicsEndImageContext
+import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
+import platform.UIKit.UIImage
+import platform.UIKit.UIImageJPEGRepresentation
 import platform.posix.memcpy
 import com.paymentoptions.pos.platformLog
+import platform.Foundation.dataWithBytes
 
-@OptIn(ExperimentalForeignApi::class)
+
+/**
+ * ┌────────────────────────┬─────────────────────────────────────────┬──────────────────────────────────────────────┐
+ * │          File          │                   Old                   │                     New                      │
+ * ├────────────────────────┼─────────────────────────────────────────┼──────────────────────────────────────────────┤
+ * │ UploadMedia.kt         │ image.size.useContents { width/height } │ CGImageGetWidth(image.CGImage) /             │
+ * │                        │                                         │ CGImageGetHeight(image.CGImage)              │
+ * ├────────────────────────┼─────────────────────────────────────────┼──────────────────────────────────────────────┤
+ * │ ScreenRatioToDp.ios.kt │ UIScreen.mainScreen.bounds.useContents  │ CGRectGetHeight(UIScreen.mainScreen.bounds)  │
+ * │                        │ { size.height }                         │                                              │
+ * ├────────────────────────┼─────────────────────────────────────────┼──────────────────────────────────────────────┤
+ * │ QRCodeGenerator.kt     │ outputImage.extent.useContents {        │ CGRectGetWidth(outputImage.extent)           │
+ * │                        │ this.size.width }                       │                                              │
+ * └────────────────────────┴─────────────────────────────────────────┴──────────────────────────────────────────────┘
+ *
+ * CGRectGetWidth, CGRectGetHeight, CGImageGetWidth, CGImageGetHeight are C functions in platform.CoreGraphics that accept
+ * CValue<T> directly — they were specifically designed by Apple as safe, orientation-aware accessors for struct fields,
+ * and they work fine in Kotlin/Native 2.x without useContents.
+ */
 actual suspend fun resizeAndCompressImage(
     imageBytes: ByteArray,
     maxSize: Int,
@@ -25,27 +53,30 @@ actual suspend fun resizeAndCompressImage(
     return compressedData.toByteArray()
 }
 
-@OptIn(ExperimentalForeignApi::class)
 private fun resizeUIImage(image: UIImage, maxSize: Double): UIImage {
-    val size = image.size.useContents {
-        val ratio = width / height
-        if (ratio > 1) {
-            CGSizeMake(maxSize, maxSize / ratio)
-        } else {
-            CGSizeMake(maxSize * ratio, maxSize)
-        }
+    val cgImage = image.CGImage ?: return image
+    val originalWidth = CGImageGetWidth(cgImage).toDouble()
+    val originalHeight = CGImageGetHeight(cgImage).toDouble()
+
+    val ratio = originalWidth / originalHeight
+    val newWidth: Double
+    val newHeight: Double
+    if (ratio > 1) {
+        newWidth = maxSize
+        newHeight = maxSize / ratio
+    } else {
+        newWidth = maxSize * ratio
+        newHeight = maxSize
     }
 
-    UIGraphicsBeginImageContextWithOptions(size, false, 1.0)
-    image.drawInRect(CGRectMake(0.0, 0.0, size.useContents { width }, size.useContents { height }))
+    UIGraphicsBeginImageContextWithOptions(CGSizeMake(newWidth, newHeight), false, 1.0)
+    image.drawInRect(CGRectMake(0.0, 0.0, newWidth, newHeight))
     val newImage = UIGraphicsGetImageFromCurrentImageContext()
     UIGraphicsEndImageContext()
 
     return newImage ?: image
 }
 
-// Helper extensions for NSData <-> ByteArray
-@OptIn(ExperimentalForeignApi::class)
 private fun NSData.toByteArray(): ByteArray {
     val lengthInt = length.toInt()
     val byteArray = ByteArray(lengthInt)
@@ -57,7 +88,6 @@ private fun NSData.toByteArray(): ByteArray {
     return byteArray
 }
 
-@OptIn(ExperimentalForeignApi::class)
 private fun ByteArray.toNSData(): NSData {
     if (isEmpty()) return NSData()
     return usePinned { pinned ->

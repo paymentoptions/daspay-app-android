@@ -53,6 +53,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,8 +72,10 @@ import com.paymentoptions.pos.device.getNfcStatus
 import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.device.DPStorageManager.getApms
+import com.paymentoptions.pos.device.DPStorageManager.getTapPayDasmid
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.formatDate
+import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.payByLink
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.network.ApiHttpException
@@ -80,9 +83,10 @@ import com.paymentoptions.pos.network.PayByLinkRequest
 import com.paymentoptions.pos.network.PayByLinkRequestProduct
 import com.paymentoptions.pos.network.PayByLinkResponse
 import com.paymentoptions.pos.network.PaymentDetailsResponse
-import com.paymentoptions.pos.network.SignatureData
+import com.paymentoptions.pos.network.endpoints.void
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
+import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -121,7 +125,6 @@ import com.paymentoptions.pos.utils.tapPaymentMethod
 import com.paymentoptions.pos.utils.viaLinkPaymentMethod
 import kotlinx.coroutines.IO
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.seconds
 
 fun formatAmount(input: String): String {
@@ -142,7 +145,10 @@ fun ReceiveMoneyFlow(
     var failureProceedFlag by remember { mutableStateOf(false) }
     var successProceedFlag by remember { mutableStateOf(false) }
     val enableScrollingInsideBottomSectionContent = false
+    val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+    var transactionFailureMessage by remember { mutableStateOf<String?>(null) }
+
     var latestTransactionId by remember { mutableStateOf<String?>(null) }
 
     var receiveMoneyFlowStage by remember {
@@ -171,6 +177,7 @@ fun ReceiveMoneyFlow(
         if (currentNfcStatus.second) {
             showNFCNotEnabled = false
         }
+
         if (!isDeveloperOptionsEnabled()) {
             showDeveloperOptionsEnabled = false
         }
@@ -815,6 +822,7 @@ fun ReceiveMoneyFlow(
                     navController,
                     enableScrolling = false,
                     amountToCharge = formatAmount(amountToChargeState),
+                    gatewayNotes = noteState,
                     availablePaymentMethods = availablePaymentMethods,
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
@@ -827,9 +835,11 @@ fun ReceiveMoneyFlow(
                         }
                     },
                     onSuccessUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) },
+                    onMandatorySignature = { updateFlowStage(ReceiveMoneyFlowStage.MANDATORY_SIGNATURE) },
                     onFailureUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED) },
                     onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) },
                     startTapAndPay = startTapAndPay,
+                    updateFailureMessage = { transactionFailureMessage = it },
                     updateLatestTransaction = { latestTransactionId = it })
             }
         }
@@ -844,7 +854,8 @@ fun ReceiveMoneyFlow(
 
         ReceiveMoneyFlowStage.TRANSACTION_FAILED -> {
             val dataMessage = MessageForStatusScreen(
-                text = "Payment Failed", statusScreenType = StatusScreenType.ERROR
+                text = transactionFailureMessage ?: "Payment Failed",
+                statusScreenType = StatusScreenType.ERROR
             )
             StatusScreen(navController, dataMessage, strategyFn = {
                 CoroutineScope(Dispatchers.Main).launch {
@@ -863,6 +874,7 @@ fun ReceiveMoneyFlow(
                 TransactionFailedBottomSectionContent(
                     navController,
                     enableScrolling = true,
+                    failureMessage = transactionFailureMessage,
                     transactionId = latestTransactionId.toString(),
                     updateFlowStage = { })
             }
@@ -909,10 +921,54 @@ fun ReceiveMoneyFlow(
             ) {
                 TakeDigitalSignatureBottomSectionContent(
                     navController,
+                    signaturePath = signaturePath,
+                    signatureDate = signatureDate,
+                    paymentDetailsResponse = paymentDetailsResponse,
+                    updateSignature = { path, bitmap, signDate ->
+                        signaturePath = path
+                        signatureBitmap = bitmap
+                        signatureDate = signDate
+                    },
+                    updateFlowStageToSuccess = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) },
+                )
+            }
+        }
+
+        ReceiveMoneyFlowStage.MANDATORY_SIGNATURE -> {
+            SectionedLayout(
+                navController = navController,
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionPaddingInDp = 0.dp,
+                bottomSectionMinHeightRatio = 0.95f,
+                bottomSectionMaxHeightRatio = 0.95f,
+                enableScrollingOfBottomSectionContent = false,
+            ) {
+                TakeDigitalSignatureBottomSectionContent(
+                    navController,
                     enableScrolling = false,
                     signaturePath = signaturePath,
                     signatureDate = signatureDate,
                     paymentDetailsResponse = paymentDetailsResponse,
+                    isMandatory = true,
+                    onCancelMandatory = {
+                        // User cancelled signature for high-amount transaction.
+                        // We must VOID the transaction.
+                        scope.launch {
+                            try {
+                                // Call void API
+                                void(
+                                    transactionId = latestTransactionId.toString(),
+                                    merchantId = getTapPayDasmid()
+                                )
+                                transactionFailureMessage = "Transaction voided because cardholder signature was not provided."
+                                updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
+                            } catch (e: Exception) {
+                                AppLogger.error("Void failed after mandatory signature cancel: ${e.message}")
+                                transactionFailureMessage = "Transaction failed and could not be voided automatically. Please check status."
+                                updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
+                            }
+                        }
+                    },
                     updateSignature = { path, bitmap, signDate ->
                         signaturePath = path
                         signatureBitmap = bitmap
@@ -932,12 +988,7 @@ fun ReceiveMoneyFlow(
                 enableScrollingOfBottomSectionContent = false,
                 enableZigZagContainerForBottomSection = true,
                 imageBelowLogo = {
-                    Text(
-                        text = "Receipt",
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    ShowReceiptView()
                 }) {
                 ReceiptBottomSectionContent(
                     navController,

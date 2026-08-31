@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ClientHeadlessImpl
 import com.paymentoptions.pos.analytics.AnalyticsHelper
@@ -25,7 +24,7 @@ import com.paymentoptions.pos.network.PaymentResponse
 import com.paymentoptions.pos.network.PaymentReturnUrl
 import com.paymentoptions.pos.network.PaymentStatusRequest
 import com.paymentoptions.pos.network.endpoints.payment
-import com.paymentoptions.pos.network.endpoints.paymentStatus
+import com.paymentoptions.pos.network.endpoints.sendWebHookNotification
 import com.paymentoptions.pos.showToast
 import com.paymentoptions.pos.ui.composables._components.dialogs.AlertDialogType
 import com.paymentoptions.pos.ui.composables._components.dialogs.MyAlertDialog
@@ -49,10 +48,13 @@ import java.util.Currency
 actual fun TapChargeMoney(
     navController: NavController,
     amountToCharge: String,
+    gatewayNotes: String?,
     onLoader: (nextStage: () -> Unit) -> Unit,
     onSuccessUpdateFlowStage: () -> Unit,
     onFailureUpdateFlowStage: () -> Unit,
     updateLatestTransaction: (id: String) -> Unit,
+    onFailureMessage: (String) -> Unit,
+    onMandatorySignature: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     var rawInput = ""
@@ -123,7 +125,7 @@ actual fun TapChargeMoney(
                     AppLogger.debug("TapToPay webhook call started")
                     try {
                         val paymentStatusResponse =
-                            paymentStatus(request = paymentStatusRequest) != null
+                            sendWebHookNotification(request = paymentStatusRequest) != null
 
                         showProcessingScreen = false
                         AppLogger.debug("TapToPay webhook response: success=$paymentStatusResponse, tranId=${paymentStatusRequest.tranId}")
@@ -134,6 +136,14 @@ actual fun TapChargeMoney(
                             )
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
                             AppLogger.debug("TapToPay flow moving to SUCCESS stage for tranId=${paymentStatusRequest.tranId}")
+//                            val cvmLimit = DPStorageManager.getCvmLimit()
+//                            val amount = amountToCharge.toDoubleOrNull() ?: 0.0
+//                            if (amount >= cvmLimit) {
+//                                AppLogger.debug("TapToPay: Amount $amount >= CVM Limit $cvmLimit, moving to MANDATORY_SIGNATURE")
+//                                onLoader { onMandatorySignature() }
+//                            } else {
+//                                onLoader { onSuccessUpdateFlowStage() }
+//                            }
                             onLoader { onSuccessUpdateFlowStage() }
                         } else {
                             AnalyticsHelper.trackPaymentDeclined(
@@ -142,7 +152,7 @@ actual fun TapChargeMoney(
                             )
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
                             AppLogger.warn("TapToPay flow moving to FAILURE stage due to false webhook response for tranId=${paymentStatusRequest.tranId}")
-                            //onFailureMessage("Tap to Pay failed while confirming payment status. Please retry.")
+                            onFailureMessage("Tap to Pay failed while confirming payment status. Please retry.")
                             onLoader {
                                 onFailureUpdateFlowStage()
                             }
@@ -161,6 +171,7 @@ actual fun TapChargeMoney(
                             message = e.message ?: "Payment status failed",
                             throwable = e,
                         )
+                        onFailureMessage(e.message ?: "Tap to Pay failed during payment confirmation.")
                         showProcessingScreen = false
                         updateLatestTransaction(paymentStatusRequest.tranId.toString())
                         onLoader {
@@ -177,6 +188,7 @@ actual fun TapChargeMoney(
                 AppLogger.error(
                     "TapToPay MineSec failure: message=${it.message}, extraMessage=${mineSecFailureMessage}, raw=$it"
                 )
+                onFailureMessage(mineSecFailureMessage)
                 val failureMessage = it.message
                 val isCancelled = failureMessage.contains("cancel", ignoreCase = true)
                 if (isCancelled) {

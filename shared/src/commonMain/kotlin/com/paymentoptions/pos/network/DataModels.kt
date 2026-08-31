@@ -1,8 +1,8 @@
 package com.paymentoptions.pos.network
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
 
 // ── Auth / Token ──────────────────────────────────────────────────────────────
 
@@ -386,7 +386,7 @@ data class PayByLinkResponseData(
     val ReminderDate: String = "",
     val IsCustomerStatus: Boolean = false,
     val Currency: String = "",
-    val ReturnUrl: JsonObject = buildJsonObject { },
+    val ReturnUrl: JsonObject = JsonObject(emptyMap()),
     val PBLLinkName: String = "",
     val ID: String = "",
 )
@@ -466,6 +466,17 @@ data class ProductRequest(
     val Currency: String? = null,
     val MerchantID: String? = null,
     val CategoryID: String? = null,
+    val ServiceFeePerc: Float? = null,
+    val ServiceFeeEnabled: Boolean? = false
+)
+
+
+@Serializable
+data class MerchantSetting(
+    val TaxRegistrationNumber: String? = null,
+    val TaxName: String? = null,
+    val TaxOnOtherFeesPerc: Int? = 0,
+    val CatalogEnabled: Boolean? = false
 )
 
 @Serializable
@@ -521,7 +532,7 @@ data class DeviceInfo(
     val DeviceID: String = "",
     val DeviceNumber: String = "",
     val DASMID: String = "",
-    val DeviceMetadata: DeviceMetadata = DeviceMetadata(),
+    @SerialName("DeviceMetadata") val deviceMetadata: DeviceMetadata = DeviceMetadata(),
     val DeviceName: String = "",
     val DeviceType: String = "",
     val Status: String = "",
@@ -529,6 +540,7 @@ data class DeviceInfo(
     val CreatedAt: String = "",
     val UpdatedAt: String = "",
     val Location: String? = null,
+    val MerchantSetting: MerchantSetting? = null
 )
 
 @Serializable
@@ -583,7 +595,7 @@ data class ExternalConfigurationResponse(
 data class CompleteDeviceRegistrationRequest(
     val UniqueCode: String,
     val DeviceNumber: String,
-    val DeviceMetadata: DeviceMetadata,
+    @SerialName("DeviceMetadata") val deviceMetadata: DeviceMetadata,
     val DeviceType: String = "MOBILE",
 )
 
@@ -800,6 +812,7 @@ data class AquirerResponse(
     val srsTranId: String = "",
     val consumerPaymentDevice: String = "",
     val createdAt: String = "",
+    val gatewayNotes: String = ""
 )
 
 // ── Upload / Media ────────────────────────────────────────────────────────────
@@ -895,6 +908,7 @@ data class AppConfig(
     val CurrAppVersion: Long,
     val IsUpdateMandatory: Boolean,
     val TransactionDetailsURL: String,
+    val CvmLimit: Float? = 200.0f
 )
 
 @Serializable

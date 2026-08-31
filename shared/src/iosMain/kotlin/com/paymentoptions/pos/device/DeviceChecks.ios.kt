@@ -1,13 +1,21 @@
 package com.paymentoptions.pos.device
 
-import platform.CoreNFC.NFCReaderSession
+import com.paymentoptions.pos.platformLog
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
 
+/**
+ * ProximityReader is a Swift-only framework (no Kotlin/Native cinterop bindings), so the actual
+ * `PaymentCardReader.isSupported` / reader-readiness check runs natively in Swift and is injected
+ * via [TapToPayReaderStatusHelper] — see `SwiftTapToPayReaderStatusProvider` in iosApp.
+ */
 actual fun getNfcStatus(): Pair<Boolean, Boolean> {
-    val isSupported = NFCReaderSession.readingAvailable
-    return Pair(isSupported, isSupported)
+    val provider = TapToPayReaderStatusHelper.provider
+    //return Pair(provider?.isSupported() ?: false, provider?.isReady() ?: false)
+    platformLog("TapToPayReaderStatusHelper","ioS is provider ready:" +
+            " ${provider?.isReady()}, isSupported: ${provider?.isSupported()}, provider: $provider")
+    return Pair(provider?.isSupported() ?: false, provider?.isSupported() ?: false)
 }
 
 // iOS has no developer-options toggle equivalent.

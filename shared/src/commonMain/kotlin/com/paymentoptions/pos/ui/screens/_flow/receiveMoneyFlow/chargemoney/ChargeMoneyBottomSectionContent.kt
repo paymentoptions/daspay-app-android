@@ -90,6 +90,7 @@ fun ChargeMoneyBottomSectionContent(
     navController: NavController,
     enableScrolling: Boolean = false,
     amountToCharge: String,
+    gatewayNotes: String?,
     availablePaymentMethods: List<PaymentMethod>,
     selectedPaymentMethod: PaymentMethod,
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
@@ -99,6 +100,8 @@ fun ChargeMoneyBottomSectionContent(
     onChangeAmount: () -> Unit,
     startTapAndPay: Boolean = false,
     updateLatestTransaction: (id: String) -> Unit,
+    updateFailureMessage: (String?) -> Unit = {},
+    onMandatorySignature: () -> Unit = {},
 ) {
     val currency = getTransactionCurrency()
     val nfcState = getNfcStatus()
@@ -135,7 +138,7 @@ fun ChargeMoneyBottomSectionContent(
     if (startTapAndPay && selectedPaymentMethod === tapPaymentMethod) {
         AppLogger.debug(
             "TapToPay gate check: startTapAndPay=$startTapAndPay, selected=${selectedPaymentMethod.text}, inProduction=$inProduction, " +
-                "developerOptionsEnabled=${isDeveloperOptionsEnabled()}, nfcEnabled=${nfcState.second}, nfcState=${nfcState.first}",
+                    "developerOptionsEnabled=${isDeveloperOptionsEnabled()}, nfcEnabled=${nfcState.second}, nfcState=${nfcState.first}",
         )
 
         if (inProduction && isDeveloperOptionsEnabled()) {
@@ -145,13 +148,17 @@ fun ChargeMoneyBottomSectionContent(
             AppLogger.warn("TapToPay blocked: NFC is disabled on production build")
             showNFCNotEnabled = true
         } else {
+            updateFailureMessage(null)
             AppLogger.debug("TapToPay checks passed, launching TapChargeMoney")
             TapChargeMoney(
                 navController = navController,
                 amountToCharge = amountToCharge,
+                gatewayNotes = gatewayNotes,
                 onLoader = onLoader,
                 onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
+                onMandatorySignature = onMandatorySignature,
                 onFailureUpdateFlowStage = onFailureUpdateFlowStage,
+                onFailureMessage = { updateFailureMessage(it) },
                 updateLatestTransaction = updateLatestTransaction,
             )
         }
@@ -187,7 +194,9 @@ fun ChargeMoneyBottomSectionContent(
                     PaymentMethodButton(
                         paymentMethod = it,
                         selectedPaymentMethod = selectedPaymentMethod,
-                        onSelected = { updateSelectedPaymentMethod(it) },
+                        onSelected = {
+                            updateSelectedPaymentMethod(it)
+                        },
                         modifier = Modifier.weight(1f),
                     )
                 }

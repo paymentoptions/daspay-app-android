@@ -12,7 +12,7 @@ object ApiEndpoints {
     const val REFUND = "daspay/refund"
     const val VOID = "daspay/void"
     const val PAYMENT = "server-to-server-interface/daspay/payment"
-    const val PAYMENT_STATUS = "notification/payments/webhook/notify/minesec"
+    const val WEBHOOK_NOTIFICATION = "notification/payments/webhook/notify/minesec"
     const val CATEGORY_LIST = "entities/merchant/catalog/all-categories/{merchantId}"
     const val PRODUCT_LIST = "entities/merchant/catalog/all-products/{categoryId}"
     const val INSIGHTS = "daspay/transactions/list"

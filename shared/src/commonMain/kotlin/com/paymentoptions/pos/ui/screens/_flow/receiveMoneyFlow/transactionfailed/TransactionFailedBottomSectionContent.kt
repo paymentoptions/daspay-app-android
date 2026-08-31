@@ -58,6 +58,7 @@ import kotlinx.serialization.json.Json
 fun TransactionFailedBottomSectionContent(
     navController: NavController,
     transactionId: String,
+    failureMessage: String? = null,
     enableScrolling: Boolean = false,
     updateFlowStage: () -> Unit = {},
 ) {
@@ -124,6 +125,17 @@ fun TransactionFailedBottomSectionContent(
                 color = red500,
             )
 
+            if (!failureMessage.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = failureMessage,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = red500,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
             CurrencyText(
                 currency = currency,
@@ -187,23 +199,24 @@ fun TransactionFailedBottomSectionContent(
                     )
                 }
 
-                if(transactionAquirerResponse?.trace?.isNotEmpty() == true)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "Trace", style = AppTheme.typography.footnote.copy(
-                            fontWeight = FontWeight.Normal, fontSize = 14.sp
+                if(transactionAquirerResponse?.trace?.isNotEmpty() == true) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Trace", style = AppTheme.typography.footnote.copy(
+                                fontWeight = FontWeight.Normal, fontSize = 14.sp
+                            )
                         )
-                    )
 
-                    Text(
-                        text = transactionAquirerResponse?.trace.toString(),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = primary500
-                    )
+                        Text(
+                            text = transactionAquirerResponse?.trace.toString(),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary500
+                        )
+                    }
                 }
 
                if(transactionAquirerResponse?.approvalCode?.isNotEmpty() == true)
@@ -223,6 +236,26 @@ fun TransactionFailedBottomSectionContent(
                         fontWeight = FontWeight.Medium,
                         color = primary500
                     )
+                }
+                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Note", style = AppTheme.typography.footnote.copy(
+                                fontWeight = FontWeight.Normal, fontSize = 14.sp
+                            )
+                        )
+
+                        Text(
+                            text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary500
+                        )
+                    }
                 }
             }
 

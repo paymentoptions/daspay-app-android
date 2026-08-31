@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
@@ -47,12 +48,7 @@ fun TransactionStatusScreen(
                 enableScrollingOfBottomSectionContent = false,
                 enableZigZagContainerForBottomSection = true,
                 imageBelowLogo = {
-                    Text(
-                        text = "Receipt",
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    ShowReceiptView()
                 }) {
                 ReceiptBottomSectionContent(
                     navController,

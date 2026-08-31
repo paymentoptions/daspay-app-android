@@ -72,6 +72,7 @@ import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.formatDate
+import com.paymentoptions.pos.ui.navigation.Screens
 import com.paymentoptions.pos.utils.getDeviceIdentifier
 import com.paymentoptions.pos.utils.modifiers.DashboardStatsShimmer
 import com.paymentoptions.pos.utils.modifiers.TransactionListShimmer
@@ -219,7 +220,7 @@ fun TransactionFilter(navController: NavController) {
                             title = "Filter Options",
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 21.sp,
-                            onClose = { navController.popBackStack() }
+                            onClose = { navController.navigate(Screens.Dashboard.route) }
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
