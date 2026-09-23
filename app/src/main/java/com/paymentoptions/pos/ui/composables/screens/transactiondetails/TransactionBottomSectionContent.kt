@@ -110,7 +110,7 @@ fun TransactionBottomSectionContent(
 
     val transactionUuid = transaction?.uuid
     val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
-        "${DPSharedPreferences.getTransactionDetailsUrl(context)}/$transactionUuid"
+        "${DPSharedPreferences.getTransactionDetailsUrl(context)}$transactionUuid"
     } else {
         null
     }

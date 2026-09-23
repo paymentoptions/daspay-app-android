@@ -75,26 +75,27 @@ fun SplashScreen(navController: NavController) {
     LaunchedEffect(locationPermissionGranted) {
         if (!locationPermissionGranted) return@LaunchedEffect
 
-        if(DPSharedPreferences.getDeviceConfiguration(context) != null) {
+        if(DPSharedPreferences.getAuthDetails(context) != null) {
             try {
                 val configInitialized = ConfigurationManager.initializeConfig(context)
                 if (configInitialized) {
-                    AppLogger.info("Config initialized successfully on splash")
+                    AppLogger.info("Config initialized successfully after sign in")
                 } else {
-                    AppLogger.warn("Config initialization failed on splash, using default base URL")
+                    AppLogger.warn("Config initialization failed after sign in, using default base URL")
                 }
             } catch (e: Exception) {
                 AppLogger.error("Error initializing config on splash: ${e.message}")
             }
+        } else {
+            AppLogger.debug("Delaying CONFIG download till provisioned")
         }
 
         if (signInResponse.isNotNull()) {
-            delay(1000)
             navController.navigate(Screens.Dashboard.route) {
                 popUpTo(navController.graph.startDestinationId) { inclusive = true }
             }
         } else {
-            delay(4000)
+            delay(3000)
             navController.navigate(Screens.AuthCheck.route)
         }
     }

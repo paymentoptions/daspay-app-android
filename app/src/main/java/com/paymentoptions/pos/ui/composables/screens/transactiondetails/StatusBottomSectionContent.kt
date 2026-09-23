@@ -548,7 +548,7 @@ private fun ReceiptContentForPDF(
 
         Text(
 //            text = "Payment Options",
-            text = paymentDetailsLatestResponse?.data?.Merchant.toString(),
+            text = paymentDetailsLatestResponse?.data?.Merchant ?: "N/A",
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
             color = primary500
@@ -576,7 +576,7 @@ private fun ReceiptContentForPDF(
             )
             Text(
 //                text = paymentDetailsLatestResponse?.data?.Scheme.toString(),
-                text = transactionAquirerResponse?.paymentMethod.toString(),
+                text = transactionAquirerResponse?.paymentMethod ?: "N/A",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
@@ -589,7 +589,7 @@ private fun ReceiptContentForPDF(
         ) {
             Text(
 //                text = "Approved",
-                paymentDetailsLatestResponse?.data?.Status.toString(),
+                paymentDetailsLatestResponse?.data?.Status ?: "N/A",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
@@ -605,7 +605,7 @@ private fun ReceiptContentForPDF(
 
         Text(
 //            text = "10:25T",
-            text = "**** **** **** " + transactionAquirerResponse?.accountLast4.toString(),
+            text = "**** **** **** " + (transactionAquirerResponse?.accountLast4 ?: "N/A"),
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
             color = primary500
@@ -775,7 +775,7 @@ private fun ReceiptContentForPDF(
                     )
                     Text(
 //                    text = transactionAquirerResponse?.primaryMid.toString(),
-                        text = paymentDetailsLatestResponse?.data?.DASMID.toString(),
+                        text = paymentDetailsLatestResponse?.data?.DASMID ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -792,7 +792,7 @@ private fun ReceiptContentForPDF(
                     )
                     Text(
 //                    text = transactionAquirerResponse?.primaryTid.toString(),
-                        text = paymentDetailsLatestResponse?.data?.TerminalID.toString(),
+                        text = paymentDetailsLatestResponse?.data?.TerminalID ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -808,7 +808,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.batchNo.toString(),
+                        text = transactionAquirerResponse?.batchNo ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -824,7 +824,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.trace.toString(),
+                        text = transactionAquirerResponse?.trace ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -840,7 +840,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.rrn.toString(),
+                        text = transactionAquirerResponse?.rrn ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -856,7 +856,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.approvalCode.toString(),
+                        text = transactionAquirerResponse?.approvalCode ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -893,7 +893,7 @@ private fun ReceiptContentForPDF(
                     )
                     Text(
 //                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
-                        paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
+                        paymentDetailsLatestResponse?.data?.TransactionRefID ?: "N/A",
                         textAlign = androidx.compose.ui.text.style.TextAlign.End,
                         modifier = Modifier.weight(1f),
                         fontSize = 14.sp,
@@ -912,7 +912,7 @@ private fun ReceiptContentForPDF(
                     )
                     Text(
 //                    paymentDetailsLatestResponse?.data?.Status.toString(),
-                        text = transactionAquirerResponse?.tranStatus.toString(),
+                        text = transactionAquirerResponse?.tranStatus ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = green500
@@ -928,7 +928,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.atc.toString(),
+                        text = transactionAquirerResponse?.atc ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -944,7 +944,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.tvr.toString(),
+                        text = transactionAquirerResponse?.tvr ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -960,7 +960,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.appName.toString(),
+                        text = transactionAquirerResponse?.appName ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -976,7 +976,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.aid.toString(),
+                        text = transactionAquirerResponse?.aid ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -992,7 +992,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.tc.toString(),
+                        text = transactionAquirerResponse?.tc ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500

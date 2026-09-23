@@ -1,7 +1,6 @@
 package com.paymentoptions.pos.device
 
 import android.content.Context
-import android.content.Context.MODE_PRIVATE
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.paymentoptions.pos.logger.AppLogger
@@ -25,70 +24,79 @@ import kotlinx.serialization.json.Json
 
 
 object DPSharedPreferences {
-        private var accessLevel: AccessLevel? = null
-        private var transactionCurrency: String? = null
-        private const val DATADOG_CLIENT_TOKEN_KEY = "datadog_client_token"
-        private const val DATADOG_APPLICATION_ID_KEY = "datadog_application_id"
+    private var accessLevel: AccessLevel? = null
+    private var transactionCurrency: String? = null
+    private const val DATADOG_CLIENT_TOKEN_KEY = "datadog_client_token"
+    private const val DATADOG_APPLICATION_ID_KEY = "datadog_application_id"
 
-        const val sharedPreferencesLabel: String = "my_prefs"
+    const val sharedPreferencesLabel: String = "my_prefs"
 
-        private fun getSecurePrefs(context: Context): android.content.SharedPreferences {
-            return try {
-                createEncryptedPrefs(context)
+    @Volatile
+    private var cachedPrefs: android.content.SharedPreferences? = null
+
+    private fun getSecurePrefs(context: Context): android.content.SharedPreferences {
+        return cachedPrefs ?: synchronized(this) {
+            cachedPrefs ?: try {
+                createEncryptedPrefs(context).also { cachedPrefs = it }
             } catch (e: Throwable) {
                 // AEADBadTagException / KeyStoreException — encrypted prefs or master key corrupted.
-                AppLogger.error("EncryptedSharedPreferences corrupted, resetting: ${e.message}")
+                AppLogger.error("EncryptedSharedPreferences corrupted, resetting. Error: ${e.message}", e)
                 clearCorruptedPrefsFiles(context)
                 try {
-                    createEncryptedPrefs(context)
+                    createEncryptedPrefs(context).also { cachedPrefs = it }
                 } catch (e2: Throwable) {
                     // If still failing, delete the Android Keystore master key entry and try once more
-                    AppLogger.error("EncryptedSharedPreferences still corrupted after cleanup, deleting keystore entry: ${e2.message}")
+                    AppLogger.error("EncryptedSharedPreferences still corrupted after cleanup, deleting keystore entry. Error: ${e2.message}", e2)
                     try {
                         val keyStore = java.security.KeyStore.getInstance("AndroidKeyStore")
                         keyStore.load(null)
                         keyStore.deleteEntry(MasterKey.DEFAULT_MASTER_KEY_ALIAS)
-                    } catch (ignored: Throwable) { }
+                    } catch (ignored: Throwable) {
+                    }
                     clearCorruptedPrefsFiles(context)
                     try {
-                        createEncryptedPrefs(context)
+                        createEncryptedPrefs(context).also { cachedPrefs = it }
                     } catch (e3: Throwable) {
                         // Last resort: fall back to unencrypted SharedPreferences to prevent crash
-                        AppLogger.error("EncryptedSharedPreferences unrecoverable, falling back to plain prefs: ${e3.message}")
-                        context.getSharedPreferences(sharedPreferencesLabel + "_fallback", Context.MODE_PRIVATE)
+                        AppLogger.error("EncryptedSharedPreferences unrecoverable, falling back to plain prefs. Error: ${e3.message}", e3)
+                        context.getSharedPreferences(sharedPreferencesLabel + "_fallback", Context.MODE_PRIVATE).also {
+                            cachedPrefs = it
+                        }
                     }
                 }
             }
         }
+    }
 
-        private fun createEncryptedPrefs(context: Context): android.content.SharedPreferences {
-            val masterKey = MasterKey.Builder(context)
-                .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-                .build()
-            return EncryptedSharedPreferences.create(
-                context,
-                sharedPreferencesLabel,
-                masterKey,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            )
-        }
+    private fun createEncryptedPrefs(context: Context): android.content.SharedPreferences {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        return EncryptedSharedPreferences.create(
+            context,
+            sharedPreferencesLabel,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
 
-        private fun clearCorruptedPrefsFiles(context: Context) {
-            val prefsDir = context.applicationInfo.dataDir + "/shared_prefs/"
-            // 1. Remove the encrypted prefs file
-            java.io.File(prefsDir + sharedPreferencesLabel + ".xml").also {
-                if (it.exists()) it.delete()
-            }
-            // 2. Remove the Tink keyset prefs (used by EncryptedSharedPreferences internally)
-            java.io.File(prefsDir + "__androidx_security_crypto_encrypted_prefs__" + sharedPreferencesLabel + ".xml").also {
-                if (it.exists()) it.delete()
-            }
-            // 3. Also try without the pref name suffix (older versions of the library)
-            java.io.File(prefsDir + "__androidx_security_crypto_encrypted_prefs__.xml").also {
-                if (it.exists()) it.delete()
-            }
+    private fun clearCorruptedPrefsFiles(context: Context) {
+        cachedPrefs = null
+        val prefsDir = context.applicationInfo.dataDir + "/shared_prefs/"
+        // 1. Remove the encrypted prefs file
+        java.io.File(prefsDir + sharedPreferencesLabel + ".xml").also {
+            if (it.exists()) it.delete()
         }
+        // 2. Remove the Tink keyset prefs (used by EncryptedSharedPreferences internally)
+        java.io.File(prefsDir + "__androidx_security_crypto_encrypted_prefs__" + sharedPreferencesLabel + ".xml").also {
+            if (it.exists()) it.delete()
+        }
+        // 3. Also try without the pref name suffix (older versions of the library)
+        java.io.File(prefsDir + "__androidx_security_crypto_encrypted_prefs__.xml").also {
+            if (it.exists()) it.delete()
+        }
+    }
 
         fun saveBoolean(context: Context, key: String, value: Boolean) = runBlocking {
             val sharedPreferences = getSecurePrefs(context)
@@ -300,6 +308,7 @@ object DPSharedPreferences {
         fun getAuthDetails(context: Context): SignInResponse? {
             val securePrefs = getSecurePrefs(context)
             val authDetailsString = securePrefs.getString("auth_details", null)
+            AppLogger.debug("getAuthDetails: $authDetailsString")
             val authDetailsJson =
                 authDetailsString?.let { Json.decodeFromString<SignInResponse>(it) }
 
@@ -349,6 +358,7 @@ object DPSharedPreferences {
         val externalDeviceConfiguration = getDeviceConfiguration(context) ?: return emptyList()
 
         val availableTypes = externalDeviceConfiguration.data.paymentMethod
+            .filter { it.Status == "ACTIVE" }
             .map { it.Type }
             .toSet()
 
@@ -474,25 +484,53 @@ object DPSharedPreferences {
     fun storeAppConfig(context: Context, appConfig: AppConfig) = runBlocking{
         val sharedPreferences = getSecurePrefs(context)
         with(sharedPreferences.edit()) {
-            putString("BaseAPIURL", appConfig.BaseAPIURL)
-            putString("TransactionDetailsURL", appConfig.TransactionDetailsURL)
-            appConfig.CvmLimit?.let { putFloat("cvm_limit", it) }
+            // Only write fields that came back non-blank. EncryptedSharedPreferences persists
+            // putString(key, null) as an explicit null record rather than leaving the previous
+            // value untouched, so writing a blank/null value here would wipe out a previously
+            // cached good URL on a partial/malformed config response.
+            if (!appConfig.BaseAPIURL.isNullOrBlank()) {
+                putString("BaseAPIURL", appConfig.BaseAPIURL)
+            }
+            if (!appConfig.TransactionDetailsURL.isNullOrBlank()) {
+                putString("TransactionDetailsURL", appConfig.TransactionDetailsURL)
+            }
+            val payByLinkUrl = appConfig.ConfigJSON?.PayByLinkURL
+            if (!payByLinkUrl.isNullOrBlank()) {
+                putString("PayByLinkURL", payByLinkUrl)
+            }
+            //appConfig.CvmLimit?.let { putFloat("cvm_limit", it) }
             apply()
         }
     }
 
-    fun getBaseUrl(context: Context): String?{
-//        val sharedPreferences = getSecurePrefs(context)
-//        return  sharedPreferences.getString("BaseAPIURL", "")
-        return BASEAPI_URL
+    fun getBaseUrl(context: Context): String{
+        val sharedPreferences = getSecurePrefs(context)
+        val baseUrl = sharedPreferences.getString("BaseAPIURL", null) ?: return BASEAPI_URL
+        AppLogger.debug("CONFIG BaseAPIURL: $baseUrl/")
+        return "$baseUrl/"
     }
 
     fun getTransactionDetailsUrl(context: Context): String?
     {
         val sharedPreferences = getSecurePrefs(context)
-        val url =  sharedPreferences.getString("TransactionDetailsURL", "https://dev.paymentoptions.com/daspay-transaction-details")
-        AppLogger.debug("getTransactionDetailsUrl: $url")
+        val url =  sharedPreferences.getString("TransactionDetailsURL", "")
+        AppLogger.debug("CONFIG getTransactionDetailsUrl: $url")
         return url
+    }
+
+    fun getPayByLinkUrl(context: Context): String?
+    {
+        val sharedPreferences = getSecurePrefs(context)
+        val url = sharedPreferences.getString("PayByLinkURL", null)
+        AppLogger.debug("CONFIG PayByLinkURL: $url/")
+
+        if (url != null) {
+            if(!url.startsWith("https://")){
+                return "https://$url/"
+            }
+            return "$url/"
+        }
+        return null
     }
 
     fun saveCvmLimit(context: Context, limit: Float) {

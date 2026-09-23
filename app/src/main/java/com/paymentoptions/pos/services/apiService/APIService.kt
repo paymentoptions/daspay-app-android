@@ -87,7 +87,7 @@ interface ApiService {
         @Body request: TransactionRequest,
     ): RefundResponse
 
-    @POST("server-to-server-interface/daspay/payment")
+    @POST("daspay/payment")
     suspend fun payment(
         @HeaderMap headers: Map<String, String>,
         @Body request: PaymentRequest,
@@ -217,6 +217,9 @@ object RetrofitClient {
     private var apiService: ApiService? = null
 
     @Volatile
+    private var configApiService: ApiService? = null
+
+    @Volatile
     private var currentBaseUrl: String? = null
 
     fun getApi(context: android.content.Context): ApiService {
@@ -246,6 +249,21 @@ object RetrofitClient {
         }
 
         return apiService!!
+    }
+
+    /**
+     * Dedicated Retrofit instance for configuration download.
+     * Always uses the bootstrap URL from BuildConfig.
+     */
+    fun getConfigApi(context: android.content.Context): ApiService {
+        return configApiService ?: synchronized(this) {
+            configApiService ?: Retrofit.Builder()
+                .baseUrl(BuildConfig.CONFIG_BASE_URL)
+                .client(provideOkHttpClient(context.applicationContext))
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build()
+                .create(ApiService::class.java).also { configApiService = it }
+        }
     }
 
     // Method to force recreation of API service (useful after config download)

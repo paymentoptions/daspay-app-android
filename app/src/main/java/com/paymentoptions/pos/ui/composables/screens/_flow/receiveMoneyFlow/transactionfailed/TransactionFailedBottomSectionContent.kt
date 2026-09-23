@@ -187,7 +187,7 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-                        paymentDetailsLatestResponse?.data?.TransactionID.toString(),
+                        paymentDetailsLatestResponse?.data?.TransactionID ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -224,7 +224,7 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-                        text = transactionAquirerResponse?.trace.toString(),
+                        text = transactionAquirerResponse?.trace ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -243,7 +243,7 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-                        text = transactionAquirerResponse?.approvalCode.toString(),
+                        text = transactionAquirerResponse?.approvalCode ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500

@@ -24,85 +24,98 @@ object ConfigurationManager {
      * If not saved, download config from API based on current environment.
      */
     suspend fun initializeConfig(context: Context): Boolean {
-        return try {
-            // Download config for current flavor/environment
-            val appConfig = configDownload(context, BuildConfig.ENVIRONMENT)
+        var retryCount = 0
+        val maxRetries = 3
+        
+        while (retryCount < maxRetries) {
+            try {
+                // Download config for current flavor/environment
+                val appConfig = configDownload(context, BuildConfig.ENVIRONMENT)
 
-            if (appConfig != null) {
-                AppLogger.debug("Config downloaded successfully. Base URL: ${appConfig.BaseAPIURL}")
+                if (appConfig != null) {
+                    AppLogger.debug("Config downloaded successfully. Base URL: ${appConfig.BaseAPIURL}")
 
-                val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
-                if(savedBaseUrl != appConfig.BaseAPIURL) {
+                    val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+                    val baseUrlChanged = savedBaseUrl != "${appConfig.BaseAPIURL}/"
+
+                    // Always persist the freshly downloaded config (storeAppConfig skips blank
+                    // fields), not just when BaseAPIURL changes - otherwise fields like
+                    // TransactionDetailsURL/PayByLinkURL never get saved once the base URL settles.
                     DPSharedPreferences.storeAppConfig(context, appConfig)
-                    // Reset RetrofitClient to use new base URL
-                    RetrofitClient.reset()
+
+                    if (baseUrlChanged) {
+                        // Reset RetrofitClient to use new base URL
+                        AppLogger.debug("Config changed base url, triggering reset of retrofit")
+                        RetrofitClient.reset()
+                    }
+
+                    isInitialized = true
+                    return true
+                } else {
+                    AppLogger.error("Failed to download app configuration (Attempt ${retryCount + 1})")
                 }
-
-                isInitialized = true
-                true
-            } else {
-                AppLogger.error("Failed to download app configuration")
-                false
+            } catch (e: Exception) {
+                AppLogger.error("Error initializing config (Attempt ${retryCount + 1}): ${e.message}")
+                if (retryCount == maxRetries - 1) {
+                    e.printStackTrace()
+                }
             }
-//            val savedBaseUrl = DPSharedPreferences.getBaseUrl(context)
+            retryCount++
+            if (retryCount < maxRetries) {
+                kotlinx.coroutines.delay(2000) // Wait 2 seconds before retry
+            }
+        }
+        return false
+    }
+
+//    /**
+//     * Force refresh of configuration from API
+//     */
+//    suspend fun refreshConfig(context: Context): Boolean {
+//        var retryCount = 0
+//        val maxRetries = 3
 //
-//            if (savedBaseUrl.isNullOrEmpty()) {
-//                AppLogger.debug("Base URL not found in preferences. Downloading config for environment: ${BuildConfig.ENVIRONMENT}")
+//        while (retryCount < maxRetries) {
+//            try {
+//                AppLogger.debug("Forcing config refresh for environment: ${BuildConfig.ENVIRONMENT}")
 //
+//                val appConfig = configDownload(context, BuildConfig.ENVIRONMENT)
 //
-//            } else {
-//                AppLogger.debug("Using saved base URL from preferences: $savedBaseUrl")
-//                isInitialized = true
-//                true
+//                if (appConfig != null) {
+//                    AppLogger.debug("Config refreshed successfully. Base URL: ${appConfig.BaseAPIURL}")
+//                    DPSharedPreferences.storeAppConfig(context, appConfig)
+//
+//                    // Reset RetrofitClient to use new base URL
+//                    RetrofitClient.reset()
+//
+//                    return true
+//                } else {
+//                    AppLogger.error("Failed to refresh app configuration (Attempt ${retryCount + 1})")
+//                }
+//            } catch (e: Exception) {
+//                AppLogger.error("Error refreshing config (Attempt ${retryCount + 1}): ${e.message}")
 //            }
-        } catch (e: Exception) {
-            AppLogger.error("Error initializing config: ${e.message}")
-            e.printStackTrace()
-            false
-        }
-    }
-
-    /**
-     * Force refresh of configuration from API
-     */
-    suspend fun refreshConfig(context: Context): Boolean {
-        return try {
-            AppLogger.debug("Forcing config refresh for environment: ${BuildConfig.ENVIRONMENT}")
-
-            val appConfig = configDownload(context, BuildConfig.ENVIRONMENT)
-
-            if (appConfig != null) {
-                AppLogger.debug("Config refreshed successfully. Base URL: ${appConfig.BaseAPIURL}")
-                DPSharedPreferences.storeAppConfig(context, appConfig)
-
-                // Reset RetrofitClient to use new base URL
-                RetrofitClient.reset()
-
-                true
-            } else {
-                AppLogger.error("Failed to refresh app configuration")
-                false
-            }
-        } catch (e: Exception) {
-            AppLogger.error("Error refreshing config: ${e.message}")
-            e.printStackTrace()
-            false
-        }
-    }
-
-    /**
-     * Get current environment name
-     */
-    fun getCurrentEnvironment(): String {
-        return BuildConfig.ENVIRONMENT
-    }
-
-    /**
-     * Check if configuration is initialized
-     */
-    fun isConfigInitialized(): Boolean {
-        return isInitialized
-    }
+//            retryCount++
+//            if (retryCount < maxRetries) {
+//                kotlinx.coroutines.delay(2000)
+//            }
+//        }
+//        return false
+//    }
+//
+//    /**
+//     * Get current environment name
+//     */
+//    fun getCurrentEnvironment(): String {
+//        return BuildConfig.ENVIRONMENT
+//    }
+//
+//    /**
+//     * Check if configuration is initialized
+//     */
+//    fun isConfigInitialized(): Boolean {
+//        return isInitialized
+//    }
 
 //    /**
 //     * Get the base URL being used (from preferences or BuildConfig)

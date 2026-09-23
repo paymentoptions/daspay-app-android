@@ -33,15 +33,13 @@ fun TransactionDetailsScreen(
         TransactionDetailsScreenType.RECEIPT_SCREEN ->
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionMinHeightRatio = 0.9f,
+                bottomSectionMaxHeightRatio = 0.9f,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMinHeightRatio = 0.75f,
-                bottomSectionMaxHeightRatio = 0.75f,
-                enableScrollingOfBottomSectionContent = false,
-                enableZigZagContainerForBottomSection = true,
-                imageBelowLogo = {
-                    ShowReceiptView()
-                }) {
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                blurTopSection = true
+            ) {
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,

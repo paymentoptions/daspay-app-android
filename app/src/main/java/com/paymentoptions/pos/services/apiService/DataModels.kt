@@ -920,7 +920,7 @@ data class AppConfigResponse (
     val data: List<AppConfig>
 )
 
-data class AppConfig (
+data class AppConfig(
     val ID: Long,
     val AppENV: String,
     val BaseAPIURL: String,
@@ -930,7 +930,19 @@ data class AppConfig (
     val CurrAppVersion: Long,
     val IsUpdateMandatory: Boolean,
     val TransactionDetailsURL: String,
+    val ConfigJSON: ConfigJsonDetails? = null,
     val CvmLimit: Float? = 200.0f
+)
+
+data class ConfigJsonDetails(
+    val BaseAPIURL: String,
+    val PayByLinkURL: String?,
+    val RegistryLogin: String,
+    val RegistryToken: String,
+    val CurrAppVersion: Long,
+    val PrevAppVersion: Long,
+    val IsUpdateMandatory: Boolean,
+    val TransactionDetailsURL: String
 )
 
 data class SettlementListResponse (

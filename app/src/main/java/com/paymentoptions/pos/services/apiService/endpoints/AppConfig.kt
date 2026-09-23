@@ -4,6 +4,7 @@ import android.content.Context
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.services.apiService.AppConfig
 import com.paymentoptions.pos.services.apiService.RetrofitClient
+import com.paymentoptions.pos.services.apiService.TokenRepository
 import com.paymentoptions.pos.services.apiService.generateRequestHeader
 
 suspend fun configDownload(
@@ -12,12 +13,22 @@ suspend fun configDownload(
 ): AppConfig? {
     try {
 
-        val requestHeaders = generateRequestHeader("")
-        val appConfigResponse = RetrofitClient.getApi(context).getAppConfiguration(headers = requestHeaders,flavourName = flavourName)
+        val tokenRepository = TokenRepository.getInstance(context)
+        val authDetails = tokenRepository.refreshTokenIfNeeded() ?: return null
+
+        val idToken = authDetails?.data?.token?.idToken
+        val requestHeaders = generateRequestHeader(idToken ?: "")
+        val appConfigResponse = RetrofitClient.getConfigApi(context)
+            .getAppConfiguration(headers = requestHeaders,flavourName = flavourName)
 
         if (appConfigResponse.success && appConfigResponse.data.isNotEmpty()) {
-            // Store app config base url in shared preference
             val appConfig = appConfigResponse.data.first()
+            if (appConfig.BaseAPIURL.isNullOrBlank() || appConfig.TransactionDetailsURL.isNullOrBlank()) {
+                // Response parsed but key fields are missing/blank (e.g. partial JSON body) -
+                // treat as a failed download so the caller retries instead of caching this.
+                AppLogger.error("configDownload: Config response for $flavourName is missing required fields")
+                return null
+            }
             AppLogger.debug("configDownload: Config downloaded successfully for $flavourName - Base URL: ${appConfig.BaseAPIURL}")
             return appConfig
         } else {

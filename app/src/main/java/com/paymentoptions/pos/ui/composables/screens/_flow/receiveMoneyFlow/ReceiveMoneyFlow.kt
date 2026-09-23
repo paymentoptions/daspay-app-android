@@ -174,6 +174,8 @@ fun ReceiveMoneyFlow(
 
     var paymentDetailsResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
 
+    val pblUrl = DPSharedPreferences.getPayByLinkUrl(context) ?: PBL_URL
+
     LaunchedEffect(Unit) {
         AnalyticsHelper.track(AnalyticsEvent.ScreenViewed("ReceiveMoneyFlow"))
     }
@@ -251,10 +253,10 @@ fun ReceiveMoneyFlow(
         Toast.makeText(context, "Your device does not support NFC", Toast.LENGTH_SHORT).show()
     }
     */
-    if (availablePaymentMethods.contains(qrCodePaymentMethod) && !apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
-        qrCodePaymentMethod.setIsEnabled(false)
-        Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
-    }
+//    if (availablePaymentMethods.contains(qrCodePaymentMethod) && !apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
+//        qrCodePaymentMethod.setIsEnabled(false)
+////        Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
+//    }
 
     // Geo-restriction state
     var showGeoRestrictionDialog by remember { mutableStateOf(false) }
@@ -358,9 +360,9 @@ fun ReceiveMoneyFlow(
                         Column(
                             modifier = Modifier
                                 .height(ScreenRatioToDp(0.5f))
-                                .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+                                .padding(4.dp)
                                 .verticalScroll(scrollState),
-                            verticalArrangement = Arrangement.spacedBy(20.dp),
+                           // verticalArrangement = Arrangement.spacedBy(1.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             //when (selectedPaymentMethod) {
@@ -407,6 +409,25 @@ fun ReceiveMoneyFlow(
                                         },
                                     )
 
+                                    Spacer(Modifier.height(4.dp))
+
+                                    Text(
+                                        text = "Ready to receive payment",
+                                        color = Color.White,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = "Tap the button below to begin",
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        fontSize = 14.sp,
+                                        textAlign = TextAlign.Center,
+                                    )
+
+                                    Spacer(Modifier.height(4.dp))
+
                                     PaymentTapToPayImage(
                                         modifier = Modifier
                                             .padding(horizontal = 20.dp)
@@ -429,30 +450,36 @@ fun ReceiveMoneyFlow(
                                                 else startTapAndPay = true
                                             })
 
-                                    FilledButton(
-                                        text = "Tap here to start Tap To Pay",
-                                        onClick = {
-                                            AppAnalytics.criticalButtonClick(
-                                                buttonName = "tap_to_pay_start",
-                                                screen = "receive_money"
-                                            )
-                                            if (inProduction)
-                                                if (DeveloperOptions.isEnabled(context)) {
-                                                    showDeveloperOptionsEnabled = true
-                                                } else if (!Nfc.getStatus(context).second) {
-                                                    showNFCNotEnabled = true
-                                                } else {
-                                                    startTapAndPay = true
-                                                }
-                                            else startTapAndPay = true
-                                        },
-                                        modifier = Modifier
-                                            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                                            .height(59.dp)
-                                            .scale(0.8f)
+                                    Spacer(Modifier.height(8.dp))
+
+                                    StartTapToPayButton(onClick = {
+                                        AppAnalytics.criticalButtonClick(
+                                            buttonName = "tap_to_pay_start",
+                                            screen = "receive_money"
+                                        )
+                                        if (inProduction)
+                                            if (DeveloperOptions.isEnabled(context)) {
+                                                showDeveloperOptionsEnabled = true
+                                            } else if (!Nfc.getStatus(context).second) {
+                                                showNFCNotEnabled = true
+                                            } else {
+                                                startTapAndPay = true
+                                            }
+                                        else startTapAndPay = true
+                                    })
+
+                                    Spacer(Modifier.height(8.dp))
+
+                                    Text(
+                                        text = "You'll be guided to align the card or phone",
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        fontSize = 14.sp,
+                                        textAlign = TextAlign.Center,
                                     )
 
-                                    PaymentSchemesRow(modifier = Modifier.height(50.dp))
+                                    Spacer(Modifier.height(10.dp))
+
+                                    PaymentSchemesRow(modifier = Modifier.height(40.dp))
                                 }
 
                                 qrCodePaymentMethod -> {
@@ -500,7 +527,7 @@ fun ReceiveMoneyFlow(
                                             val response = payByQr(context, request)
                                             if (response != null && response.success) {
                                                 val paymentUrl =
-                                                    PBL_URL + response.data.ProductID
+                                                    pblUrl + response.data.ProductID
                                                 qrCodeBitmap = generateQrCode(paymentUrl)
                                                 AnalyticsHelper.track(
                                                     AnalyticsEvent.Custom(
@@ -552,6 +579,7 @@ fun ReceiveMoneyFlow(
                                         fontSize = 18.sp,
                                         textAlign = TextAlign.Center,
                                     )
+                                    Spacer(Modifier.height(8.dp))
 
                                     // This block handles showing the Loader, Error, or QR Code
                                     if (qrCodeLoading) {
@@ -647,7 +675,7 @@ fun ReceiveMoneyFlow(
                                             if (payByLinkResponse != null && payByLinkResponse!!.success) {
 //                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
                                                 paymentUrl =
-                                                    PBL_URL + payByLinkResponse!!.data.ProductID
+                                                    pblUrl + payByLinkResponse!!.data.ProductID
                                                 viaLinkQrBitmap = generateQrCode(paymentUrl)
                                                 AppAnalytics.payByLinkCreated(
                                                     productId = payByLinkResponse!!.data.ProductID,
@@ -785,7 +813,7 @@ fun ReceiveMoneyFlow(
                                                     .padding(vertical = 16.dp, horizontal = 12.dp),
                                             ) {
                                                 Text(
-                                                    text = PBL_URL + payByLinkResponse!!.data.ProductID,
+                                                    text = pblUrl + payByLinkResponse!!.data.ProductID,
                                                     fontWeight = FontWeight.SemiBold,
                                                     fontSize = 16.sp,
                                                     color = primary900,
@@ -1070,15 +1098,13 @@ fun ReceiveMoneyFlow(
         ReceiveMoneyFlowStage.RECEIPT -> {
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionMinHeightRatio = 0.9f,
+                bottomSectionMaxHeightRatio = 0.9f,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMinHeightRatio = 0.75f,
-                bottomSectionMaxHeightRatio = 0.75f,
-                enableScrollingOfBottomSectionContent = false,
-                enableZigZagContainerForBottomSection = true,
-                imageBelowLogo = {
-                    ShowReceiptView()
-                }) {
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                blurTopSection = true
+            ) {
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,

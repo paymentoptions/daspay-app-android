@@ -24,6 +24,7 @@ class TokenAutoRefresher private constructor(
 
     private var refreshJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     private var isUserLoggedIn = false
 
     /**
@@ -32,6 +33,18 @@ class TokenAutoRefresher private constructor(
     fun onUserSignedIn() {
         isUserLoggedIn = true
         startRefreshJob()
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+            try {
+                val configInitialized = ConfigurationManager.initializeConfig(context)
+                if (configInitialized) {
+                    AppLogger.info("Config initialized successfully after sign in")
+                } else {
+                    AppLogger.warn("Config initialization failed after sign in, using default base URL")
+                }
+            } catch (e: Exception) {
+                AppLogger.error("Error initializing config after sign in: ${e.message}")
+            }
+        }
     }
 
     /**

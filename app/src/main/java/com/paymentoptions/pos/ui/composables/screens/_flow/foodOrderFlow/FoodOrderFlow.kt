@@ -72,6 +72,7 @@ import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.device.DPSharedPreferences
 import com.paymentoptions.pos.device.DPSharedPreferences.getApms
 import com.paymentoptions.pos.device.DPSharedPreferences.getTransactionCurrency
+import com.paymentoptions.pos.services.analytics.AppAnalytics
 import com.paymentoptions.pos.services.apiService.CategoryListDataRecord
 import com.paymentoptions.pos.services.apiService.PayByLinkRequest
 import com.paymentoptions.pos.services.apiService.PayByLinkRequestProduct
@@ -107,6 +108,7 @@ import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmen
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.foodmenu.ToastType
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.product.EditProductSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.foodOrderFlow.reviewcart.ReviewCartBottomSectionContent
+import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.StartTapToPayButton
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.TakeDigitalSignatureBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.chargemoney.ChargeMoneyBottomSectionContent
 import com.paymentoptions.pos.ui.composables.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
@@ -175,6 +177,8 @@ fun FoodOrderFlow(
     var showGeoRestrictionDialog by remember { mutableStateOf(false) }
     var geoRestrictionMessage by remember { mutableStateOf("") }
     var ignoreGeoDialog by remember { mutableStateOf(false) }
+
+    val pblUrl = DPSharedPreferences.getPayByLinkUrl(context) ?: PBL_URL
 
     latestTransactionId?.let {
         LaunchedEffect(latestTransactionId) {
@@ -303,10 +307,10 @@ fun FoodOrderFlow(
         Toast.makeText(context, "Your device does not support NFC", Toast.LENGTH_SHORT).show()
     }
     */
-    if (availablePaymentMethods.contains(qrCodePaymentMethod) && !apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
-        qrCodePaymentMethod.setIsEnabled(false)
-        Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
-    }
+//    if (availablePaymentMethods.contains(qrCodePaymentMethod) && !apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
+//        qrCodePaymentMethod.setIsEnabled(false)
+//       // Toast.makeText(context, "Payment via QR code not supported", Toast.LENGTH_SHORT).show()
+//    }
 
     LaunchedEffect(Unit) {
         foodCategoryListAvailable = false
@@ -470,7 +474,7 @@ fun FoodOrderFlow(
                             .height(ScreenRatioToDp(0.5f))
                             .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
                             .verticalScroll(scrollState),
-                        verticalArrangement = Arrangement.spacedBy(20.dp),
+                       // verticalArrangement = Arrangement.spacedBy(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         when (selectedPaymentMethod) {
@@ -516,6 +520,24 @@ fun FoodOrderFlow(
                                         selectedPaymentMethod = qrCodePaymentMethod
                                     },
                                 )
+                                Spacer(Modifier.height(4.dp))
+
+                                Text(
+                                    text = "Ready to receive payment",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Tap the button below to begin",
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Center,
+                                )
+
+                                Spacer(Modifier.height(4.dp))
 
                                 PaymentTapToPayImage(
                                     modifier = Modifier
@@ -524,18 +546,29 @@ fun FoodOrderFlow(
                                         .height(180.dp)
                                         .clip(shape = RoundedCornerShape(16.dp))
                                         .clickable {
-                                            if (DeveloperOptions.isEnabled(context)) {
-                                                showDeveloperOptionsEnabled = true
-                                            } else if (!Nfc.getStatus(context).second) {
-                                                showNFCNotEnabled = true
-                                            } else {
-                                                startTapAndPay = true
-                                            }
+                                            AppAnalytics.criticalButtonClick(
+                                                buttonName = "tap_to_pay_image",
+                                                screen = "receive_money"
+                                            )
+                                            if (inProduction)
+                                                if (DeveloperOptions.isEnabled(context)) {
+                                                    showDeveloperOptionsEnabled = true
+                                                } else if (!Nfc.getStatus(context).second) {
+                                                    showNFCNotEnabled = true
+                                                } else {
+                                                    startTapAndPay = true
+                                                }
+                                            else startTapAndPay = true
                                         })
 
-                                FilledButton(
-                                    text = "Tap here to start Tap To Pay",
-                                    onClick = {
+                                Spacer(Modifier.height(8.dp))
+
+                                StartTapToPayButton(onClick = {
+                                    AppAnalytics.criticalButtonClick(
+                                        buttonName = "tap_to_pay_start",
+                                        screen = "receive_money"
+                                    )
+                                    if (inProduction)
                                         if (DeveloperOptions.isEnabled(context)) {
                                             showDeveloperOptionsEnabled = true
                                         } else if (!Nfc.getStatus(context).second) {
@@ -543,14 +576,22 @@ fun FoodOrderFlow(
                                         } else {
                                             startTapAndPay = true
                                         }
-                                    },
-                                    modifier = Modifier
-                                        .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                                        .height(59.dp)
-                                        .scale(0.8f)
+                                    else startTapAndPay = true
+                                })
+
+                                Spacer(Modifier.height(8.dp))
+
+                                Text(
+                                    text = "You'll be guided to align the card or phone",
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Center,
                                 )
 
-                                PaymentSchemesRow(modifier = Modifier.height(50.dp))
+                                Spacer(Modifier.height(10.dp))
+
+                                PaymentSchemesRow(modifier = Modifier.height(40.dp))
+
                             }
 
                             qrCodePaymentMethod -> {
@@ -570,7 +611,7 @@ fun FoodOrderFlow(
                                         val response = payByQr(context, request)
                                         if (response != null && response.success) {
                                             val paymentUrl =
-                                                PBL_URL + response.data.ProductID
+                                                pblUrl + response.data.ProductID
                                             qrCodeBitmap = generateQrCode(paymentUrl)
                                             DPSharedPreferences.clearSavedCart(context)
                                         } else {
@@ -604,6 +645,8 @@ fun FoodOrderFlow(
                                     fontSize = 18.sp,
                                     textAlign = TextAlign.Center,
                                 )
+
+                                Spacer(Modifier.height(8.dp))
 
                                 if (qrCodeLoading) {
                                     MyCircularProgressIndicator(useWhiteLoader = true)
@@ -675,7 +718,7 @@ fun FoodOrderFlow(
                                         if (payByLinkResponse != null && payByLinkResponse!!.success) {
 //                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
                                             paymentUrl =
-                                                PBL_URL + payByLinkResponse!!.data.ProductID
+                                                pblUrl + payByLinkResponse!!.data.ProductID
                                             viaLinkQrBitmap = generateQrCode(paymentUrl)
                                             DPSharedPreferences.clearSavedCart(context)
                                         }
@@ -798,7 +841,7 @@ fun FoodOrderFlow(
                                                 .padding(vertical = 16.dp, horizontal = 12.dp),
                                         ) {
                                             Text(
-                                                text = PBL_URL + payByLinkResponse!!.data.ProductID,
+                                                text = pblUrl + payByLinkResponse!!.data.ProductID,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 16.sp,
                                                 color = primary900,
@@ -1001,15 +1044,13 @@ fun FoodOrderFlow(
         FoodOrderFlowStage.RECEIPT -> {
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionMinHeightRatio = 0.9f,
+                bottomSectionMaxHeightRatio = 0.9f,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMinHeightRatio = 0.75f,
-                bottomSectionMaxHeightRatio = 0.75f,
-                enableScrollingOfBottomSectionContent = false,
-                enableZigZagContainerForBottomSection = true,
-                imageBelowLogo = {
-                    ShowReceiptView()
-                }) {
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                blurTopSection = true
+            ) {
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,
