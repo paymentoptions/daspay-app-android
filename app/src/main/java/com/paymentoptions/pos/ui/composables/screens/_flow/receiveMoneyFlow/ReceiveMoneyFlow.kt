@@ -121,6 +121,7 @@ import com.paymentoptions.pos.utils.PaymentMethod
 import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.inProduction
+import com.paymentoptions.pos.utils.openUrlInBrowser
 import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
@@ -487,6 +488,7 @@ fun ReceiveMoneyFlow(
                                     startTapAndPay = false
 
                                     var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                                    var qrCodePaymentUrl by remember { mutableStateOf<String?>(null) }
                                     var qrCodeLoading by remember { mutableStateOf(false) }
                                     var qrCodeError by remember { mutableStateOf<String?>(null) }
 
@@ -528,6 +530,7 @@ fun ReceiveMoneyFlow(
                                             if (response != null && response.success) {
                                                 val paymentUrl =
                                                     pblUrl + response.data.ProductID
+                                                qrCodePaymentUrl = paymentUrl
                                                 qrCodeBitmap = generateQrCode(paymentUrl)
                                                 AnalyticsHelper.track(
                                                     AnalyticsEvent.Custom(
@@ -579,7 +582,7 @@ fun ReceiveMoneyFlow(
                                         fontSize = 18.sp,
                                         textAlign = TextAlign.Center,
                                     )
-                                    Spacer(Modifier.height(8.dp))
+                                    Spacer(Modifier.height(15.dp))
 
                                     // This block handles showing the Loader, Error, or QR Code
                                     if (qrCodeLoading) {
@@ -594,6 +597,7 @@ fun ReceiveMoneyFlow(
                                     } else {
                                         PaymentQrCodeImage(
                                             qrBitmap = qrCodeBitmap, // generated bitmap here
+                                            onClick = { openUrlInBrowser(context, qrCodePaymentUrl) },
                                             modifier = Modifier
                                                 .padding(horizontal = 20.dp)
                                                 .fillMaxWidth()
@@ -602,7 +606,9 @@ fun ReceiveMoneyFlow(
                                         )
                                     }
 
+                                    Spacer(Modifier.height(12.dp))
                                     PaymentApmsRow(modifier = Modifier.height(50.dp))
+                                    Spacer(Modifier.height(8.dp))
 
                                     NoteChip(
                                         text = "Ask customer to scan with their payment app",
@@ -759,6 +765,7 @@ fun ReceiveMoneyFlow(
 
                                                 PaymentQrCodeImage(
                                                     qrBitmap = viaLinkQrBitmap,
+                                                    onClick = { openUrlInBrowser(context, paymentUrl) },
                                                     modifier = Modifier
                                                         .padding(horizontal = 20.dp)
                                                         .fillMaxWidth()
@@ -810,6 +817,7 @@ fun ReceiveMoneyFlow(
                                                         color = Color(0xFFDCEAFE),
                                                         shape = RoundedCornerShape(11.dp)
                                                     )
+                                                    .clickable { openUrlInBrowser(context, paymentUrl) }
                                                     .padding(vertical = 16.dp, horizontal = 12.dp),
                                             ) {
                                                 Text(

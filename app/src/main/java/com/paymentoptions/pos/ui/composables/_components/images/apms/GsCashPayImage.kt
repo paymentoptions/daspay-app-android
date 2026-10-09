@@ -10,7 +10,7 @@ import com.paymentoptions.pos.R
 @Composable
 fun GsCashPayImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(id = R.drawable.gscash_apms),
+        painter = painterResource(id = R.drawable.gcash_apms),
         contentDescription = "Qr code payment method",
         contentScale = ContentScale.Fit,
         modifier = modifier

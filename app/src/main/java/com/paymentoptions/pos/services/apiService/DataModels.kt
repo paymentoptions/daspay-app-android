@@ -614,6 +614,9 @@ data class DevicePaymentMethod_Apms(
     val hasPayPay: Boolean = false,
     val hasKonbini: Boolean = false,
     val hasPayEasy: Boolean = false,
+    val hasPayNow: Boolean = false,
+    val hasQRPH: Boolean = false,
+    val hasSamsungPay: Boolean = false,
 )
 
 @Serializable

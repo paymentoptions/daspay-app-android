@@ -21,7 +21,10 @@ import com.paymentoptions.pos.ui.composables._components.images.apms.GooglePayIm
 import com.paymentoptions.pos.ui.composables._components.images.apms.GsCashPayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.KonbibniPayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.PayEasyImage
+import com.paymentoptions.pos.ui.composables._components.images.apms.PayNowLogoImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.PayPayImage
+import com.paymentoptions.pos.ui.composables._components.images.apms.QRPHLogoImage
+import com.paymentoptions.pos.ui.composables._components.images.apms.SamsungLogoImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.WechatPayImage
 
 
@@ -36,6 +39,19 @@ fun PaymentApmsRow(modifier: Modifier = Modifier) {
         modifier = modifier.horizontalScroll(state = rememberScrollState())
     ) {
 
+//        For testing add all APMS to the row
+//        ApplePayImage()
+//        DinersClubPayImage()
+//        GooglePayImage()
+//        GsCashPayImage()
+//        KonbibniPayImage()
+//        PayEasyImage()
+//        PayPayImage()
+//        WechatPayImage()
+//          PayNowLogoImage()
+//          QRPHLogoImage()
+//          SamsungLogoImage()
+
         if (apms.hasAlipay) AliPayImage()
         if (apms.hasApplePay) ApplePayImage()
         if (apms.hasDinersClub) DinersClubPayImage()
@@ -45,5 +61,8 @@ fun PaymentApmsRow(modifier: Modifier = Modifier) {
         if (apms.hasPayEasy) PayEasyImage()
         if (apms.hasPayPay) PayPayImage()
         if (apms.hasWechatpay) WechatPayImage()
+        if (apms.hasPayNow) PayNowLogoImage()
+        if (apms.hasQRPH) QRPHLogoImage()
+        if (apms.hasSamsungPay) SamsungLogoImage()
     }
 }

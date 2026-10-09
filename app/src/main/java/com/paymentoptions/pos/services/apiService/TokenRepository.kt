@@ -52,15 +52,23 @@ class TokenRepository private constructor(
             val errorBody = e.response()?.errorBody()?.string()
             AppLogger.debug("TokenRepository error body: $errorBody")
 
+            val isAuthError = e.code() == 401 || e.code() == 403
+
             try {
                 val errorResponse = Gson().fromJson(errorBody, ApiErrorResponse::class.java)
-                if (errorResponse?.messageCode == "ERR_AUTH_0003") {
-                    // Refresh token expired - need to re-authenticate
-                    AppLogger.debug("TokenRepository: Refresh token expired (ERR_AUTH_0003), triggering re-authentication")
+                if (isAuthError || errorResponse?.messageCode == "ERR_AUTH_0003") {
+                    // Refresh token expired / forbidden / unauthorized - need to re-authenticate
+                    AppLogger.debug("TokenRepository: Refresh token expired or forbidden (${e.code()}), clearing session and triggering re-authentication")
+                    DPSharedPreferences.clearSharedPreferences(context)
                     AuthEventManager.onRefreshTokenExpired()
                 }
             } catch (parseException: Exception) {
                 AppLogger.error("TokenRepository: Failed to parse error response: ${parseException.message}")
+                if (isAuthError) {
+                    AppLogger.debug("TokenRepository: Refresh token failed with HTTP ${e.code()}, clearing session and triggering re-authentication")
+                    DPSharedPreferences.clearSharedPreferences(context)
+                    AuthEventManager.onRefreshTokenExpired()
+                }
             }
         } catch (e: Exception) {
             AppLogger.error("TokenRepository refresh failed: $e")

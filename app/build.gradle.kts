@@ -55,7 +55,7 @@ android {
         applicationId = "com.paymentoptions.pos"
         minSdk = 29
         targetSdk = 36
-        versionCode = 19
+        versionCode = 20
         versionName = "3.0"
 
 

@@ -41,12 +41,10 @@ class Cart(
 
     fun calculateServiceCharge(): Float {
         var totalService = 0f
-        if (merchantSetting != null) {
-            foodItemMapByCategoryId.forEach { (_, items) ->
-                items.forEach {
-                    if ((it.item.ServiceFeeEnabled == true) && it.cartQuantity > 0) {
-                        totalService += (it.item.ServiceFeeAmount ?: 0f) * it.cartQuantity
-                    }
+        foodItemMapByCategoryId.forEach { (_, items) ->
+            items.forEach {
+                if ((it.item.ServiceFeeEnabled == true) && it.cartQuantity > 0) {
+                    totalService += (it.item.ServiceFeeAmount ?: 0f) * it.cartQuantity
                 }
             }
         }

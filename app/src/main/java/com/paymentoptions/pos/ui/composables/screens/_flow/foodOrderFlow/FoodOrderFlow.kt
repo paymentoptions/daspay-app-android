@@ -7,10 +7,17 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntOffsetAsState
 import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -130,6 +137,7 @@ import com.paymentoptions.pos.utils.cashPaymentMethod
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
 import com.paymentoptions.pos.utils.inProduction
+import com.paymentoptions.pos.utils.openUrlInBrowser
 import com.paymentoptions.pos.utils.paymentMethods
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
@@ -469,15 +477,52 @@ fun FoodOrderFlow(
                 bottomSectionPaddingInDp = 0.dp,
                 enableScrollingOfBottomSectionContent = false,
                 imageBelowLogo = {
-                    Column(
-                        modifier = Modifier
-                            .height(ScreenRatioToDp(0.5f))
-                            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                            .verticalScroll(scrollState),
-                       // verticalArrangement = Arrangement.spacedBy(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        when (selectedPaymentMethod) {
+                    val paymentMethodIndices = availablePaymentMethods.map { it.text }
+                    AnimatedContent(
+                        targetState = selectedPaymentMethod,
+                        label = "payment_method_animation",
+                        transitionSpec = {
+                            // Compare the indexes of the old and new states
+                            val initialIndex = paymentMethodIndices.indexOf(initialState.text)
+                            val targetIndex = paymentMethodIndices.indexOf(targetState.text)
+                            val animationDuration = 750
+
+                            // If the new item is to the right of the old one slide left.
+                            if (targetIndex > initialIndex) {
+                                (slideInHorizontally(
+                                    animationSpec = tween(animationDuration),
+                                    initialOffsetX = { fullWidth -> fullWidth }) + fadeIn(
+                                    animationSpec = tween(animationDuration)
+                                )).togetherWith(
+                                    slideOutHorizontally(
+                                        animationSpec = tween(animationDuration),
+                                        targetOffsetX = { fullWidth -> -fullWidth }) + fadeOut(
+                                        animationSpec = tween(animationDuration)
+                                    )
+                                )
+                            } else {
+                                (slideInHorizontally(
+                                    animationSpec = tween(animationDuration),
+                                    initialOffsetX = { fullWidth -> -fullWidth }) + fadeIn(
+                                    animationSpec = tween(animationDuration)
+                                )).togetherWith(
+                                    slideOutHorizontally(
+                                        animationSpec = tween(animationDuration),
+                                        targetOffsetX = { fullWidth -> fullWidth }) + fadeOut(
+                                        animationSpec = tween(animationDuration)
+                                    )
+                                )
+                            }
+                        }) { paymentMethod ->
+                        Column(
+                            modifier = Modifier
+                                .height(ScreenRatioToDp(0.5f))
+                                .padding(4.dp)
+                                .verticalScroll(scrollState),
+                           // verticalArrangement = Arrangement.spacedBy(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            when (paymentMethod) {
                             tapPaymentMethod -> {
                                 Nfc.getStatus(context)
 
@@ -599,6 +644,7 @@ fun FoodOrderFlow(
                                 startTapAndPay = false
 
                                 var qrCodeBitmap by remember { mutableStateOf<Bitmap?>(null) }
+                                var qrCodePaymentUrl by remember { mutableStateOf<String?>(null) }
                                 var qrCodeLoading by remember { mutableStateOf(false) }
                                 var qrCodeError by remember { mutableStateOf<String?>(null) }
 
@@ -612,6 +658,7 @@ fun FoodOrderFlow(
                                         if (response != null && response.success) {
                                             val paymentUrl =
                                                 pblUrl + response.data.ProductID
+                                            qrCodePaymentUrl = paymentUrl
                                             qrCodeBitmap = generateQrCode(paymentUrl)
                                             DPSharedPreferences.clearSavedCart(context)
                                         } else {
@@ -646,7 +693,7 @@ fun FoodOrderFlow(
                                     textAlign = TextAlign.Center,
                                 )
 
-                                Spacer(Modifier.height(8.dp))
+                                Spacer(Modifier.height(15.dp))
 
                                 if (qrCodeLoading) {
                                     MyCircularProgressIndicator(useWhiteLoader = true)
@@ -660,6 +707,7 @@ fun FoodOrderFlow(
                                 } else {
                                     PaymentQrCodeImage(
                                         qrBitmap = qrCodeBitmap,
+                                        onClick = { openUrlInBrowser(context, qrCodePaymentUrl) },
                                         modifier = Modifier
                                             .padding(horizontal = 20.dp)
                                             .fillMaxWidth()
@@ -668,7 +716,11 @@ fun FoodOrderFlow(
                                     )
                                 }
 
+                                Spacer(Modifier.height(8.dp))
+
                                 PaymentApmsRow(modifier = Modifier.height(50.dp))
+
+                                Spacer(Modifier.height(10.dp))
 
                                 NoteChip(
                                     text = "Ask customer to scan with GrabPay",
@@ -787,6 +839,7 @@ fun FoodOrderFlow(
 
                                             PaymentQrCodeImage(
                                                 qrBitmap = viaLinkQrBitmap,
+                                                onClick = { openUrlInBrowser(context, paymentUrl) },
                                                 modifier = Modifier
                                                     .padding(horizontal = 20.dp)
                                                     .fillMaxWidth()
@@ -838,6 +891,7 @@ fun FoodOrderFlow(
                                                     color = Color(0xFFDCEAFE),
                                                     shape = RoundedCornerShape(11.dp)
                                                 )
+                                                .clickable { openUrlInBrowser(context, paymentUrl) }
                                                 .padding(vertical = 16.dp, horizontal = 12.dp),
                                         ) {
                                             Text(
@@ -930,7 +984,8 @@ fun FoodOrderFlow(
                             }
                         }
                     }
-                }) {
+                }
+            }) {
                 ChargeMoneyBottomSectionContent(
                     navController,
                     amountToCharge = cartState.grandTotal.formatToPrecisionString(),
