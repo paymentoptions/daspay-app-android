@@ -147,6 +147,11 @@ actual fun getDeviceIpAddress(): String {
     }
 }
 
+actual fun isTabletDevice(): Boolean {
+    val smallestScreenWidthDp = currentActivity?.resources?.configuration?.smallestScreenWidthDp ?: return false
+    return smallestScreenWidthDp >= 600
+}
+
 // ── Logging ───────────────────────────────────────────────────────────────────
 
 actual fun platformLog(tag: String, message: String) {

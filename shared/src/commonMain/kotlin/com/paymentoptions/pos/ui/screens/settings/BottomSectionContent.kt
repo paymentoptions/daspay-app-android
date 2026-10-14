@@ -30,6 +30,7 @@ import com.paymentoptions.pos.network.SignOutResponse
 import com.paymentoptions.pos.network.endpoints.signOut
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.showToast
+import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
 import com.paymentoptions.pos.ui.composables._components.MySwitch
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
@@ -53,14 +54,13 @@ fun BottomSectionContent(navController: NavController) {
     val biometricAuthenticator = remember { getBiometricAuthenticator() }
     val isBiometricsAvailable = biometricAuthenticator.isAvailable()
 
-    var authDetails = DPStorageManager.getAuthDetails()
-    val username = authDetails?.data?.name ?: ""
-    val email = authDetails?.data?.email ?: ""
+    val username = AppStorage.userName
+    val email = AppStorage.userEmail
 
-    val lastLoginString: String = formatEpochMillis(
-        (authDetails?.data?.auth_time?.times(1000) ?: 0L),
-        "dd MMMM yyyy | hh:mm a",
-    )
+//    val lastLoginString: String = formatEpochMillis(
+//        (authDetails?.data?.auth_time?.times(1000) ?: 0L),
+//        "dd MMMM yyyy | hh:mm a",
+//    )
 
     MyDialog(
         showDialog = showSignOutConfirmationDialog,
@@ -117,20 +117,24 @@ fun BottomSectionContent(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    text = username,
-                    fontWeight = FontWeight.Bold,
-                    color = primary500,
-                    fontSize = 20.sp,
-                )
+                if(username != null) {
+                    Text(
+                        text = username,
+                        fontWeight = FontWeight.Bold,
+                        color = primary500,
+                        fontSize = 20.sp,
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(text = "Last login: $lastLoginString", color = purple50, fontSize = 14.sp)
+               //TODO Text(text = "Last login: $lastLoginString", color = purple50, fontSize = 14.sp)
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                LinkWithIcon(text = email, url = "mailto:$email", icon = Icons.Outlined.Mail)
+                if(email != null) {
+                    LinkWithIcon(text = email, url = "mailto:$email", icon = Icons.Outlined.Mail)
+                }
 
                 Spacer(modifier = Modifier.height(50.dp))
 

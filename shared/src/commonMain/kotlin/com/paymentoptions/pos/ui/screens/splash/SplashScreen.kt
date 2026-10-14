@@ -36,7 +36,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun SplashScreen(navController: NavController, environment: String) {
-    val signInResponse = DPStorageManager.getAuthDetails()
+    val isToken = AppStorage.idToken
 
     var locationPermissionGranted by remember {
         mutableStateOf(isLocationPermissionGranted())
@@ -70,7 +70,7 @@ fun SplashScreen(navController: NavController, environment: String) {
             AppLogger.error("Error initializing config on splash: ${e.message}")
         }
 
-        if (signInResponse != null) {
+        if (isToken != null) {
             delay(1.seconds)
             // check if token is saved
             val deviceConfiguration = DPStorageManager.getDeviceConfiguration()

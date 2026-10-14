@@ -52,6 +52,9 @@ expect fun getDeviceManufacturer(): String
 expect fun getDeviceOsVersion(): String
 expect fun getDeviceIpAddress(): String
 
+/** True on tablets (Android, `smallestScreenWidthDp >= 600`) and iPad; false on phones. */
+expect fun isTabletDevice(): Boolean
+
 // ── Logging ───────────────────────────────────────────────────────────────────
 
 expect fun platformLog(tag: String, message: String)

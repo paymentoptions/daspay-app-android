@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
+import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -87,10 +88,10 @@ fun AdditionalChargeBottomSectionContent(
         listOf("7", "8", "9"),
         listOf("00", "0", "←"),
     )
-    val authDetails = DPStorageManager.getAuthDetails()
+    val isToken = AppStorage.idToken
     val noteState = rememberTextFieldState()
 
-    if (authDetails == null || authDetails.data == null || authDetails.data!!.token.idToken.isBlank()) {
+    if (isToken.isNullOrBlank()) {
         showSessionExpiredAndNavigateToFingerprint(navController)
         return
     }

@@ -26,6 +26,7 @@ import com.paymentoptions.pos.network.PaymentStatusRequest
 import com.paymentoptions.pos.network.endpoints.payment
 import com.paymentoptions.pos.network.endpoints.sendWebHookNotification
 import com.paymentoptions.pos.showToast
+import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.dialogs.AlertDialogType
 import com.paymentoptions.pos.ui.composables._components.dialogs.MyAlertDialog
 import com.paymentoptions.pos.ui.navigation.Screens
@@ -62,10 +63,10 @@ actual fun TapChargeMoney(
     var showProcessingScreen by remember { mutableStateOf(false) }
     var transactionDetailsText by remember { mutableStateOf("") }
     var hasLaunchedPayment by remember { mutableStateOf(false) }
-    val authDetails = DPStorageManager.getAuthDetails()
-    AppLogger.debug("TapToPay entry: amount=$amountToCharge, authAvailable=${authDetails != null}")
+    val idToken = AppStorage.idToken
+    AppLogger.debug("TapToPay entry: amount=$amountToCharge, idToken=${idToken != null}")
 
-    if (authDetails == null || authDetails.data == null || authDetails.data!!.token.idToken.isBlank()) {
+    if (idToken.isNullOrBlank()) {
         AppLogger.warn("TapToPay aborted: auth details not found, redirecting to auth")
         showSessionExpiredAndNavigateToFingerprint(navController)
         return
@@ -73,7 +74,7 @@ actual fun TapChargeMoney(
 
     
     val merchant: MutableMap<String, String> = mutableMapOf<String, String>()
-    val decodedJwtPayloadJson = decodeJwtPayload(authDetails!!.data!!.token.idToken)
+    val decodedJwtPayloadJson = decodeJwtPayload(idToken)
     val currency = getTransactionCurrency()
 
     merchant["dasmid"] = getTapPayDasmid()
@@ -230,7 +231,8 @@ actual fun TapChargeMoney(
         billing_address = billingAddress,
         shipping_address = billingAddress,
         payment_method = paymentMethod,
-        time_zone = getDeviceTimeZone()
+        time_zone = getDeviceTimeZone(),
+        cartID = ""
     )
 
     MyAlertDialog(

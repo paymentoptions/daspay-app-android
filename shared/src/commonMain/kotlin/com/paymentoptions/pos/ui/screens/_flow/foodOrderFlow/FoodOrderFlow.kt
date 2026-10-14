@@ -40,7 +40,6 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,7 +58,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.isDeveloperOptionsEnabled
 import com.paymentoptions.pos.device.getNfcStatus
@@ -81,6 +79,7 @@ import com.paymentoptions.pos.openNfcSettings
 import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
+import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -137,7 +136,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 
@@ -913,6 +911,7 @@ fun FoodOrderFlow(
                     enableScrolling = false,
                     availablePaymentMethods = availablePaymentMethods,
                     amountToCharge = cartState.calculateGrandTotal().formatToPrecisionString(),
+                    gatewayNotes = cartState.additionalAmountNote,
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
                     onLoader = { onComplete ->
@@ -1005,7 +1004,6 @@ fun FoodOrderFlow(
             ) {
                 TakeDigitalSignatureBottomSectionContent(
                     navController,
-                    enableScrolling = false,
                     signaturePath = signaturePath,
                     signatureDate = signatureDate,
                     paymentDetailsResponse = paymentDetailsResponse,
@@ -1014,7 +1012,8 @@ fun FoodOrderFlow(
                         signatureBitmap = bitmap
                         signatureDate = signDate
                     },
-                    updateFlowStageToSuccess = { updateFlowStage(FoodOrderFlowStage.RESULT_SUCCESS) })
+                    updateFlowStageToSuccess = { updateFlowStage(FoodOrderFlowStage.RESULT_SUCCESS) },
+                )
             }
         }
 
@@ -1028,12 +1027,7 @@ fun FoodOrderFlow(
                 enableScrollingOfBottomSectionContent = false,
                 enableZigZagContainerForBottomSection = true,
                 imageBelowLogo = {
-                    Text(
-                        text = "Receipt",
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    ShowReceiptView()
                 }) {
                 ReceiptBottomSectionContent(
                     navController,

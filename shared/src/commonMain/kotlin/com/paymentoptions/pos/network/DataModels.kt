@@ -256,6 +256,7 @@ data class PaymentRequest(
     val shipping_address: Address,
     val payment_method: PaymentMethodRequest,
     val time_zone: String,
+    val cartID: String
 )
 
 @Serializable
@@ -360,6 +361,7 @@ data class PayByLinkRequestProduct(
 data class PayByLinkRequest(
     val ExpiryDate: String,
     val PBLLinkName: String,
+    val isSourceMinesec: Boolean = true,
     val Product: List<PayByLinkRequestProduct>,
 )
 
@@ -451,6 +453,9 @@ data class ProductListDataRecord(
     val Currency: String = "",
     val DeletedAt: String? = null,
     val DeletedBy: String? = null,
+    val ServiceFeePerc: Float? = null,
+    val ServiceFeeEnabled: Boolean? = false,
+    val ServiceFeeAmount: Float? = 0f
 )
 
 @Serializable
@@ -540,7 +545,9 @@ data class DeviceInfo(
     val CreatedAt: String = "",
     val UpdatedAt: String = "",
     val Location: String? = null,
-    val MerchantSetting: MerchantSetting? = null
+    val MerchantSetting: MerchantSetting? = null,
+    val MinesecDeviceId: String? = null,
+    val MinesecMerchantId: String? = null
 )
 
 @Serializable
@@ -563,6 +570,9 @@ data class DevicePaymentMethod_Apms(
     val hasPayPay: Boolean = false,
     val hasKonbini: Boolean = false,
     val hasPayEasy: Boolean = false,
+    val hasPayNow: Boolean = false,
+    val hasQRPH: Boolean = false,
+    val hasSamsungPay: Boolean = false,
 )
 
 @Serializable

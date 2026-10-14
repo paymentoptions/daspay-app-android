@@ -1,7 +1,8 @@
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class, kotlinx.cinterop.BetaInteropApi::class)
+
 package com.paymentoptions.pos
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.asSkiaBitmap
@@ -9,13 +10,8 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asComposeImageBitmap
 import androidx.compose.ui.graphics.asSkiaPath
-import coil3.Uri
-import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.allocArray
-import kotlinx.cinterop.convert
-import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.readBytes
+import kotlinx.cinterop.*
+import platform.Foundation.NSData
 import kotlinx.datetime.Instant
 import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.Canvas
@@ -28,41 +24,64 @@ import org.jetbrains.skia.PaintStrokeJoin
 import kotlin.concurrent.Volatile
 import platform.Foundation.NSDate
 import platform.Foundation.NSDateFormatter
-import platform.Foundation.NSNotificationCenter
-import platform.Foundation.NSNumber
-import platform.Foundation.NSOperationQueue
 import platform.Foundation.NSURL
+import platform.Foundation.NSUUID
+import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.dateWithTimeIntervalSince1970
 import platform.LocalAuthentication.LAContext
-import platform.LocalAuthentication.LAPolicyDeviceOwnerAuthenticationWithBiometrics
+import platform.LocalAuthentication.LAPolicyDeviceOwnerAuthentication
 import platform.UIKit.UIAlertController
 import platform.UIKit.UIAlertControllerStyleAlert
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
-import platform.UIKit.UIApplicationWillEnterForegroundNotification
 import platform.UIKit.UIDevice
+import platform.UIKit.UIImage
+import platform.UIKit.UIImagePickerController
+import platform.UIKit.UIImagePickerControllerDelegateProtocol
+import platform.UIKit.UIImagePickerControllerOriginalImage
+import platform.UIKit.UIDocumentPickerDelegateProtocol
+import platform.UIKit.UIDocumentPickerViewController
+import platform.UIKit.UINavigationControllerDelegateProtocol
+import coil3.toUri
 import platform.darwin.DISPATCH_TIME_NOW
 import platform.darwin.dispatch_after
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_time
 import com.paymentoptions.pos.logger.AppLogger
-import platform.UIKit.NSLayoutConstraint
-import platform.UIKit.NSTextAlignmentCenter
-import platform.UIKit.UIColor
-import platform.UIKit.UIFont
-import platform.UIKit.UILabel
-import platform.UIKit.UIView
+import platform.Foundation.writeToFile
+import platform.UIKit.UIDocumentPickerMode
+import platform.UIKit.UIImageJPEGRepresentation
+import platform.UIKit.UIImagePickerControllerImageURL
+import platform.UIKit.UIImagePickerControllerSourceType
+import platform.darwin.NSObject
 import kotlin.math.roundToInt
+import coil3.Uri
+import okio.FileSystem
+import okio.Path.Companion.toPath
+import platform.UIKit.setNeedsUpdateOfSupportedInterfaceOrientations
+import platform.posix.memcpy
 
-@OptIn(ExperimentalForeignApi::class)
+actual fun Uri.readBytes(context: Any?): ByteArray? {
+    val pathString = this.path ?: return null
+    val okioPath = pathString.toPath()
+
+    return try {
+        FileSystem.SYSTEM.read(okioPath) {
+            readByteArray()
+        }
+    } catch (e: Exception) {
+        null // File not found or permission denied
+    }
+}
 // ── Biometrics ────────────────────────────────────────────────────────────────
 
+@OptIn(ExperimentalForeignApi::class)
 actual fun getBiometricAuthenticator(): BiometricAuthenticator = object : BiometricAuthenticator {
 
     override fun isAvailable(): Boolean {
         val ctx = LAContext()
-        return ctx.canEvaluatePolicy(LAPolicyDeviceOwnerAuthenticationWithBiometrics, error = null)
+        return ctx.canEvaluatePolicy(LAPolicyDeviceOwnerAuthentication, error = null)
     }
 
     override fun authenticate(
@@ -73,12 +92,12 @@ actual fun getBiometricAuthenticator(): BiometricAuthenticator = object : Biomet
     ) {
         val ctx = LAContext()
         ctx.evaluatePolicy(
-            LAPolicyDeviceOwnerAuthenticationWithBiometrics,
+            LAPolicyDeviceOwnerAuthentication,
             localizedReason = title
         ) { success, error ->
             dispatch_async(dispatch_get_main_queue()) {
                 if (success) onSuccess()
-                else onError(error?.localizedDescription ?: "Biometric failed")
+                else onError(error?.localizedDescription ?: "Authentication failed")
             }
         }
     }
@@ -112,6 +131,9 @@ fun setDeviceIpAddress(ip: String) {
 
 actual fun getDeviceIpAddress(): String = storedDeviceIpAddress
 
+actual fun isTabletDevice(): Boolean =
+    UIDevice.currentDevice.userInterfaceIdiom == platform.UIKit.UIUserInterfaceIdiomPad
+
 // ── Logging ───────────────────────────────────────────────────────────────────
 
 actual fun platformLog(tag: String, message: String) {
@@ -128,11 +150,19 @@ actual fun platformLogError(tag: String, message: String, throwable: Throwable?)
 
 // ── Orientation ───────────────────────────────────────────────────────────────
 
+@Volatile
+private var portraitLocked = false
+
+/** Read by the Swift AppDelegate to gate supported orientations for the whole app. */
+fun isPortraitLocked(): Boolean = portraitLocked
+
 actual fun lockPortrait() {
+    portraitLocked = true
     dispatch_async(dispatch_get_main_queue()) {
-        // UIDeviceOrientationPortrait = 1
-        // UIDeviceOrientationPortrait = 1
-        // Orientation lock on iOS is handled via AppDelegate; KVC approach is a best-effort hint.
+        // iOS 16+: tell the system to re-query supportedInterfaceOrientations from the AppDelegate.
+        UIApplication.sharedApplication.keyWindow
+            ?.rootViewController
+            ?.setNeedsUpdateOfSupportedInterfaceOrientations()
     }
 }
 
@@ -237,26 +267,28 @@ actual fun createSignatureImage(
     return bitmap.asComposeImageBitmap()
 }
 
-@OptIn(ExperimentalForeignApi::class)
 actual fun decodeImageFromUri(uri: Any): ImageBitmap? {
     return try {
         val path = uri.toString().removePrefix("file://").substringBefore("?")
-        memScoped {
-            val file = platform.posix.fopen(path, "rb") ?: return null
-            platform.posix.fseek(file, 0, platform.posix.SEEK_END)
-            val size = platform.posix.ftell(file).toInt()
-            if (size <= 0) { platform.posix.fclose(file); return null }
-            platform.posix.fseek(file, 0, platform.posix.SEEK_SET)
-            val buf = allocArray<ByteVar>(size)
-            platform.posix.fread(buf, 1u.convert(), size.convert(), file)
-            platform.posix.fclose(file)
-            val bytes = buf.readBytes(size)
-            val skiaImage = Image.makeFromEncoded(bytes)
-            Bitmap.makeFromImage(skiaImage).asComposeImageBitmap()
-        }
+        val bytes = FileSystem.SYSTEM.read(path.toPath()) { readByteArray() }
+        val skiaImage = Image.makeFromEncoded(bytes)
+        Bitmap.makeFromImage(skiaImage).asComposeImageBitmap()
     } catch (e: Exception) {
         null
     }
+}
+
+// ── Helper: NSData -> ByteArray ──────────────────────────────────────────────
+@OptIn(ExperimentalForeignApi::class)
+private fun NSData.toByteArray(): ByteArray {
+    val size = this.length.toInt()
+    val bytes = ByteArray(size)
+    if (size > 0) {
+        bytes.usePinned { pinned ->
+            memcpy(pinned.addressOf(0), this.bytes, size.toULong())
+        }
+    }
+    return bytes
 }
 
 actual fun imageBitmapToByteArray(bitmap: ImageBitmap): ByteArray {
@@ -267,23 +299,168 @@ actual fun imageBitmapToByteArray(bitmap: ImageBitmap): ByteArray {
 }
 
 // ── Image Picker ──────────────────────────────────────────────────────────────
-// UIImagePickerController source-type constants are not in the commonized klib.
-// Swift layer should bridge these via a KMP expect or a @ObjCName-annotated entry point.
-// For now the launchers are no-ops; Swift can call the Kotlin callbacks directly.
+
+// Held strongly to prevent ARC from releasing the delegate before the picker dismisses.
+private var imagePickerDelegate: NSObject? = null
+private var cameraPickerDelegate: NSObject? = null
+private var filePickerDelegate: NSObject? = null
 
 @Composable
 actual fun rememberKmpImagePickerLauncher(onResult: (Uri?) -> Unit): KmpImagePickerLauncher {
-    return remember { object : KmpImagePickerLauncher { override fun launch() {} } }
+    val callbackRef = rememberUpdatedState(onResult)
+    return remember {
+        object : KmpImagePickerLauncher {
+            override fun launch() {
+                dispatch_async(dispatch_get_main_queue()) {
+                    val rootVC = UIApplication.sharedApplication.keyWindow?.rootViewController
+                        ?: return@dispatch_async
+                    var topVC = rootVC
+                    while (topVC.presentedViewController != null) topVC = topVC.presentedViewController!!
+
+                    val picker = UIImagePickerController()
+                    picker.sourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypePhotoLibrary
+
+                    val delegate = object : NSObject(),
+                        UIImagePickerControllerDelegateProtocol,
+                        UINavigationControllerDelegateProtocol {
+
+                        override fun imagePickerController(
+                            picker: UIImagePickerController,
+                            didFinishPickingMediaWithInfo: Map<Any?, *>
+                        ) {
+                            imagePickerDelegate = null
+                            picker.dismissViewControllerAnimated(true, completion = null)
+
+                            val imageUrl = didFinishPickingMediaWithInfo[UIImagePickerControllerImageURL] as? NSURL
+                            if (imageUrl != null) {
+                                callbackRef.value(imageUrl.absoluteString?.toUri())
+                            } else {
+                                val image = didFinishPickingMediaWithInfo[UIImagePickerControllerOriginalImage] as? UIImage
+                                callbackRef.value(image?.let { saveImageToTemp(it) })
+                            }
+                        }
+
+                        override fun imagePickerControllerDidCancel(picker: UIImagePickerController) {
+                            imagePickerDelegate = null
+                            picker.dismissViewControllerAnimated(true, completion = null)
+                            callbackRef.value(null)
+                        }
+                    }
+                    imagePickerDelegate = delegate
+                    picker.delegate = delegate
+                    topVC.presentViewController(picker, animated = true, completion = null)
+                }
+            }
+        }
+    }
 }
 
 @Composable
 actual fun rememberKmpCameraLauncher(onResult: (Uri?) -> Unit): KmpCameraLauncher {
-    return remember { object : KmpCameraLauncher { override fun launch() {} } }
+    val callbackRef = rememberUpdatedState(onResult)
+    return remember {
+        object : KmpCameraLauncher {
+            override fun launch() {
+                dispatch_async(dispatch_get_main_queue()) {
+                    if (!UIImagePickerController.isSourceTypeAvailable(
+                            UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera)) {
+                        callbackRef.value(null)
+                        return@dispatch_async
+                    }
+                    val rootVC = UIApplication.sharedApplication.keyWindow?.rootViewController
+                        ?: return@dispatch_async
+                    var topVC = rootVC
+                    while (topVC.presentedViewController != null) topVC = topVC.presentedViewController!!
+
+                    val picker = UIImagePickerController()
+                    picker.sourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
+
+                    val delegate = object : NSObject(),
+                        UIImagePickerControllerDelegateProtocol,
+                        UINavigationControllerDelegateProtocol {
+
+                        override fun imagePickerController(
+                            picker: UIImagePickerController,
+                            didFinishPickingMediaWithInfo: Map<Any?, *>
+                        ) {
+                            cameraPickerDelegate = null
+                            picker.dismissViewControllerAnimated(true, completion = null)
+
+                            val image = didFinishPickingMediaWithInfo[UIImagePickerControllerOriginalImage] as? UIImage
+                            callbackRef.value(image?.let { saveImageToTemp(it) })
+                        }
+
+                        override fun imagePickerControllerDidCancel(picker: UIImagePickerController) {
+                            cameraPickerDelegate = null
+                            picker.dismissViewControllerAnimated(true, completion = null)
+                            callbackRef.value(null)
+                        }
+                    }
+                    cameraPickerDelegate = delegate
+                    picker.delegate = delegate
+                    topVC.presentViewController(picker, animated = true, completion = null)
+                }
+            }
+        }
+    }
 }
 
 @Composable
 actual fun rememberKmpFilePickerLauncher(onResult: (Uri?) -> Unit): KmpFilePickerLauncher {
-    return remember { object : KmpFilePickerLauncher { override fun launch(mimeType: String) {} } }
+    val callbackRef = rememberUpdatedState(onResult)
+    return remember {
+        object : KmpFilePickerLauncher {
+            @Suppress("DEPRECATION")
+            override fun launch(mimeType: String) {
+                dispatch_async(dispatch_get_main_queue()) {
+                    val rootVC = UIApplication.sharedApplication.keyWindow?.rootViewController
+                        ?: return@dispatch_async
+                    var topVC = rootVC
+                    while (topVC.presentedViewController != null) topVC = topVC.presentedViewController!!
+
+                    // UIDocumentPickerModeImport copies the file to a temp location —
+                    // no security-scoped resource handling needed on the read path.
+                    val picker = UIDocumentPickerViewController(
+                        documentTypes = listOf("public.image"),
+                        inMode = UIDocumentPickerMode.UIDocumentPickerModeImport
+                    )
+
+                    val delegate = object : NSObject(), UIDocumentPickerDelegateProtocol {
+                        override fun documentPicker(
+                            controller: UIDocumentPickerViewController,
+                            didPickDocumentsAtURLs: List<*>
+                        ) {
+                            filePickerDelegate = null
+                            controller.dismissViewControllerAnimated(true, completion = null)
+                            val url = didPickDocumentsAtURLs.firstOrNull() as? NSURL
+                            callbackRef.value(url?.absoluteString?.toUri())
+                        }
+
+                        override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) {
+                            filePickerDelegate = null
+                            controller.dismissViewControllerAnimated(true, completion = null)
+                            callbackRef.value(null)
+                        }
+                    }
+                    filePickerDelegate = delegate
+                    picker.delegate = delegate
+                    topVC.presentViewController(picker, animated = true, completion = null)
+                }
+            }
+        }
+    }
+}
+
+//private fun saveImageToTemp(image: UIImage): Uri? {
+//    val data = image.jpegDataWithCompressionQuality(compressionQuality = 0.9) ?: return null
+//    val filePath = NSTemporaryDirectory() + NSUUID().UUIDString + ".jpg"
+//    return if (data.writeToFile(filePath, atomically = true)) "file://$filePath".toUri() else null
+//}
+
+private fun saveImageToTemp(image: UIImage): Uri? {
+    val data = UIImageJPEGRepresentation(image, 0.9) ?: return null
+    val filePath = NSTemporaryDirectory() + NSUUID().UUIDString + ".jpg"
+    return if (data.writeToFile(filePath, atomically = true)) "file://$filePath".toUri() else null
 }
 
 // ── Permissions ───────────────────────────────────────────────────────────────
@@ -398,3 +575,4 @@ actual fun sendLogsToSdkTeam() {
         topVC.presentViewController(activityVC, animated = true, completion = null)
     }
 }
+

@@ -7,6 +7,8 @@ import com.paymentoptions.pos.network.PaymentMethodRequest
 import com.paymentoptions.pos.network.PaymentRequest
 import com.paymentoptions.pos.network.PaymentReturnUrl
 import com.paymentoptions.pos.network.endpoints.payment
+import com.paymentoptions.pos.platformLogError
+import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.utils.decodeJwtPayload
 import com.paymentoptions.pos.utils.getDeviceTimeZone
 import com.paymentoptions.pos.utils.getKeyFromToken
@@ -29,11 +31,14 @@ object MineSecSDK {
         onError: (String) -> Unit
     ) {
         try {
-            val authDetails = DPStorageManager.getAuthDetails() ?: throw Exception("Session expired")
-            val data = authDetails.data ?: throw Exception("Invalid session")
+            val idToken = AppStorage.idToken
+             if(idToken == null){
+                 platformLogError("Minesec","Minesec Session expired")
+                 throw Exception("Session expired")
+             }
             
             val currency = DPStorageManager.getTransactionCurrency()
-            val decodedJwt = decodeJwtPayload(data.token.idToken)
+            val decodedJwt = decodeJwtPayload(idToken)
             val email = getKeyFromToken(decodedJwt, "email")
             val contact = getKeyFromToken(decodedJwt, "custom:ContactNo")
 
@@ -58,7 +63,8 @@ object MineSecSDK {
                     phone_number = contact, city = "Singapore", state = "SG", postal_code = "000000"
                 ),
                 payment_method = PaymentMethodRequest(type = "daspay"),
-                time_zone = getDeviceTimeZone()
+                time_zone = getDeviceTimeZone(),
+                cartID = ""
             )
 
             val response = payment(paymentRequest)
