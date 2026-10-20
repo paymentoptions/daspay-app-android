@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import com.paymentoptions.pos.isTabletDevice
 import com.paymentoptions.pos.device.ScreenRatioToDp
 import com.paymentoptions.pos.ui.composables._components.BottomNavShape
 import com.paymentoptions.pos.ui.composables._components.ZigZagContainer2
@@ -76,6 +77,8 @@ fun SectionedLayout(
     bottomSectionContent: @Composable () -> Unit = {},
 ) {
     var bottomBarContentState by remember { mutableStateOf(bottomBarContent) }
+
+    val screenPaddingInDp = bottomSectionPaddingInDp + if (isTabletDevice()) TABLET_EXTRA_SCREEN_PADDING_IN_DP else 0.dp
 
     val bottomSectionMinHeightDp = ScreenRatioToDp(bottomSectionMinHeightRatio)
     val bottomSectionMaxHeightDp = ScreenRatioToDp(bottomSectionMaxHeightRatio)
@@ -176,11 +179,11 @@ fun SectionedLayout(
                             .fillMaxSize()
                             .weight(1f)
                             .padding(
-                                start = if (enableZigZagContainerForBottomSection) 0.dp else bottomSectionPaddingInDp,
-                                top = bottomSectionPaddingInDp,
-                                end = if (enableZigZagContainerForBottomSection) 0.dp else bottomSectionPaddingInDp,
+                                start = if (enableZigZagContainerForBottomSection) 0.dp else screenPaddingInDp,
+                                top = screenPaddingInDp,
+                                end = if (enableZigZagContainerForBottomSection) 0.dp else screenPaddingInDp,
                                 bottom = when (bottomBarContentState) {
-                                    BottomBarContent.NAVIGATION_BAR -> bottomSectionPaddingInDp.plus(
+                                    BottomBarContent.NAVIGATION_BAR -> screenPaddingInDp.plus(
                                         15.dp
                                     )
 
