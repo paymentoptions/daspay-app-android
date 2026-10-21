@@ -7,6 +7,7 @@ import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
 import com.paymentoptions.pos.OnResume
 import com.paymentoptions.pos.openDeveloperSettings
 import com.paymentoptions.pos.openNfcSettings
+import com.paymentoptions.pos.tapToPayShortName
 import androidx.compose.ui.graphics.ImageBitmap
 import com.paymentoptions.pos.device.GeoRestrictionManager
 import com.paymentoptions.pos.showToast
@@ -412,7 +413,7 @@ fun ReceiveMoneyFlow(
                                             })
 
                                     FilledButton(
-                                        text = "Tap here to start Tap To Pay",
+                                        text = "Tap here to start $tapToPayShortName",
                                         onClick = {
                                             if (inProduction)
                                                 if (isDeveloperOptionsEnabled()) {

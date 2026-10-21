@@ -7,6 +7,7 @@ import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
 import com.paymentoptions.pos.formatDate
 import com.paymentoptions.pos.OnResume
 import com.paymentoptions.pos.showToast
+import com.paymentoptions.pos.tapToPayShortName
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -478,7 +479,7 @@ fun FoodOrderFlow(
                                         })
 
                                 FilledButton(
-                                    text = "Tap here to start Tap To Pay",
+                                    text = "Tap here to start $tapToPayShortName",
                                     onClick = {
                                         if (isDeveloperOptionsEnabled()) {
                                             showDeveloperOptionsEnabled = true

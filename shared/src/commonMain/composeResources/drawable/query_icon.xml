@@ -11,7 +11,7 @@
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:fillColor="#00000000"/>
+        android:fillColor="@android:color/transparent"/>
 
     <!-- Top line -->
     <path
@@ -20,7 +20,7 @@
         android:strokeWidth="1"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:fillColor="#00000000"/>
+        android:fillColor="@android:color/transparent"/>
 
     <!-- Bottom shape -->
     <path
@@ -29,6 +29,6 @@
         android:strokeWidth="2"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
-        android:fillColor="#00000000"/>
+        android:fillColor="@android:color/transparent"/>
 
 </vector>

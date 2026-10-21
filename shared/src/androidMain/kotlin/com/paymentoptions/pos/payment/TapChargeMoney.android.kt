@@ -198,7 +198,9 @@ actual fun TapChargeMoney(
                     AnalyticsHelper.trackPaymentFailed(reason = failureMessage)
                 }
                 showToast(mineSecFailureMessage)
-
+                onLoader {
+                    onFailureUpdateFlowStage()
+                }
             }
         }
     }

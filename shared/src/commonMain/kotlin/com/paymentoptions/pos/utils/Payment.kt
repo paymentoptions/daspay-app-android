@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.paymentoptions.pos.network.ExternalConfigurationResponse
 import com.paymentoptions.pos.network.PaymentMethodRequest
 import com.paymentoptions.pos.storage.AppStorage
+import com.paymentoptions.pos.tapToPayShortName
 import kotlinx.serialization.json.Json
 
 class PaymentMethod(
@@ -21,7 +22,7 @@ class PaymentMethod(
     }
 }
 
-val tapPaymentMethod = PaymentMethod(text = "Tap", icon = Icons.Default.TapAndPlay)
+val tapPaymentMethod = PaymentMethod(text = tapToPayShortName, icon = Icons.Default.TapAndPlay)
 val qrCodePaymentMethod = PaymentMethod(text = "QR Code", icon = Icons.Default.QrCode)
 val cashPaymentMethod = PaymentMethod(text = "Cash", icon = Icons.Default.Money, isEnabled = false)
 val viaLinkPaymentMethod = PaymentMethod(text = "Via Link", icon = Icons.Default.Link)
