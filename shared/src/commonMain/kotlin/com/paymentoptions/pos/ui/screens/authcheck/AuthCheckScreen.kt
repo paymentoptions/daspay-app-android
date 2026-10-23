@@ -38,7 +38,7 @@ fun AuthCheckScreen(navController: NavController) {
             }
         } else {
             // Not logged in, go to sign in
-            AppStorage.clearAll()
+            DPStorageManager.clearAllAndEndSession()
             navController.navigate(Screens.SignIn.route) {
                 popUpTo(0) { inclusive = true }
             }

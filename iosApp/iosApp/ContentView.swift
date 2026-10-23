@@ -6,6 +6,7 @@ struct ComposeView: UIViewControllerRepresentable {
     let provider: MineSecPaymentProvider
     let keychainProvider: KeychainProvider
     let tapToPayReaderStatusProvider: TapToPayReaderStatusProvider
+    let tapToPayReaderBridge: TapToPayReaderBridge
 
     func makeUIViewController(context: Context) -> UIViewController {
         let bundle = Bundle.main
@@ -18,7 +19,8 @@ struct ComposeView: UIViewControllerRepresentable {
             baseUrl: baseUrl,
             mineSecProvider: provider,
             keychainProvider: keychainProvider,
-            tapToPayReaderStatusProvider: tapToPayReaderStatusProvider
+            tapToPayReaderStatusProvider: tapToPayReaderStatusProvider,
+            tapToPayReaderBridge: tapToPayReaderBridge
         )
     }
 
@@ -29,12 +31,14 @@ struct ContentView: View {
     let provider: MineSecPaymentProvider
     let keychainProvider: KeychainProvider
     let tapToPayReaderStatusProvider: TapToPayReaderStatusProvider
+    let tapToPayReaderBridge: TapToPayReaderBridge
 
     var body: some View {
         ComposeView(
             provider: provider,
             keychainProvider: keychainProvider,
-            tapToPayReaderStatusProvider: tapToPayReaderStatusProvider
+            tapToPayReaderStatusProvider: tapToPayReaderStatusProvider,
+            tapToPayReaderBridge: tapToPayReaderBridge
         )
         .ignoresSafeArea()
     }

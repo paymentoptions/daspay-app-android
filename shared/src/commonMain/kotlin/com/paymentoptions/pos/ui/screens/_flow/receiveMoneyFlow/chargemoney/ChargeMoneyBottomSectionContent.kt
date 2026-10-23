@@ -11,9 +11,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,6 +38,8 @@ import com.paymentoptions.pos.device.openNfcSettings
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.payment.TapChargeMoney
+import com.paymentoptions.pos.payment.reader.ReaderState
+import com.paymentoptions.pos.payment.reader.getTapToPayReader
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
@@ -105,9 +110,13 @@ fun ChargeMoneyBottomSectionContent(
 ) {
     val currency = getTransactionCurrency()
     val nfcState = getNfcStatus()
+    val reader = remember { getTapToPayReader() }
 
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
+    var readerReadyState by remember(startTapAndPay, selectedPaymentMethod) {
+        mutableStateOf<ReaderState?>(null)
+    }
 
     MyDialog(
         showDialog = if (inProduction) showDeveloperOptionsEnabled else false,
@@ -144,12 +153,11 @@ fun ChargeMoneyBottomSectionContent(
         if (inProduction && isDeveloperOptionsEnabled()) {
             AppLogger.warn("TapToPay blocked: developer options are enabled on production build")
             showDeveloperOptionsEnabled = true
-        } else if (inProduction && !getNfcStatus().second) {
-            AppLogger.warn("TapToPay blocked: NFC is disabled on production build")
-            showNFCNotEnabled = true
-        } else {
+        } else if (!inProduction) {
+            // Non-production builds skip the reader-readiness gate so Tap to Pay can be
+            // exercised without a real/linked reader, matching the prior behaviour.
             updateFailureMessage(null)
-            AppLogger.debug("TapToPay checks passed, launching TapChargeMoney")
+            AppLogger.debug("TapToPay checks passed (non-production), launching TapChargeMoney")
             TapChargeMoney(
                 navController = navController,
                 amountToCharge = amountToCharge,
@@ -161,6 +169,45 @@ fun ChargeMoneyBottomSectionContent(
                 onFailureMessage = { updateFailureMessage(it) },
                 updateLatestTransaction = updateLatestTransaction,
             )
+        } else {
+            LaunchedEffect(startTapAndPay, selectedPaymentMethod) {
+                readerReadyState = reader.ensureReadyForPayment()
+            }
+
+            when (val state = readerReadyState) {
+                null, ReaderState.NotInitialized, ReaderState.Initializing, is ReaderState.Configuring -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentSize(Alignment.Center)
+                            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                ReaderState.Ready -> {
+                    updateFailureMessage(null)
+                    AppLogger.debug("TapToPay checks passed, launching TapChargeMoney")
+                    TapChargeMoney(
+                        navController = navController,
+                        amountToCharge = amountToCharge,
+                        gatewayNotes = gatewayNotes,
+                        onLoader = onLoader,
+                        onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
+                        onMandatorySignature = onMandatorySignature,
+                        onFailureUpdateFlowStage = onFailureUpdateFlowStage,
+                        onFailureMessage = { updateFailureMessage(it) },
+                        updateLatestTransaction = updateLatestTransaction,
+                    )
+                }
+
+                ReaderState.NotLinked, is ReaderState.Failed -> {
+                    AppLogger.warn("TapToPay blocked: reader not ready ($state)")
+                    showNFCNotEnabled = true
+                }
+            }
         }
     }
 
