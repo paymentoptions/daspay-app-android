@@ -35,6 +35,9 @@ object AndroidTapToPayReader : TapToPayReader {
         return result
     }
 
+    /** Android has no account-linking concept (see class doc) — just re-checks NFC readiness. */
+    override suspend fun linkAccount(): ReaderState = ensureReadyForPayment()
+
     private fun currentNfcState(): ReaderState {
         val (isSupported, isEnabled) = getNfcStatus()
         return when {

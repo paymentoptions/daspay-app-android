@@ -154,6 +154,44 @@ actor ReaderManager {
         return result
     }
 
+    /// Drives Apple's Tap to Pay on iPhone account-linking (Terms & Conditions) UI via
+    /// `HeadlessService.linkAccount()`. Always refreshes the full reader state afterwards so
+    /// observers (checkout, Settings, the enable flow itself) see a consistent snapshot.
+    @discardableResult
+    func linkAccount() async -> StatusSnapshot {
+        guard started else {
+            return updateState(kind: "notInitialized", progress: 0, message: nil)
+        }
+
+        logInfo("MineSec linkAccount started")
+        let result = await svc.linkAccount()
+
+        switch result {
+        case .success(let status):
+            logInfo("MineSec linkAccount succeeded: \(status)")
+            guard status.accountStatus == .linked else {
+                return updateState(kind: "notLinked", progress: 0, message: nil)
+            }
+            // Linked — immediately try to warm up so readiness reflects reality.
+            return await checkAndPrepareReader()
+
+        case .failure(let error):
+            logError("MineSec linkAccount failed: \(error)")
+            let message: String
+            switch error {
+            case .accountLinkRequired:
+                message = "You need to accept Apple's Tap to Pay on iPhone terms to continue."
+            case .accountLinkDeclined:
+                message = "Setup was declined. You can try again anytime."
+            case .accountLinkFailed(let reason):
+                message = "Couldn't set up Tap to Pay on iPhone: \(reason)"
+            default:
+                message = "\(error)"
+            }
+            return updateState(kind: "failed", progress: 0, message: message)
+        }
+    }
+
     private func checkAndPrepareReader() async -> StatusSnapshot {
         guard started else {
             return updateState(kind: "notInitialized", progress: 0, message: nil)
@@ -291,6 +329,13 @@ final class ReaderManagerBridge: NSObject, TapToPayReaderBridge {
     func ensureReadyForPayment(completion: @escaping (String, KotlinInt, String?) -> Void) {
         Task {
             let snapshot = await manager.ensureReadyForPayment()
+            completion(snapshot.kind, KotlinInt(int: snapshot.progress), snapshot.message)
+        }
+    }
+
+    func linkAccount(completion: @escaping (String, KotlinInt, String?) -> Void) {
+        Task {
+            let snapshot = await manager.linkAccount()
             completion(snapshot.kind, KotlinInt(int: snapshot.progress), snapshot.message)
         }
     }

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.outlined.Mail
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,14 +29,18 @@ import com.paymentoptions.pos.getBiometricAuthenticator
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.SignOutResponse
 import com.paymentoptions.pos.network.endpoints.signOut
+import com.paymentoptions.pos.payment.reader.ReaderState
+import com.paymentoptions.pos.payment.reader.getTapToPayReader
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.showToast
 import com.paymentoptions.pos.storage.AppStorage
+import com.paymentoptions.pos.tapToPayDisplayName
 import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
 import com.paymentoptions.pos.ui.composables._components.MySwitch
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
+import com.paymentoptions.pos.ui.composables.tapToPay.EnableTapToPayFlow
 import com.paymentoptions.pos.ui.navigation.Screens
 import com.paymentoptions.pos.ui.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.theme.primary500
@@ -53,6 +58,10 @@ fun BottomSectionContent(navController: NavController) {
     var biometricsEnabled by remember { mutableStateOf(DPStorageManager.getBiometricsStatus()) }
     val biometricAuthenticator = remember { getBiometricAuthenticator() }
     val isBiometricsAvailable = biometricAuthenticator.isAvailable()
+
+    val tapToPayReader = remember { getTapToPayReader() }
+    val tapToPayReaderState by tapToPayReader.state.collectAsState()
+    var showEnableTapToPayFlow by remember { mutableStateOf(false) }
 
     val username = AppStorage.userName
     val email = AppStorage.userEmail
@@ -182,6 +191,47 @@ fun BottomSectionContent(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(20.dp))
 
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        tapToPayDisplayName,
+                        fontWeight = FontWeight.Bold,
+                        color = primary500,
+                        fontSize = 15.sp,
+                    )
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            when (val state = tapToPayReaderState) {
+                                is ReaderState.Ready -> "Ready"
+                                is ReaderState.Configuring -> "Setting up ${state.progress}%"
+                                is ReaderState.Initializing -> "Setting up…"
+                                else -> "Not enabled"
+                            },
+                            fontWeight = FontWeight.Medium,
+                            color = primary500,
+                            fontSize = 14.sp,
+                        )
+
+                        if (tapToPayReaderState !is ReaderState.Ready) {
+                            FilledButton(
+                                text = "Enable",
+                                onClick = { showEnableTapToPayFlow = true },
+                                modifier = Modifier.height(36.dp),
+                                fontSize = 13.sp,
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
                 FilledButton(
                     text = "Logout",
                     onClick = { showSignOutConfirmationDialog = true },
@@ -192,5 +242,9 @@ fun BottomSectionContent(navController: NavController) {
                 )
             }
         }
+    }
+
+    if (showEnableTapToPayFlow) {
+        EnableTapToPayFlow(onDismiss = { showEnableTapToPayFlow = false })
     }
 }

@@ -29,6 +29,13 @@ interface TapToPayReader {
 
     /** Suspends until the reader is ready for a tap (or fails), returning the resulting state. */
     suspend fun ensureReadyForPayment(): ReaderState
+    /**
+     * Drives Apple's Tap to Pay on iPhone account-linking (Terms & Conditions) flow. No-op on
+     * platforms with no such concept (Android), which just resolve immediately. Always returns
+     * the resulting [ReaderState] — [ReaderState.Failed] carries a clear, case-specific message
+     * when linking is required/declined/fails.
+     */
+    suspend fun linkAccount(): ReaderState
 }
 
 /** Platform-provided [TapToPayReader] singleton. */

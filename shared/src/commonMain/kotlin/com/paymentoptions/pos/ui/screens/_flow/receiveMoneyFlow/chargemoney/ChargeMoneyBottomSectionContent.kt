@@ -44,6 +44,7 @@ import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.tapToPay.EnableTapToPayFlow
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary600
@@ -114,6 +115,7 @@ fun ChargeMoneyBottomSectionContent(
 
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
+    var showEnableTapToPayFlow by remember { mutableStateOf(false) }
     var readerReadyState by remember(startTapAndPay, selectedPaymentMethod) {
         mutableStateOf<ReaderState?>(null)
     }
@@ -203,12 +205,24 @@ fun ChargeMoneyBottomSectionContent(
                     )
                 }
 
-                ReaderState.NotLinked, is ReaderState.Failed -> {
+                ReaderState.NotLinked -> {
+                    AppLogger.warn("TapToPay blocked: account not linked — opening enable flow")
+                    showEnableTapToPayFlow = true
+                }
+
+                is ReaderState.Failed -> {
                     AppLogger.warn("TapToPay blocked: reader not ready ($state)")
                     showNFCNotEnabled = true
                 }
             }
         }
+    }
+
+    // The Tap to Pay chip itself is never disabled/hidden while NotLinked (3.7/5.3) — tapping it
+    // just opens the same enable flow used by Settings and the post-login prompt (admin) or the
+    // staff message (non-admin), handled above and rendered here.
+    if (showEnableTapToPayFlow) {
+        EnableTapToPayFlow(onDismiss = { showEnableTapToPayFlow = false })
     }
 
     Column(

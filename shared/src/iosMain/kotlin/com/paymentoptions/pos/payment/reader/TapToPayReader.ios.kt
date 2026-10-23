@@ -27,6 +27,9 @@ interface TapToPayReaderBridge {
     /** `kind` is one of: notInitialized, initializing, configuring, notLinked, ready, failed. */
     fun ensureReadyForPayment(completion: (kind: String, progress: Int, message: String?) -> Unit)
 
+    /** Drives Apple's Tap to Pay on iPhone account-linking (T&C) flow via `HeadlessService.linkAccount()`. */
+    fun linkAccount(completion: (kind: String, progress: Int, message: String?) -> Unit)
+
     fun setStateListener(listener: TapToPayReaderBridgeStateListener)
 }
 
@@ -79,6 +82,17 @@ object IosTapToPayReader : TapToPayReader, TapToPayReaderBridgeStateListener {
             cont.resume(ReaderState.Failed("Tap to Pay reader is not available."))
         } else {
             current.ensureReadyForPayment { kind, progress, message ->
+                cont.resume(toReaderState(kind, progress, message))
+            }
+        }
+    }
+
+    override suspend fun linkAccount(): ReaderState = suspendCancellableCoroutine { cont ->
+        val current = bridge()
+        if (current == null) {
+            cont.resume(ReaderState.Failed("Tap to Pay reader is not available."))
+        } else {
+            current.linkAccount { kind, progress, message ->
                 cont.resume(toReaderState(kind, progress, message))
             }
         }
