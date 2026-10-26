@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.payment.reader.ReaderState
 import com.paymentoptions.pos.payment.reader.getTapToPayReader
+import com.paymentoptions.pos.payment.reader.showTapToPayEducation
 import com.paymentoptions.pos.tapToPayDisplayName
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
@@ -43,8 +44,13 @@ import kotlinx.coroutines.launch
  * Only [DPStorageManager.isAdmin] users can actually start linking; staff just see a message
  * pointing them at their admin (3.8/3.8.1).
  *
+ * Right after a successful link, Apple's native "how to use Tap to Pay" content
+ * ([showTapToPayEducation], `ProximityReaderDiscovery` — covers 4.5/4.6/4.7) is shown
+ * automatically (4.2); hidden/no-op on platforms without it (Android).
+ *
  * @param onLinked Hook called once, right after the reader reports [ReaderState.Ready] following
- * a successful link — reserved for merchant education content (step 4); currently a no-op.
+ * a successful link — reserved for bespoke merchant education content beyond the automatic
+ * native content above; currently a no-op.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,6 +82,7 @@ fun EnableTapToPayFlow(
         if (hasStartedLinking && readerState is ReaderState.Ready && !reportedLinked) {
             reportedLinked = true
             onLinked()
+            showTapToPayEducation()
         }
     }
 

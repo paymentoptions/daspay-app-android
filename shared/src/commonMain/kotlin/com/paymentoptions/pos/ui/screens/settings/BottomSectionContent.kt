@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -31,6 +32,8 @@ import com.paymentoptions.pos.network.SignOutResponse
 import com.paymentoptions.pos.network.endpoints.signOut
 import com.paymentoptions.pos.payment.reader.ReaderState
 import com.paymentoptions.pos.payment.reader.getTapToPayReader
+import com.paymentoptions.pos.payment.reader.isTapToPayEducationAvailable
+import com.paymentoptions.pos.payment.reader.showTapToPayEducation
 import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.showToast
 import com.paymentoptions.pos.storage.AppStorage
@@ -46,6 +49,7 @@ import com.paymentoptions.pos.ui.screens.fingerprintscan.FingerprintScanScreen
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.formatEpochMillis
+import com.paymentoptions.pos.utils.modifiers.noRippleClickable
 import kotlinx.coroutines.launch
 
 @Composable
@@ -228,6 +232,20 @@ fun BottomSectionContent(navController: NavController) {
                             )
                         }
                     }
+                }
+
+                if (isTapToPayEducationAvailable()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "How to use $tapToPayDisplayName",
+                        color = primary500,
+                        fontSize = 13.sp,
+                        textDecoration = TextDecoration.Underline,
+                        modifier = Modifier.noRippleClickable {
+                            scope.launch { showTapToPayEducation() }
+                        },
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
