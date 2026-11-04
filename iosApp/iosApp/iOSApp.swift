@@ -53,6 +53,10 @@ actor ReaderManager {
     private var eventObserverTask: Task<Void, Never>?
     private var stateListener: TapToPayReaderBridgeStateListener?
     private var onInitializedChanged: (@Sendable (Bool) -> Void)?
+    /// Most recent terminal read-session event (`.readCancelled`/`.readNotCompleted`), cleared on
+    /// `.readyForTap`/`.readCompleted`. Lets `SwiftMineSecProvider` classify a failed transaction
+    /// as cancelled/timed-out from a real SDK signal instead of string-matching error text (5.9).
+    private var lastTerminalReadEvent: HeadlessReaderEvent?
 
     init(svc: HeadlessService, legacyStatusProvider: SwiftTapToPayReaderStatusProvider) {
         self.svc = svc
@@ -275,10 +279,33 @@ actor ReaderManager {
             updateState(kind: "notLinked", progress: 0, message: nil)
         case .readyForTap:
             updateState(kind: "ready", progress: 0, message: nil)
+            lastTerminalReadEvent = nil
         case .progress(let percent):
             updateState(kind: "configuring", progress: Int32(percent), message: nil)
+        case .readCancelled, .readNotCompleted:
+            lastTerminalReadEvent = event
+        case .readCompleted:
+            lastTerminalReadEvent = nil
         default:
             break
+        }
+    }
+
+    /// Classifies the most recent terminal read-session event into a stable outcome kind:
+    /// "cancelled" when the user backed out of Apple's native Tap to Pay sheet, "timeout" when
+    /// no card was presented in time / retries were exhausted. Returns nil when neither
+    /// applies — the eventual outcome then comes from the transaction result itself (a real
+    /// decline, webhook failure, etc.). Consuming resets it so a stale event from a previous
+    /// tap can never leak into the next one's classification.
+    func consumeLastOutcomeKind() -> String? {
+        defer { lastTerminalReadEvent = nil }
+        switch lastTerminalReadEvent {
+        case .readCancelled:
+            return "cancelled"
+        case .readNotCompleted:
+            return "timeout"
+        default:
+            return nil
         }
     }
 
@@ -345,6 +372,54 @@ final class ReaderManagerBridge: NSObject, TapToPayReaderBridge {
     }
 }
 
+// MARK: - Tap to Pay Discovery (Apple's native merchant-education content)
+
+/// Wraps Apple's `ProximityReaderDiscovery` (iOS 18+ only — matches this app's 18.5 deployment
+/// target, so there's no older-OS fallback path to support) to present the native "How to Tap"
+/// content, covering the merchant-education requirements (4.5/4.6/4.7) without any bespoke UI.
+final class ProximityReaderDiscoveryPresenter: NSObject, TapToPayDiscoveryBridge {
+    private let discovery = ProximityReaderDiscovery()
+
+    func presentHowToTap(completion: @escaping (KotlinBoolean, String?) -> Void) {
+        Task {
+            do {
+                let content = try await discovery.content(for: .payment(.howToTap))
+                guard let topVC = Self.topViewController() else {
+                    logError("ProximityReaderDiscovery: no view controller available to present from")
+                    DispatchQueue.main.async {
+                        completion(KotlinBoolean(bool: false), "No view controller available to present from.")
+                    }
+                    return
+                }
+                try await discovery.presentContent(content, from: topVC)
+                DispatchQueue.main.async {
+                    completion(KotlinBoolean(bool: true), nil)
+                }
+            } catch {
+                logError("ProximityReaderDiscovery failed: \(error)")
+                DispatchQueue.main.async {
+                    completion(KotlinBoolean(bool: false), error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    private static func topViewController() -> UIViewController? {
+        guard let rootVC = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive })?
+            .keyWindow?.rootViewController
+        else {
+            return nil
+        }
+        var topVC = rootVC
+        while let presented = topVC.presentedViewController {
+            topVC = presented
+        }
+        return topVC
+    }
+}
+
 // MARK: - App Delegate & Main App
 
 // Controls supported interface orientations for the whole app.
@@ -365,6 +440,7 @@ struct iOSApp: App {
     private let keychainProvider = SwiftKeychainProvider()
     private let tapToPayReaderStatusProvider: SwiftTapToPayReaderStatusProvider
     private let readerManagerBridge: ReaderManagerBridge
+    private let tapToPayDiscoveryPresenter = ProximityReaderDiscoveryPresenter()
 
     init() {
         let statusProvider = SwiftTapToPayReaderStatusProvider()
@@ -389,7 +465,8 @@ struct iOSApp: App {
                 provider: bridgeProvider,
                 keychainProvider: keychainProvider,
                 tapToPayReaderStatusProvider: tapToPayReaderStatusProvider,
-                tapToPayReaderBridge: readerManagerBridge
+                tapToPayReaderBridge: readerManagerBridge,
+                tapToPayDiscoveryBridge: tapToPayDiscoveryPresenter
             )
         }
     }
@@ -483,7 +560,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: posReference,
                         acquirerResponseJson: nil,
                         tranType: nil,
-                        errorMessage: "MineSec Reader is not ready. Please try again."
+                        errorMessage: "MineSec Reader is not ready. Please try again.",
+                        outcomeKind: "error"
                     ))
                 }
                 return
@@ -508,6 +586,10 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
             // Either outcome consumes the armed reader session — next call must re-prepare.
             await readerManager.markConsumed()
 
+            // Classify from the real reader-session event observed during this tap, if any
+            // (cancelled/timeout) — not from string-matching error.localizedDescription (5.9).
+            let outcomeKind = await readerManager.consumeLastOutcomeKind()
+
             DispatchQueue.main.async {
                 switch result {
                 case .success(let response):
@@ -526,7 +608,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: posReference,
                         acquirerResponseJson: jsonString,
                         tranType: "SALE",
-                        errorMessage: nil
+                        errorMessage: nil,
+                        outcomeKind: nil
                     ))
 
                 case .failure(let error):
@@ -536,7 +619,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: posReference,
                         acquirerResponseJson: nil,
                         tranType: nil,
-                        errorMessage: error.localizedDescription
+                        errorMessage: error.localizedDescription,
+                        outcomeKind: outcomeKind
                     ))
                 }
             }
@@ -561,7 +645,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "VOID",
-                        errorMessage: "MineSec Reader is not ready. Please try again."
+                        errorMessage: "MineSec Reader is not ready. Please try again.",
+                        outcomeKind: "error"
                     ))
                 }
                 return
@@ -581,7 +666,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "VOID",
-                        errorMessage: nil
+                        errorMessage: nil,
+                        outcomeKind: nil
                     ))
                 case .failure(let error):
                     onResult(MineSecTransactionResult(
@@ -590,7 +676,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "VOID",
-                        errorMessage: error.localizedDescription
+                        errorMessage: error.localizedDescription,
+                        outcomeKind: nil
                     ))
                 }
             }
@@ -617,7 +704,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "REFUND",
-                        errorMessage: "MineSec Reader is not ready. Please try again."
+                        errorMessage: "MineSec Reader is not ready. Please try again.",
+                        outcomeKind: "error"
                     ))
                 }
                 return
@@ -638,7 +726,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "REFUND",
-                        errorMessage: nil
+                        errorMessage: nil,
+                        outcomeKind: nil
                     ))
                 case .failure(let error):
                     onResult(MineSecTransactionResult(
@@ -647,7 +736,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "REFUND",
-                        errorMessage: error.localizedDescription
+                        errorMessage: error.localizedDescription,
+                        outcomeKind: nil
                     ))
                 }
             }

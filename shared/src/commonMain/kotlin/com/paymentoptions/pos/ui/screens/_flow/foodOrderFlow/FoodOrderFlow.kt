@@ -78,6 +78,7 @@ import com.paymentoptions.pos.network.endpoints.productList
 import com.paymentoptions.pos.openDeveloperSettings
 import com.paymentoptions.pos.openNfcSettings
 import com.paymentoptions.pos.storage.AppStorage
+import com.paymentoptions.pos.tapToPayDisplayName
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
@@ -484,7 +485,7 @@ fun FoodOrderFlow(
                                         })
 
                                 FilledButton(
-                                    text = "Tap here to start $tapToPayShortName",
+                                    text = "Charge with $tapToPayDisplayName",
                                     onClick = {
                                         if (isDeveloperOptionsEnabled()) {
                                             showDeveloperOptionsEnabled = true

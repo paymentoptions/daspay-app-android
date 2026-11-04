@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Mail
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,8 +19,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DPStorageManager
@@ -29,11 +34,13 @@ import com.paymentoptions.pos.network.ApiHttpException
 import com.paymentoptions.pos.network.SignInResponse
 import com.paymentoptions.pos.network.endpoints.signIn
 import com.paymentoptions.pos.storage.AppStorage
+import com.paymentoptions.pos.ui.composables._components.LinkWithIcon
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicPasswordTextInput
 import com.paymentoptions.pos.ui.composables._components.inputs.BasicTextInput
 import com.paymentoptions.pos.ui.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.getDeviceIdentifier
 import com.paymentoptions.pos.utils.inProduction
 import com.paymentoptions.pos.utils.isAndroid
@@ -41,6 +48,11 @@ import com.paymentoptions.pos.utils.parseApiErrorMessage
 import com.paymentoptions.pos.utils.validation.validateEmail
 import com.paymentoptions.pos.utils.validation.validatePassword
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import paymentoptionspos.shared.generated.resources.Res
+import paymentoptionspos.shared.generated.resources.sign_in_need_assistance
+import paymentoptionspos.shared.generated.resources.sign_in_new_to_daspay
+import paymentoptionspos.shared.generated.resources.sign_in_register_as_merchant
 
 private sealed class CredentialModel(
     val email: String = "",
@@ -159,6 +171,38 @@ fun SignInBottomSectionContent(navController: NavController, enableScrolling: Bo
             modifier = Modifier
                 .fillMaxWidth()
                 .height(59.dp),
+        )
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        // New-merchant onboarding: directs to the existing Payment Options Gateway
+        // registration + KYC flow instead of a bare support email address.
+        Text(
+            text = stringResource(Res.string.sign_in_new_to_daspay),
+            textAlign = TextAlign.Center,
+            color = purple50,
+            fontSize = 14.sp,
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        LinkWithIcon(
+            text = stringResource(Res.string.sign_in_register_as_merchant),
+            url = "https://me.paymentoptions.com/onboarding/choose-account",
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(Res.string.sign_in_need_assistance),
+            textAlign = TextAlign.Center,
+            color = purple50,
+            fontSize = 14.sp,
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+
+        LinkWithIcon(
+            text = "info@paymentoptions.com",
+            url = "mailto:info@paymentoptions.com",
+            icon = Icons.Outlined.Mail,
         )
 
         Spacer(modifier = Modifier.height(30.dp))

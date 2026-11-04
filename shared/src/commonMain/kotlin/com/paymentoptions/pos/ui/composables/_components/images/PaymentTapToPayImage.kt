@@ -1,18 +1,11 @@
 package com.paymentoptions.pos.ui.composables._components.images
 
-import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.paymentoptions.pos.tapToPayDisplayName
-import org.jetbrains.compose.resources.painterResource
-import paymentoptionspos.shared.generated.resources.Res
-import paymentoptionspos.shared.generated.resources.payment_taptopay
 
+// TODO(design): placeholder art — see ttp_placeholder.xml (Android) / the native SF Symbol
+// (iOS, TapToPayButtonIcon.ios.kt). This is the actionable checkout button's icon.
 @Composable
 fun PaymentTapToPayImage(modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(Res.drawable.payment_taptopay),
-        contentDescription = "Payment $tapToPayDisplayName",
-        modifier = modifier
-    )
+    TapToPayButtonIcon(modifier = modifier)
 }

@@ -85,6 +85,7 @@ import com.paymentoptions.pos.network.PayByLinkRequestProduct
 import com.paymentoptions.pos.network.PayByLinkResponse
 import com.paymentoptions.pos.network.PaymentDetailsResponse
 import com.paymentoptions.pos.network.endpoints.void
+import com.paymentoptions.pos.tapToPayDisplayName
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
@@ -421,7 +422,7 @@ fun ReceiveMoneyFlow(
                                             })
 
                                     FilledButton(
-                                        text = "Tap here to start $tapToPayShortName",
+                                        text = "Charge with $tapToPayDisplayName",
                                         onClick = {
                                             if (inProduction)
                                                 if (isDeveloperOptionsEnabled()) {

@@ -2,7 +2,6 @@ package com.paymentoptions.pos.payment
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.NavController
 import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DPStorageManager
@@ -10,27 +9,37 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.ApiHttpException
 import com.paymentoptions.pos.network.endpoints.sendWebHookNotification
 import com.paymentoptions.pos.showToast
+import com.paymentoptions.pos.ui.screens.status.StatusScreenType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+
+/** Maps a native-SDK-classified [MineSecTransactionResult.outcomeKind] to a [StatusScreenType]. */
+private fun outcomeKindToStatusScreenType(outcomeKind: String?): StatusScreenType = when (outcomeKind) {
+    "cancelled" -> StatusScreenType.CANCELLED
+    "timeout" -> StatusScreenType.TIMEOUT
+    "error" -> StatusScreenType.ERROR
+    else -> StatusScreenType.DECLINED
+}
 
 @Composable
 actual fun TapChargeMoney(
     navController: NavController,
     amountToCharge: String,
     gatewayNotes: String?,
-    onLoader: (nextStage: () -> Unit) -> Unit,
+    onLoader: () -> Unit,
     onSuccessUpdateFlowStage: () -> Unit,
-    onFailureUpdateFlowStage: () -> Unit,
+    onFailureUpdateFlowStage: (StatusScreenType) -> Unit,
     updateLatestTransaction: (id: String) -> Unit,
     onFailureMessage: (String) -> Unit,
     onMandatorySignature: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
     val provider = MineSecPlatform.paymentProvider
     val currency = DPStorageManager.getTransactionCurrency()
 
     if (provider == null || !provider.isInitialized) {
         showToast("MineSec SDK not ready. Please wait a moment and try again.")
-        onFailureUpdateFlowStage()
+        onFailureUpdateFlowStage(StatusScreenType.ERROR)
         return
     }
 
@@ -51,7 +60,16 @@ actual fun TapChargeMoney(
                     posReference = posRef,
                     onResult = { result ->
                         if (result.success) {
-                            scope.launch {
+                            // The card read completed — real processing (webhook confirmation)
+                            // starts now and runs until the backend actually responds (5.8).
+                            onLoader()
+                            // A plain scope, not rememberCoroutineScope(): onLoader() above just
+                            // triggered a flow-stage change that disposes this composable (and
+                            // would cancel a composition-bound scope) before the webhook call
+                            // can run — it must survive that transition to actually complete.
+                            // (Dispatchers.IO isn't available on iOS/Native; Default is fine for
+                            // a suspend network call via Ktor, which doesn't block a thread.)
+                            CoroutineScope(Dispatchers.Default).launch {
                                 val paymentStatusRequest = PaymentStatusMapper.fromMineSecResult(
                                     posReference = posRef,
                                     result = result,
@@ -69,20 +87,16 @@ actual fun TapChargeMoney(
                                             transactionId = webhookTranId,
                                             amount = amountToCharge,
                                         )
-                                        onLoader {
-                                            updateLatestTransaction(webhookTranId)
-                                            onSuccessUpdateFlowStage()
-                                        }
+                                        updateLatestTransaction(webhookTranId)
+                                        onSuccessUpdateFlowStage()
                                     } else {
                                         AnalyticsHelper.trackPaymentDeclined(
                                             reason = "paymentStatus returned false",
                                             transactionId = webhookTranId,
                                         )
                                         onFailureMessage("Tap to Pay failed while confirming payment status. Please retry.")
-                                        onLoader {
-                                            updateLatestTransaction(webhookTranId)
-                                            onFailureUpdateFlowStage()
-                                        }
+                                        updateLatestTransaction(webhookTranId)
+                                        onFailureUpdateFlowStage(StatusScreenType.DECLINED)
                                     }
                                 } catch (e: Exception) {
                                     AppLogger.error("TapToPay iOS webhook exception: ${e.message}", e)
@@ -98,21 +112,22 @@ actual fun TapChargeMoney(
                                         throwable = e,
                                     )
                                     onFailureMessage(e.message ?: "Tap to Pay failed during payment confirmation.")
-                                    onLoader {
-                                        updateLatestTransaction(paymentStatusRequest.tranId.orEmpty())
-                                        onFailureUpdateFlowStage()
-                                    }
+                                    updateLatestTransaction(paymentStatusRequest.tranId.orEmpty())
+                                    onFailureUpdateFlowStage(StatusScreenType.ERROR)
                                 }
                             }
                         } else {
+                            // Classified from a real reader-session event observed during this
+                            // tap (cancelled/timeout), not from string-matching errorMessage (5.9).
+                            val outcome = outcomeKindToStatusScreenType(result.outcomeKind)
                             val message = result.errorMessage ?: "Transaction failed"
-                            if (message.contains("cancel", ignoreCase = true)) {
-                                AnalyticsHelper.trackPaymentCancelled(reason = message)
-                            } else {
-                                AnalyticsHelper.trackPaymentFailed(reason = message)
+                            when (outcome) {
+                                StatusScreenType.CANCELLED -> AnalyticsHelper.trackPaymentCancelled(reason = message)
+                                else -> AnalyticsHelper.trackPaymentFailed(reason = message)
                             }
                             showToast(message)
-                            onFailureUpdateFlowStage()
+                            onFailureMessage(message)
+                            onFailureUpdateFlowStage(outcome)
                         }
                     },
                 )
@@ -121,7 +136,7 @@ actual fun TapChargeMoney(
                 AnalyticsHelper.trackPaymentFailed(reason = error)
                 showToast(error)
                 onFailureMessage(error)
-                onFailureUpdateFlowStage()
+                onFailureUpdateFlowStage(StatusScreenType.ERROR)
             },
         )
     }

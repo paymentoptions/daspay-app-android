@@ -40,11 +40,13 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.payment.TapChargeMoney
 import com.paymentoptions.pos.payment.reader.ReaderState
 import com.paymentoptions.pos.payment.reader.getTapToPayReader
+import com.paymentoptions.pos.tapToPayDisplayName
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.composables.tapToPay.EnableTapToPayFlow
+import com.paymentoptions.pos.ui.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary600
@@ -100,9 +102,9 @@ fun ChargeMoneyBottomSectionContent(
     availablePaymentMethods: List<PaymentMethod>,
     selectedPaymentMethod: PaymentMethod,
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
-    onLoader: (nextStage: () -> Unit) -> Unit = {},
+    onLoader: () -> Unit = {},
     onSuccessUpdateFlowStage: () -> Unit = {},
-    onFailureUpdateFlowStage: () -> Unit = {},
+    onFailureUpdateFlowStage: (StatusScreenType) -> Unit = {},
     onChangeAmount: () -> Unit,
     startTapAndPay: Boolean = false,
     updateLatestTransaction: (id: String) -> Unit,
@@ -178,6 +180,7 @@ fun ChargeMoneyBottomSectionContent(
 
             when (val state = readerReadyState) {
                 null, ReaderState.NotInitialized, ReaderState.Initializing, is ReaderState.Configuring -> {
+                    val progress = (state as? ReaderState.Configuring)?.progress
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -186,6 +189,14 @@ fun ChargeMoneyBottomSectionContent(
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Preparing $tapToPayDisplayName" + (progress?.let { "… $it%" } ?: "…"),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary900,
+                            textAlign = TextAlign.Center,
+                        )
                     }
                 }
 
