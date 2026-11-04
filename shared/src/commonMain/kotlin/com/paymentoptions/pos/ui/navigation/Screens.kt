@@ -49,4 +49,8 @@ sealed class Screens(val route: String) {
     object Splash    : Screens("Splash")
     object FcmToken  : Screens("FcmToken")
     object Status    : Screens("Status")
+
+    // Tap to Pay on iPhone (placeholder screens — not yet wired into any trigger point)
+    object TapToPayAwareness : Screens("TapToPayAwareness")
+    object TryTapToPay       : Screens("TryTapToPay")
 }

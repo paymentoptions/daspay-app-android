@@ -12,6 +12,11 @@ data class MineSecTransactionResult(
     val acquirerResponseJson: String? = null,
     val tranType: String? = null,
     val errorMessage: String? = null,
+    /**
+     * "cancelled" or "timeout" when classified from a real SDK reader-session event
+     * (not string-matched from [errorMessage]); null otherwise (5.9).
+     */
+    val outcomeKind: String? = null,
 )
 
 /**

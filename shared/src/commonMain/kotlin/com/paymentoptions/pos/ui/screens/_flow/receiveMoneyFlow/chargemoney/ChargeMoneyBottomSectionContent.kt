@@ -11,9 +11,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,10 +38,15 @@ import com.paymentoptions.pos.device.openNfcSettings
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.payment.TapChargeMoney
+import com.paymentoptions.pos.payment.reader.ReaderState
+import com.paymentoptions.pos.payment.reader.getTapToPayReader
+import com.paymentoptions.pos.tapToPayDisplayName
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
+import com.paymentoptions.pos.ui.composables.tapToPay.EnableTapToPayFlow
+import com.paymentoptions.pos.ui.screens.status.StatusScreenType
 import com.paymentoptions.pos.ui.theme.iconBackgroundColor
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.ui.theme.primary600
@@ -94,9 +102,9 @@ fun ChargeMoneyBottomSectionContent(
     availablePaymentMethods: List<PaymentMethod>,
     selectedPaymentMethod: PaymentMethod,
     updateSelectedPaymentMethod: (PaymentMethod) -> Unit = {},
-    onLoader: (nextStage: () -> Unit) -> Unit = {},
+    onLoader: () -> Unit = {},
     onSuccessUpdateFlowStage: () -> Unit = {},
-    onFailureUpdateFlowStage: () -> Unit = {},
+    onFailureUpdateFlowStage: (StatusScreenType) -> Unit = {},
     onChangeAmount: () -> Unit,
     startTapAndPay: Boolean = false,
     updateLatestTransaction: (id: String) -> Unit,
@@ -105,9 +113,14 @@ fun ChargeMoneyBottomSectionContent(
 ) {
     val currency = getTransactionCurrency()
     val nfcState = getNfcStatus()
+    val reader = remember { getTapToPayReader() }
 
     var showDeveloperOptionsEnabled by remember { mutableStateOf(false) }
     var showNFCNotEnabled by remember { mutableStateOf(false) }
+    var showEnableTapToPayFlow by remember { mutableStateOf(false) }
+    var readerReadyState by remember(startTapAndPay, selectedPaymentMethod) {
+        mutableStateOf<ReaderState?>(null)
+    }
 
     MyDialog(
         showDialog = if (inProduction) showDeveloperOptionsEnabled else false,
@@ -144,12 +157,11 @@ fun ChargeMoneyBottomSectionContent(
         if (inProduction && isDeveloperOptionsEnabled()) {
             AppLogger.warn("TapToPay blocked: developer options are enabled on production build")
             showDeveloperOptionsEnabled = true
-        } else if (inProduction && !getNfcStatus().second) {
-            AppLogger.warn("TapToPay blocked: NFC is disabled on production build")
-            showNFCNotEnabled = true
-        } else {
+        } else if (!inProduction) {
+            // Non-production builds skip the reader-readiness gate so Tap to Pay can be
+            // exercised without a real/linked reader, matching the prior behaviour.
             updateFailureMessage(null)
-            AppLogger.debug("TapToPay checks passed, launching TapChargeMoney")
+            AppLogger.debug("TapToPay checks passed (non-production), launching TapChargeMoney")
             TapChargeMoney(
                 navController = navController,
                 amountToCharge = amountToCharge,
@@ -161,7 +173,67 @@ fun ChargeMoneyBottomSectionContent(
                 onFailureMessage = { updateFailureMessage(it) },
                 updateLatestTransaction = updateLatestTransaction,
             )
+        } else {
+            LaunchedEffect(startTapAndPay, selectedPaymentMethod) {
+                readerReadyState = reader.ensureReadyForPayment()
+            }
+
+            when (val state = readerReadyState) {
+                null, ReaderState.NotInitialized, ReaderState.Initializing, is ReaderState.Configuring -> {
+                    val progress = (state as? ReaderState.Configuring)?.progress
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentSize(Alignment.Center)
+                            .padding(DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Preparing $tapToPayDisplayName" + (progress?.let { "… $it%" } ?: "…"),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = primary900,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+
+                ReaderState.Ready -> {
+                    updateFailureMessage(null)
+                    AppLogger.debug("TapToPay checks passed, launching TapChargeMoney")
+                    TapChargeMoney(
+                        navController = navController,
+                        amountToCharge = amountToCharge,
+                        gatewayNotes = gatewayNotes,
+                        onLoader = onLoader,
+                        onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
+                        onMandatorySignature = onMandatorySignature,
+                        onFailureUpdateFlowStage = onFailureUpdateFlowStage,
+                        onFailureMessage = { updateFailureMessage(it) },
+                        updateLatestTransaction = updateLatestTransaction,
+                    )
+                }
+
+                ReaderState.NotLinked -> {
+                    AppLogger.warn("TapToPay blocked: account not linked — opening enable flow")
+                    showEnableTapToPayFlow = true
+                }
+
+                is ReaderState.Failed -> {
+                    AppLogger.warn("TapToPay blocked: reader not ready ($state)")
+                    showNFCNotEnabled = true
+                }
+            }
         }
+    }
+
+    // The Tap to Pay chip itself is never disabled/hidden while NotLinked (3.7/5.3) — tapping it
+    // just opens the same enable flow used by Settings and the post-login prompt (admin) or the
+    // staff message (non-admin), handled above and rendered here.
+    if (showEnableTapToPayFlow) {
+        EnableTapToPayFlow(onDismiss = { showEnableTapToPayFlow = false })
     }
 
     Column(

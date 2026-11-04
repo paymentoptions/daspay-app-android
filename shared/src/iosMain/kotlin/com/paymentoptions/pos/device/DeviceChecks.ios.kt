@@ -12,10 +12,9 @@ import platform.UIKit.UIApplicationOpenSettingsURLString
  */
 actual fun getNfcStatus(): Pair<Boolean, Boolean> {
     val provider = TapToPayReaderStatusHelper.provider
-    //return Pair(provider?.isSupported() ?: false, provider?.isReady() ?: false)
     platformLog("TapToPayReaderStatusHelper","ioS is provider ready:" +
             " ${provider?.isReady()}, isSupported: ${provider?.isSupported()}, provider: $provider")
-    return Pair(provider?.isSupported() ?: false, provider?.isSupported() ?: false)
+    return Pair(provider?.isSupported() ?: false, provider?.isReady() ?: false)
 }
 
 // iOS has no developer-options toggle equivalent.

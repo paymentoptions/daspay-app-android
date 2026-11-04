@@ -7,6 +7,7 @@ import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
 import com.paymentoptions.pos.formatDate
 import com.paymentoptions.pos.OnResume
 import com.paymentoptions.pos.showToast
+import com.paymentoptions.pos.tapToPayShortName
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -77,6 +78,7 @@ import com.paymentoptions.pos.network.endpoints.productList
 import com.paymentoptions.pos.openDeveloperSettings
 import com.paymentoptions.pos.openNfcSettings
 import com.paymentoptions.pos.storage.AppStorage
+import com.paymentoptions.pos.tapToPayDisplayName
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
@@ -137,7 +139,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.seconds
 
 const val MAX_QUANTITY_PER_FOOD_ITEM = 20
 
@@ -155,6 +156,7 @@ fun FoodOrderFlow(
         mutableStateOf<FoodOrderFlowStage>(initialFoodOrderFlowStage)
     }
     var latestTransactionId by remember { mutableStateOf<String?>(null) }
+    var transactionOutcome by remember { mutableStateOf(StatusScreenType.DECLINED) }
 
     var foodCategoryList by remember { mutableStateOf<List<CategoryListDataRecord>>(listOf()) }
     var selectedFoodCategory by remember { mutableStateOf<CategoryListDataRecord?>(null) }
@@ -207,7 +209,12 @@ fun FoodOrderFlow(
         }
     }
 
-    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(availablePaymentMethods.first()) }
+    // Tap to Pay is the default selected method whenever it's available (5.1/5.2).
+    var selectedPaymentMethod by remember {
+        mutableStateOf<PaymentMethod>(
+            availablePaymentMethods.firstOrNull { it == tapPaymentMethod } ?: availablePaymentMethods.first()
+        )
+    }
 
     OnResume {
         val currentNfcStatus = getNfcStatus()
@@ -478,7 +485,7 @@ fun FoodOrderFlow(
                                         })
 
                                 FilledButton(
-                                    text = "Tap here to start Tap To Pay",
+                                    text = "Charge with $tapToPayDisplayName",
                                     onClick = {
                                         if (isDeveloperOptionsEnabled()) {
                                             showDeveloperOptionsEnabled = true
@@ -914,15 +921,16 @@ fun FoodOrderFlow(
                     gatewayNotes = cartState.additionalAmountNote,
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
-                    onLoader = { onComplete ->
-                        CoroutineScope(Dispatchers.Main).launch {
-                            updateFlowStage(FoodOrderFlowStage.RESULT_PROCESSING)
-                            delay(3.seconds)
-                            onComplete()
-                        }
+                    onLoader = {
+                        // Real processing state: shown from the moment the card read completes
+                        // until the backend actually responds (5.8) — no artificial delay.
+                        updateFlowStage(FoodOrderFlowStage.RESULT_PROCESSING)
                     },
                     onSuccessUpdateFlowStage = { updateFlowStage(FoodOrderFlowStage.RESULT_SUCCESS) },
-                    onFailureUpdateFlowStage = { updateFlowStage(FoodOrderFlowStage.RESULT_ERROR) },
+                    onFailureUpdateFlowStage = { outcome ->
+                        transactionOutcome = outcome
+                        updateFlowStage(FoodOrderFlowStage.RESULT_ERROR)
+                    },
                     onChangeAmount = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
                     startTapAndPay = startTapAndPay,
                     updateLatestTransaction = { latestTransactionId = it })
@@ -938,8 +946,14 @@ fun FoodOrderFlow(
         }
 
         FoodOrderFlowStage.RESULT_ERROR -> {
+            val textForOutcome = when (transactionOutcome) {
+                StatusScreenType.TIMEOUT -> "Payment Timed Out"
+                StatusScreenType.CANCELLED -> "Payment Cancelled"
+                StatusScreenType.DECLINED -> "Payment Declined"
+                else -> "Payment Failed"
+            }
             val dataMessage = MessageForStatusScreen(
-                text = "Payment Failed", statusScreenType = StatusScreenType.ERROR
+                text = textForOutcome, statusScreenType = transactionOutcome
             )
             StatusScreen(navController, dataMessage, strategyFn = {
                 failureProceedFlag = true
@@ -957,7 +971,7 @@ fun FoodOrderFlow(
                     navController,
                     enableScrolling = enableScrollingInsideBottomSectionContent,
                     transactionId = latestTransactionId.toString(),
-                    updateFlowStage = { })
+                    updateFlowStage = { updateFlowStage(FoodOrderFlowStage.RECEIPT) })
             }
         }
 

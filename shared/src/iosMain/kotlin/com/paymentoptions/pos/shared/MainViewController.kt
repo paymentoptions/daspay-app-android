@@ -8,6 +8,10 @@ import com.paymentoptions.pos.device.TapToPayReaderStatusHelper
 import com.paymentoptions.pos.device.TapToPayReaderStatusProvider
 import com.paymentoptions.pos.payment.MineSecPaymentProvider
 import com.paymentoptions.pos.payment.MineSecPlatform
+import com.paymentoptions.pos.payment.reader.TapToPayDiscoveryBridge
+import com.paymentoptions.pos.payment.reader.TapToPayDiscoveryBridgeHolder
+import com.paymentoptions.pos.payment.reader.TapToPayReaderBridge
+import com.paymentoptions.pos.payment.reader.TapToPayReaderBridgeHolder
 import com.paymentoptions.pos.utils.KeychainHelper
 import com.paymentoptions.pos.utils.KeychainProvider
 import platform.UIKit.UIViewController
@@ -24,12 +28,16 @@ import platform.UIKit.UIViewController
  * @param mineSecProvider  Implementation of the MineSec SDK logic from Swift.
  * @param keychainProvider  Implementation of Keychain storage from Swift.
  * @param tapToPayReaderStatusProvider  Implementation of the ProximityReader Tap to Pay status check from Swift.
+ * @param tapToPayReaderBridge  Implementation of the Tap to Pay reader lifecycle (ReaderManager) from Swift.
+ * @param tapToPayDiscoveryBridge  Implementation of Apple's ProximityReaderDiscovery content presenter from Swift.
  */
 fun MainViewController(
     baseUrl: String,
     mineSecProvider: MineSecPaymentProvider?,
     keychainProvider: KeychainProvider?,
     tapToPayReaderStatusProvider: TapToPayReaderStatusProvider?,
+    tapToPayReaderBridge: TapToPayReaderBridge?,
+    tapToPayDiscoveryBridge: TapToPayDiscoveryBridge?,
 ): UIViewController {
     AppStorage.init(createSettings())
 
@@ -42,6 +50,8 @@ fun MainViewController(
     MineSecPlatform.paymentProvider = mineSecProvider
     KeychainHelper.provider = keychainProvider
     TapToPayReaderStatusHelper.provider = tapToPayReaderStatusProvider
+    TapToPayReaderBridgeHolder.bridge = tapToPayReaderBridge
+    TapToPayDiscoveryBridgeHolder.bridge = tapToPayDiscoveryBridge
 
     return ComposeUIViewController {
         App(buildTimeBaseUrl = baseUrl, environment = environment)

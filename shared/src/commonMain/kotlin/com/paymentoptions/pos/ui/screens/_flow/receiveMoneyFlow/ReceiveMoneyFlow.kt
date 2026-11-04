@@ -7,6 +7,7 @@ import com.paymentoptions.pos.ui.composables._components.dialogs.MyDialog
 import com.paymentoptions.pos.OnResume
 import com.paymentoptions.pos.openDeveloperSettings
 import com.paymentoptions.pos.openNfcSettings
+import com.paymentoptions.pos.tapToPayShortName
 import androidx.compose.ui.graphics.ImageBitmap
 import com.paymentoptions.pos.device.GeoRestrictionManager
 import com.paymentoptions.pos.showToast
@@ -84,6 +85,7 @@ import com.paymentoptions.pos.network.PayByLinkRequestProduct
 import com.paymentoptions.pos.network.PayByLinkResponse
 import com.paymentoptions.pos.network.PaymentDetailsResponse
 import com.paymentoptions.pos.network.endpoints.void
+import com.paymentoptions.pos.tapToPayDisplayName
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
@@ -148,6 +150,7 @@ fun ReceiveMoneyFlow(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
     var transactionFailureMessage by remember { mutableStateOf<String?>(null) }
+    var transactionOutcome by remember { mutableStateOf(StatusScreenType.DECLINED) }
 
     var latestTransactionId by remember { mutableStateOf<String?>(null) }
 
@@ -193,12 +196,19 @@ fun ReceiveMoneyFlow(
             paymentMethods().filter { it != tapPaymentMethod }
         }
     }
-    var selectedPaymentMethod by remember { mutableStateOf<PaymentMethod>(availablePaymentMethods.first()) }
+    // Tap to Pay is the default selected method whenever it's available (5.1/5.2).
+    var selectedPaymentMethod by remember {
+        mutableStateOf<PaymentMethod>(
+            availablePaymentMethods.firstOrNull { it == tapPaymentMethod } ?: availablePaymentMethods.first()
+        )
+    }
 
     LaunchedEffect(availablePaymentMethods) {
-        // If the currently selected method is no longer available, default to the first available one.
+        // If the currently selected method is no longer available, default to Tap to Pay if it's
+        // back in the list, otherwise the first available one.
         if (selectedPaymentMethod !in availablePaymentMethods) {
-            selectedPaymentMethod = availablePaymentMethods.first()
+            selectedPaymentMethod = availablePaymentMethods.firstOrNull { it == tapPaymentMethod }
+                ?: availablePaymentMethods.first()
         }
     }
 
@@ -412,7 +422,7 @@ fun ReceiveMoneyFlow(
                                             })
 
                                     FilledButton(
-                                        text = "Tap here to start Tap To Pay",
+                                        text = "Charge with $tapToPayDisplayName",
                                         onClick = {
                                             if (inProduction)
                                                 if (isDeveloperOptionsEnabled()) {
@@ -827,16 +837,16 @@ fun ReceiveMoneyFlow(
                     selectedPaymentMethod = selectedPaymentMethod,
                     updateSelectedPaymentMethod = { selectedPaymentMethod = it },
                     onLoader = {
+                        // Real processing state: shown from the moment the card read completes
+                        // until the backend actually responds (5.8) — no artificial delay.
                         updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_PROCESSING)
-                        CoroutineScope(Dispatchers.IO).launch {
-                            // Simulate transaction processing delay
-                            delay(3.seconds)
-                            it()
-                        }
                     },
                     onSuccessUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_SUCCESSFUL) },
                     onMandatorySignature = { updateFlowStage(ReceiveMoneyFlowStage.MANDATORY_SIGNATURE) },
-                    onFailureUpdateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED) },
+                    onFailureUpdateFlowStage = { outcome ->
+                        transactionOutcome = outcome
+                        updateFlowStage(ReceiveMoneyFlowStage.TRANSACTION_FAILED)
+                    },
                     onChangeAmount = { updateFlowStage(ReceiveMoneyFlowStage.INPUT_MONEY) },
                     startTapAndPay = startTapAndPay,
                     updateFailureMessage = { transactionFailureMessage = it },
@@ -853,9 +863,15 @@ fun ReceiveMoneyFlow(
         }
 
         ReceiveMoneyFlowStage.TRANSACTION_FAILED -> {
+            val defaultMessageForOutcome = when (transactionOutcome) {
+                StatusScreenType.TIMEOUT -> "Payment Timed Out"
+                StatusScreenType.CANCELLED -> "Payment Cancelled"
+                StatusScreenType.DECLINED -> "Payment Declined"
+                else -> "Payment Failed"
+            }
             val dataMessage = MessageForStatusScreen(
-                text = transactionFailureMessage ?: "Payment Failed",
-                statusScreenType = StatusScreenType.ERROR
+                text = transactionFailureMessage ?: defaultMessageForOutcome,
+                statusScreenType = transactionOutcome
             )
             StatusScreen(navController, dataMessage, strategyFn = {
                 CoroutineScope(Dispatchers.Main).launch {
@@ -876,7 +892,7 @@ fun ReceiveMoneyFlow(
                     enableScrolling = true,
                     failureMessage = transactionFailureMessage,
                     transactionId = latestTransactionId.toString(),
-                    updateFlowStage = { })
+                    updateFlowStage = { updateFlowStage(ReceiveMoneyFlowStage.RECEIPT) })
             }
         }
 

@@ -159,5 +159,9 @@ fun Navigator(
         composable(Screens.HelpAndSupport.route) { HelpAndSupportScreenPlaceholder(navController) }
         composable(Screens.SendLogs.route)       { SendLogsScreenPlaceholder(navController) }
         composable(Screens.FcmToken.route)       { FcmTokenScreenPlaceholder(navController) }
+
+        // ── Tap to Pay on iPhone (placeholder screens — reachable, not yet auto-triggered) ──
+        composable(Screens.TapToPayAwareness.route) { OpenTapToPayAwarenessScreen(navController) }
+        composable(Screens.TryTapToPay.route)       { OpenTryTapToPayScreen(navController) }
     }
 }

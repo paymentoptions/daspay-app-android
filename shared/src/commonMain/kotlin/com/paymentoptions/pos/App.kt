@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.paymentoptions.pos.auth.TokenRepository
 import com.paymentoptions.pos.network.ConfigurationManager
+import com.paymentoptions.pos.payment.reader.ReaderLifecycleCoordinator
 import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.navigation.Navigator
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -39,6 +40,14 @@ fun App(
 
         // Lock the screen to portrait on supported platforms
         lockPortrait()
+
+        // Resume the Tap to Pay reader if a session was already active (app relaunch).
+        ReaderLifecycleCoordinator.appStarted()
+    }
+
+    // App-wide foreground hook — the single place the reader is warmed up on resume.
+    OnResume {
+        ReaderLifecycleCoordinator.onForeground()
     }
 
     AppTheme {

@@ -42,6 +42,9 @@ interface StorageInterface {
     // ── Device / external config JSON ─────────────────────────────────────────
     var deviceConfigJson: String?
 
+    // ── Tap to Pay merchant config JSON (MerchantConfig) ──────────────────────
+    var merchantConfigJson: String?
+
     // ── App config / URLs ─────────────────────────────────────────────────────
     var baseUrl: String?
     var configBaseUrl: String?
