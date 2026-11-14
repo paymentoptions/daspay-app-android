@@ -96,6 +96,8 @@ import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,14 +139,7 @@ fun TransactionSuccessfulBottomSectionContent(
     }
 
     if (paymentDetailsLatestResponse != null) {
-        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
-            runCatching<AquirerResponse> {
-                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
-            }.getOrNull() ?: AquirerResponse()
-        } else {
-            AquirerResponse()
-        }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse) ?: AquirerResponse()
     }
 
     fun navigateToVoidAction(transaction: TransactionListDataRecord){
@@ -424,7 +419,8 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
                 }
 
-                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
+                if (gatewayNotes.isNotBlank()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -436,7 +432,7 @@ fun TransactionSuccessfulBottomSectionContent(
                         )
 
                         Text(
-                            transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            gatewayNotes,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = primary500

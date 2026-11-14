@@ -83,7 +83,8 @@ import com.paymentoptions.pos.utils.modifiers.dashedBorder
 import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.utils.safeParseDateTime
 import kotlinx.datetime.Instant
-import kotlinx.serialization.json.Json
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalComposeApi::class
@@ -135,14 +136,7 @@ fun StatusBottomSectionContent(
 
 
     if (paymentDetailsLatestResponse != null) {
-        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
-            runCatching<AquirerResponse> {
-                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
-            }.getOrNull() ?: AquirerResponse()
-        } else {
-            AquirerResponse()
-        }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse) ?: AquirerResponse()
     }
     val transactionDetailUrl = "https://dev.paymentoptions.com/daspay-transaction-details/$transactionId"
 
@@ -298,10 +292,11 @@ fun StatusBottomSectionContent(
                         label = "Aggregator",
                         value = aggregator
                     )
-                    if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                    val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
+                    if (gatewayNotes.isNotBlank()) {
                         TransactionDetailRow(
                             label = "Note",
-                            value = transactionAquirerResponse?.gatewayNotes!!.trim()
+                            value = gatewayNotes
                         )
                     }
                 }
@@ -493,14 +488,7 @@ private fun ReceiptContentForPDF(
     }
 
     if (paymentDetailsLatestResponse != null) {
-        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
-            runCatching<AquirerResponse> {
-                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
-            }.getOrNull() ?: AquirerResponse()
-        } else {
-            AquirerResponse()
-        }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse) ?: AquirerResponse()
     }
     Column(
         modifier = Modifier

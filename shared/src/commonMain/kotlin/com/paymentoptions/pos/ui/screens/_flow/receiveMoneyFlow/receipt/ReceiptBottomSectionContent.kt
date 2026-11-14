@@ -67,7 +67,6 @@ import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.network.AquirerResponse
 import com.paymentoptions.pos.network.PaymentDetailsResponse
-import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
@@ -97,6 +96,8 @@ import com.paymentoptions.pos.utils.topdf.PageSize
 import com.paymentoptions.pos.utils.topdf.PdfExportProgress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalComposeApi::class
@@ -159,14 +160,7 @@ fun ReceiptBottomSectionContent(
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
 
     if (paymentDetailsLatestResponse != null) {
-        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
-            runCatching<AquirerResponse> {
-                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
-            }.getOrNull() ?: AquirerResponse()
-        } else {
-            AquirerResponse()
-        }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse) ?: AquirerResponse()
     }
 
     val transactionDetailUrl = if (transactionUuid != null) {
@@ -649,7 +643,8 @@ fun ReceiptBottomSectionContent(
                 )
             }
 
-            if(transactionAquirerResponse?.gatewayNotes?.isNotBlank() == true){
+            val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
+            if (gatewayNotes.isNotBlank()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -660,7 +655,7 @@ fun ReceiptBottomSectionContent(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                        text = gatewayNotes,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -887,14 +882,7 @@ private fun ReceiptContentForPDF(
     }
 
     if (paymentDetailsLatestResponse != null) {
-        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
-            runCatching<AquirerResponse> {
-                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
-            }.getOrNull() ?: AquirerResponse()
-        } else {
-            AquirerResponse()
-        }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse) ?: AquirerResponse()
     }
     Column(
         modifier = Modifier
@@ -1253,7 +1241,8 @@ private fun ReceiptContentForPDF(
                 )
             }
 
-            if(transactionAquirerResponse?.gatewayNotes?.isNotBlank() == true){
+            val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
+            if (gatewayNotes.isNotBlank()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -1264,7 +1253,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                        text = gatewayNotes,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500

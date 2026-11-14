@@ -37,7 +37,7 @@ fun Transaction.toPaymentStatusRequest(
         trace = this.trace,
         callbackUrl = this.callbackUrl.toString(),
         entryMode = this.entryMode.toString(),
-        amount = "{\"currency\":\"${this.amount.currency}\",\"value\":${this.amount.value.toFloat()}",
+        amount = "{\"currency\":\"${this.amount.currency}\",\"value\":${this.amount.value.toFloat()}}",
         batchNo = this.batchNo.toString(),
         appName = this.appName.toString(),
         linkedTranId = this.posReference.toString(),

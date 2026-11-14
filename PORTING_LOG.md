@@ -26,10 +26,10 @@ Status: **ported** · **already present** · **skipped** (with reason) · **pend
 | 15 | B2 | Logout / dashboard / payment-method analytics | b31a3aa | ported | cM/ui/screens/settings/BottomSectionContent.kt, cM/ui/screens/dashboard/DashboardScreen.kt, cM/ui/screens/_flow/receiveMoneyFlow/ReceiveMoneyFlow.kt, .../chargemoney/ChargeMoneyBottomSectionContent.kt | Mapped to KMP AnalyticsHelper (same pattern as bottom-nav logout): click events, trackLogout on success, trackApiError on failure; trackDashboardNavigation("Dashboard") on enter; trackMerchantSelection(dasmid, method) on method change; select_payment_method_* click. Release "logout_initiated" has no KMP event (click covers it). TTP image/start clicks already tracked as trackTapToPayInitiated. |
 | 16 | B2 | Global API-error tracking (Ktor) | cc3f8b5 | ported | cM/network/KtorClient.kt | HttpResponseValidator: non-2xx → trackApiError("METHOD /path", status, description); request exceptions → trackApiError with throwable. Unlike release, the error body is not sent (avoids consuming it and sending customer data). Existing ad-hoc trackApiError calls can now double-report. |
 | 17 | B2 | Build info in sent logs; provideUi log | 1ac13af | ported | cM/Platform.kt (expect buildInfoSummary), aM/Platform.android.kt, iM/Platform.ios.kt, iM/shared/MainViewController.kt, app/.../ClientApp.kt, cM/ui/screens/logger/SendLogsScreen.kt, aM/ClientHeadlessImpl.kt, app/.../ClientHeadlessImpl.kt | Android fills it from BuildConfig in ClientApp; iOS uses NSBundle version/build plus the environment and base URL given to MainViewController (no flavor on iOS). |
-| 18 | B3 | getGatewayNotes with Referenceremark fallback | 21e807b | pending | | |
-| 19 | B3 | parseAcquirerResponse, AcquirerResponse as JsonElement | 820d6c7/21e807b | pending | | |
-| 20 | B3 | PaymentDetails fields nullable | 820d6c7 | pending | | |
-| 21 | B3 | Amount JSON missing `}` in TransactionMapper | 820d6c7 | pending | | |
+| 18 | B3 | getGatewayNotes with Referenceremark fallback | 21e807b | ported | utils/AcquirerResponseUtils.kt; Receipt (x2), Failed, Successful, Status, TransactionBottom | Notes row now falls back to Referenceremark. Notes text is not logged (release logged it). |
+| 19 | B3 | parseAcquirerResponse, AcquirerResponse as JsonElement | 820d6c7/21e807b | ported | DataModels AcquirerResponse: List<JsonElement>?; parser accepts object or JSON-string entries | kotlinx instead of Gson; lenient Json (ignoreUnknownKeys, coerceInputValues). jsonObjectToMap not ported (unused). |
+| 20 | B3 | PaymentDetails fields nullable | 820d6c7 | ported | DataModels PaymentDetailsResponseData: 17 fields `String? = null` | All consumers already had fallbacks. Kept KMP types for Amount (Double) and TransactionID (Long). |
+| 21 | B3 | Amount JSON missing `}` in TransactionMapper | 820d6c7 | ported | androidMain TransactionMapper.android.kt | HIGH: payment-status payload. iOS has no equivalent mapper. |
 | 22 | B4 | Pay-by-link URL from config | a6a5764 | pending | | |
 | 23 | B4 | Base / transaction-details URL from stored config | a6a5764 | pending | | Needs decision. |
 | 24 | B4 | storeAppConfig skips blanks | a6a5764 | pending | | |
@@ -56,7 +56,8 @@ Status: **ported** · **already present** · **skipped** (with reason) · **pend
 |---|---|---|---|---|---|
 | 7e213f1 | Baseline fix (not a release item): missing ttp_placeholder.xml, stray KtorClient.reset(), dead iosMain/network/AppStorage.ios.kt, NSRoundingMode import | pass | pass | 1/1 pass | fails (pre-existing) |
 | 7897a09 | B1: items 1–13, NC-1, NC-2 | pass | pass | 1/1 pass | fails (pre-existing) |
-| B2 commit | Items 14–17 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
+| `2bec448` | Items 14–17 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
+| B3 commit | Items 18–21 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
 
 Both rows were verified in one build with B1 applied on top of the baseline fix; the baseline commit was not built on its own.
 
