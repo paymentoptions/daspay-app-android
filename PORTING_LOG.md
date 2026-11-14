@@ -43,8 +43,8 @@ Status: **ported** · **already present** · **skipped** (with reason) · **pend
 | 32–40 | B5 | Dynamic GST / service charge, cart, products, PBL request, receipt breakdown, geo-restriction, QR click, QR gate | 62d16d8/21e807b/820d6c7/27f1a54 | pending | | |
 | 41–50 | B6 | Payment path, cartID, CVM signature, mandatory signature void, MineSec description, failure handling, webhook rules, refund/void checks, profile id | various | pending | | High risk. |
 | 51–54 | B7 | MineSec profile constant, MineSec config/licence, x-api-key, headless prod artifact | various | pending | | Secrets; only on explicit request. |
-| 55 | — | StartTapToPayButton UI | a6a5764 | pending decision | | KMP has its own TTP flow. |
-| 56 | — | Signature preview removed from success screen | 820d6c7 | pending decision | | KMP keeps it. |
+| 55 | B8 | StartTapToPayButton + "Ready to receive payment" | a6a5764 | ported | new receiveMoneyFlow/StartTapToPayButton.kt; ReceiveMoneyFlow, FoodOrderFlow | Decision: port on both. Label is "Start $tapToPayDisplayName" ("Tap to Pay on iPhone" on iOS). Review the NFC wave icon and copy against Apple's Tap to Pay on iPhone guidelines before an iOS release. Icons were already in composeResources. |
+| 56 | B8 | Remove server signature section from success screen | 820d6c7 | ported | TransactionSuccessfulBottomSectionContent | Decision: remove, like release. The just-captured signature still shows; the server-fetched "Customer Signature" (getSignature) is gone from this screen. |
 | 57 | — | Datadog credentials in encrypted prefs | b31a3aa | skipped | | KMP reads BuildConfig directly (different design). |
 | 58 | — | EncryptedPrefs caching/logging | a6a5764 | skipped | | KMP uses multiplatform-settings. |
 | NC-1 | B1 | Xcode build phase: find Homebrew openjdk@17 before java_home | a6a5764 | ported | iosApp/iosApp.xcodeproj/project.pbxproj | |
@@ -60,7 +60,8 @@ Status: **ported** · **already present** · **skipped** (with reason) · **pend
 | `b2989e7` | Items 18–21 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
 | `866c7cc` | Items 22–31 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
 | `8837c92` | Items 32–40 | pass | pass | 6/6 pass (+5 CartTotalsTest) | fails (pre-existing legacy tree only; no new errors) |
-| B6 commit | Items 41–50 | pass | pass | 7/7 pass (+1 TranStatusTest) | fails (pre-existing legacy tree only; no new errors) |
+| `e4077a8` | Items 41–50 | pass | pass | 7/7 pass (+1 TranStatusTest) | fails (pre-existing legacy tree only; no new errors) |
+| B8 commit | Items 55–56 | pass | pass | 7/7 pass | fails (pre-existing legacy tree only; no new errors) |
 
 Both rows were verified in one build with B1 applied on top of the baseline fix; the baseline commit was not built on its own.
 

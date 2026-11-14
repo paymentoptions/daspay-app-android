@@ -144,6 +144,7 @@ import androidx.compose.material3.TextButton
 import com.paymentoptions.pos.utils.toPlainAmountString
 import com.paymentoptions.pos.utils.openPaymentUrl
 import androidx.compose.ui.platform.LocalUriHandler
+import com.paymentoptions.pos.ui.screens._flow.receiveMoneyFlow.StartTapToPayButton
 
 const val MAX_QUANTITY_PER_FOOD_ITEM = 20
 
@@ -517,24 +518,40 @@ fun FoodOrderFlow(
                                             }
                                         })
 
-                                FilledButton(
-                                    text = "Charge with $tapToPayDisplayName",
-                                    onClick = {
-                                        if (isDeveloperOptionsEnabled()) {
-                                            showDeveloperOptionsEnabled = true
-                                        } else if (!getNfcStatus().second) {
-                                            showNFCNotEnabled = true
-                                        } else {
-                                            startTapAndPay = true
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                                        .height(59.dp)
-                                        .scale(0.8f)
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Ready to receive payment",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
                                 )
-
-                                PaymentSchemesRow(modifier = Modifier.height(50.dp))
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Tap the button below to begin",
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Center,
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                StartTapToPayButton(onClick = {
+                                    if (isDeveloperOptionsEnabled()) {
+                                        showDeveloperOptionsEnabled = true
+                                    } else if (!getNfcStatus().second) {
+                                        showNFCNotEnabled = true
+                                    } else {
+                                        startTapAndPay = true
+                                    }
+                                })
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = "You'll be guided to align the card or phone",
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontSize = 14.sp,
+                                    textAlign = TextAlign.Center,
+                                )
+                                Spacer(Modifier.height(10.dp))
+                                PaymentSchemesRow(modifier = Modifier.height(40.dp))
                             }
 
                             qrCodePaymentMethod -> {
