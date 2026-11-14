@@ -341,7 +341,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
+                        paymentDetailsLatestResponse?.data?.TransactionRefID ?: "N/A",
                         textAlign = androidx.compose.ui.text.style.TextAlign.End,
                         modifier = Modifier.weight(1f),
                         fontSize = 14.sp,
@@ -379,7 +379,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        text = transactionAquirerResponse?.trace.toString(),
+                        text = transactionAquirerResponse?.trace ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -397,7 +397,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        text = transactionAquirerResponse?.approvalCode.toString(),
+                        text = transactionAquirerResponse?.approvalCode ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -417,7 +417,7 @@ fun TransactionSuccessfulBottomSectionContent(
 
                     Text(
 //                        paymentDetailsLatestResponse?.data?.Scheme.toString(),
-                        transactionAquirerResponse?.paymentMethod.toString(),
+                        transactionAquirerResponse?.paymentMethod ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500

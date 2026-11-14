@@ -71,7 +71,6 @@ fun SplashScreen(navController: NavController, environment: String) {
         }
 
         if (isToken != null) {
-            delay(1.seconds)
             // check if token is saved
             val deviceConfiguration = DPStorageManager.getDeviceConfiguration()
             if(deviceConfiguration == null) {

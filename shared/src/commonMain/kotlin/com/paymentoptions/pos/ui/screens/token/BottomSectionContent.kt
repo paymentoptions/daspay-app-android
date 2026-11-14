@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,6 +57,7 @@ import com.paymentoptions.pos.ui.theme.purple50
 import com.paymentoptions.pos.utils.getDeviceIdentifier
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.parseApiErrorMessage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
@@ -68,6 +70,13 @@ fun TokenBottomSectionContent(navController: NavController, enableScrolling: Boo
     var lastClicked by remember { mutableStateOf<Int?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            delay(4000)
+            errorMessage = null
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         if (isLoading) {
@@ -103,12 +112,12 @@ fun TokenBottomSectionContent(navController: NavController, enableScrolling: Boo
             }
         }
 
-        Text(text = "Register Device", style = AppTheme.typography.screenTitle)
+        Text(text = "Enter Device PIN", style = AppTheme.typography.screenTitle)
 
         Spacer(modifier = Modifier.height(4.dp))
 
         Text(
-            text = "Enter the token provided by admin to register this device",
+            text = "Enter the PIN provided by your administrator.",
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = purple50,
@@ -230,7 +239,7 @@ fun TokenBottomSectionContent(navController: NavController, enableScrolling: Boo
 
             FilledButton(
                 modifier = Modifier.fillMaxWidth().height(59.dp),
-                text = "Register Device",
+                text = "Continue",
                 disabled = otp.length < 6 || isLoading,
                 onClick = {
                     scope.launch {

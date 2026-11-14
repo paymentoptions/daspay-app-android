@@ -81,7 +81,6 @@ import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.tapToPayDisplayName
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
-import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -1034,15 +1033,13 @@ fun FoodOrderFlow(
         FoodOrderFlowStage.RECEIPT -> {
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionMinHeightRatio = 0.9f,
+                bottomSectionMaxHeightRatio = 0.9f,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMinHeightRatio = 0.75f,
-                bottomSectionMaxHeightRatio = 0.75f,
-                enableScrollingOfBottomSectionContent = false,
-                enableZigZagContainerForBottomSection = true,
-                imageBelowLogo = {
-                    ShowReceiptView()
-                }) {
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                blurTopSection = true
+            ) {
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,

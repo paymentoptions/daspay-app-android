@@ -8,7 +8,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.network.TransactionListDataRecord
-import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
 import com.paymentoptions.pos.ui.composables.layout.sectioned.BottomBarContent
 import com.paymentoptions.pos.ui.composables.layout.sectioned.SectionedLayout
 import com.paymentoptions.pos.ui.screens._flow.receiveMoneyFlow.receipt.ReceiptBottomSectionContent
@@ -33,15 +32,13 @@ fun TransactionDetailsScreen(
         TransactionDetailsScreenType.RECEIPT_SCREEN ->
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionMinHeightRatio = 0.9f,
+                bottomSectionMaxHeightRatio = 0.9f,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMinHeightRatio = 0.75f,
-                bottomSectionMaxHeightRatio = 0.75f,
-                enableScrollingOfBottomSectionContent = false,
-                enableZigZagContainerForBottomSection = true,
-                imageBelowLogo = {
-                    ShowReceiptView()
-                }) {
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                blurTopSection = true
+            ) {
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,

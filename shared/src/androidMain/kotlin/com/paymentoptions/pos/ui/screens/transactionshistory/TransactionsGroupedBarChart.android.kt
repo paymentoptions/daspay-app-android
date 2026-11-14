@@ -38,10 +38,8 @@ import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.network.InsightsResponseDataRecord
 import com.paymentoptions.pos.network.toTransactionListDataRecord
-import com.paymentoptions.pos.ui.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderColor
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
@@ -285,29 +283,7 @@ actual fun TransactionsGroupedBarChart(
                     // Add click listener for bar selection
                     setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
                         override fun onValueSelected(e: Entry?, h: Highlight?) {
-                            if (e != null && h != null) {
-                                val slotIndex = e.x.toInt()
-                                val dataSetIndex = h.dataSetIndex // 0 = earnings, 1 = refunds
-
-                                // Get transactions for this slot
-                                val slotTransactions = transactionsBySlot[slotIndex]
-                                if (!slotTransactions.isNullOrEmpty()) {
-                                    // Filter by transaction type based on which bar was clicked
-                                    val filteredTransactions = if (dataSetIndex == 0) {
-                                        // Earnings bar clicked - get PURCHASE transactions
-                                        slotTransactions.filter { it.TransactionType == "PURCHASE" }
-                                    } else {
-                                        // Refunds bar clicked - get REFUND transactions
-                                        slotTransactions.filter { it.TransactionType == "REFUND" }
-                                    }
-
-                                    // Navigate to the first transaction details
-                                    val transaction = filteredTransactions.firstOrNull() ?: slotTransactions.first()
-                                    val transactionListDataRecord = transaction.toTransactionListDataRecord()
-                                    val transactionJson = Json.encodeToString(transactionListDataRecord)
-                                    navController.navigate(Screens.TransactionDetails.createRoute(transactionJson))
-                                }
-                            }
+                            // Tapping a bar intentionally does nothing (release 820d6c7).
                         }
 
                         override fun onNothingSelected() {

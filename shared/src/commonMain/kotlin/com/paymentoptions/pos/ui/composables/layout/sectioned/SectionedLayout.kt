@@ -129,7 +129,7 @@ fun SectionedLayout(
                         .height(LOGO_HEIGHT_IN_DP)
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 imageBelowLogo()
             }
