@@ -30,16 +30,16 @@ Status: **ported** · **already present** · **skipped** (with reason) · **pend
 | 19 | B3 | parseAcquirerResponse, AcquirerResponse as JsonElement | 820d6c7/21e807b | ported | DataModels AcquirerResponse: List<JsonElement>?; parser accepts object or JSON-string entries | kotlinx instead of Gson; lenient Json (ignoreUnknownKeys, coerceInputValues). jsonObjectToMap not ported (unused). |
 | 20 | B3 | PaymentDetails fields nullable | 820d6c7 | ported | DataModels PaymentDetailsResponseData: 17 fields `String? = null` | All consumers already had fallbacks. Kept KMP types for Amount (Double) and TransactionID (Long). |
 | 21 | B3 | Amount JSON missing `}` in TransactionMapper | 820d6c7 | ported | androidMain TransactionMapper.android.kt | HIGH: payment-status payload. iOS has no equivalent mapper. |
-| 22 | B4 | Pay-by-link URL from config | a6a5764 | pending | | |
-| 23 | B4 | Base / transaction-details URL from stored config | a6a5764 | pending | | Needs decision. |
-| 24 | B4 | storeAppConfig skips blanks | a6a5764 | pending | | |
-| 25 | B4 | Persist CvmLimit | 820d6c7 | pending | | |
-| 26 | B4 | getMerchantSettings | 62d16d8 | pending | | |
-| 27 | B4 | Logout clears token/device config/biometrics | 62d16d8/21e807b | pending | | |
-| 28 | B4 | Config fetch from bootstrap URL with auth + blank check | 21e807b/a6a5764 | pending | | `flavour` vs `appenv` needs decision. |
-| 29 | B4 | Config init after sign-in | a6a5764 | pending | | |
-| 30 | B4 | Splash downloads config only when signed in | a6a5764 | pending | | |
-| 31 | B4 | Refresh 401/403 clears session | 27f1a54 | pending | | |
+| 22 | B4 | Pay-by-link URL from config | a6a5764 | ported | DPStorageManager.getPayByLinkUrl(); ReceiveMoneyFlow (3), FoodOrderFlow (3) | Saved ConfigJSON.PayByLinkURL, else a per-flavour default (release falls back to prod for every flavour). |
+| 23 | B4 | Base / transaction-details URL from stored config | a6a5764 | ported | Android + iOS DPStorageManager actuals; StatusBottomSectionContent | Decision: saved config, else the flavour's bootstrap URL. Transaction-details default is known only for DEV; UAT/PROD rely on downloaded config. |
+| 24 | B4 | storeAppConfig skips blanks | a6a5764 | ported | Android + iOS dpStoreAppConfig, DPStorageManager.storeAppConfig | |
+| 25 | B4 | Persist CvmLimit | 820d6c7 | ported | DPStorageManager.saveCvmLimit / getCvmLimit (default 200) | As on release, nothing saves it from config yet (release has that line commented out), so the limit stays 200. |
+| 26 | B4 | getMerchantSettings | 62d16d8 | ported | DPStorageManager.getMerchantSettings() | Used by the B5 cart work. |
+| 27 | B4 | Logout clears token/device config/biometrics | 62d16d8/21e807b | ported | DPStorageManager.clearSharedPreferences() | HIGH: every caller now also clears the device PIN status, device config and biometrics, including the payment-start error path in TapChargeMoney (release does the same). |
+| 28 | B4 | Config fetch from bootstrap URL with auth + blank check | 21e807b/a6a5764 | ported | endpoints/AppConfig.kt, ConfigurationManager, KtorClient | Decision: follow release. `appenv`, bootstrap URL, bearer token (config removed from Ktor's public list), blank BaseAPIURL/TransactionDetailsURL rejected; skipped when not signed in. buildTimeBaseUrl is no longer overwritten. |
+| 29 | B4 | Config init after sign-in | a6a5764 | ported | TokenAutoRefresher.onUserSignedIn(), called from manual and fingerprint sign-in | onUserSignedIn was never called on KMP; it now also schedules proactive token refresh, as on release. |
+| 30 | B4 | Splash downloads config only when signed in | a6a5764 | ported | SplashScreen | |
+| 31 | B4 | Refresh 401/403 clears session | 27f1a54 | ported | TokenRefreshService.refresh() → TokenRefreshResult; KtorClient, TokenRepository | HIGH (auth). 401/403 or ERR_AUTH_0003 → full session clear + re-auth; other failures unchanged. |
 | 32–40 | B5 | Dynamic GST / service charge, cart, products, PBL request, receipt breakdown, geo-restriction, QR click, QR gate | 62d16d8/21e807b/820d6c7/27f1a54 | pending | | |
 | 41–50 | B6 | Payment path, cartID, CVM signature, mandatory signature void, MineSec description, failure handling, webhook rules, refund/void checks, profile id | various | pending | | High risk. |
 | 51–54 | B7 | MineSec profile constant, MineSec config/licence, x-api-key, headless prod artifact | various | pending | | Secrets; only on explicit request. |
@@ -57,7 +57,8 @@ Status: **ported** · **already present** · **skipped** (with reason) · **pend
 | 7e213f1 | Baseline fix (not a release item): missing ttp_placeholder.xml, stray KtorClient.reset(), dead iosMain/network/AppStorage.ios.kt, NSRoundingMode import | pass | pass | 1/1 pass | fails (pre-existing) |
 | 7897a09 | B1: items 1–13, NC-1, NC-2 | pass | pass | 1/1 pass | fails (pre-existing) |
 | `2bec448` | Items 14–17 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
-| B3 commit | Items 18–21 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
+| `b2989e7` | Items 18–21 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
+| B4 commit | Items 22–31 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
 
 Both rows were verified in one build with B1 applied on top of the baseline fix; the baseline commit was not built on its own.
 

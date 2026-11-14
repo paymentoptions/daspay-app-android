@@ -566,7 +566,7 @@ fun FoodOrderFlow(
                                         )
                                         if (response != null && response.success) {
                                             val paymentUrl =
-                                                "https://api-dev.paymentoptions.com/paybylink/" + response.data.ProductID
+                                                DPStorageManager.getPayByLinkUrl() + response.data.ProductID
                                             qrCodeBitmap = generateQrCode(paymentUrl)
                                         } else {
                                             qrCodeError = "Failed to generate QR code."
@@ -704,7 +704,7 @@ fun FoodOrderFlow(
                                         if (payByLinkResponse != null && payByLinkResponse!!.success) {
 //                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
                                             paymentUrl =
-                                                "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID
+                                                DPStorageManager.getPayByLinkUrl() + payByLinkResponse!!.data.ProductID
                                             viaLinkQrBitmap = generateQrCode(paymentUrl)
                                         }
 
@@ -822,7 +822,7 @@ fun FoodOrderFlow(
                                                 .padding(vertical = 16.dp, horizontal = 12.dp),
                                         ) {
                                             Text(
-                                                text = "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID,
+                                                text = DPStorageManager.getPayByLinkUrl() + payByLinkResponse!!.data.ProductID,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 16.sp,
                                                 color = primary900,

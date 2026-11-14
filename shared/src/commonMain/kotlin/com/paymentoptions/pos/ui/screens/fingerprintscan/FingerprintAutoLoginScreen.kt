@@ -55,6 +55,7 @@ import com.paymentoptions.pos.utils.parseApiErrorMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 
 @Composable
 fun FingerprintAutoLoginScreen(navController: NavController) {
@@ -85,6 +86,7 @@ fun FingerprintAutoLoginScreen(navController: NavController) {
                     when (outcome) {
                         AutoSignInOutcome.Success -> {
                             showToast("Auto sign-in is successful")
+                            TokenAutoRefresher.getInstance().onUserSignedIn()
                             navController.navigate(Screens.Dashboard.route) {
                                 popUpTo(Screens.Dashboard.route) { inclusive = true }
                                 launchSingleTop = true

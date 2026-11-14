@@ -2,6 +2,7 @@ package com.paymentoptions.pos.network
 
 import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.auth.AuthEventManager
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.platformLog
 import com.paymentoptions.pos.storage.AppStorage
 import io.ktor.client.HttpClient
@@ -91,16 +92,26 @@ object KtorClient {
                 }
                 refreshTokens {
                     platformLog(TAG, "TokenRefresh Refreshing tokens due to 401 response")
-                    val refreshed = TokenRefreshService.refreshToken()
-                    platformLog(TAG, "TokenRefresh result: ${if (refreshed != null) "success" else "failure"}, and refresh : $refreshed")
-                    if (refreshed == null) {
-                        // Keep behavior close to legacy Retrofit authenticator: clear stale tokens and force re-auth.
-                        AppStorage.clearAuthData()
-                        AuthEventManager.requireReAuthentication()
-                        platformLog(TAG, "TokenRefresh failed; cleared auth data and triggered re-authentication")
-                        return@refreshTokens null
+                    when (val result = TokenRefreshService.refresh()) {
+                        is TokenRefreshResult.Success -> {
+                            platformLog(TAG, "TokenRefresh result: success")
+                            result.tokens
+                        }
+                        TokenRefreshResult.AuthRejected -> {
+                            // Refresh token refused (401/403): end the whole session, as release does.
+                            DPStorageManager.clearSharedPreferences()
+                            AuthEventManager.requireReAuthentication()
+                            platformLog(TAG, "TokenRefresh rejected; cleared session and triggered re-authentication")
+                            null
+                        }
+                        TokenRefreshResult.Failed -> {
+                            // Keep behavior close to legacy Retrofit authenticator: clear stale tokens and force re-auth.
+                            AppStorage.clearAuthData()
+                            AuthEventManager.requireReAuthentication()
+                            platformLog(TAG, "TokenRefresh failed; cleared auth data and triggered re-authentication")
+                            null
+                        }
                     }
-                    BearerTokens(refreshed.accessToken, refreshed.refreshToken)
                 }
                 sendWithoutRequest { request ->
                     // Return true only for routes that should include bearer preemptively.
@@ -113,8 +124,7 @@ object KtorClient {
 
                     val isPublicEndpoint =
                         path.endsWith("auth/signin") ||
-                        path.endsWith("auth/signout") ||
-                        path.contains("daspay-configuration")
+                        path.endsWith("auth/signout")
 
                     !isPublicEndpoint && !isS3PreSigned
                 }

@@ -138,7 +138,7 @@ fun StatusBottomSectionContent(
     if (paymentDetailsLatestResponse != null) {
         transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse) ?: AquirerResponse()
     }
-    val transactionDetailUrl = "https://dev.paymentoptions.com/daspay-transaction-details/$transactionId"
+    val transactionDetailUrl = "${DPStorageManager.getTransactionDetailsUrl()}/$transactionId"
 
     if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),
