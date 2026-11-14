@@ -2,6 +2,7 @@ package com.paymentoptions.pos.shared
 
 import androidx.compose.ui.window.ComposeUIViewController
 import com.paymentoptions.pos.App
+import com.paymentoptions.pos.setBuildEnvironment
 import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.storage.createSettings
 import com.paymentoptions.pos.device.TapToPayReaderStatusHelper
@@ -46,6 +47,7 @@ fun MainViewController(
         baseUrl.contains("api-uat") -> "UAT"
         else -> "PROD"
     }
+    setBuildEnvironment(environment, baseUrl)
 
     MineSecPlatform.paymentProvider = mineSecProvider
     KeychainHelper.provider = keychainProvider

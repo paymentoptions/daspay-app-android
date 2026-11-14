@@ -211,6 +211,17 @@ fun ReceiveMoneyFlow(
         }
     }
 
+    // Report which merchant (DASMID) each payment method routes to whenever the selection changes.
+    LaunchedEffect(selectedPaymentMethod) {
+        val dasmid = when (selectedPaymentMethod) {
+            tapPaymentMethod -> getTapPayDasmid()
+            qrCodePaymentMethod -> DPStorageManager.getQRDasmid()
+            viaLinkPaymentMethod -> DPStorageManager.getPayByLinkDasmid()
+            else -> ""
+        }
+        AnalyticsHelper.trackMerchantSelection(merchantId = dasmid, merchantName = selectedPaymentMethod.text)
+    }
+
     latestTransactionId?.let {
         LaunchedEffect(latestTransactionId) {
             try {

@@ -1,9 +1,11 @@
 package com.paymentoptions.pos.network
 
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.auth.AuthEventManager
 import com.paymentoptions.pos.platformLog
 import com.paymentoptions.pos.storage.AppStorage
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
@@ -12,6 +14,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
+import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
@@ -52,6 +55,30 @@ object KtorClient {
             requestTimeoutMillis = TIMEOUT_MS
             connectTimeoutMillis = TIMEOUT_MS
             socketTimeoutMillis  = TIMEOUT_MS
+        }
+
+        // Report every non-2xx response and every failed request to analytics
+        // (replaces the OkHttp ApiErrorTrackingInterceptor on release). Only the method, path and
+        // status are sent: the body is not read here, so callers can still read it, and error
+        // bodies can contain customer data. Doesn't throw, so request behaviour is unchanged.
+        HttpResponseValidator {
+            validateResponse { response ->
+                if (!response.status.isSuccess()) {
+                    val request = response.call.request
+                    AnalyticsHelper.trackApiError(
+                        endpoint = "${request.method.value} ${request.url.encodedPath}",
+                        statusCode = response.status.value,
+                        message = response.status.description,
+                    )
+                }
+            }
+            handleResponseExceptionWithRequest { cause, request ->
+                AnalyticsHelper.trackApiError(
+                    endpoint = "${request.method.value} ${request.url.encodedPath}",
+                    message = cause.message ?: (cause::class.simpleName ?: "Request failed"),
+                    throwable = cause,
+                )
+            }
         }
 
         install(Auth) {

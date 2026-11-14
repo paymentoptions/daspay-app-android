@@ -35,6 +35,14 @@ class ClientApp : Application() {
         initAppLogger()
         initDatadogRum()
         setIsDebugBuild(BuildConfig.DEBUG)
+        setBuildInfo(
+            versionName = BuildConfig.VERSION_NAME,
+            versionCode = BuildConfig.VERSION_CODE,
+            buildType = BuildConfig.BUILD_TYPE,
+            flavor = BuildConfig.FLAVOR,
+            environment = BuildConfig.ENVIRONMENT,
+            bootstrapBaseUrl = BuildConfig.CONFIG_BASE_URL,
+        )
         DatadogAnalyticsDelegate.environment = BuildConfig.ENVIRONMENT
         DatadogAnalyticsDelegate.variant = "${BuildConfig.FLAVOR}-${BuildConfig.BUILD_TYPE}"
         AnalyticsHelper.delegate = DatadogAnalyticsDelegate

@@ -22,10 +22,10 @@ Status: **ported** · **already present** · **skipped** (with reason) · **pend
 | 11 | B1 | RectangleCheckbox component | 62d16d8 | ported | cM/ui/composables/_components/RectangleCheckbox.kt (new) | Used by #35 (B5). Interaction source is now `remember`ed. |
 | 12 | B1 | DashedDivider | 21e807b | ported | cM/utils/DashedDivider.kt (new) | Used by #40 (B5). |
 | 13 | B1 | Date patterns `YYYY` → `yyyy` (week-year bug) | 820d6c7 | ported | cM/ui/screens/transactionshistory/BottomSectionContent.kt | All 9 patterns in the file, including the API filter dates. Same bug remains in FoodOrderFlow/ReceiveMoneyFlow ExpiryDate and TakeDigitalSignature (not changed on release; follow-up). |
-| 14 | B2 | Screen-view analytics in shared Navigator | b31a3aa | pending | | |
-| 15 | B2 | Logout / dashboard / payment-method analytics | b31a3aa | pending | | |
-| 16 | B2 | Global API-error tracking (Ktor) | cc3f8b5 | pending | | |
-| 17 | B2 | Build info in sent logs; provideUi log | 1ac13af | pending | | |
+| 14 | B2 | Screen-view analytics in shared Navigator | b31a3aa | ported | cM/ui/navigation/Navigator.kt | Collects currentBackStackEntryFlow → trackScreenNavigation(from, to). Also covers the auth redirects, so release's extra explicit calls there aren't duplicated. |
+| 15 | B2 | Logout / dashboard / payment-method analytics | b31a3aa | ported | cM/ui/screens/settings/BottomSectionContent.kt, cM/ui/screens/dashboard/DashboardScreen.kt, cM/ui/screens/_flow/receiveMoneyFlow/ReceiveMoneyFlow.kt, .../chargemoney/ChargeMoneyBottomSectionContent.kt | Mapped to KMP AnalyticsHelper (same pattern as bottom-nav logout): click events, trackLogout on success, trackApiError on failure; trackDashboardNavigation("Dashboard") on enter; trackMerchantSelection(dasmid, method) on method change; select_payment_method_* click. Release "logout_initiated" has no KMP event (click covers it). TTP image/start clicks already tracked as trackTapToPayInitiated. |
+| 16 | B2 | Global API-error tracking (Ktor) | cc3f8b5 | ported | cM/network/KtorClient.kt | HttpResponseValidator: non-2xx → trackApiError("METHOD /path", status, description); request exceptions → trackApiError with throwable. Unlike release, the error body is not sent (avoids consuming it and sending customer data). Existing ad-hoc trackApiError calls can now double-report. |
+| 17 | B2 | Build info in sent logs; provideUi log | 1ac13af | ported | cM/Platform.kt (expect buildInfoSummary), aM/Platform.android.kt, iM/Platform.ios.kt, iM/shared/MainViewController.kt, app/.../ClientApp.kt, cM/ui/screens/logger/SendLogsScreen.kt, aM/ClientHeadlessImpl.kt, app/.../ClientHeadlessImpl.kt | Android fills it from BuildConfig in ClientApp; iOS uses NSBundle version/build plus the environment and base URL given to MainViewController (no flavor on iOS). |
 | 18 | B3 | getGatewayNotes with Referenceremark fallback | 21e807b | pending | | |
 | 19 | B3 | parseAcquirerResponse, AcquirerResponse as JsonElement | 820d6c7/21e807b | pending | | |
 | 20 | B3 | PaymentDetails fields nullable | 820d6c7 | pending | | |
@@ -55,7 +55,8 @@ Status: **ported** · **already present** · **skipped** (with reason) · **pend
 | Commit | What | :shared Android compile | :shared iOS compile + framework link | :shared host tests | :app |
 |---|---|---|---|---|---|
 | 7e213f1 | Baseline fix (not a release item): missing ttp_placeholder.xml, stray KtorClient.reset(), dead iosMain/network/AppStorage.ios.kt, NSRoundingMode import | pass | pass | 1/1 pass | fails (pre-existing) |
-| B1 commit | Items 1–13, NC-1, NC-2 | pass | pass | 1/1 pass | fails (pre-existing) |
+| 7897a09 | B1: items 1–13, NC-1, NC-2 | pass | pass | 1/1 pass | fails (pre-existing) |
+| B2 commit | Items 14–17 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
 
 Both rows were verified in one build with B1 applied on top of the baseline fix; the baseline commit was not built on its own.
 

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.getNfcStatus
 import com.paymentoptions.pos.device.isDeveloperOptionsEnabled
 import com.paymentoptions.pos.device.openDevelopmentSettings
@@ -267,6 +268,10 @@ fun ChargeMoneyBottomSectionContent(
                         paymentMethod = it,
                         selectedPaymentMethod = selectedPaymentMethod,
                         onSelected = {
+                            AnalyticsHelper.trackCriticalButtonClick(
+                                buttonName = "select_payment_method_${it.text.lowercase().replace(" ", "_")}",
+                                screenName = "receive_money"
+                            )
                             updateSelectedPaymentMethod(it)
                         },
                         modifier = Modifier.weight(1f),

@@ -75,6 +75,13 @@ expect fun lockPortrait()
  */
 expect val isDebugBuild: Boolean
 
+/**
+ * One-line build summary (version, build type, flavor/environment, bootstrap URL) written to
+ * exported logs. Android: set from the app BuildConfig via setBuildInfo(). iOS: bundle version plus
+ * the environment/base URL passed to MainViewController.
+ */
+expect fun buildInfoSummary(): String
+
 // ── URL encoding helpers ──────────────────────────────────────────────────────
 
 /** Percent-encodes [value] for safe use in a URL path/query segment. */

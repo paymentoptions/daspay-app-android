@@ -25,9 +25,11 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.getBiometricAuthenticator
 import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.ApiHttpException
 import com.paymentoptions.pos.network.SignOutResponse
 import com.paymentoptions.pos.network.endpoints.signOut
 import com.paymentoptions.pos.payment.reader.ReaderState
@@ -81,12 +83,26 @@ fun BottomSectionContent(navController: NavController) {
         text = "Do you want to log out?",
         acceptButtonText = "Log Out",
         onAcceptFn = {
+            AnalyticsHelper.trackCriticalButtonClick(buttonName = "Log Out Confirm", screenName = "Settings")
             scope.launch {
                 signOutLoader = true
                 try {
-                    signOutResponse = signOut()
+                    val response = signOut()
+                    signOutResponse = response
+                    // A null response counts as signed out, same as the bottom-nav logout.
+                    if (response == null || response.success) {
+                        AnalyticsHelper.trackLogout()
+                    } else {
+                        AnalyticsHelper.trackApiError(endpoint = "signOut", message = response.message)
+                    }
                 } catch (e: Exception) {
                     AppLogger.error("Error: ${e.toString()}")
+                    AnalyticsHelper.trackApiError(
+                        endpoint = "signOut",
+                        statusCode = (e as? ApiHttpException)?.statusCode,
+                        message = e.message ?: "Sign out failed",
+                        throwable = e
+                    )
                 } finally {
                     TokenAutoRefresher.getInstance()?.onUserSignedOut()
                     DPStorageManager.clearSharedPreferences()
@@ -252,7 +268,10 @@ fun BottomSectionContent(navController: NavController) {
 
                 FilledButton(
                     text = "Logout",
-                    onClick = { showSignOutConfirmationDialog = true },
+                    onClick = {
+                        AnalyticsHelper.trackCriticalButtonClick(buttonName = "Log Out", screenName = "Settings")
+                        showSignOutConfirmationDialog = true
+                    },
                     isLoading = signOutLoader,
                     modifier = Modifier
                         .fillMaxWidth()

@@ -187,6 +187,24 @@ fun setIsDebugBuild(value: Boolean) {
     isDebugBuildHolder = value
 }
 
+@Volatile
+private var buildInfoHolder: String = "unknown"
+
+/** Wire from the app BuildConfig at startup (see ClientApp). */
+fun setBuildInfo(
+    versionName: String,
+    versionCode: Int,
+    buildType: String,
+    flavor: String,
+    environment: String,
+    bootstrapBaseUrl: String,
+) {
+    buildInfoHolder = "versionName=$versionName, versionCode=$versionCode, buildType=$buildType, " +
+        "flavor=$flavor, environment=$environment, bootstrapBaseUrl=$bootstrapBaseUrl"
+}
+
+actual fun buildInfoSummary(): String = buildInfoHolder
+
 // ── Settings Navigation ───────────────────────────────────────────────────────
 
 actual fun openNfcSettings() {
