@@ -7,6 +7,7 @@ import com.paymentoptions.pos.network.ConfigurationManager
 import com.paymentoptions.pos.network.ExternalConfigurationResponse
 import com.paymentoptions.pos.network.MerchantSetting
 import com.paymentoptions.pos.network.SignInResponse
+import com.paymentoptions.pos.payment.MineSecPlatform
 import com.paymentoptions.pos.payment.reader.MerchantConfig
 import com.paymentoptions.pos.payment.reader.ReaderLifecycleCoordinator
 import com.paymentoptions.pos.storage.AppStorage
@@ -80,7 +81,7 @@ object DPStorageManager {
 //            let terminalEmvProfileId = "4c702000-0000-0000-03c9-91c46a350fd8"
 
             val merchantConfig = MerchantConfig(
-                profileId = deviceInfo.MinesecDeviceId ?: "",
+                profileId = deviceInfo.MinesecDeviceId?.takeIf { it.isNotBlank() } ?: MineSecPlatform.PROFILE_ID,
                 merchantBusinessName = "Pertok",
                 merchantId = deviceInfo.MinesecMerchantId ?: "",
                 merchantCategoryCode = "5999",
@@ -111,6 +112,14 @@ object DPStorageManager {
     fun getApms(): DevicePaymentMethod_Apms = dpGetApms()
 
     fun getMerchantSettings(): MerchantSetting? = getDeviceConfiguration()?.data?.deviceInfo?.MerchantSetting
+
+    /**
+     * MineSec profile for this merchant: the device config's MinesecDeviceId, falling back to the
+     * app's built-in profile (MineSecPlatform.PROFILE_ID) when the config doesn't have one.
+     */
+    fun getMerchantProfileId(): String =
+        getDeviceConfiguration()?.data?.deviceInfo?.MinesecDeviceId?.takeIf { it.isNotBlank() }
+            ?: MineSecPlatform.PROFILE_ID
 
     /** Saves the config URLs; blank values are skipped so they never overwrite a good saved URL. */
     fun storeAppConfig(appConfig: AppConfig) {

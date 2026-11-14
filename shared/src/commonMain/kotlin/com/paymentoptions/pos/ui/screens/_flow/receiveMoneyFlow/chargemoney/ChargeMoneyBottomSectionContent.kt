@@ -58,6 +58,7 @@ import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
+import com.paymentoptions.pos.ui.screens._flow.foodOrderFlow.Cart
 
 @Composable
 fun PaymentMethodButton(
@@ -110,7 +111,8 @@ fun ChargeMoneyBottomSectionContent(
     startTapAndPay: Boolean = false,
     updateLatestTransaction: (id: String) -> Unit,
     updateFailureMessage: (String?) -> Unit = {},
-    onMandatorySignature: () -> Unit = {},
+    onMandatorySignature: (() -> Unit)? = null,
+    cart: Cart? = null,
 ) {
     val currency = getTransactionCurrency()
     val nfcState = getNfcStatus()
@@ -170,6 +172,7 @@ fun ChargeMoneyBottomSectionContent(
                 onLoader = onLoader,
                 onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
                 onMandatorySignature = onMandatorySignature,
+                cart = cart,
                 onFailureUpdateFlowStage = onFailureUpdateFlowStage,
                 onFailureMessage = { updateFailureMessage(it) },
                 updateLatestTransaction = updateLatestTransaction,
@@ -211,6 +214,7 @@ fun ChargeMoneyBottomSectionContent(
                         onLoader = onLoader,
                         onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
                         onMandatorySignature = onMandatorySignature,
+                        cart = cart,
                         onFailureUpdateFlowStage = onFailureUpdateFlowStage,
                         onFailureMessage = { updateFailureMessage(it) },
                         updateLatestTransaction = updateLatestTransaction,

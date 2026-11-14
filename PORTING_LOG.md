@@ -59,7 +59,8 @@ Status: **ported** · **already present** · **skipped** (with reason) · **pend
 | `2bec448` | Items 14–17 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
 | `b2989e7` | Items 18–21 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
 | `866c7cc` | Items 22–31 | pass | pass | 1/1 pass | fails (pre-existing legacy tree only; no new errors) |
-| B5 commit | Items 32–40 | pass | pass | 6/6 pass (+5 CartTotalsTest) | fails (pre-existing legacy tree only; no new errors) |
+| `8837c92` | Items 32–40 | pass | pass | 6/6 pass (+5 CartTotalsTest) | fails (pre-existing legacy tree only; no new errors) |
+| B6 commit | Items 41–50 | pass | pass | 7/7 pass (+1 TranStatusTest) | fails (pre-existing legacy tree only; no new errors) |
 
 Both rows were verified in one build with B1 applied on top of the baseline fix; the baseline commit was not built on its own.
 

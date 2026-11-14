@@ -13,6 +13,8 @@ import com.paymentoptions.pos.ui.screens.status.StatusScreenType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.paymentoptions.pos.network.endpoints.isSuccessfulTranStatus
+import com.paymentoptions.pos.ui.screens._flow.foodOrderFlow.Cart
 
 /** Maps a native-SDK-classified [MineSecTransactionResult.outcomeKind] to a [StatusScreenType]. */
 private fun outcomeKindToStatusScreenType(outcomeKind: String?): StatusScreenType = when (outcomeKind) {
@@ -32,7 +34,8 @@ actual fun TapChargeMoney(
     onFailureUpdateFlowStage: (StatusScreenType) -> Unit,
     updateLatestTransaction: (id: String) -> Unit,
     onFailureMessage: (String) -> Unit,
-    onMandatorySignature: () -> Unit,
+    onMandatorySignature: (() -> Unit)?,
+    cart: Cart?,
 ) {
     val provider = MineSecPlatform.paymentProvider
     val currency = DPStorageManager.getTransactionCurrency()
@@ -50,13 +53,18 @@ actual fun TapChargeMoney(
             currency = currency,
         )
 
+        // Food orders: register the cart so the payment carries its line items (release 21e807b).
+        val cartProductId = createCartProductId(cart, currency)
+
         MineSecSDK.processSale(
             amount = amountToCharge,
+            cartID = cartProductId,
             onNativeTrigger = { posRef ->
                 provider.launchSale(
                     amount = amountToCharge,
                     currency = currency,
-                    description = "Payment from POS",
+                    // The payment note goes to MineSec as the sale description (release 62d16d8).
+                    description = gatewayNotes?.trim()?.takeIf { it.isNotEmpty() } ?: "Payment from POS",
                     posReference = posRef,
                     onResult = { result ->
                         if (result.success) {
@@ -78,7 +86,9 @@ actual fun TapChargeMoney(
                                 )
                                 AppLogger.debug("TapToPay iOS webhook payload built: $paymentStatusRequest")
                                 try {
-                                    val webhookSuccess = sendWebHookNotification(request = paymentStatusRequest) != null
+                                    // Success needs both a webhook reply and an approving status (release 820d6c7).
+                                    val webhookSuccess = sendWebHookNotification(request = paymentStatusRequest) != null &&
+                                        isSuccessfulTranStatus(paymentStatusRequest.tranStatus)
                                     val webhookTranId = paymentStatusRequest.tranId.orEmpty()
                                     AppLogger.debug("TapToPay iOS webhook response: success=$webhookSuccess, tranId=$webhookTranId")
 
@@ -88,7 +98,13 @@ actual fun TapChargeMoney(
                                             amount = amountToCharge,
                                         )
                                         updateLatestTransaction(webhookTranId)
-                                        onSuccessUpdateFlowStage()
+                                        val mandatorySignature = onMandatorySignature
+                                        if (mandatorySignature != null && requiresMandatorySignature(amountToCharge)) {
+                                            AppLogger.debug("TapToPay iOS: amount at or above CVM limit, moving to MANDATORY_SIGNATURE")
+                                            mandatorySignature()
+                                        } else {
+                                            onSuccessUpdateFlowStage()
+                                        }
                                     } else {
                                         AnalyticsHelper.trackPaymentDeclined(
                                             reason = "paymentStatus returned false",

@@ -6,6 +6,7 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.PaymentStatusRequest
 import com.paymentoptions.pos.payment.MineSecPlatform
 import com.paymentoptions.pos.payment.PaymentStatusMapper
+import com.paymentoptions.pos.device.DPStorageManager
 
 @Composable
 actual fun rememberMineSecActionDispatcher(): MineSecActionDispatcher {
@@ -27,7 +28,7 @@ actual fun rememberMineSecActionDispatcher(): MineSecActionDispatcher {
                 }
                 provider.launchVoid(
                     acquirerTransactionId = acquirerTransactionId,
-                    profileId = MineSecPlatform.PROFILE_ID,
+                    profileId = DPStorageManager.getMerchantProfileId(),
                     onResult = { result ->
                         AppLogger.debug("MineSec void result: success=${result.success}")
                         if (result.success) {
@@ -38,6 +39,7 @@ actual fun rememberMineSecActionDispatcher(): MineSecActionDispatcher {
                                 currency = "",
                                 parentUUID = parentUUID,
                                 childUUID = childUUID,
+                                gatewayNotes = notes,
                             )
                             onReady(request)
                         } else {
@@ -65,7 +67,7 @@ actual fun rememberMineSecActionDispatcher(): MineSecActionDispatcher {
                     acquirerTransactionId = acquirerTransactionId,
                     amount = amount,
                     currency = currency,
-                    profileId = MineSecPlatform.PROFILE_ID,
+                    profileId = DPStorageManager.getMerchantProfileId(),
                     onResult = { result ->
                         AppLogger.debug("MineSec refund result: success=${result.success}")
                         if (result.success) {
@@ -76,6 +78,7 @@ actual fun rememberMineSecActionDispatcher(): MineSecActionDispatcher {
                                 currency = currency,
                                 parentUUID = parentUUID,
                                 childUUID = childUUID,
+                                gatewayNotes = notes,
                             )
                             onReady(request)
                         } else {

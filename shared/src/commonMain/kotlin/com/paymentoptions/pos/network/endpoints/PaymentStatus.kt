@@ -21,3 +21,10 @@ suspend fun sendWebHookNotification(request: PaymentStatusRequest): String? {
     response.throwIfNotSuccess("WebHookNotification")
     return response.body<String>()
 }
+
+/**
+ * Whether a MineSec transaction status counts as a successful payment once the webhook has been
+ * sent: only APPROVED, VOIDED or ADJUSTED (release 820d6c7). Anything else (DECLINED, ...) is a failure.
+ */
+fun isSuccessfulTranStatus(tranStatus: String?): Boolean =
+    tranStatus?.trim()?.uppercase() in setOf("APPROVED", "VOIDED", "ADJUSTED")

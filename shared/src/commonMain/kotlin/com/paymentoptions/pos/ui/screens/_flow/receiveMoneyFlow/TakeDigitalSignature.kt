@@ -66,6 +66,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import androidx.compose.foundation.layout.Row
 
 
 @Composable
@@ -110,7 +111,10 @@ fun TakeDigitalSignatureBottomSectionContent(
 
         ScreenTitleWithCloseButton(
             navController = navController,
-            onClose = { updateFlowStageToSuccess() })
+            onClose = {
+                // A mandatory signature can't be skipped: closing voids the payment.
+                if (isMandatory) onCancelMandatory() else updateFlowStageToSuccess()
+            })
 
         Text(
             text = "Signature",
@@ -191,6 +195,17 @@ fun TakeDigitalSignatureBottomSectionContent(
         if (isLoading) {
             MyCircularProgressIndicator()
         } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+            if (isMandatory) {
+                OutlinedButton(
+                    text = "Cancel",
+                    onClick = onCancelMandatory,
+                    modifier = Modifier.weight(1f)
+                )
+            }
             FilledButton(
                 text = "Confirm",
                 onClick = {
@@ -258,13 +273,17 @@ fun TakeDigitalSignatureBottomSectionContent(
                     } else if (transactionIdValue == null) {
                         AppLogger.error("TakeDigitalSignature", "transactionIdValue is null — cannot upload")
                         showToast("Error: Transaction ID not found.")
+                    } else if (isMandatory) {
+                        // Not signed, but the amount requires a signature.
+                        showToast("Signature is required")
                     } else {
                         // Not signed — skip upload and proceed
                         updateFlowStageToSuccess()
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.weight(if (isMandatory) 1f else 2f)
             )
+            }
         }
     }
 }
@@ -295,6 +314,11 @@ private fun resolveTransactionId(paymentDetailsResponse: PaymentDetailsResponse?
                 "TakeDigitalSignature", "Resolved transaction id from TransactionRefID=$directRef"
             )
             return@runCatching directRef
+        }
+
+        data.V2UUID?.takeIf { it.isNotBlank() }?.let {
+            AppLogger.debug("TakeDigitalSignature", "Resolved transaction id from V2UUID")
+            return@runCatching it
         }
 
         AppLogger.warn(

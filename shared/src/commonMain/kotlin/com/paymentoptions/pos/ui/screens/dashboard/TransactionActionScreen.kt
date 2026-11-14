@@ -72,6 +72,9 @@ import org.jetbrains.compose.resources.painterResource
 import paymentoptionspos.shared.generated.resources.Res
 import paymentoptionspos.shared.generated.resources.ic_warning
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.serialization.json.JsonPrimitive
+import com.paymentoptions.pos.utils.parseAcquirerResponse
+import com.paymentoptions.pos.network.endpoints.isSuccessfulTranStatus
 
 // ── Platform seam ─────────────────────────────────────────────────────────────
 
@@ -152,45 +155,37 @@ fun TransactionActionScreen(
                 "${Screens.TransactionReceipt.route}?transactionId=$childUUID" +
                 "&title=Your transaction is ${actionLabel}ed&amount=${transaction.amount}&refrenceId=$childUUID" +
                 "&aggregator=${transaction.Scheme}&dateString=${transaction.Date}"
-            try {
-                withContext(Dispatchers.Main) {
-                    processingScreenType = StatusScreenType.PROCESSING
-                    processingMessage = "Processing $actionLabel..."
-                }
+            withContext(Dispatchers.Main) {
+                processingScreenType = StatusScreenType.PROCESSING
+                processingMessage = "Processing $actionLabel..."
+            }
+            // The outcome is MineSec's status for the action (release 21e807b): success only for
+            // APPROVED/VOIDED/ADJUSTED once the webhook is sent; if the webhook call itself fails,
+            // only an APPROVED action counts.
+            val succeeded = try {
                 sendWebHookNotification(request = request)
-
-                if(request.tranStatus == "APPROVED" || request.tranStatus == "VOIDED" || request.tranStatus == "ADJUSTED"){
-                    withContext(Dispatchers.Main) {
-                        processingScreenType = StatusScreenType.SUCCESS
-                        processingMessage = "$actionLabel Completed"
-                    }
-                } else {
-                    // Webhook failure doesn't block navigation — action already succeeded
-                    withContext(Dispatchers.Main) {
-                       showTransactionFailure()
-                    }
-                }
-
+                isSuccessfulTranStatus(request.tranStatus)
             } catch (e: Exception) {
                 AppLogger.error("Webhook failed for $actionLabel: ${e.message}", e)
-                // Webhook failure doesn't block navigation — action already succeeded
-                if(request.tranStatus == "APPROVED"){
-                    withContext(Dispatchers.Main) {
-                        processingScreenType = StatusScreenType.SUCCESS
-                        processingMessage = "$actionLabel Completed"
-                    }
-                } else {
-                    AppLogger.error("Webhook failed for $actionLabel: ${e.message}", e)
-                    // Webhook failure doesn't block navigation — action already succeeded
-                    withContext(Dispatchers.Main) {
-                        showTransactionFailure()
+                request.tranStatus?.trim()?.uppercase() == "APPROVED"
+            }
+
+            if (succeeded) {
+                withContext(Dispatchers.Main) {
+                    processingScreenType = StatusScreenType.SUCCESS
+                    processingMessage = "$actionLabel Completed"
+                }
+                delay(delayTime)
+                withContext(Dispatchers.Main) {
+                    navController.navigate(receiptRoute) {
+                        popUpTo(Screens.TransactionAction.route) { inclusive = true }
                     }
                 }
-            }
-            delay(delayTime)
-            withContext(Dispatchers.Main) {
-                navController.navigate(receiptRoute) {
-                    popUpTo(Screens.TransactionAction.route) { inclusive = true }
+            } else {
+                // Previously this also navigated to the receipt after showing the failure.
+                errorMessage = hostResponseMessage(request) ?: "$actionLabel Failed"
+                withContext(Dispatchers.Main) {
+                    showTransactionFailure()
                 }
             }
         }
@@ -207,7 +202,7 @@ fun TransactionActionScreen(
                     transactionId = transaction.uuid,
                     merchantId = transaction.DASMID,
                 )
-                if (response != null) {
+                if (response != null && response.success) {
                     val childUUID = response.transaction_details.id
                     AppLogger.debug("Void API success, childUUID=$childUUID")
                     withContext(Dispatchers.Main) {
@@ -226,9 +221,9 @@ fun TransactionActionScreen(
                         )
                     }
                 } else {
-                    AppLogger.error("Void API returned null")
+                    errorMessage = response?.gateway_response?.message?.takeIf { it.isNotBlank() } ?: "Void request failed"
+                    AppLogger.error("Void API returned failure: $errorMessage")
                     withContext(Dispatchers.Main) {
-                        errorMessage = "Void request failed"
                         showTransactionFailure()
                     }
                 }
@@ -258,7 +253,7 @@ fun TransactionActionScreen(
                             amount = transaction.amount,
                             notes = notesInput.text.toString().ifBlank { "Refund from DASPay App" },
                         )
-                        if (response != null) {
+                        if (response != null && response.success) {
                             val childUUID = response.transaction_details.id
                             AppLogger.debug("Refund API success, childUUID=$childUUID")
                             withContext(Dispatchers.Main) {
@@ -279,9 +274,9 @@ fun TransactionActionScreen(
                                 )
                             }
                         } else {
-                            AppLogger.error("Refund API returned null")
+                            errorMessage = response?.gateway_response?.message?.takeIf { it.isNotBlank() } ?: "Refund request failed"
+                            AppLogger.error("Refund API returned failure: $errorMessage")
                             withContext(Dispatchers.Main) {
-                                errorMessage = "Refund request failed"
                                 showTransactionFailure()
                             }
                         }
@@ -316,6 +311,11 @@ fun TransactionActionScreen(
                                 amount = transaction.amount,
                                 notes = notesInput.text.toString().ifBlank { "Refund from DASPay App" },
                             )
+                            if (response != null && !response.success) {
+                                errorMessage = response.gateway_response.message.ifBlank { "Refund Failed" }
+                                AppLogger.error("Refund API returned failure: $errorMessage")
+                                break
+                            }
                         } catch (e: Exception) {
                             AppLogger.error("Refund attempt $attempt failed: ${e.message}", e)
                             lastError = e
@@ -324,7 +324,7 @@ fun TransactionActionScreen(
                         }
                     }
 
-                    if (response != null) {
+                    if (response != null && response.success) {
                         val id = response.transaction_details.id
                         withContext(Dispatchers.Main) {
                             processingScreenType = StatusScreenType.SUCCESS
@@ -537,3 +537,10 @@ fun TransactionActionScreen(
         )
     }
 }
+
+/** The host's response message for a failed MineSec action, from the action's acquirer payload. */
+private fun hostResponseMessage(request: PaymentStatusRequest): String? =
+    runCatching {
+        parseAcquirerResponse(listOf(JsonPrimitive(request.acquirerResponse)))
+            ?.actions?.firstOrNull()?.hostRespMessage?.takeIf { it.isNotBlank() }
+    }.getOrNull()

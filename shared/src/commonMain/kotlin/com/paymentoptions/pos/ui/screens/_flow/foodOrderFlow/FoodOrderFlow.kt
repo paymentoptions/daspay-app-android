@@ -894,7 +894,9 @@ fun FoodOrderFlow(
                     },
                     onChangeAmount = { updateFlowStage(FoodOrderFlowStage.REVIEW_CART) },
                     startTapAndPay = startTapAndPay,
-                    updateLatestTransaction = { latestTransactionId = it })
+                    updateLatestTransaction = { latestTransactionId = it },
+                    cart = cartState,
+                )
             }
         }
 
