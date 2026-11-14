@@ -2,4 +2,21 @@
     <string name="session_expired">Your session has expired,or you do not have permission to perform this action.</string>
     <string name="device_credential_missing">Secure your device by enabling a PIN, fingerprint, or face lock</string>
     <string name="no_network">Unable to connect. Please check your internet connection and try again.</string>
+
+    <!-- TODO(design): Tap to Pay awareness splash copy — placeholder, swap for final wording. -->
+    <string name="ttp_awareness_hero_label">APPLE HERO ASSET</string>
+    <string name="ttp_awareness_title">Meet %1$s</string>
+    <string name="ttp_awareness_body">Accept contactless payments right from this device — no extra hardware needed.</string>
+    <string name="ttp_awareness_cta">Got it</string>
+
+    <!-- TODO(design): "Try it out" screen copy — placeholder, swap for final wording. -->
+    <string name="ttp_try_it_out_title">You\'re all set</string>
+    <string name="ttp_try_it_out_body">Try a test payment now to see %1$s in action.</string>
+    <string name="ttp_try_it_out_cta">Try a test payment</string>
+
+    <!-- Sign-in "how to get an account" copy: directs new merchants to the existing Payment
+         Options Gateway onboarding flow (registration + KYC), rather than a bare email address. -->
+    <string name="sign_in_new_to_daspay">New to DASPay?</string>
+    <string name="sign_in_register_as_merchant">Register as a Merchant</string>
+    <string name="sign_in_need_assistance">Need assistance?</string>
 </resources>

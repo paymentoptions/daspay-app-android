@@ -421,3 +421,5 @@ actual fun sendLogsToSdkTeam() {
         ExportLogs.sendLogsToSdkTeam(activity)
     }
 }
+
+actual val tapToPayDisplayName: String = "Tap to Pay"

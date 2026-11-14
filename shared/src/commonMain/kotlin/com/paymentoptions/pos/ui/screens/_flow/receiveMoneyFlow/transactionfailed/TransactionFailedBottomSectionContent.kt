@@ -2,7 +2,9 @@ package com.paymentoptions.pos.ui.screens._flow.receiveMoneyFlow.transactionfail
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,11 +13,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,22 +35,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.formatDate
+import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.network.AquirerResponse
 import com.paymentoptions.pos.network.PaymentDetailsResponse
+import com.paymentoptions.pos.network.toTransactionListDataRecord
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
+import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
+import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
+import com.paymentoptions.pos.ui.composables._components.buttons.OutlinedButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ScanButton
 import com.paymentoptions.pos.ui.composables._components.buttons.ShareButton
+import com.paymentoptions.pos.ui.composables._components.images.PaymentQrCodeImage
 import com.paymentoptions.pos.ui.composables.layout.sectioned.DEFAULT_BOTTOM_SECTION_PADDING_IN_DP
 import com.paymentoptions.pos.ui.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
@@ -48,12 +66,18 @@ import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
 import com.paymentoptions.pos.ui.theme.red500
+import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.generateQrCode
+import com.paymentoptions.pos.utils.getAvailableAction
 import com.paymentoptions.pos.utils.safeParseDateTime
+import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionFailedBottomSectionContent(
     navController: NavController,
@@ -90,12 +114,63 @@ fun TransactionFailedBottomSectionContent(
     val dateTime = safeParseDateTime(dateString)
     val formattedDate = formatDate(dateTime, "dd MMMM YYYY")
 
-    var shareableFailureText =
-        "Transaction failed. Details are unavailable."
+    // Same transaction-details link used by the success screen's Email/Share/Scan — used here
+    // too so the failure screen offers the same receipt options as success (5.10).
+    val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
+    val transactionDetailUrl = if (!transactionUuid.isNullOrEmpty()) {
+        "${DPStorageManager.getTransactionDetailsUrl()}/$transactionUuid"
+    } else {
+        null
+    }
 
-    paymentDetailsLatestResponse?.let {
-        shareableFailureText =
-            "Details for failed transaction #${paymentDetailsLatestResponse!!.data.TransactionID}\nAmount: ${paymentDetailsLatestResponse!!.data.Amount.formatToPrecisionString()} $currency\nDate: $formattedDate\nStatus: FAILED"
+    var showQrCodeBottomSheetExpanded by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
+
+    if (showQrCodeBottomSheetExpanded) ModalBottomSheet(
+        modifier = Modifier.fillMaxWidth(),
+        onDismissRequest = { showQrCodeBottomSheetExpanded = false },
+        sheetState = sheetState,
+        containerColor = Color.White,
+        contentColor = primary500,
+        dragHandle = {}) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 20.dp)
+        ) {
+            IconButton(
+                modifier = Modifier.align(alignment = Alignment.CenterEnd), onClick = {
+                    showQrCodeBottomSheetExpanded = false
+                }) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            val linkQrBitmap = generateQrCode(transactionDetailUrl ?: "")
+
+            PaymentQrCodeImage(
+                qrBitmap = linkQrBitmap,
+                modifier = Modifier
+                    .padding(horizontal = 20.dp)
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(shape = RoundedCornerShape(16.dp))
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            NoteChip(
+                text = "Scan with your device",
+                modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
+            )
+        }
     }
 
     Column(
@@ -141,6 +216,51 @@ fun TransactionFailedBottomSectionContent(
                 currency = currency,
                 amount = paymentDetailsLatestResponse?.data?.Amount.formatToPrecisionString()
             )
+
+            // Same "View Full Receipt" / VOID / REFUND row as the success screen, reusing the
+            // exact same gates — shouldShowFullReceipt() already returns false for backend
+            // status == "NOTSUCCESSFUL", so it naturally stays hidden for a true decline, but
+            // the mechanism itself is identical rather than a separate, more restrictive one.
+            if (paymentDetailsLatestResponse?.data != null) {
+                val transaction = paymentDetailsLatestResponse?.data!!.toTransactionListDataRecord()
+                val availableAction = getAvailableAction(transaction)
+                Row(
+                    modifier = Modifier,
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (availableAction != TransactionAction.NONE) {
+                        OutlinedButton(
+                            text = if (availableAction == TransactionAction.REFUND) "Refund" else "VOID",
+                            onClick = {
+                                val transactionJson = Json.encodeToString(transaction)
+                                when (availableAction) {
+                                    TransactionAction.VOID -> navController.navigate(
+                                        Screens.TransactionAction.createRoute(transactionJson, "VOID")
+                                    )
+                                    TransactionAction.REFUND -> navController.navigate(
+                                        Screens.TransactionAction.createRoute(transactionJson, "REFUND")
+                                    )
+                                    else -> {}
+                                }
+                            },
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                    }
+
+                    if (shouldShowFullReceipt(transaction))
+                        FilledButton(
+                            text = "View Full Receipt",
+                            onClick = { updateFlowStage() },
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier
+                        )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -290,7 +410,7 @@ fun TransactionFailedBottomSectionContent(
                         text = "Email",
                         email = Email(
                             subject = "DASPay Transaction Failure Details",
-                            text = shareableFailureText
+                            text = transactionDetailUrl ?: "Transaction details unavailable"
                         ),
                         modifier = Modifier
                             .weight(1f)
@@ -305,7 +425,7 @@ fun TransactionFailedBottomSectionContent(
 
                     ShareButton(
                         text = "Share",
-                        shareContent = shareableFailureText,
+                        shareContent = transactionDetailUrl ?: "Transaction details unavailable",
                         modifier = Modifier
                             .weight(1f)
                             .border(
@@ -327,6 +447,7 @@ fun TransactionFailedBottomSectionContent(
                             )
                             .background(Color.White)
                             .padding(horizontal = 10.dp, vertical = 20.dp)
+                            .clickable { showQrCodeBottomSheetExpanded = true }
                     )
                 }
 

@@ -576,3 +576,5 @@ actual fun sendLogsToSdkTeam() {
     }
 }
 
+actual val tapToPayDisplayName: String = "Tap to Pay on iPhone"
+

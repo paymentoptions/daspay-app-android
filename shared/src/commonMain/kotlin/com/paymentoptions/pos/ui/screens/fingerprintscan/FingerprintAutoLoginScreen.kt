@@ -40,7 +40,6 @@ import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.autoSignIn
 import com.paymentoptions.pos.network.endpoints.completeDeviceRegistration
 import com.paymentoptions.pos.network.endpoints.getExternalDeviceConfiguration
-import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
 import com.paymentoptions.pos.ui.composables._components.images.BackgroundImage
 import com.paymentoptions.pos.ui.composables._components.images.LogoImage
@@ -266,7 +265,7 @@ private suspend fun performAutoSignIn(): AutoSignInOutcome {
 private fun handleAutoSignInFailure(navController: NavController) {
     showToast("Auto sign-in failed, please enter credentials again")
     AuthEventManager.requireManualSignIn()
-    AppStorage.clearAll()
+    DPStorageManager.clearAllAndEndSession()
     navController.navigate(Screens.AuthCheck.route) {
         popUpTo(Screens.AuthCheck.route) { inclusive = true }
     }

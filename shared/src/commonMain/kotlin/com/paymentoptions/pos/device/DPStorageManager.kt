@@ -5,6 +5,10 @@ import com.paymentoptions.pos.network.DevicePaymentMethod_Apms
 import com.paymentoptions.pos.network.DevicePaymentMethod_Schemes
 import com.paymentoptions.pos.network.ExternalConfigurationResponse
 import com.paymentoptions.pos.network.SignInResponse
+import com.paymentoptions.pos.payment.reader.MerchantConfig
+import com.paymentoptions.pos.payment.reader.ReaderLifecycleCoordinator
+import com.paymentoptions.pos.storage.AppStorage
+import kotlinx.serialization.json.Json
 
 /**
  * Compatibility shim: all persistence delegates to AppStorage.
@@ -31,7 +35,16 @@ object DPStorageManager {
 
     fun getAuthDetails(): SignInResponse? = dpGetAuthDetails()
 
-    fun clearSharedPreferences() = dpClearSharedPreferences()
+    fun clearSharedPreferences() {
+        dpClearSharedPreferences()
+        ReaderLifecycleCoordinator.sessionEnded()
+    }
+
+    /** Wipes every persisted value (used when auto sign-in / session restore fails). */
+    fun clearAllAndEndSession() {
+        AppStorage.clearAll()
+        ReaderLifecycleCoordinator.sessionEnded()
+    }
 
     fun saveCredentials(email: String, password: String) = dpSaveCredentials(email, password)
 
@@ -45,9 +58,33 @@ object DPStorageManager {
 
     fun getFcmToken(): String? = dpGetFcmToken()
 
-    fun saveDeviceConfiguration(config: ExternalConfigurationResponse) = dpSaveDeviceConfiguration(config)
+    fun saveDeviceConfiguration(config: ExternalConfigurationResponse) {
+        dpSaveDeviceConfiguration(config)
+
+        val deviceInfo = config.data?.deviceInfo
+        if (deviceInfo != null) {
+
+//            let businessName = "Pertok"
+//            let merchantId = "M1770891455"
+//            let merchantCategoryCode = "5999"
+//            let terminalEmvProfileId = "4c702000-0000-0000-03c9-91c46a350fd8"
+
+            val merchantConfig = MerchantConfig(
+                profileId = deviceInfo.MinesecDeviceId ?: "",
+                merchantBusinessName = "Pertok",
+                merchantId = deviceInfo.MinesecMerchantId ?: "",
+                merchantCategoryCode = "5999",
+                terminalEmvProfileId = "4c702000-0000-0000-03c9-91c46a350fd8",
+            )
+            AppStorage.merchantConfigJson = Json.encodeToString(MerchantConfig.serializer(), merchantConfig)
+            ReaderLifecycleCoordinator.sessionEstablished(merchantConfig)
+        }
+    }
 
     fun getDeviceConfiguration(): ExternalConfigurationResponse? = dpGetDeviceConfiguration()
+
+    fun getMerchantConfig(): MerchantConfig? =
+        AppStorage.merchantConfigJson?.let { Json.decodeFromString(MerchantConfig.serializer(), it) }
 
     fun getTransactionCurrency(): String = dpGetTransactionCurrency()
 

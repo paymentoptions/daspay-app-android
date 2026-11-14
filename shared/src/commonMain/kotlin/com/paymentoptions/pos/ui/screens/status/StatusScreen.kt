@@ -38,7 +38,7 @@ import paymentoptionspos.shared.generated.resources.check
 import paymentoptionspos.shared.generated.resources.error
 
 enum class StatusScreenType {
-    ERROR, PROCESSING, SUCCESS
+    PROCESSING, SUCCESS, DECLINED, TIMEOUT, CANCELLED, ERROR
 }
 
 data class MessageForStatusScreen(
@@ -74,12 +74,16 @@ fun StatusScreen(
         label = "pulse_alpha"
     )
 
+    val isFailureType = dataMessage.statusScreenType in setOf(
+        StatusScreenType.DECLINED, StatusScreenType.TIMEOUT, StatusScreenType.CANCELLED, StatusScreenType.ERROR
+    )
+
     SimpleLayout {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
-                .conditional(dataMessage.statusScreenType == StatusScreenType.ERROR) {
+                .conditional(isFailureType) {
                     background(red300)
                 }) {
 
@@ -118,7 +122,7 @@ fun StatusScreen(
                                     .alpha(pulseAlpha + 0.2f)
                             }
                             .background(
-                                color = Color(if (dataMessage.statusScreenType == StatusScreenType.ERROR) 0xFFFFC6C7 else 0xFFA2C3F4).copy(
+                                color = Color(if (isFailureType) 0xFFFFC6C7 else 0xFFA2C3F4).copy(
                                     alpha = 0.5f
                                 ), shape = RoundedCornerShape(50)
                             ), contentAlignment = Alignment.Center
@@ -132,16 +136,16 @@ fun StatusScreen(
                                 }
                                 .background(
                                     color = Color(
-                                        if (dataMessage.statusScreenType == StatusScreenType.ERROR) 0xFFCD5557 else 0xFF87AEF2
+                                        if (isFailureType) 0xFFCD5557 else 0xFF87AEF2
                                     ), shape = RoundedCornerShape(50)
                                 ), contentAlignment = Alignment.Center
                         ) {
                             if (dataMessage.statusScreenType != StatusScreenType.PROCESSING) Icon(
-                                painter = painterResource(if (dataMessage.statusScreenType == StatusScreenType.ERROR) Res.drawable.error else Res.drawable.check),
+                                painter = painterResource(if (isFailureType) Res.drawable.error else Res.drawable.check),
                                 contentDescription = "Icon",
                                 tint = Color.White,
                                 modifier = Modifier
-                                    .size(if (dataMessage.statusScreenType == StatusScreenType.ERROR) 78.dp else 50.dp)
+                                    .size(if (isFailureType) 78.dp else 50.dp)
                                     .background(Color.Transparent)
                             )
                         }

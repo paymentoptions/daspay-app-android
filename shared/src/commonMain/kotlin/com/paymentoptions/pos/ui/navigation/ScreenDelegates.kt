@@ -29,6 +29,8 @@ import com.paymentoptions.pos.ui.screens.logger.SendLogsScreen
 import com.paymentoptions.pos.ui.screens._flow.foodOrderFlow.FoodOrderFlow
 import com.paymentoptions.pos.ui.screens._flow.receiveMoneyFlow.ReceiveMoneyFlow
 import com.paymentoptions.pos.ui.screens._flow.refundFlow.refundinitiated.RefundInitiatedScreen
+import com.paymentoptions.pos.ui.screens.taptopayawareness.TapToPayAwarenessScreen
+import com.paymentoptions.pos.ui.screens.trytaptopay.TryTapToPayScreen
 import com.paymentoptions.pos.utils.TransactionAction
 
 /**
@@ -138,6 +140,14 @@ fun SendLogsScreenPlaceholder(nav: NavHostController) = SendLogsScreen(nav)
 
 @Composable
 fun FcmTokenScreenPlaceholder(nav: NavHostController) = LoadingPlaceholder()
+
+// ── Tap to Pay on iPhone (placeholder screens) ─────────────────────────────────
+
+@Composable
+fun OpenTapToPayAwarenessScreen(nav: NavHostController) = TapToPayAwarenessScreen(nav)
+
+@Composable
+fun OpenTryTapToPayScreen(nav: NavHostController) = TryTapToPayScreen(nav)
 
 // ── Default placeholder ───────────────────────────────────────────────────────
 

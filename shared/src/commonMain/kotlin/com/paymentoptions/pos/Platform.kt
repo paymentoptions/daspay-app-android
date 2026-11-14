@@ -196,3 +196,14 @@ expect fun openPdf(filePath: String)
 expect fun sendLogsToSdkTeam()
 
 expect fun Uri.readBytes(context: Any? = null): ByteArray?
+
+// ── Tap to Pay naming ─────────────────────────────────────────────────────────
+
+/**
+ * Platform-correct user-facing name: "Tap to Pay on iPhone" on iOS, "Tap to Pay" on Android.
+ * Use [tapToPayShortName] instead where space is too tight for the full iOS name.
+ */
+expect val tapToPayDisplayName: String
+
+/** Short form for space-constrained UI (buttons, chips); same wording on both platforms. */
+const val tapToPayShortName: String = "Tap to Pay"

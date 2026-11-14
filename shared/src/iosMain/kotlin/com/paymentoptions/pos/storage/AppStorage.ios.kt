@@ -108,6 +108,12 @@ object AndroidAppStorage : StorageInterface {
         get() = settings.getStringOrNull(KEY_DEVICE_CONFIG_JSON)
         set(v) { if (v != null) settings[KEY_DEVICE_CONFIG_JSON] = v else settings.remove(KEY_DEVICE_CONFIG_JSON) }
 
+    // ── Tap to Pay merchant config JSON (MerchantConfig) ──────────────────────
+
+    override var merchantConfigJson: String?
+        get() = settings.getStringOrNull(KEY_MERCHANT_CONFIG_JSON)
+        set(v) { if (v != null) settings[KEY_MERCHANT_CONFIG_JSON] = v else settings.remove(KEY_MERCHANT_CONFIG_JSON) }
+
     // ── App config / URLs ─────────────────────────────────────────────────────
 
     override var baseUrl: String?
@@ -176,6 +182,7 @@ object AndroidAppStorage : StorageInterface {
         accessLevel     = null
         authDetailsJson = null
         cartJson        = null
+        merchantConfigJson = null
     }
 
     override fun clearAll() {
@@ -203,6 +210,7 @@ object AndroidAppStorage : StorageInterface {
     private const val KEY_DASMID                  = "dasmid"
     private const val KEY_MERCHANT_LEGAL_NAME     = "merchantLegalName"
     private const val KEY_DEVICE_CONFIG_JSON      = "deviceConfigJson"
+    private const val KEY_MERCHANT_CONFIG_JSON    = "merchantConfigJson"
     private const val KEY_BASE_URL                = "baseUrl"
     private const val KEY_CONFIG_BASE_URL         = "configBaseUrl"
     private const val KEY_TRANSACTION_DETAILS_URL = "transactionDetailsUrl"

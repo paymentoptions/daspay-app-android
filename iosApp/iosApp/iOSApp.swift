@@ -12,11 +12,11 @@ private func logError(_ message: String) {
     AppLogger.shared.error(objects: KotlinArray<AnyObject>(size: 1) { _ in message as AnyObject })
 }
 
-// MARK: - Reader Coordinator (serializes warm-up/invalidate, tracks session consumption)
+// MARK: - Reader Manager (owns the Tap to Pay reader lifecycle, implements TapToPayReaderBridge)
 
-/// Owns all reader prep so `launchSale`/`launchVoid`/`launchLinkedRefund` and the MineSec
-/// event observer never race each other's invalidate/warmUp sequence — concurrent callers
-/// await the same in-flight prepare instead of starting their own.
+/// Owns the entire MineSec reader lifecycle (init / warm-up / teardown) behind the shared
+/// Kotlin `TapToPayReader` contract. Started exactly once, from shared Kotlin's
+/// `ReaderLifecycleCoordinator` (via `ReaderManagerBridge`) — never from `iOSApp.init()`.
 ///
 /// Also tracks session consumption explicitly: MineSec's `getReaderStatus()` keeps
 /// reporting `.ready` even after a session has already been used for a tap (accountStatus
@@ -24,15 +24,120 @@ private func logError(_ message: String) {
 /// every transaction after the first one skipped invalidate/warm-up entirely and handed
 /// Apple's ProximityReader a session that could never register a new tap — producing a
 /// timeout that looked like "worked once, then broke."
-actor ReaderCoordinator {
-    private let svc: HeadlessService
-    private let statusProvider: SwiftTapToPayReaderStatusProvider
-    private var inFlight: Task<Bool, Never>?
-    private var sessionConsumed = false
+actor ReaderManager {
+    struct MerchantConfig: Equatable {
+        let profileId: String
+        let merchantBusinessName: String
+        let merchantId: String
+        let merchantCategoryCode: String
+        let terminalEmvProfileId: String
+    }
 
-    init(svc: HeadlessService, statusProvider: SwiftTapToPayReaderStatusProvider) {
+    struct StatusSnapshot {
+        let kind: String // notInitialized, initializing, configuring, notLinked, ready, failed
+        let progress: Int32
+        let message: String?
+        var isReady: Bool { kind == "ready" }
+    }
+
+    private let svc: HeadlessService
+    /// Legacy boolean readiness mirror still consumed by `getNfcStatus()` call sites that
+    /// weren't moved onto `ensureReadyForPayment()` in this step — kept in sync so that
+    /// out-of-scope UI (e.g. the NFC-not-enabled early checks) keeps working unchanged.
+    private let legacyStatusProvider: SwiftTapToPayReaderStatusProvider
+
+    private var currentConfig: MerchantConfig?
+    private var started = false
+    private var sessionConsumed = false
+    private var inFlightEnsure: Task<StatusSnapshot, Never>?
+    private var eventObserverTask: Task<Void, Never>?
+    private var stateListener: TapToPayReaderBridgeStateListener?
+    private var onInitializedChanged: (@Sendable (Bool) -> Void)?
+    /// Most recent terminal read-session event (`.readCancelled`/`.readNotCompleted`), cleared on
+    /// `.readyForTap`/`.readCompleted`. Lets `SwiftMineSecProvider` classify a failed transaction
+    /// as cancelled/timed-out from a real SDK signal instead of string-matching error text (5.9).
+    private var lastTerminalReadEvent: HeadlessReaderEvent?
+
+    init(svc: HeadlessService, legacyStatusProvider: SwiftTapToPayReaderStatusProvider) {
         self.svc = svc
-        self.statusProvider = statusProvider
+        self.legacyStatusProvider = legacyStatusProvider
+    }
+
+    func setStateListener(_ listener: TapToPayReaderBridgeStateListener) {
+        self.stateListener = listener
+    }
+
+    /// Lets `SwiftMineSecProvider` mirror `initSoftPOS` success/failure into its
+    /// Kotlin-visible `isInitialized` flag.
+    func setOnInitializedChanged(_ callback: @escaping @Sendable (Bool) -> Void) {
+        self.onInitializedChanged = callback
+    }
+
+    /// No-op if already started with an identical config; otherwise stops the current
+    /// session first, then calls `initSoftPOS` with the new one.
+    func start(config: MerchantConfig) async {
+        if started, currentConfig == config {
+            logInfo("ReaderManager.start: already started with identical config — no-op")
+            return
+        }
+        if started {
+            logInfo("ReaderManager.start: config changed — stopping current session first")
+            await stopInternal()
+        }
+
+        currentConfig = config
+        started = true
+        updateState(kind: "initializing", progress: 0, message: nil)
+
+        let result = await svc.initSoftPOS(
+            profileId: config.profileId,
+            licenseFile: "payment-options.license",
+            posConfiguration: POSConfiguration(
+                tapToPayReaderConfig: TapToPayReaderConfiguration(
+                    merchantBusinessName: config.merchantBusinessName,
+                    merchantId: config.merchantId,
+                    merchantCategoryCode: config.merchantCategoryCode,
+                    terminalEmvProfileId: config.terminalEmvProfileId
+                )
+            )
+        )
+
+        switch result {
+        case .success(let info):
+            logInfo("MineSec initialized: \(info.headlessId) v\(info.headlessVersion)")
+            onInitializedChanged?(true)
+            observeEvents()
+            _ = await ensureReadyForPayment()
+
+        case .failure(let error):
+            logError("MineSec Init failed: \(error)")
+            onInitializedChanged?(false)
+            updateState(kind: "failed", progress: 0, message: "\(error)")
+        }
+    }
+
+    func stop() async {
+        await stopInternal()
+    }
+
+    private func stopInternal() async {
+        eventObserverTask?.cancel()
+        eventObserverTask = nil
+        // HeadlessService exposes no teardown/dispose API (confirmed against the SDK's full
+        // public surface and its README quickstart) — invalidateSession() is the closest
+        // available primitive. It invalidates the current reader session but cannot undo
+        // initSoftPOS; a later start(config:) re-initializes via a fresh initSoftPOS call.
+        await svc.invalidateSession()
+        started = false
+        currentConfig = nil
+        sessionConsumed = false
+        onInitializedChanged?(false)
+        updateState(kind: "notInitialized", progress: 0, message: nil)
+    }
+
+    func onForeground() async {
+        guard started else { return }
+        _ = await ensureReadyForPayment()
     }
 
     /// Call after ANY transaction result (success or failure) — both consume the armed
@@ -41,34 +146,75 @@ actor ReaderCoordinator {
         sessionConsumed = true
     }
 
-    func prepare() async -> Bool {
-        if let inFlight {
-            return await inFlight.value
+    @discardableResult
+    func ensureReadyForPayment() async -> StatusSnapshot {
+        if let inFlightEnsure {
+            return await inFlightEnsure.value
         }
         let task = Task { await self.checkAndPrepareReader() }
-        inFlight = task
+        inFlightEnsure = task
         let result = await task.value
-        inFlight = nil
+        inFlightEnsure = nil
         return result
     }
 
-    private func checkAndPrepareReader() async -> Bool {
-        let status = await svc.getReaderStatus()
-        logInfo("MineSec reader status check: \(status)")
+    /// Drives Apple's Tap to Pay on iPhone account-linking (Terms & Conditions) UI via
+    /// `HeadlessService.linkAccount()`. Always refreshes the full reader state afterwards so
+    /// observers (checkout, Settings, the enable flow itself) see a consistent snapshot.
+    @discardableResult
+    func linkAccount() async -> StatusSnapshot {
+        guard started else {
+            return updateState(kind: "notInitialized", progress: 0, message: nil)
+        }
 
-        guard status.accountStatus == .linked else {
+        logInfo("MineSec linkAccount started")
+        let result = await svc.linkAccount()
+
+        switch result {
+        case .success(let status):
+            logInfo("MineSec linkAccount succeeded: \(status)")
+            guard status.accountStatus == .linked else {
+                return updateState(kind: "notLinked", progress: 0, message: nil)
+            }
+            // Linked — immediately try to warm up so readiness reflects reality.
+            return await checkAndPrepareReader()
+
+        case .failure(let error):
+            logError("MineSec linkAccount failed: \(error)")
+            let message: String
+            switch error {
+            case .accountLinkRequired:
+                message = "You need to accept Apple's Tap to Pay on iPhone terms to continue."
+            case .accountLinkDeclined:
+                message = "Setup was declined. You can try again anytime."
+            case .accountLinkFailed(let reason):
+                message = "Couldn't set up Tap to Pay on iPhone: \(reason)"
+            default:
+                message = "\(error)"
+            }
+            return updateState(kind: "failed", progress: 0, message: message)
+        }
+    }
+
+    private func checkAndPrepareReader() async -> StatusSnapshot {
+        guard started else {
+            return updateState(kind: "notInitialized", progress: 0, message: nil)
+        }
+
+        let readerStatus = await svc.getReaderStatus()
+        logInfo("MineSec reader status check: \(readerStatus)")
+
+        guard readerStatus.accountStatus == .linked else {
             logError("MineSec account is not linked")
-            await statusProvider.updateReadiness(false)
-            return false
+            return updateState(kind: "notLinked", progress: 0, message: nil)
         }
 
-        if status.readiness == .ready && !sessionConsumed {
-            logInfo("MineSec Session is already active and ready")
-            await statusProvider.updateReadiness(true)
-            return true
+        if readerStatus.readiness == .ready, !sessionConsumed {
+            logInfo("MineSec session is already active and ready")
+            return updateState(kind: "ready", progress: 0, message: nil)
         }
 
-        logInfo("MineSec Session not ready/expired/consumed. Invalidating stale session before warm-up...")
+        logInfo("MineSec session not ready/expired/consumed. Invalidating stale session before warm-up...")
         await svc.invalidateSession()
 
         // Poll instead of a fixed sleep: retries up to ~2s, adapting to how long
@@ -78,20 +224,18 @@ actor ReaderCoordinator {
 
         switch warmUpResult {
         case .success(let newStatus):
-            logInfo("MineSec warm-up OK — readiness: \(newStatus.readiness)")
             sessionConsumed = false // fresh session, not yet used
-
-            let statusNow = await svc.getReaderStatus()
-            logInfo("MineSec new reader status check after warm up: \(statusNow)")
-
-            let ready = newStatus.accountStatus == .linked && newStatus.readiness == .ready
-            await statusProvider.updateReadiness(ready)
-            return ready
+            guard newStatus.accountStatus == .linked else {
+                return updateState(kind: "notLinked", progress: 0, message: nil)
+            }
+            guard newStatus.readiness == .ready else {
+                return updateState(kind: "failed", progress: 0, message: "Reader not ready after warm-up")
+            }
+            return updateState(kind: "ready", progress: 0, message: nil)
 
         case .failure(let error):
             logError("MineSec warm-up failed: \(error)")
-            await statusProvider.updateReadiness(false)
-            return false
+            return updateState(kind: "failed", progress: 0, message: "\(error)")
         }
     }
 
@@ -116,6 +260,164 @@ actor ReaderCoordinator {
         }
         return lastResult
     }
+
+    private func observeEvents() {
+        eventObserverTask?.cancel()
+        eventObserverTask = Task { [weak self] in
+            guard let self else { return }
+            for await event in await svc.events {
+                await self.handle(event: event)
+            }
+        }
+    }
+
+    private func handle(event: HeadlessReaderEvent) {
+        logInfo("MineSec Event: \(event)")
+        switch event {
+        case .notReady:
+            logInfo("MineSec reader reported notReady")
+            updateState(kind: "notLinked", progress: 0, message: nil)
+        case .readyForTap:
+            updateState(kind: "ready", progress: 0, message: nil)
+            lastTerminalReadEvent = nil
+        case .progress(let percent):
+            updateState(kind: "configuring", progress: Int32(percent), message: nil)
+        case .readCancelled, .readNotCompleted:
+            lastTerminalReadEvent = event
+        case .readCompleted:
+            lastTerminalReadEvent = nil
+        default:
+            break
+        }
+    }
+
+    /// Classifies the most recent terminal read-session event into a stable outcome kind:
+    /// "cancelled" when the user backed out of Apple's native Tap to Pay sheet, "timeout" when
+    /// no card was presented in time / retries were exhausted. Returns nil when neither
+    /// applies — the eventual outcome then comes from the transaction result itself (a real
+    /// decline, webhook failure, etc.). Consuming resets it so a stale event from a previous
+    /// tap can never leak into the next one's classification.
+    func consumeLastOutcomeKind() -> String? {
+        defer { lastTerminalReadEvent = nil }
+        switch lastTerminalReadEvent {
+        case .readCancelled:
+            return "cancelled"
+        case .readNotCompleted:
+            return "timeout"
+        default:
+            return nil
+        }
+    }
+
+    @discardableResult
+    private func updateState(kind: String, progress: Int32, message: String?) -> StatusSnapshot {
+        let snapshot = StatusSnapshot(kind: kind, progress: progress, message: message)
+        stateListener?.onStateChanged(kind: kind, progress: progress, message: message)
+        Task { await legacyStatusProvider.updateReadiness(snapshot.isReady) }
+        return snapshot
+    }
+}
+
+/// Wraps [ReaderManager] behind Kotlin's `TapToPayReaderBridge` protocol — primitive-only,
+/// callback-based methods, matching the existing `MineSecPaymentProvider` pattern, since a
+/// Swift class implementing a Kotlin-defined protocol can't conform to Kotlin `suspend fun`s.
+final class ReaderManagerBridge: NSObject, TapToPayReaderBridge {
+    private let manager: ReaderManager
+
+    init(manager: ReaderManager) {
+        self.manager = manager
+    }
+
+    func start(
+        profileId: String,
+        merchantBusinessName: String,
+        merchantId: String,
+        merchantCategoryCode: String,
+        terminalEmvProfileId: String
+    ) {
+        let config = ReaderManager.MerchantConfig(
+            profileId: profileId,
+            merchantBusinessName: merchantBusinessName,
+            merchantId: merchantId,
+            merchantCategoryCode: merchantCategoryCode,
+            terminalEmvProfileId: terminalEmvProfileId
+        )
+        Task { await manager.start(config: config) }
+    }
+
+    func stop() {
+        Task { await manager.stop() }
+    }
+
+    func onForeground() {
+        Task { await manager.onForeground() }
+    }
+
+    func ensureReadyForPayment(completion: @escaping (String, KotlinInt, String?) -> Void) {
+        Task {
+            let snapshot = await manager.ensureReadyForPayment()
+            completion(snapshot.kind, KotlinInt(int: snapshot.progress), snapshot.message)
+        }
+    }
+
+    func linkAccount(completion: @escaping (String, KotlinInt, String?) -> Void) {
+        Task {
+            let snapshot = await manager.linkAccount()
+            completion(snapshot.kind, KotlinInt(int: snapshot.progress), snapshot.message)
+        }
+    }
+
+    func setStateListener(listener: TapToPayReaderBridgeStateListener) {
+        Task { await manager.setStateListener(listener) }
+    }
+}
+
+// MARK: - Tap to Pay Discovery (Apple's native merchant-education content)
+
+/// Wraps Apple's `ProximityReaderDiscovery` (iOS 18+ only — matches this app's 18.5 deployment
+/// target, so there's no older-OS fallback path to support) to present the native "How to Tap"
+/// content, covering the merchant-education requirements (4.5/4.6/4.7) without any bespoke UI.
+final class ProximityReaderDiscoveryPresenter: NSObject, TapToPayDiscoveryBridge {
+    private let discovery = ProximityReaderDiscovery()
+
+    func presentHowToTap(completion: @escaping (KotlinBoolean, String?) -> Void) {
+        Task {
+            do {
+                let content = try await discovery.content(for: .payment(.howToTap))
+                guard let topVC = Self.topViewController() else {
+                    logError("ProximityReaderDiscovery: no view controller available to present from")
+                    DispatchQueue.main.async {
+                        completion(KotlinBoolean(bool: false), "No view controller available to present from.")
+                    }
+                    return
+                }
+                try await discovery.presentContent(content, from: topVC)
+                DispatchQueue.main.async {
+                    completion(KotlinBoolean(bool: true), nil)
+                }
+            } catch {
+                logError("ProximityReaderDiscovery failed: \(error)")
+                DispatchQueue.main.async {
+                    completion(KotlinBoolean(bool: false), error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    private static func topViewController() -> UIViewController? {
+        guard let rootVC = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first(where: { $0.activationState == .foregroundActive })?
+            .keyWindow?.rootViewController
+        else {
+            return nil
+        }
+        var topVC = rootVC
+        while let presented = topVC.presentedViewController {
+            topVC = presented
+        }
+        return topVC
+    }
 }
 
 // MARK: - App Delegate & Main App
@@ -137,69 +439,24 @@ struct iOSApp: App {
     private let bridgeProvider: SwiftMineSecProvider
     private let keychainProvider = SwiftKeychainProvider()
     private let tapToPayReaderStatusProvider: SwiftTapToPayReaderStatusProvider
-    private let readerCoordinator: ReaderCoordinator
+    private let readerManagerBridge: ReaderManagerBridge
+    private let tapToPayDiscoveryPresenter = ProximityReaderDiscoveryPresenter()
 
     init() {
         let statusProvider = SwiftTapToPayReaderStatusProvider()
         self.tapToPayReaderStatusProvider = statusProvider
 
         let svc = mineSecService
-        let coordinator = ReaderCoordinator(svc: svc, statusProvider: statusProvider)
-        self.readerCoordinator = coordinator
+        let manager = ReaderManager(svc: svc, legacyStatusProvider: statusProvider)
+        self.readerManagerBridge = ReaderManagerBridge(manager: manager)
 
-        let provider = SwiftMineSecProvider(service: svc, coordinator: coordinator)
+        let provider = SwiftMineSecProvider(service: svc, readerManager: manager)
         self.bridgeProvider = provider
 
-        // Snapshot @State values into plain locals — avoids capturing `self` in the Task closure.
-        let businessName = "Pertok"
-        let merchantId = "M1770891455"
-        let merchantCategoryCode = "5999"
-        let terminalEmvProfileId = "4c702000-0000-0000-03c9-91c46a350fd8"
-
-        Task {
-            let result = await svc.initSoftPOS(
-                profileId: "prof_01M0Y76NPJ4EEKSS83M1NCHKG1",
-                licenseFile: "payment-options.license",
-                posConfiguration: POSConfiguration(
-                    tapToPayReaderConfig: TapToPayReaderConfiguration(
-                        merchantBusinessName: businessName,
-                        merchantId: merchantId,
-                        merchantCategoryCode: merchantCategoryCode,
-                        terminalEmvProfileId: terminalEmvProfileId
-                    )
-                )
-            )
-
-            logInfo("Minesec result initSoftPOS: \(result)")
-
-            switch result {
-            case .success(let info):
-                logInfo("MineSec initialized: \(info.headlessId) v\(info.headlessVersion)")
-                provider.isInitialized = true
-
-                // Unified check and warm-up logic, now serialized through the coordinator.
-                _ = await coordinator.prepare()
-
-                Task {
-                    for await event in await svc.events {
-                        logInfo("MineSec Event: \(event)")
-                        switch event {
-                        case .notReady:
-                            logInfo("MineSec reader reported notReady — resetting session")
-                            await statusProvider.updateReadiness(false)
-                            _ = await coordinator.prepare()
-                        case .readyForTap:
-                            await statusProvider.updateReadiness(true)
-                        default:
-                            break
-                        }
-                    }
-                }
-
-            case .failure(let error):
-                logError("MineSec Init failed: \(error)")
-            }
-        }
+        // iOSApp only registers the reader manager with shared Kotlin code here — it must
+        // never start the SDK itself. Starting (and stopping, and foreground warm-up) is
+        // driven exclusively by shared Kotlin's `ReaderLifecycleCoordinator`, in response to
+        // login / session-restore / logout / app-foreground events.
     }
 
     var body: some Scene {
@@ -207,7 +464,9 @@ struct iOSApp: App {
             ContentView(
                 provider: bridgeProvider,
                 keychainProvider: keychainProvider,
-                tapToPayReaderStatusProvider: tapToPayReaderStatusProvider
+                tapToPayReaderStatusProvider: tapToPayReaderStatusProvider,
+                tapToPayReaderBridge: readerManagerBridge,
+                tapToPayDiscoveryBridge: tapToPayDiscoveryPresenter
             )
         }
     }
@@ -237,7 +496,7 @@ actor SwiftTapToPayReaderStatusProviderCore {
 /// Bridges MineSec's Tap to Pay reader status to Kotlin's `getNfcStatus()`.
 ///
 /// Readiness is driven by `HeadlessService.getReaderStatus()`/`warmUp()` via
-/// `ReaderCoordinator`, not by a standalone `PaymentCardReader` instance: per MineSec's
+/// `ReaderManager`, not by a standalone `PaymentCardReader` instance: per MineSec's
 /// api-guide.md, `PaymentCardReader`/`ProximityReader` internals are not the supported
 /// customer API, and a `PaymentCardReader` created independently of the Headless SDK never
 /// has an active read session on it, so it never emits `.readyForTap` — that previously made
@@ -266,14 +525,19 @@ class SwiftTapToPayReaderStatusProvider: NSObject, TapToPayReaderStatusProvider 
 /// Bridges Kotlin [MineSecPaymentProvider] calls to the native MineSec Headless iOS SDK v1.2.00.
 class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
     private let service: HeadlessService
-    private let coordinator: ReaderCoordinator
+    private let readerManager: ReaderManager
     /// Set to true by iOSApp after initSoftPOS completes successfully.
     var isInitialized: Bool = false
 
-    init(service: HeadlessService, coordinator: ReaderCoordinator) {
+    init(service: HeadlessService, readerManager: ReaderManager) {
         self.service = service
-        self.coordinator = coordinator
+        self.readerManager = readerManager
         super.init()
+
+        let setInitialized: @Sendable (Bool) -> Void = { [weak self] isInitialized in
+            self?.isInitialized = isInitialized
+        }
+        Task { await readerManager.setOnInitializedChanged(setInitialized) }
     }
 
     func launchSale(
@@ -285,9 +549,9 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
     ) {
         Task {
             // Check session and automatically recover if expired/consumed before proceeding.
-            let ready = await coordinator.prepare()
+            let snapshot = await readerManager.ensureReadyForPayment()
 
-            guard ready else {
+            guard snapshot.isReady else {
                 logError("MineSec reader is not ready. launchPayment aborted.")
                 DispatchQueue.main.async {
                     onResult(MineSecTransactionResult(
@@ -296,7 +560,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: posReference,
                         acquirerResponseJson: nil,
                         tranType: nil,
-                        errorMessage: "MineSec Reader is not ready. Please try again."
+                        errorMessage: "MineSec Reader is not ready. Please try again.",
+                        outcomeKind: "error"
                     ))
                 }
                 return
@@ -319,7 +584,11 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
             logInfo("MineSec launchSale result: \(result)")
 
             // Either outcome consumes the armed reader session — next call must re-prepare.
-            await coordinator.markConsumed()
+            await readerManager.markConsumed()
+
+            // Classify from the real reader-session event observed during this tap, if any
+            // (cancelled/timeout) — not from string-matching error.localizedDescription (5.9).
+            let outcomeKind = await readerManager.consumeLastOutcomeKind()
 
             DispatchQueue.main.async {
                 switch result {
@@ -339,7 +608,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: posReference,
                         acquirerResponseJson: jsonString,
                         tranType: "SALE",
-                        errorMessage: nil
+                        errorMessage: nil,
+                        outcomeKind: nil
                     ))
 
                 case .failure(let error):
@@ -349,7 +619,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: posReference,
                         acquirerResponseJson: nil,
                         tranType: nil,
-                        errorMessage: error.localizedDescription
+                        errorMessage: error.localizedDescription,
+                        outcomeKind: outcomeKind
                     ))
                 }
             }
@@ -363,9 +634,9 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
     ) {
         Task {
             // Check session and automatically recover if expired/consumed before proceeding.
-            let ready = await coordinator.prepare()
+            let snapshot = await readerManager.ensureReadyForPayment()
 
-            guard ready else {
+            guard snapshot.isReady else {
                 logError("MineSec reader is not ready. actionVoid aborted.")
                 DispatchQueue.main.async {
                     onResult(MineSecTransactionResult(
@@ -374,7 +645,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "VOID",
-                        errorMessage: "MineSec Reader is not ready. Please try again."
+                        errorMessage: "MineSec Reader is not ready. Please try again.",
+                        outcomeKind: "error"
                     ))
                 }
                 return
@@ -383,7 +655,7 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
             let result = await service.actionVoid(tranId: acquirerTransactionId)
             logInfo("MineSec launchVoid result: \(result)")
 
-            await coordinator.markConsumed()
+            await readerManager.markConsumed()
 
             DispatchQueue.main.async {
                 switch result {
@@ -394,7 +666,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "VOID",
-                        errorMessage: nil
+                        errorMessage: nil,
+                        outcomeKind: nil
                     ))
                 case .failure(let error):
                     onResult(MineSecTransactionResult(
@@ -403,7 +676,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "VOID",
-                        errorMessage: error.localizedDescription
+                        errorMessage: error.localizedDescription,
+                        outcomeKind: nil
                     ))
                 }
             }
@@ -419,9 +693,9 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
     ) {
         Task {
             // Check session and automatically recover if expired/consumed before proceeding.
-            let ready = await coordinator.prepare()
+            let snapshot = await readerManager.ensureReadyForPayment()
 
-            guard ready else {
+            guard snapshot.isReady else {
                 logError("MineSec reader is not ready. actionLinkedRefund aborted.")
                 DispatchQueue.main.async {
                     onResult(MineSecTransactionResult(
@@ -430,7 +704,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "REFUND",
-                        errorMessage: "MineSec Reader is not ready. Please try again."
+                        errorMessage: "MineSec Reader is not ready. Please try again.",
+                        outcomeKind: "error"
                     ))
                 }
                 return
@@ -440,7 +715,7 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
             let result = await service.actionLinkedRefund(tranId: acquirerTransactionId, amount: amountObj)
             logInfo("MineSec launchLinkedRefund result: \(result)")
 
-            await coordinator.markConsumed()
+            await readerManager.markConsumed()
 
             DispatchQueue.main.async {
                 switch result {
@@ -451,7 +726,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "REFUND",
-                        errorMessage: nil
+                        errorMessage: nil,
+                        outcomeKind: nil
                     ))
                 case .failure(let error):
                     onResult(MineSecTransactionResult(
@@ -460,7 +736,8 @@ class SwiftMineSecProvider: NSObject, MineSecPaymentProvider {
                         posReference: nil,
                         acquirerResponseJson: nil,
                         tranType: "REFUND",
-                        errorMessage: error.localizedDescription
+                        errorMessage: error.localizedDescription,
+                        outcomeKind: nil
                     ))
                 }
             }
