@@ -98,6 +98,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.paymentoptions.pos.utils.getGatewayNotes
 import com.paymentoptions.pos.utils.parseAcquirerResponse
+import com.paymentoptions.pos.ui.composables._components.TaxRegistrationRow
+import com.paymentoptions.pos.ui.composables._components.ReceiptBreakdown
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalComposeApi::class
@@ -342,6 +344,13 @@ fun ReceiptBottomSectionContent(
 
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
+        )
+
+        // Section 1.5: food-order breakdown (items, service, additional, tax), when present
+        ReceiptBreakdown(
+            productDetails = paymentDetailsLatestResponse?.data?.DaspayProductDetails,
+            merchantSetting = DPStorageManager.getMerchantSettings(),
+            horizontalPadding = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
         )
 
         //Section 2 : Total
@@ -642,6 +651,8 @@ fun ReceiptBottomSectionContent(
                     color = primary500
                 )
             }
+
+            TaxRegistrationRow(DPStorageManager.getMerchantSettings())
 
             val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
             if (gatewayNotes.isNotBlank()) {
@@ -974,6 +985,11 @@ private fun ReceiptContentForPDF(
             color = Color.LightGray.copy(alpha = 0.2f)
         )
 
+        ReceiptBreakdown(
+            productDetails = paymentDetailsLatestResponse?.data?.DaspayProductDetails,
+            merchantSetting = DPStorageManager.getMerchantSettings(),
+        )
+
         // Total Section
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1240,6 +1256,8 @@ private fun ReceiptContentForPDF(
                     color = primary500
                 )
             }
+
+            TaxRegistrationRow(DPStorageManager.getMerchantSettings())
 
             val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
             if (gatewayNotes.isNotBlank()) {

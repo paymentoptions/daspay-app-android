@@ -85,6 +85,9 @@ import com.paymentoptions.pos.utils.safeParseDateTime
 import kotlinx.datetime.Instant
 import com.paymentoptions.pos.utils.getGatewayNotes
 import com.paymentoptions.pos.utils.parseAcquirerResponse
+import com.paymentoptions.pos.ui.composables._components.taxRegistrationNumberToShow
+import com.paymentoptions.pos.ui.composables._components.TaxRegistrationRow
+import com.paymentoptions.pos.ui.composables._components.ReceiptBreakdown
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalComposeApi::class
@@ -292,6 +295,9 @@ fun StatusBottomSectionContent(
                         label = "Aggregator",
                         value = aggregator
                     )
+                    DPStorageManager.getMerchantSettings().taxRegistrationNumberToShow()?.let {
+                        TransactionDetailRow(label = "TAX REGISTRATION NO.", value = it)
+                    }
                     val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
                     if (gatewayNotes.isNotBlank()) {
                         TransactionDetailRow(
@@ -300,6 +306,12 @@ fun StatusBottomSectionContent(
                         )
                     }
                 }
+
+                ReceiptBreakdown(
+                    productDetails = paymentDetailsLatestResponse?.data?.DaspayProductDetails,
+                    merchantSetting = DPStorageManager.getMerchantSettings(),
+                    horizontalPadding = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
+                )
 
                 HorizontalDivider(
                     modifier = Modifier.padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP),
@@ -580,6 +592,11 @@ private fun ReceiptContentForPDF(
             color = Color.LightGray.copy(alpha = 0.2f)
         )
 
+        ReceiptBreakdown(
+            productDetails = paymentDetailsLatestResponse?.data?.DaspayProductDetails,
+            merchantSetting = DPStorageManager.getMerchantSettings(),
+        )
+
         // Total Section
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -846,6 +863,8 @@ private fun ReceiptContentForPDF(
                     color = primary500
                 )
             }
+
+            TaxRegistrationRow(DPStorageManager.getMerchantSettings())
         }
 
         // Signature

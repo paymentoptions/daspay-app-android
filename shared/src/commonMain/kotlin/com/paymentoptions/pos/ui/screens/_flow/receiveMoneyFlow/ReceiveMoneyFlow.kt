@@ -127,6 +127,8 @@ import com.paymentoptions.pos.utils.viaLinkPaymentMethod
 import kotlinx.coroutines.IO
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.seconds
+import com.paymentoptions.pos.utils.openPaymentUrl
+import androidx.compose.ui.platform.LocalUriHandler
 
 fun formatAmount(input: String): String {
     if (input.isEmpty()) return "0.00"
@@ -251,10 +253,7 @@ fun ReceiveMoneyFlow(
         showToast("Your device does not support NFC")
     }
     */
-    if (availablePaymentMethods.contains(qrCodePaymentMethod) && !apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
-        qrCodePaymentMethod.setIsEnabled(false)
-        showToast("Payment via QR code not supported")
-    }
+    // QR stays enabled for every APM set: the old "QR not supported" gate predates the new APMs (release 27f1a54).
 
     // Geo-restriction state
     var showGeoRestrictionDialog by remember { mutableStateOf(false) }
@@ -468,6 +467,8 @@ fun ReceiveMoneyFlow(
                                     startTapAndPay = false
 
                                     var qrCodeBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+                                    var qrCodePaymentUrl by remember { mutableStateOf<String?>(null) }
+                                    val uriHandler = LocalUriHandler.current
                                     var qrCodeLoading by remember { mutableStateOf(false) }
                                     var qrCodeError by remember { mutableStateOf<String?>(null) }
 
@@ -501,6 +502,7 @@ fun ReceiveMoneyFlow(
                                                 val paymentUrl =
                                                     DPStorageManager.getPayByLinkUrl() + response.data.ProductID
                                                 qrCodeBitmap = generateQrCode(paymentUrl)
+                                                qrCodePaymentUrl = paymentUrl
                                             } else {
                                                 qrCodeError = "Failed to generate QR code."
                                             }
@@ -544,6 +546,7 @@ fun ReceiveMoneyFlow(
                                     } else {
                                         PaymentQrCodeImage(
                                             qrBitmap = qrCodeBitmap, // generated bitmap here
+                                            onClick = { uriHandler.openPaymentUrl(qrCodePaymentUrl) },
                                             modifier = Modifier
                                                 .padding(horizontal = 20.dp)
                                                 .fillMaxWidth()
@@ -605,6 +608,7 @@ fun ReceiveMoneyFlow(
                                     val sheetState = rememberModalBottomSheetState()
                                     //added a state variable to hold the generated QR bitmap
                                     var viaLinkQrBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+                                    val linkUriHandler = LocalUriHandler.current
 
                                     LaunchedEffect(Unit) {
                                         try {
@@ -685,6 +689,7 @@ fun ReceiveMoneyFlow(
 
                                                 PaymentQrCodeImage(
                                                     qrBitmap = viaLinkQrBitmap,
+                                                    onClick = { linkUriHandler.openPaymentUrl(paymentUrl) },
                                                     modifier = Modifier
                                                         .padding(horizontal = 20.dp)
                                                         .fillMaxWidth()
@@ -746,6 +751,7 @@ fun ReceiveMoneyFlow(
                                                     maxLines = 1,
                                                     textAlign = TextAlign.Center,
                                                     modifier = Modifier.horizontalScroll(state = rememberScrollState())
+                                                        .clickable { linkUriHandler.openPaymentUrl(paymentUrl) }
                                                 )
                                             }
 

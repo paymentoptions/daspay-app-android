@@ -273,13 +273,13 @@ fun ReviewCartBottomSectionContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Service Charge (${cartState.serviceChargePercentage}%)",
+                        "Service Charge",
                         style = AppTheme.typography.footnote.copy(
                             fontSize = 14.sp, fontWeight = FontWeight.Normal
                         )
                     )
 
-                    CurrencyRow(currency = currency, amount = cartState.calculateServiceCharge())
+                    CurrencyRow(currency = currency, amount = cartState.serviceCharge)
                 }
 
                 Row(
@@ -296,18 +296,21 @@ fun ReviewCartBottomSectionContent(
                 }
 
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "GST (${cartState.gstPercentage}%)",
-                        style = AppTheme.typography.footnote.copy(
-                            fontSize = 14.sp, fontWeight = FontWeight.Normal
+                // Tax applies only when the merchant's catalog is enabled (see Cart.calculateGstCharge).
+                if (cartState.merchantSetting?.CatalogEnabled == true) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "${cartState.merchantSetting?.TaxName ?: "GST"} (${cartState.merchantSetting?.TaxOnOtherFeesPerc ?: 0}%)",
+                            style = AppTheme.typography.footnote.copy(
+                                fontSize = 14.sp, fontWeight = FontWeight.Normal
+                            )
                         )
-                    )
 
-                    CurrencyRow(currency = currency, amount = cartState.calculateGstCharge())
+                        CurrencyRow(currency = currency, amount = cartState.gstCharge)
+                    }
                 }
 
                 HorizontalDivider(
@@ -324,7 +327,7 @@ fun ReviewCartBottomSectionContent(
                         )
                     )
 
-                    CurrencyRow(currency = currency, amount = cartState.calculateGrandTotal())
+                    CurrencyRow(currency = currency, amount = cartState.grandTotal)
                 }
             }
         }

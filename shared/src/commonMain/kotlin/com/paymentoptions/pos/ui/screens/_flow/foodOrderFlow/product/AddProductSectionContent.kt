@@ -62,6 +62,10 @@ import com.paymentoptions.pos.ui.theme.enabledFilledButtonGradientBrush
 import com.paymentoptions.pos.ui.theme.innerShadow
 import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.formatToPrecisionString
+import com.paymentoptions.pos.utils.toPlainAmountString
+import com.paymentoptions.pos.ui.composables._components.RectangleCheckbox
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -77,10 +81,25 @@ fun AddProductSectionContent(
     val productDescription = rememberTextFieldState()
     val productPrice = rememberTextFieldState()
     val productCode = rememberTextFieldState()
+    val serviceFees = rememberTextFieldState()
+    var serviceFeeEnabled by remember { mutableStateOf(false) }
     var showMediaSheet by remember { mutableStateOf(false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+    // Errors clear themselves after 4 seconds.
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            delay(4000)
+            errorMessage = null
+        }
+    }
+
+    // Typing a fee ticks "enabled"; clearing it unticks.
+    LaunchedEffect(serviceFees.text) {
+        serviceFeeEnabled = serviceFees.text.isNotBlank()
+    }
 
     // Multiplatform launchers
     val imagePickerLauncher = rememberKmpImagePickerLauncher { uri -> imageUri = uri }
@@ -165,6 +184,31 @@ fun AddProductSectionContent(
                         placeholder = "Enter Product code",
                         modifier = Modifier.fillMaxWidth(),
                         label = "Product Code",
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Product Service Fees
+                Column(modifier = Modifier.weight(0.5f)) {
+                    OutlinedTextInput(
+                        state = serviceFees,
+                        placeholder = "Enter Product Fees",
+                        modifier = Modifier.fillMaxWidth(),
+                        label = "Service fees (%)",
+                        onlyDigits = true,
+                    )
+                }
+                // Service fee enabled
+                Column(modifier = Modifier.weight(0.5f)) {
+                    RectangleCheckbox(
+                        checked = serviceFeeEnabled,
+                        onCheckedChange = { serviceFeeEnabled = it }
                     )
                 }
             }
@@ -356,8 +400,17 @@ fun AddProductSectionContent(
                         }
 
                         // Safe conversion + rounding to 2 decimals
+                        val serviceFeesText = serviceFees.text.toString().trim()
+                        if (serviceFeesText.isNotBlank() && !priceRegex.matches(serviceFeesText)) {
+                            errorMessage = "Enter a valid service fees (up to 2 decimal places)."
+                            isLoading = false
+                            return@launch
+                        }
+                        val serviceFeePerc = serviceFeesText.toFloatOrNull() ?: 0f
+
                         val priceFloat = priceText.toFloat()
-                        val finalPrice = priceFloat.formatToPrecisionString().toFloat()
+                        // Plain string: formatToPrecisionString() adds thousands separators that toFloat() can't parse.
+                        val finalPrice = priceFloat.toPlainAmountString().toFloat()
 
 
                         val result = try {
@@ -374,6 +427,8 @@ fun AddProductSectionContent(
                                     Currency = DPStorageManager.getTransactionCurrency(),
                                     MerchantID = categorySelected?.MerchantID ?: "",
                                     CategoryID = categorySelected?.CategoryID ?: "",
+                                    ServiceFeePerc = serviceFeePerc,
+                                    ServiceFeeEnabled = serviceFeeEnabled,
                                 ),
                                 imageBytes = imageUri?.readBytes(), // Placeholder for now
                                 imageFileName = imageUri?.filePath

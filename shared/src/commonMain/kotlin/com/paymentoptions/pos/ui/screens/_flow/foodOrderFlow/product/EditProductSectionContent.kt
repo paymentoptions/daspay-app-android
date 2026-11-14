@@ -54,6 +54,10 @@ import com.paymentoptions.pos.utils.formatToPrecisionString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.paymentoptions.pos.utils.toPlainAmountString
+import com.paymentoptions.pos.ui.composables._components.RectangleCheckbox
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.LaunchedEffect
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -68,12 +72,22 @@ fun EditProductSectionContent(
     val scope = rememberCoroutineScope()
     var productName = rememberTextFieldState(initialText = selectedFoodItem.item.ProductName)
     var productDescription = rememberTextFieldState(initialText = selectedFoodItem.item.ProductDesc?:"")
-    var productPrice = rememberTextFieldState(initialText = selectedFoodItem.item.ProductPrice.formatToPrecisionString())
+    var productPrice = rememberTextFieldState(initialText = selectedFoodItem.item.ProductPrice.toPlainAmountString())
     var productCode = rememberTextFieldState(initialText = selectedFoodItem.item.ProductCode)
+    val serviceFees = rememberTextFieldState(initialText = selectedFoodItem.item.ServiceFeePerc?.toPlainAmountString() ?: "")
+    var serviceFeeEnabled by remember { mutableStateOf(selectedFoodItem.item.ServiceFeeEnabled ?: false) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var showMediaSheet by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
+
+    // Errors clear themselves after 4 seconds.
+    LaunchedEffect(errorMessage) {
+        if (errorMessage != null) {
+            delay(4000)
+            errorMessage = null
+        }
+    }
 
     // Multiplatform launchers
     val imagePickerLauncher = rememberKmpImagePickerLauncher { uri -> imageUri = uri }
@@ -157,6 +171,31 @@ fun EditProductSectionContent(
                         placeholder = "Ex. SKU-000",
                         disabled = DPStorageManager.isStaff(),
                         modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Product Service Fees
+                Column(modifier = Modifier.weight(0.5f)) {
+                    OutlinedTextInput(
+                        state = serviceFees,
+                        placeholder = "Enter Service Fees",
+                        modifier = Modifier.fillMaxWidth(),
+                        label = "Service fees (%)",
+                        onlyDigits = true,
+                    )
+                }
+                // Service fee enabled
+                Column(modifier = Modifier.weight(0.5f)) {
+                    RectangleCheckbox(
+                        checked = serviceFeeEnabled,
+                        onCheckedChange = { serviceFeeEnabled = it }
                     )
                 }
             }
@@ -361,8 +400,17 @@ fun EditProductSectionContent(
                         }
 
                         // Safe conversion + rounding to 2 decimals
+                        val serviceFeesText = serviceFees.text.toString().trim()
+                        if (serviceFeesText.isNotBlank() && !priceRegex.matches(serviceFeesText)) {
+                            errorMessage = "Enter a valid service fees (up to 2 decimal places)."
+                            isLoading = false
+                            return@launch
+                        }
+                        val serviceFeePerc = serviceFeesText.toFloatOrNull() ?: 0f
+
                         val priceFloat = priceText.toFloat()
-                        val finalPrice = priceFloat.formatToPrecisionString().toFloat()
+                        // Plain string: formatToPrecisionString() adds thousands separators that toFloat() can't parse.
+                        val finalPrice = priceFloat.toPlainAmountString().toFloat()
                         // val selectedFile = uriToTempFile(context, imageUri)
 
                         val result = try {
@@ -372,7 +420,9 @@ fun EditProductSectionContent(
                                     productDescription,
                                     finalPrice,
                                     productCode,
-                                    selectedFoodItem
+                                    selectedFoodItem,
+                                    serviceFeePerc,
+                                    serviceFeeEnabled,
                                 ),
                                 productId = selectedFoodItem.item.ProductID,
                                 imageBytes = imageUri?.readBytes() ,
@@ -402,7 +452,9 @@ private fun getProductRequest(
     productDescription: TextFieldState,
     finalPrice: Float,
     productCode: TextFieldState,
-    selectedFoodItem: FoodItem
+    selectedFoodItem: FoodItem,
+    serviceFeePerc: Float,
+    serviceFeeEnabled: Boolean,
 ): ProductRequest {
     if (DPStorageManager.isAdmin()) return ProductRequest(
         ProductName = productName.text.toString(),
@@ -413,6 +465,8 @@ private fun getProductRequest(
         Currency = DPStorageManager.getTransactionCurrency(),
         MerchantID = selectedFoodItem.item.MerchantID,
         CategoryID = selectedFoodItem.item.CategoryID,
+        ServiceFeeEnabled = serviceFeeEnabled,
+        ServiceFeePerc = serviceFeePerc,
     ) else {
         return ProductRequest(
             ProductName = productName.text.toString(),
@@ -423,6 +477,8 @@ private fun getProductRequest(
             CategoryID = selectedFoodItem.item.CategoryID,
             ProductPrice = null,
             ProductCode = null,
+            ServiceFeeEnabled = serviceFeeEnabled,
+            ServiceFeePerc = serviceFeePerc,
         )
 
     }

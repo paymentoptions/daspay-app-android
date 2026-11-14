@@ -50,6 +50,8 @@ import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.modifiers.FoodCategoryShimmer
 import com.paymentoptions.pos.utils.modifiers.FoodItemListShimmer
 import com.paymentoptions.pos.utils.modifiers.conditional
+import com.paymentoptions.pos.ui.theme.AppTheme
+import com.paymentoptions.pos.ui.screens._flow.foodOrderFlow.reviewcart.CurrencyRow
 
 fun searchLogic(foodItem: ProductListDataRecord, searchTerm: String): Boolean {
     return if (searchTerm.isEmpty()) true else {
@@ -226,17 +228,24 @@ fun FoodMenuBottomSectionContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        "Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primary500
+                        "Item Total", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = primary500
                     )
 
-                    CurrencyText(
-                        currency = currency,
-                        amount = cartState.itemTotal.formatToPrecisionString(),
-                        fontSize = 14.sp,
-                        color = primary500,
-                        addSpaceAfterCurrency = true,
-                        fontWeight = FontWeight(980)
-                    )
+                    CurrencyRow(currency = currency, amount = cartState.itemTotal)
+                }
+                if (cartState.serviceCharge != 0f) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            "Service Charge",
+                            style = AppTheme.typography.footnote.copy(
+                                fontSize = 14.sp, fontWeight = FontWeight.Normal
+                            )
+                        )
+                        CurrencyRow(currency = currency, amount = cartState.serviceCharge)
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))

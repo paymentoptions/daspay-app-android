@@ -93,6 +93,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import com.paymentoptions.pos.utils.getGatewayNotes
 import com.paymentoptions.pos.utils.parseAcquirerResponse
+import com.paymentoptions.pos.ui.composables._components.taxRegistrationNumberToShow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -391,6 +392,10 @@ fun TransactionBottomSectionContent(
                     label = "Currency",
                     value = currency
                 )
+
+                DPStorageManager.getMerchantSettings().taxRegistrationNumberToShow()?.let {
+                    TransactionDetailRow(label = "TAX REGISTRATION NO.", value = it)
+                }
 
                 val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
                 if (gatewayNotes.isNotBlank()) {
