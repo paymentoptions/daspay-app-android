@@ -2,6 +2,7 @@ package com.paymentoptions.pos.logger
 
 import android.os.Process
 import android.util.Log
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.platformLogError
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -24,7 +25,14 @@ class SdkUnCaughtException(
         val printWriter = PrintWriter(result)
         throwable.printStackTrace(printWriter)
         printWriter.close()
+
         platformLogError("Uncaught exception in $thread", result.toString())
+
+        AnalyticsHelper.trackException(
+            event = com.paymentoptions.pos.analytics.AnalyticsEvent.APP_CRASH,
+            throwable = throwable,
+        )
+
         if (uncaughtExceptionHandler != null) {
             uncaughtExceptionHandler.uncaughtException(thread, throwable)
         } else {

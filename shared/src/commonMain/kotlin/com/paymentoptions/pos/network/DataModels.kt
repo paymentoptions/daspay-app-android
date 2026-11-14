@@ -2,6 +2,7 @@ package com.paymentoptions.pos.network
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 // ── Auth / Token ──────────────────────────────────────────────────────────────
@@ -743,6 +744,16 @@ data class PaymentDetailsResponseData(
     val SubscriptionDetails: String? = null,
     val PaymentType: String,
     val AcquirerResponse: List<String>? = emptyList(),
+    val TransactionLog: JsonElement? = null,
+    val TokenizedTransactionHistory: JsonElement? = null,
+    val ProductDetails: JsonElement? = null,
+    val TransactionHistory: List<TransactionHistory>? = null,
+    val CaptureRequestTransaction: List<JsonElement>? = null,
+    val RefundRequestTransaction: List<JsonElement>? = null,
+    val TerminalName: String? = null,
+    val PBLLinkName: String? = null,
+    val IsBlockRefund: Boolean? = null,
+    val DaspayProductDetails: List<DaspayProductDetailData> = emptyList(),
 )
 
 @Serializable
@@ -905,21 +916,35 @@ data class SettlementListResponse(
     val data: SettlementData = SettlementData(),
 )
 
+@Serializable
+data class ConfigJsonDetails(
+    val BaseAPIURL: String? = null,
+    val PayByLinkURL: String? = null,
+    val RegistryLogin: String? = null,
+    val RegistryToken: String? = null,
+    val CurrAppVersion: Long? = null,
+    val PrevAppVersion: Long? = null,
+    val IsUpdateMandatory: Boolean? = null,
+    val TransactionDetailsURL: String? = null,
+)
+
 // ── App Config ────────────────────────────────────────────────────────────────
 
 @Serializable
 data class AppConfig(
-    val ID: Long,
-    val AppENV: String,
-    val BaseAPIURL: String,
-    val RegistryLogin: String,
-    val RegistryToken: String,
-    val PrevAppVersion: Long,
-    val CurrAppVersion: Long,
-    val IsUpdateMandatory: Boolean,
-    val TransactionDetailsURL: String,
-    val CvmLimit: Float? = 200.0f
+    val ID: Long = 0,
+    val AppENV: String? = null,
+    val BaseAPIURL: String? = null,
+    val RegistryLogin: String? = null,
+    val RegistryToken: String? = null,
+    val PrevAppVersion: Long = 0,
+    val CurrAppVersion: Long = 0,
+    val IsUpdateMandatory: Boolean = false,
+    val TransactionDetailsURL: String? = null,
+    val ConfigJSON: ConfigJsonDetails? = null,
+    val CvmLimit: Float? = 200.0f,
 )
+
 
 @Serializable
 data class AppConfigResponse(
@@ -928,4 +953,28 @@ data class AppConfigResponse(
     val messageCode: String,
     val success: Boolean,
     val data: List<AppConfig>,
+)
+
+@Serializable
+data class TransactionHistory(
+    val uuid: String,
+    val trackid: String? = null,
+    val event: String? = null,
+    val TransactionType: String,
+    val amount: Float,
+    val status: String,
+    val ResponseCodeID: Int,
+    val CreatedAt: String,
+    val CurrencyCode: String,
+    val Isrecurring: Boolean,
+)
+
+@Serializable
+data class DaspayProductDetailData(
+    val Id: String,
+    val Name: String,
+    val Price: Double,
+    val Currency: String,
+    val Quantity: Int,
+    val TotalPrice: String,
 )

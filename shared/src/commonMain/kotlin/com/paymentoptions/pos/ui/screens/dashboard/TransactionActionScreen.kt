@@ -159,7 +159,7 @@ fun TransactionActionScreen(
                 }
                 sendWebHookNotification(request = request)
 
-                if(request.tranStatus == "APPROVED"){
+                if(request.tranStatus == "APPROVED" || request.tranStatus == "VOIDED" || request.tranStatus == "ADJUSTED"){
                     withContext(Dispatchers.Main) {
                         processingScreenType = StatusScreenType.SUCCESS
                         processingMessage = "$actionLabel Completed"
