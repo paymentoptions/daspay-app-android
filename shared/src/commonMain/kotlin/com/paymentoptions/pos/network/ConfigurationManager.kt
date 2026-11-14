@@ -51,9 +51,9 @@ object ConfigurationManager {
                     if (baseUrlChanged) {
                         // Notify KtorClient that the base URL may have changed
                         buildTimeBaseUrl = DPStorageManager.getBaseUrl() ?: appConfig.BaseAPIURL
-
-                        AppLogger.debug("Config changed base url, resetting HTTP client")
-                        KtorClient.reset() // only needed if the client caches a base URL (see note)
+                        // KtorClient resolves the base URL per request via ConfigurationManager.url(),
+                        // so the client does not need to be rebuilt (unlike the old RetrofitClient).
+                        AppLogger.debug("Config changed base url to $buildTimeBaseUrl")
                     }
 
                     isInitialized = true
