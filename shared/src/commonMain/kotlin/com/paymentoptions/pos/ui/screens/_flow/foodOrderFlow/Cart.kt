@@ -1,5 +1,7 @@
 package com.paymentoptions.pos.ui.screens._flow.foodOrderFlow
 
+import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.network.MerchantSetting
 import com.paymentoptions.pos.storage.AppStorage
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -11,10 +13,12 @@ class Cart(
     var timestampInMilliseconds: Long? = null,
     var itemQuantity: Int = 0,
     var itemTotal: Float = 0.0f,
-    var serviceChargePercentage: Float = 10f,
-    var gstPercentage: Float = 9f,
     var additionalCharge: Float = 0f,
     var additionalAmountNote: String = "",
+    var merchantSetting: MerchantSetting? = null,
+    var serviceCharge: Float = 0f,
+    var gstCharge: Float = 0f,
+    var grandTotal: Float = 0f,
 ) {
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
@@ -23,19 +27,58 @@ class Cart(
             AppStorage.cartJson = cart.toJson()
         }
 
+        /**
+         * Loads the saved cart with the current merchant settings, and recalculates its totals so a
+         * cart saved by an older version (or before the settings changed) never charges a stale amount.
+         */
         fun load(): Cart? {
+            val merchantSetting = DPStorageManager.getMerchantSettings()
             return try {
-                AppStorage.cartJson?.let { json.decodeFromString<Cart>(it) }
+                AppStorage.cartJson?.let { json.decodeFromString<Cart>(it) }?.also { cart ->
+                    cart.merchantSetting = merchantSetting ?: cart.merchantSetting
+                    cart.updateTotals()
+                }
             } catch (e: Exception) {
-                Cart()
+                Cart(merchantSetting = merchantSetting)
             }
         }
     }
 
-    fun calculateServiceCharge() = itemTotal.times(serviceChargePercentage.div(100))
-    fun calculateGstCharge() = itemTotal.times(gstPercentage.div(100))
-    fun calculateGrandTotal() =
-        itemTotal.plus(calculateServiceCharge()).plus(calculateGstCharge()).plus(additionalCharge)
+    /** Sum of each item's fixed service fee times its quantity, for items with the fee enabled. */
+    fun calculateServiceCharge(): Float {
+        var totalService = 0f
+        foodItemMapByCategoryId.forEach { (_, items) ->
+            items.forEach {
+                if (it.item.ServiceFeeEnabled == true && it.cartQuantity > 0) {
+                    totalService += (it.item.ServiceFeeAmount ?: 0f) * it.cartQuantity
+                }
+            }
+        }
+        return totalService
+    }
+
+    /** Tax on [totalValue] at the merchant's rate; zero unless the merchant's catalog is enabled. */
+    fun calculateGstCharge(totalValue: Float): Float {
+        val setting = merchantSetting ?: return 0f
+        val taxPercent = setting.TaxOnOtherFeesPerc ?: return 0f
+        if (setting.CatalogEnabled != true) return 0f
+        return totalValue * taxPercent / 100
+    }
+
+    /** Recomputes service charge, tax (on items + service + additional charge) and the grand total. */
+    fun updateTotals() {
+        serviceCharge = calculateServiceCharge()
+        val totalBeforeTax = itemTotal + serviceCharge + additionalCharge
+        gstCharge = calculateGstCharge(totalBeforeTax)
+        grandTotal = totalBeforeTax + gstCharge
+    }
+
+    fun updateAdditionalCharge(amount: Float, note: String) {
+        additionalCharge = amount
+        additionalAmountNote = note
+        updateTotals()
+        save(this)
+    }
 
     fun toJson(): String {
         return Json.encodeToString(this)
@@ -49,7 +92,8 @@ class Cart(
         }
         additionalCharge = 0f
         additionalAmountNote = ""
-        save( this)
+        updateTotals()
+        save(this)
     }
 
     fun removeFoodItemQuantity(foodItem: FoodItem) {
@@ -68,6 +112,7 @@ class Cart(
             } else {
                 this.itemTotal = 0f
             }
+            updateTotals()
             save(this)
         }
     }
@@ -77,6 +122,7 @@ class Cart(
             foodItem.decreaseQuantity()
             this.itemQuantity--
             this.itemTotal -= foodItem.item.ProductPrice
+            updateTotals()
             save(this)
         }
     }
@@ -86,6 +132,7 @@ class Cart(
             foodItem.increaseQuantity()
             this.itemQuantity++
             this.itemTotal += foodItem.item.ProductPrice
+            updateTotals()
             save(this)
         }
     }
@@ -106,6 +153,7 @@ class Cart(
             }
             this.foodItemMapByCategoryId[categoryId] = newFoodItemsInTheCategorySorted
         }
+        updateTotals()
         save(this)
     }
 
@@ -122,13 +170,15 @@ class Cart(
     fun copy(): Cart {
         return Cart(
             foodItemMapByCategoryId = this.foodItemMapByCategoryId,
-            serviceChargePercentage = this.serviceChargePercentage,
-            gstPercentage = this.gstPercentage,
             additionalCharge = this.additionalCharge,
             timestampInMilliseconds = this.timestampInMilliseconds,
             itemQuantity = this.itemQuantity,
             itemTotal = this.itemTotal,
             additionalAmountNote = this.additionalAmountNote,
+            merchantSetting = this.merchantSetting,
+            serviceCharge = this.serviceCharge,
+            gstCharge = this.gstCharge,
+            grandTotal = this.grandTotal,
         )
     }
 

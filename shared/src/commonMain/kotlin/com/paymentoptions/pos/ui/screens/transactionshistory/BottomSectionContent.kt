@@ -143,7 +143,7 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
         when (selectedFilter.key) {
             "Today" -> {
                 receivalForText = "Receival for the day"
-                receivalForTimePeriodText = formatEpochMillis(now.toEpochMilliseconds(), "dd MMMM, YYYY")
+                receivalForTimePeriodText = formatEpochMillis(now.toEpochMilliseconds(), "dd MMMM, yyyy")
                 receivalAmount = 0.0f
                 startMillis = now.toEpochMilliseconds()
                 endMillis = now.toEpochMilliseconds()
@@ -152,8 +152,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             "Week" -> {
                 val aWeekAgo = now.minus(7, DateTimeUnit.DAY, timeZone)
                 receivalForText = "Receival for the week"
-                val startStr = formatEpochMillis(aWeekAgo.toEpochMilliseconds(), "dd MMM, YYYY")
-                val endStr = formatEpochMillis(now.toEpochMilliseconds(), "dd MMM, YYYY")
+                val startStr = formatEpochMillis(aWeekAgo.toEpochMilliseconds(), "dd MMM, yyyy")
+                val endStr = formatEpochMillis(now.toEpochMilliseconds(), "dd MMM, yyyy")
                 receivalForTimePeriodText = "$startStr to $endStr"
                 receivalAmount = 0.0f
                 startMillis = aWeekAgo.toEpochMilliseconds()
@@ -163,8 +163,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             "Month" -> {
                 val aMonthAgo = now.minus(1, DateTimeUnit.MONTH, timeZone)
                 receivalForText = "Receival for the month"
-                val startStr = formatEpochMillis(aMonthAgo.toEpochMilliseconds(), "dd MMM, YYYY")
-                val endStr = formatEpochMillis(now.toEpochMilliseconds(), "dd MMM, YYYY")
+                val startStr = formatEpochMillis(aMonthAgo.toEpochMilliseconds(), "dd MMM, yyyy")
+                val endStr = formatEpochMillis(now.toEpochMilliseconds(), "dd MMM, yyyy")
                 receivalForTimePeriodText = "$startStr to $endStr"
                 receivalAmount = 0.0f
                 startMillis = aMonthAgo.toEpochMilliseconds()
@@ -176,8 +176,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
                 receivalAmount = 0.0f
 
                 if (fromDateCustomFilter != null && toDateCustomFilter != null) {
-                    val startStr = formatEpochMillis(fromDateCustomFilter!!, "dd MMMM YYYY")
-                    val endStr = formatEpochMillis(toDateCustomFilter!!, "dd MMMM YYYY")
+                    val startStr = formatEpochMillis(fromDateCustomFilter!!, "dd MMMM yyyy")
+                    val endStr = formatEpochMillis(toDateCustomFilter!!, "dd MMMM yyyy")
                     receivalForTimePeriodText = "$startStr to $endStr"
                     startMillis = fromDateCustomFilter!!
                     endMillis = toDateCustomFilter!!
@@ -189,8 +189,8 @@ fun BottomSectionContent(navController: NavController, enableScrolling: Boolean 
             val deviceNumber = AppStorage.deviceNumber ?: getDeviceIdentifier()
             val uniqueCode = AppStorage.tokenCode ?: ""
             
-            val startDateStr = formatEpochMillis(startMillis, "YYYY/MM/dd") + " 00:00:00"
-            val endDateStr = formatEpochMillis(endMillis, "YYYY/MM/dd") + " 23:59:59"
+            val startDateStr = formatEpochMillis(startMillis, "yyyy/MM/dd") + " 00:00:00"
+            val endDateStr = formatEpochMillis(endMillis, "yyyy/MM/dd") + " 23:59:59"
 
             val insightsResponse = insights(
                 deviceNumber = deviceNumber,

@@ -136,17 +136,13 @@ internal actual fun dpGetApms(): DevicePaymentMethod_Apms {
 }
 
 internal actual fun dpStoreAppConfig(appConfig: AppConfig) {
-    AppStorage.baseUrl = appConfig.BaseAPIURL
-    AppStorage.transactionDetailsUrl = appConfig.TransactionDetailsURL
+    // Only overwrite with non-blank values, so a partial config response can't wipe a good saved URL.
+    appConfig.BaseAPIURL?.takeIf { it.isNotBlank() }?.let { AppStorage.baseUrl = it }
+    appConfig.TransactionDetailsURL?.takeIf { it.isNotBlank() }?.let { AppStorage.transactionDetailsUrl = it }
 }
 
 internal actual fun dpGetTokenExpiry(): Long = AppStorage.tokenExpiry
 
-//TODO replace after server is proper
-//internal actual fun dpGetBaseUrl(): String? = AppStorage.baseUrl
-//
-//internal actual fun dpGetTransactionDetailsUrl(): String? = AppStorage.transactionDetailsUrl
+internal actual fun dpGetBaseUrl(): String? = AppStorage.baseUrl?.takeIf { it.isNotBlank() }
 
-internal actual fun dpGetBaseUrl(): String? = "https://api-dev.paymentoptions.com/api/v1/"//storage.baseUrl
-
-internal actual fun dpGetTransactionDetailsUrl(): String? =  "https://dev.paymentoptions.com/daspay-transaction-details/"//storage.transactionDetailsUrl
+internal actual fun dpGetTransactionDetailsUrl(): String? = AppStorage.transactionDetailsUrl?.takeIf { it.isNotBlank() }

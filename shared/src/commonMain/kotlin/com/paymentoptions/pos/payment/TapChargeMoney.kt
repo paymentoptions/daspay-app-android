@@ -1,5 +1,7 @@
 package com.paymentoptions.pos.payment
 
+import com.paymentoptions.pos.ui.screens._flow.foodOrderFlow.Cart
+
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.paymentoptions.pos.ui.screens.status.StatusScreenType
@@ -16,5 +18,8 @@ expect fun TapChargeMoney(
     onFailureUpdateFlowStage: (outcome: StatusScreenType) -> Unit = {},
     updateLatestTransaction: (id: String) -> Unit = {},
     onFailureMessage: (String) -> Unit = {},
-    onMandatorySignature: () -> Unit,
+    /** Called instead of success when the amount needs a signature; null = no signature step here. */
+    onMandatorySignature: (() -> Unit)? = null,
+    /** Food-order cart, registered as a pay-by-link product and sent as the payment's cartID. */
+    cart: Cart? = null,
 )

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.getNfcStatus
 import com.paymentoptions.pos.device.isDeveloperOptionsEnabled
 import com.paymentoptions.pos.device.openDevelopmentSettings
@@ -57,6 +58,7 @@ import com.paymentoptions.pos.utils.modifiers.innerShadow
 import com.paymentoptions.pos.utils.modifiers.noRippleClickable
 import com.paymentoptions.pos.utils.qrCodePaymentMethod
 import com.paymentoptions.pos.utils.tapPaymentMethod
+import com.paymentoptions.pos.ui.screens._flow.foodOrderFlow.Cart
 
 @Composable
 fun PaymentMethodButton(
@@ -109,7 +111,8 @@ fun ChargeMoneyBottomSectionContent(
     startTapAndPay: Boolean = false,
     updateLatestTransaction: (id: String) -> Unit,
     updateFailureMessage: (String?) -> Unit = {},
-    onMandatorySignature: () -> Unit = {},
+    onMandatorySignature: (() -> Unit)? = null,
+    cart: Cart? = null,
 ) {
     val currency = getTransactionCurrency()
     val nfcState = getNfcStatus()
@@ -169,6 +172,7 @@ fun ChargeMoneyBottomSectionContent(
                 onLoader = onLoader,
                 onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
                 onMandatorySignature = onMandatorySignature,
+                cart = cart,
                 onFailureUpdateFlowStage = onFailureUpdateFlowStage,
                 onFailureMessage = { updateFailureMessage(it) },
                 updateLatestTransaction = updateLatestTransaction,
@@ -210,6 +214,7 @@ fun ChargeMoneyBottomSectionContent(
                         onLoader = onLoader,
                         onSuccessUpdateFlowStage = onSuccessUpdateFlowStage,
                         onMandatorySignature = onMandatorySignature,
+                        cart = cart,
                         onFailureUpdateFlowStage = onFailureUpdateFlowStage,
                         onFailureMessage = { updateFailureMessage(it) },
                         updateLatestTransaction = updateLatestTransaction,
@@ -267,6 +272,10 @@ fun ChargeMoneyBottomSectionContent(
                         paymentMethod = it,
                         selectedPaymentMethod = selectedPaymentMethod,
                         onSelected = {
+                            AnalyticsHelper.trackCriticalButtonClick(
+                                buttonName = "select_payment_method_${it.text.lowercase().replace(" ", "_")}",
+                                screenName = "receive_money"
+                            )
                             updateSelectedPaymentMethod(it)
                         },
                         modifier = Modifier.weight(1f),

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.services.apiService.TokenAutoRefresher
 import com.paymentoptions.pos.getPushToken
 import com.paymentoptions.pos.showToast
 import com.paymentoptions.pos.logger.AppLogger
@@ -232,6 +233,7 @@ private suspend fun onSignInSuccess(
     }
 
     DPStorageManager.saveAuthDetails(signInResponse)
+    TokenAutoRefresher.getInstance().onUserSignedIn()
     AppStorage.merchantCountriesJson = signInResponse.data?.subsidiaries?.joinToString(",") ?: ""
 
     navController.navigate(Screens.Token.route)

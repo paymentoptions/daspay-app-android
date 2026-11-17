@@ -5,12 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.painterResource
 import paymentoptionspos.shared.generated.resources.Res
-import paymentoptionspos.shared.generated.resources.gscash_apms
+import paymentoptionspos.shared.generated.resources.gcash_apms
 
 @Composable
 fun GsCashPayImage(modifier: Modifier = Modifier) {
     Image(
-        painter = painterResource(Res.drawable.gscash_apms),
+        painter = painterResource(Res.drawable.gcash_apms),
         contentDescription = "GCash",
         modifier = modifier
     )

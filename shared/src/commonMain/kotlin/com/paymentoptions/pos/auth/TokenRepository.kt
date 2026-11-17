@@ -1,6 +1,7 @@
 package com.paymentoptions.pos.auth
 
 import com.paymentoptions.pos.device.DPStorageManager
+import com.paymentoptions.pos.network.TokenRefreshResult
 import com.paymentoptions.pos.network.TokenRefreshService
 import com.paymentoptions.pos.platformLog
 import com.paymentoptions.pos.platformLogError
@@ -82,16 +83,24 @@ object TokenRepository {
             }
             lastRefreshAttemptMs = nowMs
 
-            val result = TokenRefreshService.refreshToken()
-            if (result != null) {
-                platformLog(TAG, "Token refreshed proactively; scheduling next cycle")
-                // Schedule the NEXT cycle for the freshly-stored expiry.
-                // Clear the job ref first so the guard above doesn't block the new schedule.
-                refreshJob = null
-                scheduleProactiveRefresh(DPStorageManager.getTokenExpiry())
-            } else {
-                platformLog(TAG, "Proactive refresh returned null – user may need to re-authenticate")
-                AuthEventManager.requireReAuthentication()
+            when (TokenRefreshService.refresh()) {
+                is TokenRefreshResult.Success -> {
+                    platformLog(TAG, "Token refreshed proactively; scheduling next cycle")
+                    // Schedule the NEXT cycle for the freshly-stored expiry.
+                    // Clear the job ref first so the guard above doesn't block the new schedule.
+                    refreshJob = null
+                    scheduleProactiveRefresh(DPStorageManager.getTokenExpiry())
+                }
+                TokenRefreshResult.AuthRejected -> {
+                    // Refresh token refused (401/403): end the whole session, as release does.
+                    platformLog(TAG, "Proactive refresh rejected; clearing session and requiring re-authentication")
+                    DPStorageManager.clearSharedPreferences()
+                    AuthEventManager.requireReAuthentication()
+                }
+                TokenRefreshResult.Failed -> {
+                    platformLog(TAG, "Proactive refresh failed – user may need to re-authenticate")
+                    AuthEventManager.requireReAuthentication()
+                }
             }
         } catch (e: Exception) {
             platformLogError(TAG, "Proactive refresh failed", e)

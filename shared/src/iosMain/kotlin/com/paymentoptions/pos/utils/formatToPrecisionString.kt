@@ -7,6 +7,7 @@ import platform.Foundation.NSNumber
 import platform.Foundation.NSNumberFormatter
 import platform.Foundation.NSNumberFormatterDecimalStyle
 import platform.Foundation.NSNumberFormatterRoundHalfEven
+import platform.Foundation.NSRoundingMode
 
 private fun precisionFormatter(precision: Int, grouping: Boolean = true) =
     NSNumberFormatter().apply {
@@ -34,7 +35,7 @@ actual fun Double?.formatToPrecisionString(precision: Int): String {
 actual fun Float.formatAmount(): String {
     // NSRoundPlain == Java's HALF_UP (ties round away from zero)
     val handler = NSDecimalNumberHandler(
-        roundingMode = NSRoundPlain,
+        roundingMode = NSRoundingMode.NSRoundPlain,
         scale = 2,
         raiseOnExactness = false,
         raiseOnOverflow = false,

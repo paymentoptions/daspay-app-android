@@ -46,6 +46,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.util.Currency
+import com.paymentoptions.pos.utils.parseApiErrorMessage
+import com.paymentoptions.pos.network.endpoints.isSuccessfulTranStatus
+import com.paymentoptions.pos.ui.screens._flow.foodOrderFlow.Cart
 
 /**
  * Classifies a MineSec [WrappedResult.Failure] by its real numeric error code — not by
@@ -70,7 +73,8 @@ actual fun TapChargeMoney(
     onFailureUpdateFlowStage: (StatusScreenType) -> Unit,
     updateLatestTransaction: (id: String) -> Unit,
     onFailureMessage: (String) -> Unit,
-    onMandatorySignature: () -> Unit,
+    onMandatorySignature: (() -> Unit)?,
+    cart: Cart?,
 ) {
     val scope = rememberCoroutineScope()
     var rawInput = ""
@@ -146,8 +150,10 @@ actual fun TapChargeMoney(
                 CoroutineScope(Dispatchers.IO).launch {
                     AppLogger.debug("TapToPay webhook call started")
                     try {
+                        // Success needs both a webhook reply and an approving MineSec status (release 820d6c7).
                         val paymentStatusResponse =
-                            sendWebHookNotification(request = paymentStatusRequest) != null
+                            sendWebHookNotification(request = paymentStatusRequest) != null &&
+                                isSuccessfulTranStatus(paymentStatusRequest.tranStatus)
 
                         AppLogger.debug("TapToPay webhook response: success=$paymentStatusResponse, tranId=${paymentStatusRequest.tranId}")
                         if (paymentStatusResponse) {
@@ -157,15 +163,13 @@ actual fun TapChargeMoney(
                             )
                             updateLatestTransaction(paymentStatusRequest.tranId.toString())
                             AppLogger.debug("TapToPay flow moving to SUCCESS stage for tranId=${paymentStatusRequest.tranId}")
-//                            val cvmLimit = DPStorageManager.getCvmLimit()
-//                            val amount = amountToCharge.toDoubleOrNull() ?: 0.0
-//                            if (amount >= cvmLimit) {
-//                                AppLogger.debug("TapToPay: Amount $amount >= CVM Limit $cvmLimit, moving to MANDATORY_SIGNATURE")
-//                                onMandatorySignature()
-//                            } else {
-//                                onSuccessUpdateFlowStage()
-//                            }
-                            onSuccessUpdateFlowStage()
+                            val mandatorySignature = onMandatorySignature
+                            if (mandatorySignature != null && requiresMandatorySignature(amountToCharge)) {
+                                AppLogger.debug("TapToPay: amount $amountToCharge >= CVM limit ${DPStorageManager.getCvmLimit()}, moving to MANDATORY_SIGNATURE")
+                                mandatorySignature()
+                            } else {
+                                onSuccessUpdateFlowStage()
+                            }
                         } else {
                             AnalyticsHelper.trackPaymentDeclined(
                                 reason = "paymentStatus returned false",
@@ -236,19 +240,6 @@ actual fun TapChargeMoney(
 
     val paymentMethod = PaymentMethodRequest(type = "daspay")
 
-    val paymentRequest = PaymentRequest(
-        amount = amountToCharge,
-        currency = currency,
-        merchant_txn_ref = "TEST00989012878787878787878787",
-        customer_ip = getDeviceIpAddress(),
-        merchant_id = merchant["dasmid"]!!,
-        return_url = paymentReturnUrl,
-        billing_address = billingAddress,
-        shipping_address = billingAddress,
-        payment_method = paymentMethod,
-        time_zone = getDeviceTimeZone(),
-        cartID = ""
-    )
 
     MyAlertDialog(
         showDialog = paymentLoader,
@@ -269,6 +260,21 @@ actual fun TapChargeMoney(
                     amount = amountToCharge,
                     currency = currency,
                 )
+                // Food orders: register the cart so the payment carries its line items (release 21e807b).
+                val cartProductId = createCartProductId(cart, currency)
+                val paymentRequest = PaymentRequest(
+                    amount = amountToCharge,
+                    currency = currency,
+                    merchant_txn_ref = "TEST00989012878787878787878787",
+                    customer_ip = getDeviceIpAddress(),
+                    merchant_id = merchant["dasmid"]!!,
+                    return_url = paymentReturnUrl,
+                    billing_address = billingAddress,
+                    shipping_address = billingAddress,
+                    payment_method = paymentMethod,
+                    time_zone = getDeviceTimeZone(),
+                    cartID = cartProductId
+                )
                 val paymentResponse: PaymentResponse? = payment(paymentRequest)
                 println("paymentResponse: $paymentResponse")
                 if (paymentResponse == null) {
@@ -279,7 +285,8 @@ actual fun TapChargeMoney(
 
                 paymentResponse?.let {
                     if (it.success) {
-                        println("inThis PaymentResponse ---->")
+                        val profileId = DPStorageManager.getMerchantProfileId()
+                        AppLogger.debug("TapToPay launching MineSec SALE, posReference=${it.transaction_details.id}")
                         launcher.launch(
                             PoiRequest.ActionNew(
                                 tranType = TranType.SALE,
@@ -287,10 +294,18 @@ actual fun TapChargeMoney(
                                     BigDecimal(amountToCharge),
                                     Currency.getInstance(DPStorageManager.getTransactionCurrency()),
                                 ),
-                                profileId = MineSecPlatform.PROFILE_ID,
+                                profileId = profileId,
+                                // The payment note goes to MineSec as the sale description (release 62d16d8).
+                                description = gatewayNotes?.trim()?.takeIf { note -> note.isNotEmpty() },
                                 posReference = it.transaction_details.id
                             )
                         )
+                    } else {
+                        // Previously nothing happened here and the screen hung on the loader.
+                        AppLogger.warn("TapToPay payment API returned success=false; MineSec launch skipped")
+                        AnalyticsHelper.trackPaymentFailed(reason = "payment success=false (status ${it.status_code})")
+                        onFailureMessage("Unable to initialize Tap to Pay (status ${it.status_code}). Please try again.")
+                        onFailureUpdateFlowStage(StatusScreenType.ERROR)
                     }
                 }
             } catch (e: Exception) {
@@ -301,11 +316,11 @@ actual fun TapChargeMoney(
                     message = e.message ?: "Payment start failed",
                     throwable = e,
                 )
-                DPStorageManager.clearSharedPreferences()
-                navController.navigate(Screens.AuthCheck.route) {
-                    popUpTo(0) { inclusive = true }
-                }
-                println("Payment Error: ${e.toString()}")
+                // Show the failure screen instead of ending the session (release 820d6c7). A real
+                // session expiry is handled by the null-response branch above and by KtorClient.
+                AppLogger.error("TapToPay error during payment setup: ${e.message}", e)
+                onFailureMessage(parseApiErrorMessage(e, "Tap to Pay failed to start. Please retry."))
+                onFailureUpdateFlowStage(StatusScreenType.ERROR)
             } finally {
                 paymentLoader = false
             }

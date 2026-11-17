@@ -116,7 +116,7 @@ kotlin {
                 implementation(libs.androidx.activity.compose)
 
                 // Encrypted SharedPreferences backing for AppStorage on Android
-                implementation("androidx.security:security-crypto:1.1.0-alpha06")
+                implementation(libs.androidx.security.crypto)
 
                 // Biometric for FingerprintAutoLogin
                 implementation(libs.androidx.biometric)

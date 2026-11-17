@@ -16,6 +16,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.paymentoptions.pos.buildInfoSummary
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.sendLogsToSdkTeam
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
@@ -98,6 +99,8 @@ fun SendLogsScreen(navController: NavHostController) {
                     val message = logMessageState.text.toString()
                     AppLogger.debug("User Log Message: $message")
                     AppLogger.info("Log message captured. Initiating export.")
+                    // Build metadata helps match exported logs to the app version and backend config.
+                    AppLogger.info("Build info -> ${buildInfoSummary()}")
 
                     showConfirmation = true
                     sendLogsToSdkTeam()

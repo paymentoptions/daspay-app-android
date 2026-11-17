@@ -88,7 +88,6 @@ import com.paymentoptions.pos.network.endpoints.void
 import com.paymentoptions.pos.tapToPayDisplayName
 import com.paymentoptions.pos.ui.composables._components.MyCircularProgressIndicator
 import com.paymentoptions.pos.ui.composables._components.NoteChip
-import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -128,6 +127,8 @@ import com.paymentoptions.pos.utils.viaLinkPaymentMethod
 import kotlinx.coroutines.IO
 import kotlinx.datetime.Clock
 import kotlin.time.Duration.Companion.seconds
+import com.paymentoptions.pos.utils.openPaymentUrl
+import androidx.compose.ui.platform.LocalUriHandler
 
 fun formatAmount(input: String): String {
     if (input.isEmpty()) return "0.00"
@@ -212,6 +213,17 @@ fun ReceiveMoneyFlow(
         }
     }
 
+    // Report which merchant (DASMID) each payment method routes to whenever the selection changes.
+    LaunchedEffect(selectedPaymentMethod) {
+        val dasmid = when (selectedPaymentMethod) {
+            tapPaymentMethod -> getTapPayDasmid()
+            qrCodePaymentMethod -> DPStorageManager.getQRDasmid()
+            viaLinkPaymentMethod -> DPStorageManager.getPayByLinkDasmid()
+            else -> ""
+        }
+        AnalyticsHelper.trackMerchantSelection(merchantId = dasmid, merchantName = selectedPaymentMethod.text)
+    }
+
     latestTransactionId?.let {
         LaunchedEffect(latestTransactionId) {
             try {
@@ -241,10 +253,7 @@ fun ReceiveMoneyFlow(
         showToast("Your device does not support NFC")
     }
     */
-    if (availablePaymentMethods.contains(qrCodePaymentMethod) && !apms.hasPayEasy && !apms.hasGooglePay && !apms.hasPayPay && !apms.hasWechatpay && !apms.hasKonbini && !apms.hasAlipay && !apms.hasGCash && !apms.hasDinersClub) {
-        qrCodePaymentMethod.setIsEnabled(false)
-        showToast("Payment via QR code not supported")
-    }
+    // QR stays enabled for every APM set: the old "QR not supported" gate predates the new APMs (release 27f1a54).
 
     // Geo-restriction state
     var showGeoRestrictionDialog by remember { mutableStateOf(false) }
@@ -421,36 +430,52 @@ fun ReceiveMoneyFlow(
                                                 }
                                             })
 
-                                    FilledButton(
-                                        text = "Charge with $tapToPayDisplayName",
-                                        onClick = {
-                                            if (inProduction)
-                                                if (isDeveloperOptionsEnabled()) {
-                                                    showDeveloperOptionsEnabled = true
-                                                } else if (!getNfcStatus().second) {
-                                                    showNFCNotEnabled = true
-                                                } else {
-                                                    AnalyticsHelper.trackTapToPayInitiated(
-                                                        amount = amountToChargeState,
-                                                        currency = currency,
-                                                    )
-                                                    startTapAndPay = true
-                                                }
-                                            else {
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = "Ready to receive payment",
+                                        color = Color.White,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = "Tap the button below to begin",
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        fontSize = 14.sp,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    StartTapToPayButton(onClick = {
+                                        if (inProduction)
+                                            if (isDeveloperOptionsEnabled()) {
+                                                showDeveloperOptionsEnabled = true
+                                            } else if (!getNfcStatus().second) {
+                                                showNFCNotEnabled = true
+                                            } else {
                                                 AnalyticsHelper.trackTapToPayInitiated(
                                                     amount = amountToChargeState,
                                                     currency = currency,
                                                 )
                                                 startTapAndPay = true
                                             }
-                                        },
-                                        modifier = Modifier
-                                            .padding(horizontal = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP)
-                                            .height(59.dp)
-                                            .scale(0.8f)
+                                        else {
+                                            AnalyticsHelper.trackTapToPayInitiated(
+                                                amount = amountToChargeState,
+                                                currency = currency,
+                                            )
+                                            startTapAndPay = true
+                                        }
+                                    })
+                                    Spacer(Modifier.height(8.dp))
+                                    Text(
+                                        text = "You'll be guided to align the card or phone",
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        fontSize = 14.sp,
+                                        textAlign = TextAlign.Center,
                                     )
-
-                                    PaymentSchemesRow(modifier = Modifier.height(50.dp))
+                                    Spacer(Modifier.height(10.dp))
+                                    PaymentSchemesRow(modifier = Modifier.height(40.dp))
                                 }
 
                                 qrCodePaymentMethod -> {
@@ -458,6 +483,8 @@ fun ReceiveMoneyFlow(
                                     startTapAndPay = false
 
                                     var qrCodeBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+                                    var qrCodePaymentUrl by remember { mutableStateOf<String?>(null) }
+                                    val uriHandler = LocalUriHandler.current
                                     var qrCodeLoading by remember { mutableStateOf(false) }
                                     var qrCodeError by remember { mutableStateOf<String?>(null) }
 
@@ -489,8 +516,9 @@ fun ReceiveMoneyFlow(
                                             val response = payByLink(dasmid = DPStorageManager.getQRDasmid(), request)
                                             if (response != null && response.success) {
                                                 val paymentUrl =
-                                                    "https://api-dev.paymentoptions.com/paybylink/" + response.data.ProductID
+                                                    DPStorageManager.getPayByLinkUrl() + response.data.ProductID
                                                 qrCodeBitmap = generateQrCode(paymentUrl)
+                                                qrCodePaymentUrl = paymentUrl
                                             } else {
                                                 qrCodeError = "Failed to generate QR code."
                                             }
@@ -534,6 +562,7 @@ fun ReceiveMoneyFlow(
                                     } else {
                                         PaymentQrCodeImage(
                                             qrBitmap = qrCodeBitmap, // generated bitmap here
+                                            onClick = { uriHandler.openPaymentUrl(qrCodePaymentUrl) },
                                             modifier = Modifier
                                                 .padding(horizontal = 20.dp)
                                                 .fillMaxWidth()
@@ -595,6 +624,7 @@ fun ReceiveMoneyFlow(
                                     val sheetState = rememberModalBottomSheetState()
                                     //added a state variable to hold the generated QR bitmap
                                     var viaLinkQrBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+                                    val linkUriHandler = LocalUriHandler.current
 
                                     LaunchedEffect(Unit) {
                                         try {
@@ -610,7 +640,7 @@ fun ReceiveMoneyFlow(
                                                 )
 //                                              val paymentUrl = "https://daspay/" + payByLinkResponse!!.data.ID
                                                 paymentUrl =
-                                                    "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID
+                                                    DPStorageManager.getPayByLinkUrl() + payByLinkResponse!!.data.ProductID
                                                 viaLinkQrBitmap = generateQrCode(paymentUrl)
                                             }
                                         } catch (e: Exception) {
@@ -675,6 +705,7 @@ fun ReceiveMoneyFlow(
 
                                                 PaymentQrCodeImage(
                                                     qrBitmap = viaLinkQrBitmap,
+                                                    onClick = { linkUriHandler.openPaymentUrl(paymentUrl) },
                                                     modifier = Modifier
                                                         .padding(horizontal = 20.dp)
                                                         .fillMaxWidth()
@@ -729,13 +760,14 @@ fun ReceiveMoneyFlow(
                                                     .padding(vertical = 16.dp, horizontal = 12.dp),
                                             ) {
                                                 Text(
-                                                    text = "https://api-dev.paymentoptions.com/paybylink/" + payByLinkResponse!!.data.ProductID,
+                                                    text = DPStorageManager.getPayByLinkUrl() + payByLinkResponse!!.data.ProductID,
                                                     fontWeight = FontWeight.SemiBold,
                                                     fontSize = 16.sp,
                                                     color = primary900,
                                                     maxLines = 1,
                                                     textAlign = TextAlign.Center,
                                                     modifier = Modifier.horizontalScroll(state = rememberScrollState())
+                                                        .clickable { linkUriHandler.openPaymentUrl(paymentUrl) }
                                                 )
                                             }
 
@@ -997,15 +1029,13 @@ fun ReceiveMoneyFlow(
         ReceiveMoneyFlowStage.RECEIPT -> {
             SectionedLayout(
                 navController = navController,
-                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                bottomSectionMinHeightRatio = 0.9f,
+                bottomSectionMaxHeightRatio = 0.9f,
                 bottomSectionPaddingInDp = 0.dp,
-                bottomSectionMinHeightRatio = 0.75f,
-                bottomSectionMaxHeightRatio = 0.75f,
-                enableScrollingOfBottomSectionContent = false,
-                enableZigZagContainerForBottomSection = true,
-                imageBelowLogo = {
-                    ShowReceiptView()
-                }) {
+                bottomBarContent = BottomBarContent.NAVIGATION_BAR,
+                enableScrollingOfBottomSectionContent = !enableScrollingInsideBottomSectionContent,
+                blurTopSection = true
+            ) {
                 ReceiptBottomSectionContent(
                     navController,
                     enableScrolling = true,

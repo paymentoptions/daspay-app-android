@@ -11,7 +11,7 @@ object ApiEndpoints {
     const val PAY_BY_LINK = "paybylink/add/DASMID/"
     const val REFUND = "daspay/refund"
     const val VOID = "daspay/void"
-    const val PAYMENT = "server-to-server-interface/daspay/payment"
+    const val PAYMENT = "daspay/payment"
     const val WEBHOOK_NOTIFICATION = "notification/payments/webhook/notify/minesec"
     const val CATEGORY_LIST = "entities/merchant/catalog/all-categories/{merchantId}"
     const val PRODUCT_LIST = "entities/merchant/catalog/all-products/{categoryId}"

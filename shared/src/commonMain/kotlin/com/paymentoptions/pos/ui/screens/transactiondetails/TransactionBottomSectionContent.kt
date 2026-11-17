@@ -80,7 +80,6 @@ import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
 import com.paymentoptions.pos.ui.theme.primary100
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.primary900
-import com.paymentoptions.pos.utils.AppJson
 import com.paymentoptions.pos.utils.TransactionAction
 import com.paymentoptions.pos.utils.formatToPrecisionString
 import com.paymentoptions.pos.utils.generateQrCode
@@ -92,6 +91,9 @@ import com.paymentoptions.pos.utils.safeParseDateTime
 import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
+import com.paymentoptions.pos.ui.composables._components.taxRegistrationNumberToShow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -129,13 +131,7 @@ fun TransactionBottomSectionContent(
                 null
             }
 
-            try{
-                transactionAquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()?.let {
-                    AppJson.decodeFromString<AquirerResponse>(it)
-                }
-            } catch (ex: Exception){
-                AppLogger.error("Exception in Acquirer", ex)
-            }
+            transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse)
             signatureData = try {
                 getSignature(uuid = transactionUuid)?.data
             } catch (e: Exception) {
@@ -397,10 +393,15 @@ fun TransactionBottomSectionContent(
                     value = currency
                 )
 
-                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                DPStorageManager.getMerchantSettings().taxRegistrationNumberToShow()?.let {
+                    TransactionDetailRow(label = "TAX REGISTRATION NO.", value = it)
+                }
+
+                val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
+                if (gatewayNotes.isNotBlank()) {
                     TransactionDetailRow(
                         label = "Note",
-                        value = transactionAquirerResponse?.gatewayNotes!!.trim()
+                        value = gatewayNotes
                     )
                 }
             }

@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.asComposeImageBitmap
 import androidx.compose.ui.graphics.asSkiaPath
 import kotlinx.cinterop.*
 import platform.Foundation.NSData
+import platform.Foundation.NSBundle
 import kotlinx.datetime.Instant
 import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.Canvas
@@ -176,6 +177,27 @@ actual val isDebugBuild: Boolean
 
 fun setIsDebugBuild(value: Boolean) {
     isDebugBuildHolder = value
+}
+
+@Volatile
+private var buildEnvironmentHolder: String = "unknown"
+
+@Volatile
+private var bootstrapBaseUrlHolder: String = "unknown"
+
+/** Called from MainViewController with the environment derived from the Info.plist base URL. */
+fun setBuildEnvironment(environment: String, bootstrapBaseUrl: String) {
+    buildEnvironmentHolder = environment
+    bootstrapBaseUrlHolder = bootstrapBaseUrl
+}
+
+actual fun buildInfoSummary(): String {
+    val info = NSBundle.mainBundle.infoDictionary
+    val versionName = info?.get("CFBundleShortVersionString") as? String ?: "unknown"
+    val versionCode = info?.get("CFBundleVersion") as? String ?: "unknown"
+    val buildType = if (isDebugBuild) "debug" else "release"
+    return "versionName=$versionName, versionCode=$versionCode, buildType=$buildType, " +
+        "environment=$buildEnvironmentHolder, bootstrapBaseUrl=$bootstrapBaseUrlHolder"
 }
 
 @OptIn(ExperimentalForeignApi::class)

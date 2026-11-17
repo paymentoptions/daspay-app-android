@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.paymentoptions.pos.ui.screens._flow.foodOrderFlow.FoodItem
 import com.paymentoptions.pos.ui.theme.primary500
 import com.paymentoptions.pos.ui.theme.productDescription
+import com.paymentoptions.pos.utils.formatAmount
 import com.paymentoptions.pos.utils.formatToPrecisionString
 
 @Composable
@@ -61,7 +62,7 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
                     )
 
                     Text(
-                        "${foodItem.item.ServiceFeePerc.formatToPrecisionString()}/%",
+                        "${foodItem.item.ServiceFeePerc.formatAmount()}%",
                         fontSize = 12.sp,
                         fontWeight = FontWeight(980),
                         color = primary500
@@ -88,6 +89,15 @@ fun FoodDetail(foodItem: FoodItem, modifier: Modifier = Modifier) {
                 fontWeight = FontWeight(980),
                 color = primary500
             )
+
+            if ((foodItem.item.ServiceFeeEnabled == true) && foodItem.item.ServiceFeeAmount != null) {
+                Text(
+                    "+${foodItem.item.ServiceFeeAmount.formatToPrecisionString()}",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = primary500.copy(alpha = 0.5f)
+                )
+            }
         }
     }
 }

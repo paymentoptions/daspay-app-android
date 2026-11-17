@@ -27,6 +27,8 @@ object MineSecSDK {
      */
     suspend fun processSale(
         amount: String,
+        /** Pay-by-link product ID for a food-order cart, or "" (see createCartProductId). */
+        cartID: String = "",
         onNativeTrigger: suspend (posReference: String) -> Unit,
         onError: (String) -> Unit
     ) {
@@ -64,7 +66,7 @@ object MineSecSDK {
                 ),
                 payment_method = PaymentMethodRequest(type = "daspay"),
                 time_zone = getDeviceTimeZone(),
-                cartID = ""
+                cartID = cartID
             )
 
             val response = payment(paymentRequest)

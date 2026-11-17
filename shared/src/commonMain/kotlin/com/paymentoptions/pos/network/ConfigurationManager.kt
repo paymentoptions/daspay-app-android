@@ -12,15 +12,21 @@ import kotlin.coroutines.cancellation.CancellationException
 /**
  * Manages the active API base URL.
  *
- * Priority: saved config → AppStorage override → build-time default.
+ * Priority: saved config → AppStorage override → the flavour's build-time (bootstrap) URL.
  */
 object ConfigurationManager {
 
     private const val MAX_RETRIES = 3
     private const val RETRY_DELAY_MS = 2_000L
 
-    /** Injected at app startup from BuildConfig (Android) / plist (iOS). Never mutated after that. */
+    /**
+     * The flavour's bootstrap URL, injected at app startup from BuildConfig (Android) / plist (iOS).
+     * Config is always downloaded from here, and it is the API base URL until config has been saved.
+     * Never mutated after startup.
+     */
     var buildTimeBaseUrl: String = "https://api-dev.paymentoptions.com/api/v1/"
+
+    val bootstrapBaseUrl: String get() = buildTimeBaseUrl
 
     /** Injected at app startup from BuildConfig (Android) / plist (iOS). */
     var buildEnvironment: String = "DEV"
@@ -29,13 +35,24 @@ object ConfigurationManager {
     var isInitialized: Boolean = false
         private set
 
+    /**
+     * Downloads and saves the app config. Needs a signed-in user (the config endpoint is
+     * authenticated), so it returns false straight away when there is no ID token.
+     */
     suspend fun initializeConfig(environment: String = buildEnvironment): Boolean {
+        if (AppStorage.idToken.isNullOrBlank()) {
+            AppLogger.debug("Config download skipped: no signed-in user yet")
+            return false
+        }
         repeat(MAX_RETRIES) { attempt ->
             try {
                 val appConfig = getAppConfiguration(environment)
                     ?.takeIf { it.success }
                     ?.data
                     ?.firstOrNull()
+                    // A config without these URLs is treated as a failed download, so it's retried
+                    // instead of saved.
+                    ?.takeIf { !it.BaseAPIURL.isNullOrBlank() && !it.TransactionDetailsURL.isNullOrBlank() }
 
                 if (appConfig != null) {
                     AppLogger.debug("Config downloaded. Base URL: ${appConfig.BaseAPIURL}")
@@ -49,17 +66,15 @@ object ConfigurationManager {
                     DPStorageManager.storeAppConfig(appConfig)
 
                     if (baseUrlChanged) {
-                        // Notify KtorClient that the base URL may have changed
-                        buildTimeBaseUrl = DPStorageManager.getBaseUrl() ?: appConfig.BaseAPIURL
-
-                        AppLogger.debug("Config changed base url, resetting HTTP client")
-                        KtorClient.reset() // only needed if the client caches a base URL (see note)
+                        // KtorClient resolves the base URL per request via url(), so the client does
+                        // not need rebuilding (unlike the old RetrofitClient).
+                        AppLogger.debug("Config changed base url to $activeBaseUrl")
                     }
 
                     isInitialized = true
                     return true
                 }
-                AppLogger.error("Failed to download app configuration (Attempt ${attempt + 1})")
+                AppLogger.error("Failed to download app configuration, or it was missing required URLs (Attempt ${attempt + 1})")
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

@@ -22,6 +22,7 @@ import com.paymentoptions.pos.ui.composables._components.images.apms.GooglePayIm
 import com.paymentoptions.pos.ui.composables._components.images.apms.GsCashPayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.KonbibniPayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.PayEasyImage
+import com.paymentoptions.pos.ui.composables._components.images.apms.PayNowLogoImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.PayPayImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.QRPHLogoImage
 import com.paymentoptions.pos.ui.composables._components.images.apms.SamsungLogoImage
@@ -61,6 +62,6 @@ fun PaymentApmsRow(modifier: Modifier = Modifier) {
         if (apms.hasWechatpay) WechatPayImage()
         if (apms.hasSamsungPay) SamsungLogoImage()
         if (apms.hasQRPH) QRPHLogoImage()
-        if (apms.hasPayNow) QRPHLogoImage()
+        if (apms.hasPayNow) PayNowLogoImage()
     }
 }

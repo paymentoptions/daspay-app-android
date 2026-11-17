@@ -26,10 +26,17 @@ object PaymentStatusMapper {
         currency: String,
         parentUUID: String? = null,
         childUUID: String? = null,
+        /** Refund/void note; sent in the acquirer payload as gatewayNotes, as Android does. */
+        gatewayNotes: String? = null,
     ): PaymentStatusRequest {
 
-        val acquirerJson =
+        val rawAcquirerJson =
             result.acquirerResponseJson?.takeIf { it.isNotBlank() } ?: "{}"
+        val note = gatewayNotes?.trim()?.takeIf { it.isNotEmpty() }
+        val acquirerJson = if (note == null) rawAcquirerJson else runCatching {
+            val obj = json.parseToJsonElement(rawAcquirerJson).jsonObject
+            JsonObject(obj + ("gatewayNotes" to JsonPrimitive(note))).toString()
+        }.getOrDefault(rawAcquirerJson)
 
         val fields = runCatching {
             json.parseToJsonElement(acquirerJson).jsonObject

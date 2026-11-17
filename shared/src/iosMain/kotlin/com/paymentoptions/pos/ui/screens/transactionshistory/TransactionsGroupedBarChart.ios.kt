@@ -3,7 +3,6 @@ package com.paymentoptions.pos.ui.screens.transactionshistory
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,14 +25,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.network.InsightsResponseDataRecord
 import com.paymentoptions.pos.network.toTransactionListDataRecord
-import com.paymentoptions.pos.ui.navigation.Screens
 import com.paymentoptions.pos.ui.theme.AppTheme
 import com.paymentoptions.pos.ui.theme.borderColor
 import com.paymentoptions.pos.ui.theme.containerBackgroundGradientBrush
@@ -53,7 +50,6 @@ import kotlinx.datetime.monthsUntil
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlin.math.absoluteValue
 
 private val earningsColor = Color(0xFF00C9A7)
@@ -215,26 +211,8 @@ actual fun TransactionsGroupedBarChart(
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .pointerInput(transactionsBySlot) {
-                        detectTapGestures { tapOffset ->
-                            val groupWidth = size.width.toFloat() / numSlots
-                            val tappedSlot = (tapOffset.x / groupWidth).toInt().coerceIn(0, numSlots - 1)
-                            val slotTxns = transactionsBySlot[tappedSlot]
-                            if (!slotTxns.isNullOrEmpty()) {
-                                val halfGroup = groupWidth / 2
-                                val groupCenter = tappedSlot * groupWidth + halfGroup
-                                val isEarnings = tapOffset.x < groupCenter
-                                val filtered = if (isEarnings)
-                                    slotTxns.filter { it.TransactionType == "PURCHASE" }
-                                else
-                                    slotTxns.filter { it.TransactionType == "REFUND" }
-                                val txn = (filtered.firstOrNull() ?: slotTxns.first())
-                                val json = Json.encodeToString(txn.toTransactionListDataRecord())
-                                navController.navigate(Screens.TransactionDetails.createRoute(json))
-                            }
-                        }
-                    },
+                    .weight(1f),
+                    // Tapping a bar intentionally does nothing (matches Android; release 820d6c7).
             ) {
                 val chartHeight = size.height
                 val chartWidth = size.width

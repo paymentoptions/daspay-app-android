@@ -67,9 +67,9 @@ import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.network.endpoints.paymentDetails
 import com.paymentoptions.pos.network.AquirerResponse
 import com.paymentoptions.pos.network.PaymentDetailsResponse
-import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
+import com.paymentoptions.pos.ui.composables._components.ShowReceiptView
 import com.paymentoptions.pos.ui.composables._components.buttons.Email
 import com.paymentoptions.pos.ui.composables._components.buttons.EmailButton
 import com.paymentoptions.pos.ui.composables._components.buttons.FilledButton
@@ -96,6 +96,10 @@ import com.paymentoptions.pos.utils.topdf.PageSize
 import com.paymentoptions.pos.utils.topdf.PdfExportProgress
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
+import com.paymentoptions.pos.ui.composables._components.TaxRegistrationRow
+import com.paymentoptions.pos.ui.composables._components.ReceiptBreakdown
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalComposeApi::class
@@ -158,14 +162,7 @@ fun ReceiptBottomSectionContent(
     val transactionUuid = paymentDetailsLatestResponse?.data?.TransactionRefID
 
     if (paymentDetailsLatestResponse != null) {
-        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
-            runCatching<AquirerResponse> {
-                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
-            }.getOrNull() ?: AquirerResponse()
-        } else {
-            AquirerResponse()
-        }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse) ?: AquirerResponse()
     }
 
     val transactionDetailUrl = if (transactionUuid != null) {
@@ -246,6 +243,7 @@ fun ReceiptBottomSectionContent(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
+            ShowReceiptView()
             //Section 1
             Column(
             modifier = Modifier
@@ -275,7 +273,7 @@ fun ReceiptBottomSectionContent(
                     modifier = Modifier
                         .size(16.dp)
                         .clickable {
-                            clipboardManager.setText(AnnotatedString(paymentDetailsLatestResponse?.data?.TransactionID.toString()))
+                            clipboardManager.setText(AnnotatedString(paymentDetailsLatestResponse?.data?.TransactionID?.toString() ?: "N/A"))
                         }
 
                 )
@@ -283,7 +281,7 @@ fun ReceiptBottomSectionContent(
 
             Text(
 //                text = "Payment Options",
-                text = paymentDetailsLatestResponse?.data?.Merchant.toString(),
+                text = paymentDetailsLatestResponse?.data?.Merchant ?: "N/A",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
@@ -310,7 +308,7 @@ fun ReceiptBottomSectionContent(
                     color = primary500
                 )
                 Text(
-                    text = transactionAquirerResponse?.paymentMethod.toString(),
+                    text = transactionAquirerResponse?.paymentMethod ?: "N/A",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -322,7 +320,7 @@ fun ReceiptBottomSectionContent(
             ) {
                 Text(
 //                    text = "Approved",
-                    paymentDetailsLatestResponse?.data?.Status.toString(),
+                    paymentDetailsLatestResponse?.data?.Status ?: "N/A",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -337,7 +335,7 @@ fun ReceiptBottomSectionContent(
             }
 
             Text(
-                text = "**** **** **** " + transactionAquirerResponse?.accountLast4.toString(),
+                text = "**** **** **** " + (transactionAquirerResponse?.accountLast4 ?: "N/A"),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
@@ -346,6 +344,13 @@ fun ReceiptBottomSectionContent(
 
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(), color = Color.LightGray.copy(alpha = 0.2f)
+        )
+
+        // Section 1.5: food-order breakdown (items, service, additional, tax), when present
+        ReceiptBreakdown(
+            productDetails = paymentDetailsLatestResponse?.data?.DaspayProductDetails,
+            merchantSetting = DPStorageManager.getMerchantSettings(),
+            horizontalPadding = DEFAULT_BOTTOM_SECTION_PADDING_IN_DP,
         )
 
         //Section 2 : Total
@@ -388,7 +393,7 @@ fun ReceiptBottomSectionContent(
 
                 Text(
 //                    transactionAquirerResponse?.primaryMid.toString(),
-                    paymentDetailsLatestResponse?.data?.DASMID.toString(),
+                    paymentDetailsLatestResponse?.data?.DASMID ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -406,7 +411,7 @@ fun ReceiptBottomSectionContent(
 
                 Text(
 //                    transactionAquirerResponse?.primaryTid.toString(),
-                    paymentDetailsLatestResponse?.data?.TerminalID.toString(),
+                    paymentDetailsLatestResponse?.data?.TerminalID ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -423,7 +428,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.batchNo.toString(),
+                    transactionAquirerResponse?.batchNo ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -440,7 +445,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.trace.toString(),
+                    transactionAquirerResponse?.trace ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -457,7 +462,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.rrn.toString(),
+                    transactionAquirerResponse?.rrn ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -474,7 +479,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.approvalCode.toString(),
+                    transactionAquirerResponse?.approvalCode ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -517,7 +522,7 @@ fun ReceiptBottomSectionContent(
 
                 Text(
 //                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
-                    paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
+                    paymentDetailsLatestResponse?.data?.TransactionRefID ?: "N/A",
                     textAlign = androidx.compose.ui.text.style.TextAlign.End,
                     modifier = Modifier.weight(1f),
                     fontSize = 14.sp,
@@ -537,7 +542,7 @@ fun ReceiptBottomSectionContent(
 
                 Text(
 //                    paymentDetailsLatestResponse?.data?.Status.toString(),
-                    transactionAquirerResponse?.tranStatus.toString(),
+                    transactionAquirerResponse?.tranStatus ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = green500
@@ -572,7 +577,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.atc.toString(),
+                    transactionAquirerResponse?.atc ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -589,7 +594,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.tvr.toString(),
+                    transactionAquirerResponse?.tvr ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -606,7 +611,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.appName.toString(),
+                    transactionAquirerResponse?.appName ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -623,7 +628,7 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.aid.toString(),
+                    transactionAquirerResponse?.aid ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -640,14 +645,17 @@ fun ReceiptBottomSectionContent(
                 )
 
                 Text(
-                    transactionAquirerResponse?.tc.toString(),
+                    transactionAquirerResponse?.tc ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
                 )
             }
 
-            if(transactionAquirerResponse?.gatewayNotes?.isNotBlank() == true){
+            TaxRegistrationRow(DPStorageManager.getMerchantSettings())
+
+            val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
+            if (gatewayNotes.isNotBlank()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -658,7 +666,7 @@ fun ReceiptBottomSectionContent(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                        text = gatewayNotes,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -885,14 +893,7 @@ private fun ReceiptContentForPDF(
     }
 
     if (paymentDetailsLatestResponse != null) {
-        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
-            runCatching<AquirerResponse> {
-                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
-            }.getOrNull() ?: AquirerResponse()
-        } else {
-            AquirerResponse()
-        }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse) ?: AquirerResponse()
     }
     Column(
         modifier = Modifier
@@ -916,7 +917,7 @@ private fun ReceiptContentForPDF(
 
         Text(
 //            text = "Payment Options",
-            text = paymentDetailsLatestResponse?.data?.Merchant.toString(),
+            text = paymentDetailsLatestResponse?.data?.Merchant ?: "N/A",
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
             color = primary500
@@ -944,7 +945,7 @@ private fun ReceiptContentForPDF(
             )
             Text(
 //                text = paymentDetailsLatestResponse?.data?.Scheme.toString(),
-                text = transactionAquirerResponse?.paymentMethod.toString(),
+                text = transactionAquirerResponse?.paymentMethod ?: "N/A",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
@@ -957,7 +958,7 @@ private fun ReceiptContentForPDF(
         ) {
             Text(
 //                text = "Approved",
-                paymentDetailsLatestResponse?.data?.Status.toString(),
+                paymentDetailsLatestResponse?.data?.Status ?: "N/A",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = primary500
@@ -973,7 +974,7 @@ private fun ReceiptContentForPDF(
 
         Text(
 //            text = "10:25T",
-            text = "**** **** **** " + transactionAquirerResponse?.accountLast4.toString(),
+            text = "**** **** **** " + (transactionAquirerResponse?.accountLast4 ?: "N/A"),
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
             color = primary500
@@ -982,6 +983,11 @@ private fun ReceiptContentForPDF(
         HorizontalDivider(
             modifier = Modifier.fillMaxWidth(),
             color = Color.LightGray.copy(alpha = 0.2f)
+        )
+
+        ReceiptBreakdown(
+            productDetails = paymentDetailsLatestResponse?.data?.DaspayProductDetails,
+            merchantSetting = DPStorageManager.getMerchantSettings(),
         )
 
         // Total Section
@@ -1024,7 +1030,7 @@ private fun ReceiptContentForPDF(
                 )
                 Text(
 //                    text = transactionAquirerResponse?.primaryMid.toString(),
-                    text = paymentDetailsLatestResponse?.data?.DASMID.toString(),
+                    text = paymentDetailsLatestResponse?.data?.DASMID ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1041,7 +1047,7 @@ private fun ReceiptContentForPDF(
                 )
                 Text(
 //                    text = transactionAquirerResponse?.primaryTid.toString(),
-                    text = paymentDetailsLatestResponse?.data?.TerminalID.toString(),
+                    text = paymentDetailsLatestResponse?.data?.TerminalID ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1057,7 +1063,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.batchNo.toString(),
+                    text = transactionAquirerResponse?.batchNo ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1073,7 +1079,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.trace.toString(),
+                    text = transactionAquirerResponse?.trace ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1089,7 +1095,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.rrn.toString(),
+                    text = transactionAquirerResponse?.rrn ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1105,7 +1111,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.approvalCode.toString(),
+                    text = transactionAquirerResponse?.approvalCode ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1145,7 +1151,7 @@ private fun ReceiptContentForPDF(
                 )
                 Text(
 //                    paymentDetailsLatestResponse?.data?.TransactionID.toString(),
-                    paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
+                    paymentDetailsLatestResponse?.data?.TransactionRefID ?: "N/A",
                     textAlign = androidx.compose.ui.text.style.TextAlign.End,
                     modifier = Modifier.weight(1f),
                     fontSize = 14.sp,
@@ -1164,7 +1170,7 @@ private fun ReceiptContentForPDF(
                 )
                 Text(
 //                    paymentDetailsLatestResponse?.data?.Status.toString(),
-                    text = transactionAquirerResponse?.tranStatus.toString(),
+                    text = transactionAquirerResponse?.tranStatus ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = green500
@@ -1180,7 +1186,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.atc.toString(),
+                    text = transactionAquirerResponse?.atc ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1196,7 +1202,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.tvr.toString(),
+                    text = transactionAquirerResponse?.tvr ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1212,7 +1218,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.appName.toString(),
+                    text = transactionAquirerResponse?.appName ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1228,7 +1234,7 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.aid.toString(),
+                    text = transactionAquirerResponse?.aid ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
@@ -1244,14 +1250,17 @@ private fun ReceiptContentForPDF(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = transactionAquirerResponse?.tc.toString(),
+                    text = transactionAquirerResponse?.tc ?: "N/A",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = primary500
                 )
             }
 
-            if(transactionAquirerResponse?.gatewayNotes?.isNotBlank() == true){
+            TaxRegistrationRow(DPStorageManager.getMerchantSettings())
+
+            val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
+            if (gatewayNotes.isNotBlank()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -1262,7 +1271,7 @@ private fun ReceiptContentForPDF(
                         fontSize = 14.sp
                     )
                     Text(
-                        text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                        text = gatewayNotes,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500

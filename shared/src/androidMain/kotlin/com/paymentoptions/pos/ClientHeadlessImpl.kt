@@ -28,7 +28,10 @@ import com.theminesec.sdk.headless.ui.UiStateDisplayView
 
 class ClientHeadlessImpl : HeadlessActivity(){
     override val experimentalScreenProvider = false
-    override fun provideUi(): UiProvider {return CustomUiProvider()}
+    override fun provideUi(): UiProvider {
+        AppLogger.debug("TapToPay HeadlessActivity provideUi called; experimentalScreenProvider=$experimentalScreenProvider")
+        return CustomUiProvider()
+    }
 }
 
 

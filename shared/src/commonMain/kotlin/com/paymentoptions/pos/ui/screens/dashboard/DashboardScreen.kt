@@ -3,6 +3,7 @@ package com.paymentoptions.pos.ui.screens.dashboard
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.payment.reader.ReaderState
 import com.paymentoptions.pos.payment.reader.getTapToPayReader
@@ -36,6 +38,10 @@ fun DashboardScreen(navController: NavController) {
         mutableStateOf(!DPStorageManager.getBoolean(KEY_TTP_ENABLE_PROMPT_DISMISSED))
     }
     var showEnableTapToPayFlow by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        AnalyticsHelper.trackDashboardNavigation(section = "Dashboard")
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         NotificationPermission()

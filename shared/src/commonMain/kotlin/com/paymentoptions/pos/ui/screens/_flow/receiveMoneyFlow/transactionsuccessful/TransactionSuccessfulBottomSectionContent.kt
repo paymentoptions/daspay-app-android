@@ -55,17 +55,13 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.paymentoptions.pos.device.DPStorageManager
 import com.paymentoptions.pos.device.DPStorageManager.getTransactionCurrency
-import coil3.compose.AsyncImage
 import kotlinx.serialization.json.Json
 import com.paymentoptions.pos.logger.AppLogger
 import com.paymentoptions.pos.network.endpoints.paymentDetails
-import com.paymentoptions.pos.network.endpoints.getSignature
 import com.paymentoptions.pos.network.AquirerResponse
 import com.paymentoptions.pos.network.PaymentDetailsResponse
-import com.paymentoptions.pos.network.SignatureData
 import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.network.toTransactionListDataRecord
-import com.paymentoptions.pos.utils.modifiers.shimmerEffect
 import com.paymentoptions.pos.ui.composables._components.CurrencyText
 import com.paymentoptions.pos.ui.composables._components.NoteChip
 import com.paymentoptions.pos.ui.composables._components.ScreenTitleWithCloseButton
@@ -96,6 +92,8 @@ import com.paymentoptions.pos.utils.shouldShowFullReceipt
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,8 +110,6 @@ fun TransactionSuccessfulBottomSectionContent(
     val scrollState = rememberScrollState()
     var paymentDetailsLatestResponse by remember { mutableStateOf<PaymentDetailsResponse?>(null) }
     var transactionAquirerResponse by remember { mutableStateOf<AquirerResponse?>(AquirerResponse()) }
-    var signatureData by remember { mutableStateOf<SignatureData?>(null) }
-    var isSignatureLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         paymentDetailsLatestResponse = try {
@@ -123,28 +119,8 @@ fun TransactionSuccessfulBottomSectionContent(
         }
     }
 
-    LaunchedEffect(transactionId) {
-        if (transactionId.isNotBlank()) {
-            isSignatureLoading = true
-            signatureData = try {
-                getSignature(uuid = transactionId)?.data
-            } catch (e: Exception) {
-                AppLogger.error("GetSignature error: ${e.message}")
-                null
-            }
-            isSignatureLoading = false
-        }
-    }
-
     if (paymentDetailsLatestResponse != null) {
-        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
-            runCatching<AquirerResponse> {
-                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
-            }.getOrNull() ?: AquirerResponse()
-        } else {
-            AquirerResponse()
-        }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse) ?: AquirerResponse()
     }
 
     fun navigateToVoidAction(transaction: TransactionListDataRecord){
@@ -341,7 +317,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        paymentDetailsLatestResponse?.data?.TransactionRefID.toString(),
+                        paymentDetailsLatestResponse?.data?.TransactionRefID ?: "N/A",
                         textAlign = androidx.compose.ui.text.style.TextAlign.End,
                         modifier = Modifier.weight(1f),
                         fontSize = 14.sp,
@@ -379,7 +355,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        text = transactionAquirerResponse?.trace.toString(),
+                        text = transactionAquirerResponse?.trace ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -397,7 +373,7 @@ fun TransactionSuccessfulBottomSectionContent(
                     )
 
                     Text(
-                        text = transactionAquirerResponse?.approvalCode.toString(),
+                        text = transactionAquirerResponse?.approvalCode ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -417,14 +393,15 @@ fun TransactionSuccessfulBottomSectionContent(
 
                     Text(
 //                        paymentDetailsLatestResponse?.data?.Scheme.toString(),
-                        transactionAquirerResponse?.paymentMethod.toString(),
+                        transactionAquirerResponse?.paymentMethod ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
                     )
                 }
 
-                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
+                if (gatewayNotes.isNotBlank()) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -436,7 +413,7 @@ fun TransactionSuccessfulBottomSectionContent(
                         )
 
                         Text(
-                            transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            gatewayNotes,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = primary500
@@ -580,75 +557,6 @@ fun TransactionSuccessfulBottomSectionContent(
                         }
                     }
 
-                }
-
-                // ── Server Signature Section ─────────────────────────────
-                if (isSignatureLoading) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Box(
-                            modifier = Modifier
-                                .width(150.dp)
-                                .height(14.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .shimmerEffect()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .shimmerEffect()
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
-                } else {
-                    val signatureUrl = signatureData?.signatureURL?.toString()
-                    if (signatureData?.imageExists == true && !signatureUrl.isNullOrBlank()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Customer Signature",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = primary900
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(150.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .dashedBorder(
-                                        color = Color.LightGray,
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .background(Color.White),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                AsyncImage(
-                                    model = signatureUrl,
-                                    contentDescription = "Transaction Signature",
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(140.dp)
-                                        .padding(8.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
-                        }
-                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))

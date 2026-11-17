@@ -76,6 +76,8 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.paymentoptions.pos.utils.getGatewayNotes
+import com.paymentoptions.pos.utils.parseAcquirerResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,14 +101,7 @@ fun TransactionFailedBottomSectionContent(
     }
 
     if (paymentDetailsLatestResponse != null) {
-        val rawAcquirerResponse = paymentDetailsLatestResponse?.data?.AcquirerResponse?.firstOrNull()
-        transactionAquirerResponse = if (!rawAcquirerResponse.isNullOrBlank()) {
-            runCatching<AquirerResponse> {
-                Json { ignoreUnknownKeys = true }.decodeFromString(rawAcquirerResponse)
-            }.getOrNull() ?: AquirerResponse()
-        } else {
-            AquirerResponse()
-        }
+        transactionAquirerResponse = parseAcquirerResponse(paymentDetailsLatestResponse?.data?.AcquirerResponse) ?: AquirerResponse()
     }
     val dateString =
         paymentDetailsLatestResponse?.data?.Date ?: Clock.System.now()
@@ -294,7 +289,7 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-                        paymentDetailsLatestResponse?.data?.TransactionID.toString(),
+                        paymentDetailsLatestResponse?.data?.TransactionID?.toString() ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
@@ -331,7 +326,7 @@ fun TransactionFailedBottomSectionContent(
                         )
 
                         Text(
-                            text = transactionAquirerResponse?.trace.toString(),
+                            text = transactionAquirerResponse?.trace ?: "N/A",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = primary500
@@ -351,13 +346,14 @@ fun TransactionFailedBottomSectionContent(
                     )
 
                     Text(
-                        text = transactionAquirerResponse?.approvalCode.toString(),
+                        text = transactionAquirerResponse?.approvalCode ?: "N/A",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         color = primary500
                     )
                 }
-                if (!transactionAquirerResponse?.gatewayNotes.isNullOrBlank()) {
+                val gatewayNotes = getGatewayNotes(paymentDetailsLatestResponse?.data, transactionAquirerResponse)
+                if (gatewayNotes.isNotBlank()) {
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -370,7 +366,7 @@ fun TransactionFailedBottomSectionContent(
                         )
 
                         Text(
-                            text = transactionAquirerResponse?.gatewayNotes!!.trim(),
+                            text = gatewayNotes,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = primary500

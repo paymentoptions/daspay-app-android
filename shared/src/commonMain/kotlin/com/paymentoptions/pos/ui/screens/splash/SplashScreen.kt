@@ -59,19 +59,23 @@ fun SplashScreen(navController: NavController, environment: String) {
     LaunchedEffect(locationPermissionGranted) {
         if (!locationPermissionGranted) return@LaunchedEffect
 
-        try {
-            val configInitialized = ConfigurationManager.initializeConfig(environment)
-            if (configInitialized) {
-                AppLogger.info("Config initialized successfully on splash")
-            } else {
-                AppLogger.warn("Config initialization failed on splash, using default base URL")
+        // The config endpoint needs a signed-in user; before sign-in it is downloaded after sign-in instead.
+        if (isToken != null) {
+            try {
+                val configInitialized = ConfigurationManager.initializeConfig(environment)
+                if (configInitialized) {
+                    AppLogger.info("Config initialized successfully on splash")
+                } else {
+                    AppLogger.warn("Config initialization failed on splash, using default base URL")
+                }
+            } catch (e: Exception) {
+                AppLogger.error("Error initializing config on splash: ${e.message}")
             }
-        } catch (e: Exception) {
-            AppLogger.error("Error initializing config on splash: ${e.message}")
+        } else {
+            AppLogger.debug("Config download deferred until sign-in")
         }
 
         if (isToken != null) {
-            delay(1.seconds)
             // check if token is saved
             val deviceConfiguration = DPStorageManager.getDeviceConfiguration()
             if(deviceConfiguration == null) {

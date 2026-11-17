@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.paymentoptions.pos.analytics.AnalyticsHelper
 import com.paymentoptions.pos.auth.AuthEventManager
 import com.paymentoptions.pos.network.TransactionListDataRecord
 import com.paymentoptions.pos.urlDecode
@@ -39,6 +40,19 @@ fun Navigator(
                     navController.navigate(Screens.SignIn.route) {
                         popUpTo(0) { inclusive = true }
                     }
+            }
+        }
+    }
+
+    // ── Screen-view analytics ──────────────────────────────────────────────
+    // Every destination change, including the auth redirects above, is reported once.
+    LaunchedEffect(navController) {
+        var previousRoute: String? = null
+        navController.currentBackStackEntryFlow.collectLatest { entry ->
+            val route = entry.destination.route ?: return@collectLatest
+            if (route != previousRoute) {
+                AnalyticsHelper.trackScreenNavigation(fromScreen = previousRoute ?: "", toScreen = route)
+                previousRoute = route
             }
         }
     }
