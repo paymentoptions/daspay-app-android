@@ -3,6 +3,8 @@ package com.paymentoptions.pos.network
 import com.paymentoptions.pos.platformLog
 import com.paymentoptions.pos.platformLogError
 import com.paymentoptions.pos.storage.AppStorage
+import com.paymentoptions.pos.utils.decodeJwtPayload
+import com.paymentoptions.pos.utils.getDeviceIdentifier
 import com.paymentoptions.pos.utils.isAndroid
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -23,6 +25,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 /** Outcome of a token refresh. */
 sealed interface TokenRefreshResult {
@@ -69,7 +72,8 @@ object TokenRefreshService {
                 client.post(ConfigurationManager.url(ApiEndpoints.REFRESH_TOKEN)) {
                     contentType(ContentType.Application.Json)
                     setBody(RefreshTokenRequest(username, refreshToken))
-                    applyDaspaySignHeaders(isAndroid(),AppStorage.deviceNumber?:"")
+                    // Same device ID that sign-in sends in x-domain.
+                    applyDaspaySignHeaders(isAndroid(), getDeviceIdentifier())
                 }
             } finally {
                 client.close()
@@ -96,7 +100,9 @@ object TokenRefreshService {
                 AppStorage.accessToken  = data.token.accessToken
                 AppStorage.idToken      = data.token.idToken
                 AppStorage.refreshToken = data.token.refreshToken
-                AppStorage.tokenExpiry  = data.exp * 1000L
+                // The response's top-level exp is not always moved forward on refresh, so prefer
+                // the new ID token's own exp claim; otherwise the next proactive cycle comes too early.
+                AppStorage.tokenExpiry  = idTokenExpiryMs(data.token.idToken) ?: (data.exp * 1000L)
                 TokenRefreshResult.Success(BearerTokens(data.token.idToken, data.token.refreshToken))
             } else TokenRefreshResult.Failed
         } catch (e: CancellationException) {
@@ -107,3 +113,8 @@ object TokenRefreshService {
         }
     }
 }
+
+/** The `exp` claim of a JWT in epoch milliseconds, or null when it can't be read. */
+private fun idTokenExpiryMs(idToken: String): Long? = runCatching {
+    decodeJwtPayload(idToken)["exp"]?.jsonPrimitive?.longOrNull?.times(1000L)
+}.getOrNull()

@@ -16,6 +16,8 @@ import com.paymentoptions.pos.payment.reader.TapToPayReaderBridgeHolder
 import com.paymentoptions.pos.utils.KeychainHelper
 import com.paymentoptions.pos.utils.KeychainProvider
 import platform.UIKit.UIViewController
+import com.paymentoptions.pos.logger.AppLogger
+import com.paymentoptions.pos.network.ConfigurationManager
 
 /**
  * iOS entry point for the shared Compose Multiplatform UI.
@@ -42,12 +44,21 @@ fun MainViewController(
 ): UIViewController {
     AppStorage.init(createSettings())
 
+    // Info.plist gives "" when CONFIG_BASE_URL isn't defined in the xcconfig (ContentView's nil
+    // fallback doesn't catch that), so fall back to the same dev URL here.
+    val effectiveBaseUrl = if (ConfigurationManager.isUsableBaseUrl(baseUrl)) {
+        baseUrl.trim()
+    } else {
+        AppLogger.warn("ConfigBaseURL from Info.plist is not a usable URL ('$baseUrl'); using ${ConfigurationManager.DEFAULT_BASE_URL}")
+        ConfigurationManager.DEFAULT_BASE_URL
+    }
+
     val environment = when {
-        baseUrl.contains("api-dev") -> "DEV"
-        baseUrl.contains("api-uat") -> "UAT"
+        effectiveBaseUrl.contains("api-dev") -> "DEV"
+        effectiveBaseUrl.contains("api-uat") -> "UAT"
         else -> "PROD"
     }
-    setBuildEnvironment(environment, baseUrl)
+    setBuildEnvironment(environment, effectiveBaseUrl)
 
     MineSecPlatform.paymentProvider = mineSecProvider
     KeychainHelper.provider = keychainProvider
@@ -56,6 +67,6 @@ fun MainViewController(
     TapToPayDiscoveryBridgeHolder.bridge = tapToPayDiscoveryBridge
 
     return ComposeUIViewController {
-        App(buildTimeBaseUrl = baseUrl, environment = environment)
+        App(buildTimeBaseUrl = effectiveBaseUrl, environment = environment)
     }
 }

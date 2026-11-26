@@ -98,10 +98,10 @@ object KtorClient {
                             result.tokens
                         }
                         TokenRefreshResult.AuthRejected -> {
-                            // Refresh token refused (401/403): end the whole session, as release does.
-                            DPStorageManager.clearSharedPreferences()
+                            // Refresh token refused: sign the user out, but keep the device registration.
+                            DPStorageManager.endAuthSession()
                             AuthEventManager.requireReAuthentication()
-                            platformLog(TAG, "TokenRefresh rejected; cleared session and triggered re-authentication")
+                            platformLog(TAG, "TokenRefresh rejected; cleared auth data and triggered re-authentication")
                             null
                         }
                         TokenRefreshResult.Failed -> {

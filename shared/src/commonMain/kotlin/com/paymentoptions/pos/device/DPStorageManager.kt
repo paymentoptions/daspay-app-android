@@ -51,6 +51,16 @@ object DPStorageManager {
         ReaderLifecycleCoordinator.sessionEnded()
     }
 
+    /**
+     * Ends the signed-in session after the server refuses the refresh token. Clears auth data only:
+     * the device token, device config and biometrics stay, so signing in again doesn't repeat
+     * device registration. Use [clearSharedPreferences] for an explicit logout.
+     */
+    fun endAuthSession() {
+        dpClearSharedPreferences()
+        ReaderLifecycleCoordinator.sessionEnded()
+    }
+
     /** Wipes every persisted value (used when auto sign-in / session restore fails). */
     fun clearAllAndEndSession() {
         AppStorage.clearAll()
