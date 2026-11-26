@@ -16,10 +16,21 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.datetime.Clock
 
 private const val TAG = "TokenRepository"
-/** Refresh 5 minutes before the token expires. */
+/** Refresh at most 5 minutes before the token expires. */
 private const val REFRESH_BUFFER_MS = 5 * 60 * 1_000L
 /** Minimum gap between two refresh attempts to prevent storms on 429. */
 private const val MIN_REFRESH_COOLDOWN_MS = 60 * 1_000L
+
+/**
+ * Delay before the proactive refresh. The buffer is capped at half the remaining lifetime, so a
+ * short-lived token (DASPay ID tokens live 5 minutes) is refreshed half-way through instead of the
+ * moment it is issued. Returns 0 for a token that has already expired.
+ */
+internal fun proactiveRefreshDelayMs(expiryEpochMs: Long, nowMs: Long): Long {
+    val remainingMs = expiryEpochMs - nowMs
+    if (remainingMs <= 0L) return 0L
+    return remainingMs - minOf(REFRESH_BUFFER_MS, remainingMs / 2)
+}
 
 /**
  * Manages token lifecycle: auto-refresh before expiry and 401 handling.
@@ -48,8 +59,7 @@ object TokenRepository {
             return
         }
 
-        val refreshAt = expiryEpochMs - REFRESH_BUFFER_MS
-        val delayMs = (refreshAt - nowMs).coerceAtLeast(0L)
+        val delayMs = proactiveRefreshDelayMs(expiryEpochMs, nowMs)
 
         platformLog(TAG, "Scheduling token refresh in ${delayMs / 1_000}s")
         refreshJob = scope.launch {
@@ -92,9 +102,9 @@ object TokenRepository {
                     scheduleProactiveRefresh(DPStorageManager.getTokenExpiry())
                 }
                 TokenRefreshResult.AuthRejected -> {
-                    // Refresh token refused (401/403): end the whole session, as release does.
-                    platformLog(TAG, "Proactive refresh rejected; clearing session and requiring re-authentication")
-                    DPStorageManager.clearSharedPreferences()
+                    // Refresh token refused: sign the user out, but keep the device registration.
+                    platformLog(TAG, "Proactive refresh rejected; clearing auth data and requiring re-authentication")
+                    DPStorageManager.endAuthSession()
                     AuthEventManager.requireReAuthentication()
                 }
                 TokenRefreshResult.Failed -> {

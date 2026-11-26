@@ -9,6 +9,7 @@ import com.paymentoptions.pos.storage.AppStorage
 import com.paymentoptions.pos.ui.navigation.Navigator
 import com.paymentoptions.pos.ui.theme.AppTheme
 import kotlinx.datetime.Clock
+import androidx.compose.runtime.remember
 
 /**
  * Root Compose Multiplatform composable.
@@ -24,10 +25,16 @@ fun App(
     environment: String = "DEV",
 ) {
 
-    // Inject build-time base URL so ConfigurationManager can resolve API calls
-    LaunchedEffect(buildTimeBaseUrl, environment) {
-        ConfigurationManager.buildTimeBaseUrl = buildTimeBaseUrl
+    // Inject the build-time base URL and environment during composition, before Navigator's first
+    // screen reads them (a LaunchedEffect runs too late: Splash captured the default "DEV").
+    remember(buildTimeBaseUrl, environment) {
+        ConfigurationManager.buildTimeBaseUrl =
+            if (ConfigurationManager.isUsableBaseUrl(buildTimeBaseUrl)) buildTimeBaseUrl.trim()
+            else ConfigurationManager.DEFAULT_BASE_URL
         ConfigurationManager.buildEnvironment = environment
+    }
+
+    LaunchedEffect(buildTimeBaseUrl, environment) {
 
         // Schedule proactive token refresh only if the token still has meaningful lifetime left.
         // Expired / near-expired tokens are handled reactively by the Ktor 401 refreshTokens path.
